@@ -1,4 +1,9 @@
-canvas {
+.canvas {
     width: 100%;
     object-fit: contain;
+}
+.information {
+    width: 100%;
+    object-fit: contain;
+    hidden: false;
 }

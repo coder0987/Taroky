@@ -78,7 +78,7 @@ io.sockets.on('connection', function(socket) {
     let socketId = Math.random()*100000000000000000;
     SOCKET_LIST[socketId] = socket;
 
-    players[socketId] = {'id':socketId,'pid':-1,'room':-1,'socket':socket};
+    players[socketId] = {'id':socketId,'pid':-1,'room':-1,'pn':-1,'socket':socket};
 
     socket.on('instanceCheck', function(playerID) {
         for (let i in players) {
@@ -89,21 +89,27 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on('disconnect', function() {
+        if (~players[socketId].room) {
+            rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
+            rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
+            rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
+        }
         delete players[socketId];
         delete SOCKET_LIST[socketId];
     });
 
     socket.on('roomConnect', function(roomNumber) {
         let connected = false;
-        if (rooms[roomNumber] && rooms[roomNumber][playerCount] < 4) {
+        if (rooms[roomNumber] && rooms[roomNumber][playerCount] < 4 && players[socketId].room == -1) {
             for (let i=0;i<4;i++) {
-                if (rooms[roomNumber][players][i].type == PLAYER_TYPE.ROBOT) {
-                    rooms[roomNumber][players][i].type = PLAYER_TYPE.HUMAN;
-                    rooms[roomNumber][players][i].socket = socketId;
-                    rooms[roomNumber][players][i].pid = players[socketId].pid;
+                if (rooms[roomNumber]['players'][i].type == PLAYER_TYPE.ROBOT) {
+                    rooms[roomNumber]['players'][i].type = PLAYER_TYPE.HUMAN;
+                    rooms[roomNumber]['players'][i].socket = socketId;
+                    rooms[roomNumber]['players'][i].pid = players[socketId].pid;
                     socket.emit('roomConnected', roomNumber);
                     connected = true;
                     players[socketId]['room'] = roomNumber;
+                    players[socketId]['pn'] = i;
                     break;
                 }
             }
