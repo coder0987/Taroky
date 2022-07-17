@@ -103,6 +103,16 @@ io.sockets.on('connection', function(socket) {
             rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
             rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
             rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
+            rooms[players[socketId].room]['playerCount'] -= 1;
+            if (rooms[players[socketId].room]['playerCount']==1 && rooms[players[socketId].room]['host'] == socketId) {
+                for (let i in rooms[players[socketId].room]['players']) {
+                    if (rooms[players[socketId].room]['players'][i].pn == PLAYER_TYPE.HUMAN) {
+                        rooms[players[socketId].room]['host'] = rooms[players[socketId].room]['players'][i].socket;
+                        players[rooms[players[socketId].room]['players'][i].socket].socket.emit('roomHost');
+                        break;
+                    }
+                }
+            }
         }
         delete players[socketId];
         delete SOCKET_LIST[socketId];
@@ -116,10 +126,15 @@ io.sockets.on('connection', function(socket) {
                     rooms[roomNumber]['players'][i].type = PLAYER_TYPE.HUMAN;
                     rooms[roomNumber]['players'][i].socket = socketId;
                     rooms[roomNumber]['players'][i].pid = players[socketId].pid;
+                    rooms[roomNumber]['playerCount'] += 1;
                     socket.emit('roomConnected', roomNumber);
                     connected = true;
                     players[socketId]['room'] = roomNumber;
                     players[socketId]['pn'] = i;
+                    if (rooms[roomNumber]['playerCount'] == 1) {
+                        rooms[roomNumber]['host'] = socketId;
+                        socket.emit('roomHost');
+                    }
                     break;
                 }
             }
@@ -129,7 +144,7 @@ io.sockets.on('connection', function(socket) {
 });
 
 function tick() {
-    for (let i=rooms.length-2; i>=0;i++) {
+    for (let i=rooms.length-2; i>=0;i--) {
         //Operations
         if (rooms[i].playerCount == 0) {
             delete rooms[i];
@@ -141,7 +156,7 @@ function tick() {
         }
     }
     if (rooms.length == 0 || rooms[rooms.length-1].playerCount > 0) {
-        rooms.push({'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]});
+        rooms.push({'host':-1,'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]});
     }
     simplifiedRooms = [];
     for (let i=0; i<rooms.length; i++) {

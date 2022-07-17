@@ -13,8 +13,58 @@ let availableRooms=[];
 let drawnRooms=[];
 let connectingToRoom = false;
 let inGame = false;
+let baseDeck = [];
+for (let s=0;s<4;s++)
+    for (let v=0;v<8;v++)
+        baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
+for (let v=0;v<22;v++)
+    baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
+
+function createCardBack(appendedTo) {
+    let cardBack = document.createElement('img');
+    cardBack.src = '/assets/images/TarokyBack.jpg';
+    cardBack.id = appendedTo + 'CardBack';
+    document.getElementById(appendedTo).appendChild(card);
+    return cardBack;
+}
+
+function generateDeck() {
+    for (let i in baseDeck) {
+        let card = document.createElement('img');
+        card.src = '/assets/images/TarokyBack.jpg';
+        card.hidden = true;
+        card.id = baseDeck[i].value + baseDeck[i].suit;
+        //card.src = '/assets/images/' + card.id;
+        document.getElementById('deck').appendChild(card);
+    }
+}
+
+function isInHand(element) {
+    if (element) {
+        for (let i in hand) {
+            if (element.id == hand[i].value + hand[i].suit) return true;
+        }
+    }
+    return false;
+}
+
+function drawHand() {
+    let divHand = document.getElementById('hand');
+    let divDeck = document.getElementById('deck');
+    let returnToDeck = divHand.children;
+    for (let i=returnToDeck.length-1; i>=0; i--) {
+        let child = returnToDeck[i];
+        if (!isInHand(child)) {child.hidden = true;divDeck.appendChild(child);}
+    }
+    for (let i in hand) {
+        let card = document.getElementById(hand[i].value + hand[i].suit);
+        divHand.appendChild(card);
+        card.hidden = false;
+    }
+}
 
 window.onload = () => {
+    generateDeck();
     socket = io();
 
     if (localStorage.getItem('tarokyInstance') == 0)
@@ -43,6 +93,7 @@ window.onload = () => {
     });
     socket.on('returnHand', function(returnHand) {
         hand = returnHand;
+        drawHand();
     });
     socket.on('returnDeck', function(returnDeck) {
         deck = returnDeck;
@@ -57,10 +108,12 @@ window.onload = () => {
         alert('Failed to connect to room ' + (roomNotConnected+1));
         connectingToRoom = false;
     });
+    socket.on('roomHost', function() {
+        alert('You are the room host');
+    });
 }
 
 function buttonClick() {
-    //Use element.click() to trigger for now
     if (!connectingToRoom) {
         connectingToRoom=true;socket.emit('roomConnect',this.roomNumber);alert('Connecting to room ' + (this.roomNumber+1) + '...');
     } else {console.log('Already connecting to a room!');}
