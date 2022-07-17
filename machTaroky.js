@@ -6,6 +6,8 @@ const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: '
 const refRes = {width: 1200, height: 1200};
 const WIDTH = refRes.width;
 const HEIGHT = refRes.height;
+const ERR_FONT = '24px Arial';
+const INFO_FONT = '24px Arial';
 let ticker;
 let ctx;
 let players;
@@ -14,7 +16,9 @@ let canvas;
 let scale;
 let origin;
 let socket;
-let availableRooms;
+let availableRooms=[];
+let drawnRooms=[];
+let connectingToRoom = false;
 let inGame = false;
 let menuScroll;
 
@@ -22,7 +26,7 @@ window.onload = () => {
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     menuScroll = 5;
-    ticker = setInterval(tick, 1000/30.0);//30 FPS
+    canvas.hidden = true;
     socket = io();
 
     if (localStorage.getItem('tarokyInstance') == 0)
@@ -42,26 +46,55 @@ window.onload = () => {
     socket.on('returnDeck', function(returnDeck) {
         deck = returnDeck;
     });
+    socket.on('roomConnected', function(roomConnected) {
+        let inGame = true;
+        canvas.hidden = false;
+        document.getElementById('rooms').innerHTML = '';
+        connectingToRoom = false;
+        alert('Connected to room ' + roomConnected);
+    });
+    socket.on('roomNotConnected', function(roomNotConnected){
+        alert('Failed to connect to room ' + roomNotConnected);
+        connectingToRoom = false;
+    });
+
+    ticker = setInterval(tick, 1000/30.0);//30 FPS
+}
+
+function appendButton(elementId, roomNumb){
+	let button = document.createElement('button');
+	button.innerHTML = "Room " + (roomNumb+1);
+	document.getElementById(elementId).appendChild(button);
+	button.addEventListener('click', () => joinRoom(roomNumb));
+	button.onclick = () => console.log('click');
+}
+
+function joinRoom(whichRoom) {
+    if (!connectingToRoom) {
+        connectingToRoom=true;
+        socket.emit('roomConnect',roomNumb);
+        alert('Connecting to room ' + roomNumb + '...');
+    } else {
+        console.error('Already connecting to a room!');
+    }
 }
 
 function drawBoard() {
-    ctx.fillStyle = 'rgb(163,123,91)';
-    ctx.fillRect(0,0, WIDTH, HEIGHT);
     if (inGame) {
         //Draw board for in game
+        ctx.fillStyle = 'rgb(163,123,91)';
+        ctx.fillRect(0,0, WIDTH, HEIGHT);
     } else {
         //Draw menu
-        if (availableRooms) {
-            let i=0;
-            while (i < availableRooms.length && i*200 - menuScroll < HEIGHT) {
-                //Board is 1200x1200, each room selection is 200 tall and 1100 wide. 6 can fit
-                if (menuScroll < (i+1)*200) {
-                    //Draw room
-                    ctx.fillStyle = 'brown';
-                    ctx.fillRect(50,i*200+menuScroll,1100,200);
-                }
-                i++;
+        if ([...availableRooms] != [...drawnRooms]) {
+            drawnRooms = [...availableRooms];
+            document.getElementById('rooms').innerHTML = '';
+            for (let i=0; i<drawnRooms.length;i++) {
+                appendButton('rooms',i);
             }
+        }
+        if (connectingToRoom) {
+
         }
     }
 }

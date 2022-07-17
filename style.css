@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 :root {
     --green: #98ad99;
     --red: #9D181D;
@@ -78,3 +79,14 @@ viewport {
 	border-right: 25px solid transparent;
 	border-top: 50px solid var(--red);
 }
+=======
+.canvas {
+    width: 100%;
+    object-fit: contain;
+}
+.information {
+    width: 100%;
+    object-fit: contain;
+    hidden: false;
+}
+>>>>>>> 24706a8cfb299a2fc674903b851215d4292a4c62
