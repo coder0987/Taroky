@@ -91,7 +91,7 @@ viewport {
     transition-duration: 0.4s;
   }
   
-  .button:hover {
+.button:hover {
     background-color: var(--navy);
     color: var(--black);
   }

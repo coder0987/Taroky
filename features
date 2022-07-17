@@ -1,0 +1,20 @@
+Design features to add
+    Load screen
+        1. create four suit icons w css
+        2. make four suit icons shrink to circles
+        3. consecutive animation loop
+        4. load screen divider
+        5. load screen visible/invisible
+    Create default deck
+        1. create card assets PS
+        2. load card assets into new deck folder
+        3. name/connect to HTML objects
+    Settings page
+        Dark mode
+            1. add slider
+            2. toggle black/white or tan, green/navy, red remains
+            3. find way to remember user preference? or add toggle to start screen
+        Choose deck
+            1. create or commission deck art
+            2. load into deck folder
+            3. make deck selection in settings
