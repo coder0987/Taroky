@@ -66,6 +66,7 @@ const SUIT = {0: 'Spades',1: 'Clubs',2: 'Hearts',3: 'Diamonds',4: 'Trump'};
 const RED_VALUE = {0: 'Ace',1: 'Two',2: 'Three',3: 'Four',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const BLACK_VALUE = {0: 'Seven',1: 'Eight',2: 'Nine',3: 'Ten',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz'};
+let simplifiedRooms = [];
 let baseDeck = [];
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
@@ -81,11 +82,20 @@ io.sockets.on('connection', function(socket) {
     players[socketId] = {'id':socketId,'pid':-1,'room':-1,'pn':-1,'socket':socket};
 
     socket.on('instanceCheck', function(playerID) {
-        for (let i in players) {
-            if (players[i].pid == playerID)
-                socket.disconnect();
+        if (players[socketId]) {
+            let allowed = true;
+            for (let i in players) {
+                if (players[i].pid == playerID) {
+                    socket.disconnect();
+                    allowed = false;
+                }
+            }
+            if (allowed) {
+                players[socketId].pid = playerID;
+            }
+        } else {
+            socket.emit('recheckInstance');
         }
-        players[socketId].pid = playerID;
     });
 
     socket.on('disconnect', function() {
@@ -100,7 +110,7 @@ io.sockets.on('connection', function(socket) {
 
     socket.on('roomConnect', function(roomNumber) {
         let connected = false;
-        if (rooms[roomNumber] && rooms[roomNumber][playerCount] < 4 && players[socketId].room == -1) {
+        if (rooms[roomNumber] && rooms[roomNumber]['playerCount'] < 4 && players[socketId].room == -1) {
             for (let i=0;i<4;i++) {
                 if (rooms[roomNumber]['players'][i].type == PLAYER_TYPE.ROBOT) {
                     rooms[roomNumber]['players'][i].type = PLAYER_TYPE.HUMAN;
@@ -127,11 +137,15 @@ function tick() {
     }
     for(let i in players){
         if (!~players[i]['room']) {
-            players[i]['socket'].emit('returnRooms',rooms);
+            players[i]['socket'].emit('returnRooms',simplifiedRooms);
         }
     }
     if (rooms.length == 0 || rooms[rooms.length-1].playerCount > 0) {
         rooms.push({'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]});
+    }
+    simplifiedRooms = [];
+    for (let i=0; i<rooms.length; i++) {
+        simplifiedRooms.push(rooms[i].playerCount);
     }
 }
 
