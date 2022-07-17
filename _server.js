@@ -142,6 +142,12 @@ io.sockets.on('connection', function(socket) {
         }
         if (!connected) socket.emit('roomNotConnected',roomNumber);
     });
+    socket.on('startGame',function(){
+        if (rooms[players[socketId].room]['host']==socketId) {
+            //Start the game
+            console.log('Game is starting in room ' + players[socketId].room);
+        }
+    });
 });
 
 function numEmptyRooms() {

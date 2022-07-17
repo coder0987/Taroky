@@ -63,6 +63,14 @@ function drawHand() {
     }
 }
 
+function hostRoom() {
+    let tools = document.getElementById('host');
+    let startGame = document.createElement('button');
+    startGame.innerHTML = 'Start Game';
+    startGame.addEventListener('click',function(){this.hidden=true;alert('Starting...');socket.emit('startGame');});
+    tools.appendChild(startGame);
+}
+
 window.onload = () => {
     generateDeck();
     socket = io();
@@ -109,6 +117,7 @@ window.onload = () => {
         connectingToRoom = false;
     });
     socket.on('roomHost', function() {
+        hostRoom();
         alert('You are the room host');
     });
 }
