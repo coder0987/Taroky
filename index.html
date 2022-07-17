@@ -8,9 +8,7 @@
 
     <title>Mach Tarok</title>
 
-    <!-- Latest compiled and minified CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Latest compiled JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <link rel="stylesheet" href="style.css">
@@ -18,27 +16,29 @@
     <script src="/machTaroky.js"></script>
 </head>
 <body>
-<div class="container-fluid">
-    <div id="loadscreen"></div>
-        <div id="loader-wrapper">
-            <div id="loader">
-                <span class="heart"></span>
-                <span class="club"></span>
-                <span class="diamond">
-                    <span class="triangle-up"></span>
-                    <span class="triangle-down"></span>
-                </span>
-                <span class="spade"></span>
+    <div id="loadscreen container-fluid col-md-12"></div>
+        <div class="container col-sm-6 border">
+            <div class="row">
+                <div class="heart col border position-relative">asdf</div>
+                <div class="club col border position-relative">asdsf</div>
+                <div class="diamond col border position-relative">ddff
+                    <span id="diamondtup"></span>
+                    <span id="diamondtdn"></span>
+                </div>
+                <div class="spade col border position-relative">asdf
+                    <span id="spadec1"></span>
+                    <span id="spadec2"></span>
+                    <span id="spadec3"></span>
+                    <span id="spadetup"></span>
+                </div>
             </div>
         </div>
     </div>
 
-    <img href="/assets/logo.png" alt="MachTarok">
+    <img href="\assets\logo.png\" alt="MachTarok" class="col-md-8">
     <div id="outer">
         <canvas id="canvas"></canvas>
     </div>
-    
-</div>
     <div id="rooms"></div>
 </body>
 </html>
