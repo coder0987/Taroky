@@ -75,6 +75,15 @@ for (let s=0;s<4;s++)
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];}
+function Board() {this.talon=[];this.table=[];this.preverTalon=[];}
+/*Cards are kept in several locations.
+Between games, cards are kept in room[roomNumber]['deck']
+At the beginning of the game, cards are dealt out and stored in Players' hands at room[roomNumber]['players'][i].hand
+Cards are also dealt to the Talon at room[roomNumber]['board'].talon
+Players then draw cards appropriately and discard. Those cards are stored in room[roomNumber]['players'][i].discard
+During play, up to 4 cards can be 'on the table' and are stored in rooms[roomNumber]['board'].table
+During Prever draw, the Prever player may reject the first set of 3 cards from the talon. These cards are stored in rooms[roomNumber]['board'].preverTalon
+*/
 
 io.sockets.on('connection', function(socket) {
     let socketId = Math.random()*100000000000000000;
@@ -86,17 +95,9 @@ io.sockets.on('connection', function(socket) {
         if (players[socketId]) {
             let allowed = true;
             for (let i in players) {
-                if (players[i].pid == playerID) {
-                    socket.disconnect();
-                    allowed = false;
-                }
-            }
-            if (allowed) {
-                players[socketId].pid = playerID;
-            }
-        } else {
-            socket.emit('recheckInstance');
-        }
+                if (players[i].pid == playerID) {socket.disconnect();allowed = false;}}
+            if (allowed) {players[socketId].pid = playerID;}
+        } else {socket.emit('recheckInstance');}
     });
 
     socket.on('disconnect', function() {
@@ -109,8 +110,7 @@ io.sockets.on('connection', function(socket) {
                 for (let i in rooms[players[socketId].room]['players']) {
                     if (rooms[players[socketId].room]['players'][i].pn == PLAYER_TYPE.HUMAN) {
                         rooms[players[socketId].room]['host'] = rooms[players[socketId].room]['players'][i].socket;
-                        players[rooms[players[socketId].room]['players'][i].socket].socket.emit('roomHost');
-                        break;
+                        players[rooms[players[socketId].room]['players'][i].socket].socket.emit('roomHost');break;
                     }
                 }
             }
@@ -135,8 +135,7 @@ io.sockets.on('connection', function(socket) {
                     if (rooms[roomNumber]['playerCount'] == 1) {
                         rooms[roomNumber]['host'] = socketId;
                         socket.emit('roomHost');
-                    }
-                    break;
+                    } break;
                 }
             }
         }
@@ -146,17 +145,12 @@ io.sockets.on('connection', function(socket) {
         if (rooms[players[socketId].room]['host']==socketId) {
             //Start the game
             console.log('Game is starting in room ' + players[socketId].room);
+
         }
     });
 });
 
-function numEmptyRooms() {
-    let emptyRoomCount = 0;
-    for (let i=0; i<rooms.length; i++) {
-        if (rooms[i].playerCount == 0) emptyRoomCount++;
-    }
-    return emptyRoomCount;
-}
+function numEmptyRooms() {let emptyRoomCount = 0;for (let i=0; i<rooms.length; i++) {if (rooms[i].playerCount == 0) emptyRoomCount++;}return emptyRoomCount;}
 
 function tick() {
     if (!ticking) {
