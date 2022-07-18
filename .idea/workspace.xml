@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Refactors room generation and deletion">
-      <change afterPath="$PROJECT_DIR$/Gameplay" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds gameplay summary">
+      <change afterPath="$PROJECT_DIR$/chatbox.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -103,7 +103,14 @@
       <option name="project" value="LOCAL" />
       <updated>1658096155514</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Adds gameplay summary">
+      <created>1658167363813</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1658167363813</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -125,6 +132,7 @@
     <MESSAGE value="removes canvas in preparation for HTML/CSS-based game rendering" />
     <MESSAGE value="Adds room host and card objects" />
     <MESSAGE value="Refactors room generation and deletion" />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactors room generation and deletion" />
+    <MESSAGE value="Adds gameplay summary" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds gameplay summary" />
   </component>
 </project>

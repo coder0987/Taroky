@@ -67,7 +67,7 @@ function hostRoom() {
     let tools = document.getElementById('host');
     let startGame = document.createElement('button');
     startGame.innerHTML = 'Start Game';
-    startGame.addEventListener('click',function(){this.hidden=true;alert('Starting...');socket.emit('startGame');});
+    startGame.addEventListener('click',function(){this.hidden=true;addMessage('Starting...');socket.emit('startGame');});
     tools.appendChild(startGame);
 }
 
@@ -93,7 +93,7 @@ window.onload = () => {
             }
         }
         if (connectingToRoom) {
-            console.log('loading...');//ADD LOADING ANIMATION
+            addMessage('loading...');//ADD LOADING ANIMATION
         }
     });
     socket.on('returnPlayers', function(returnPlayers) {
@@ -110,22 +110,28 @@ window.onload = () => {
         inGame = true;
         document.getElementById('rooms').innerHTML = '';
         connectingToRoom = false;
-        alert('Connected to room ' + (roomConnected+1));
+        addMessage('Connected to room ' + (roomConnected+1));
     });
     socket.on('roomNotConnected', function(roomNotConnected){
-        alert('Failed to connect to room ' + (roomNotConnected+1));
+        addMessage('Failed to connect to room ' + (roomNotConnected+1));
         connectingToRoom = false;
     });
     socket.on('roomHost', function() {
         hostRoom();
-        alert('You are the room host');
+        addMessage('You are the room host');
+    });
+    socket.on('chatMessage', function(thePlayer,theMessage) {
+        playerSentMessage(thePlayer,theMessage);
+    });
+    socket.on('message', function(theMessage) {
+        addMessage(theMessage);
     });
 }
 
 function buttonClick() {
     if (!connectingToRoom) {
-        connectingToRoom=true;socket.emit('roomConnect',this.roomNumber);alert('Connecting to room ' + (this.roomNumber+1) + '...');
-    } else {console.log('Already connecting to a room!');}
+        connectingToRoom=true;socket.emit('roomConnect',this.roomNumber);addMessage('Connecting to room ' + (this.roomNumber+1) + '...');
+    } else {addError('Already connecting to a room!');}
 }
 
 function appendButton(elementId, roomNumb){
