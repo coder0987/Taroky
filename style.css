@@ -76,6 +76,40 @@ viewport {
     top: 3.5rem;
     left: 3.1rem;
 }
+#hearts {
+    width: 2rem;
+    height: 2rem;
+	background: var(--red);
+    transform: rotate(45deg);
+    position: absolute;
+    top: 1.1rem;
+    left: 1.75rem;
+}
+#heartc1 {
+    height: 2.2rem;
+    width: 2.2rem;
+    background-color: var(--red);
+    border-radius: 50%;
+    position: absolute;
+    left: .8rem
+}
+#heartc2 {
+    height: 2.2rem;
+    width: 2.2rem;
+    background-color: var(--red);
+    border-radius: 50%;
+    position: absolute;
+    left: 2.5rem
+}
+#heartc3 {
+    height: 2rem;
+    width: 2rem;
+    background-color: var(--red);
+    border-radius: 50%;
+    position: absolute;
+    top: 1rem;
+    left: 1.5rem;
+}
 .canvas {
     width: 100%;
     object-fit: contain;
