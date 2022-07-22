@@ -43,38 +43,39 @@ viewport {
     top: 2.2rem;
     left: 1rem;
 }
-#spadec1 {
+#clubc1 {
     height: 2rem;
     width: 2rem;
     background-color: var(--black);
     border-radius: 50%;
     position: absolute;
+    left: .9rem;
 }
-#spadec2 {
+#clubc2 {
     height: 2rem;
     width: 2rem;
     background-color: var(--black);
     border-radius: 50%;
     position: absolute;
-    left: 1.8rem;
+    left: .2rem;
     top: 1.5rem;
 }
-#spadec3 {
+#clubc3 {
     height: 2rem;
     width: 2rem;
     background-color: var(--black);
     border-radius: 50%;
     position: absolute;
-    left: 3.4rem;
+    left: 1.9rem;
     top: 1.5rem
 }
-#spadetup {
+#clubtup {
     border-left: .5rem solid transparent;
 	border-right: .5rem solid transparent;
 	border-bottom: 1rem solid var(--black);
     position: absolute;
     top: 3.5rem;
-    left: 3.1rem;
+    left: 1.6rem;
 }
 #hearts {
     width: 2rem;
@@ -82,7 +83,7 @@ viewport {
 	background: var(--red);
     transform: rotate(45deg);
     position: absolute;
-    top: 1.1rem;
+    top: 1.7rem;
     left: 1.75rem;
 }
 #heartc1 {
@@ -91,7 +92,8 @@ viewport {
     background-color: var(--red);
     border-radius: 50%;
     position: absolute;
-    left: .8rem
+    left: .8rem;
+    top: .6rem;
 }
 #heartc2 {
     height: 2.2rem;
@@ -99,16 +101,43 @@ viewport {
     background-color: var(--red);
     border-radius: 50%;
     position: absolute;
-    left: 2.5rem
+    left: 2.5rem;
+    top: .6rem;
 }
-#heartc3 {
+#spades {
+    width: 2rem;
+    height: 2rem;
+	background: var(--black);
+    transform: rotate(45deg);
+    position: absolute;
+    top: .75rem;
+    left: 1.9rem;
+}
+#spadec1 {
     height: 2rem;
     width: 2rem;
-    background-color: var(--red);
+    background-color: var(--black);
     border-radius: 50%;
     position: absolute;
-    top: 1rem;
-    left: 1.5rem;
+    left: 1rem;
+    top: 1.55rem;
+}
+#spadec2 {
+    height: 2rem;
+    width: 2rem;
+    background-color: var(--black);
+    border-radius: 50%;
+    position: absolute;
+    left: 2.8rem;
+    top: 1.55rem;
+}
+#spadetup {
+    border-left: .5rem solid transparent;
+	border-right: .5rem solid transparent;
+	border-bottom: 1rem solid var(--black);
+    position: absolute;
+    top: 3.5rem;
+    left: 2.4rem;
 }
 .canvas {
     width: 100%;
