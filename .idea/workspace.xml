@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds multiplayer scalability and functionality using sockets">
-      <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds a chatbox for future simplicity">
       <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/style.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,6 +10,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
+    <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GithubDefaultAccount">
@@ -76,7 +74,49 @@
       <option name="project" value="LOCAL" />
       <updated>1657998484414</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Adds multiplayer scalability and functionality using sockets">
+      <created>1658018542137</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1658018542138</updated>
+    </task>
+    <task id="LOCAL-00006" summary="removes canvas in preparation for HTML/CSS-based game rendering">
+      <created>1658025125341</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1658025125341</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Adds room host and card objects">
+      <created>1658095076288</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1658095076288</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Refactors room generation and deletion">
+      <created>1658096155514</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1658096155514</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Adds gameplay summary">
+      <created>1658167363813</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1658167363813</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Adds a chatbox for future simplicity">
+      <created>1658168199252</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1658168199252</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -95,6 +135,11 @@
     <MESSAGE value="Server.js file added" />
     <MESSAGE value="Adds board initialization and other fundamental structures" />
     <MESSAGE value="Adds multiplayer scalability and functionality using sockets" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adds multiplayer scalability and functionality using sockets" />
+    <MESSAGE value="removes canvas in preparation for HTML/CSS-based game rendering" />
+    <MESSAGE value="Adds room host and card objects" />
+    <MESSAGE value="Refactors room generation and deletion" />
+    <MESSAGE value="Adds gameplay summary" />
+    <MESSAGE value="Adds a chatbox for future simplicity" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds a chatbox for future simplicity" />
   </component>
 </project>

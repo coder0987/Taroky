@@ -114,17 +114,12 @@ viewport {
     width: 100%;
     object-fit: contain;
 }
-.information {
-    width: 100%;
-    object-fit: contain;
-    hidden: false;
-}
 
 .button {
     transition-duration: 0.4s;
-  }
+}
   
 .button:hover {
     background-color: var(--navy);
     color: var(--black);
-  }
+}
