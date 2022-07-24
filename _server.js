@@ -75,7 +75,16 @@ for (let s=0;s<4;s++)
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];}
-function Board() {this.talon=[];this.table=[];this.preverTalon=[];}
+function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.nextStep={player:'host',action:'start',time:Date.now()};}
+function shuffleDeck(deck,shuffleType) {
+    let tempDeck=[...deck]; deck=[];
+    switch (shuffleType) {
+        case 1: /*cut*/     let half=tempDeck.length/2; for(let i=0;i<half;i++){deck[i]=tempDeck[half+i];} for(let i=half;i<tempDeck.length;i++){deck[i]=tempDeck[i-half];} return deck;
+        case 2: /*riffle*/  for (let i=0;i<tempDeck.length;i++) {deck.push(tempDeck.splice(i,1));}while (tempDeck.length>0) {deck.push(tempDeck.splice(0,1));} return deck;
+        case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
+        default: return tempDeck;
+    }
+}
 /*Cards are kept in several locations.
 Between games, cards are kept in room[roomNumber]['deck']
 At the beginning of the game, cards are dealt out and stored in Players' hands at room[roomNumber]['players'][i].hand
@@ -142,10 +151,26 @@ io.sockets.on('connection', function(socket) {
         if (!connected) socket.emit('roomNotConnected',roomNumber);
     });
     socket.on('startGame',function(){
-        if (rooms[players[socketId].room]['host']==socketId) {
+        if (rooms[players[socketId].room]['host']==socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'shuffle') {
             //Start the game
             console.log('Game is starting in room ' + players[socketId].room);
-
+            rooms[players[socketId].room]['board']['nextStep'].action = 'shuffle';
+            rooms[players[socketId].room]['board']['nextStep'].player = players[socketId]['pn'];
+            rooms[players[socketId].room]['board']['nextStep'].time = Date.now();
+            for (let i=0; i<4; i++) {
+                if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
+                    players[rooms[players[socketId].room]['players'][i].socket].socket.emit('startingGame',rooms[players[socketId].room['host']],i);//Inform the players of game beginning. Host is assumed to be shuffler.
+                }
+            }
+            socket.emit('shuffle');
+        }
+    });
+    socket.on('shuffle', function(type, again) {
+        if (rooms[players[socketId].room]['board']['nextStep'].action=='shuffle' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+            if (type > 0 && type < 4) {
+                //1: cut, 2: riffle, 3: randomize
+                rooms[players[socketId].room]['deck'] = shuffleDeck(rooms[players[socketId].room['deck']],type);
+            }
         }
     });
 });
@@ -167,7 +192,7 @@ function tick() {
             }
         }
         if (rooms.length == 0 || numEmptyRooms() == 0) {
-            rooms.push({'host':-1,'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]});
+            rooms.push({'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]});
         }
         simplifiedRooms = [];
         for (let i=0; i<rooms.length; i++) {

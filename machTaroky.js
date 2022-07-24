@@ -13,6 +13,8 @@ let availableRooms=[];
 let drawnRooms=[];
 let connectingToRoom = false;
 let inGame = false;
+let playerNumber = -1;
+let hostNumber = -1;
 let baseDeck = [];
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
@@ -125,6 +127,12 @@ window.onload = () => {
     });
     socket.on('message', function(theMessage) {
         addMessage(theMessage);
+    });
+    socket.on('startingGame', function(hostPN, pN) {
+        hostNumber = hostPN;
+        playerNumber = pN;
+        addMessage('Game Beginning.')
+        addMessage('You are player ' + (pN+1));
     });
 }
 

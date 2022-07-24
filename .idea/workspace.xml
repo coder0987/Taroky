@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Fixes logo src attribute">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds TarokyBack temporary image file">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -123,7 +125,14 @@
       <option name="project" value="LOCAL" />
       <updated>1658168330200</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Adds TarokyBack temporary image file">
+      <created>1658698029413</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1658698029413</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -148,6 +157,7 @@
     <MESSAGE value="Adds gameplay summary" />
     <MESSAGE value="Adds a chatbox for future simplicity" />
     <MESSAGE value="Fixes logo src attribute" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes logo src attribute" />
+    <MESSAGE value="Adds TarokyBack temporary image file" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds TarokyBack temporary image file" />
   </component>
 </project>
