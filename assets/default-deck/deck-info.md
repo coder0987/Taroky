@@ -1,1 +1,2 @@
-Deck designed by Lauren Mach in July 2022
+Deck designed in July 2022
+© Lauren Mach
