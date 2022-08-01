@@ -1,9 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds TarokyBack temporary image file">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds shuffling and game beginning">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/club-10.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/club-ten.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/club-7.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/club-seven.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/club-8.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/club-eight.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/club-9.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/club-nine.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/deck-info.md" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/deck-info.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/diamond-1.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/diamond-ace.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/diamond-2.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/diamond-two.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/diamond-3.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/diamond-three.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/diamond-4.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/diamond-four.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/heart-1.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/heart-ace.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/heart-2.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/heart-two.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/heart-3.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/heart-three.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/heart-4.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/heart-four.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/skyz.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-skyz.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/spade-10.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/spade-ten.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/spade-7.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/spade-seven.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/spade-8.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/spade-eight.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/default-deck/spade-9.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/spade-nine.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -132,7 +150,14 @@
       <option name="project" value="LOCAL" />
       <updated>1658698029413</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Adds shuffling and game beginning">
+      <created>1658704293416</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1658704293416</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -158,6 +183,7 @@
     <MESSAGE value="Adds a chatbox for future simplicity" />
     <MESSAGE value="Fixes logo src attribute" />
     <MESSAGE value="Adds TarokyBack temporary image file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adds TarokyBack temporary image file" />
+    <MESSAGE value="Adds shuffling and game beginning" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds shuffling and game beginning" />
   </component>
 </project>

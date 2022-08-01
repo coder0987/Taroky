@@ -53,7 +53,7 @@ app.get('/',function(req, res) {
 });
 app.use('/client',express.static(__dirname + '/client'));
 
-console.log("Listening on port 8080");
+console.log("Listening on port 8080 (Accessible at https://localhost:8080/ )");
 
 
 //SOCKETS

@@ -1,5 +1,5 @@
 const PLAYER_TYPE = {HUMAN: 0,ROBOT: 1,AI: 2,H: 0,R: 1};
-const SUIT = {0: 'Spades',1: 'Clubs',2: 'Hearts',3: 'Diamonds',4: 'Trump'};
+const SUIT = {0: 'Spade',1: 'Club',2: 'Heart',3: 'Diamond',4: 'Trump'};
 const RED_VALUE = {0: 'Ace',1: 'Two',2: 'Three',3: 'Four',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const BLACK_VALUE = {0: 'Seven',1: 'Eight',2: 'Nine',3: 'Ten',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz'};
@@ -33,10 +33,10 @@ function createCardBack(appendedTo) {
 function generateDeck() {
     for (let i in baseDeck) {
         let card = document.createElement('img');
-        card.src = '/assets/images/TarokyBack.jpg';
         card.hidden = true;
         card.id = baseDeck[i].value + baseDeck[i].suit;
-        //card.src = '/assets/images/' + card.id;
+        card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
+        card.src = '/assets/default-deck/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '.png';
         document.getElementById('deck').appendChild(card);
     }
 }
@@ -64,6 +64,14 @@ function drawHand() {
         card.hidden = false;
     }
 }
+
+function showAllCards() {
+    let divDeck = document.getElementById('deck');
+    let toShow = divDeck.children;
+    for (let i in toShow) {
+        toShow[i].hidden = false;
+    }
+}//Debug function
 
 function hostRoom() {
     let tools = document.getElementById('host');
