@@ -22,11 +22,13 @@ for (let s=0;s<4;s++)
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
 
+/** @PARAM ELEMENT (not an ID) */
 function createCardBack(appendedTo) {
+    if (document.getElementById(appendedTo.id + 'CardBack')) {console.error('CardBack already exists at ' + appendedTo.id + 'CardBack');return;}
     let cardBack = document.createElement('img');
     cardBack.src = '/assets/images/TarokyBack.jpg';
-    cardBack.id = appendedTo + 'CardBack';
-    document.getElementById(appendedTo).appendChild(card);
+    cardBack.id = appendedTo.id + 'CardBack';
+    appendedTo.appendChild(cardBack);
     return cardBack;
 }
 
@@ -127,8 +129,10 @@ window.onload = () => {
         connectingToRoom = false;
     });
     socket.on('roomHost', function() {
-        hostRoom();
         addMessage('You are the room host');
+    });
+    socket.on('youStart', function() {
+        hostRoom();
     });
     socket.on('chatMessage', function(thePlayer,theMessage) {
         playerSentMessage(thePlayer,theMessage);
@@ -141,6 +145,13 @@ window.onload = () => {
         playerNumber = pN;
         addMessage('Game Beginning.')
         addMessage('You are player ' + (pN+1));
+    });
+    socket.on('nextAction', function(action) {
+        addMessage('Next action: ' + JSON.stringify(action));
+    });
+    socket.on('shuffle', function() {
+        addMessage('You are shuffling.');
+        createCardBack(document.getElementById('center'));
     });
 }
 
@@ -163,3 +174,4 @@ function appendButton(elementId, roomNumb){
 }
 
 function checkRoomsEquality(a,b) {if (a.length != b.length) {return false;}for (let i=0;i<a.length;i++) {if (a[i] != b[i])return false;}return true;}
+
