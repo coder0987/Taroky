@@ -21,7 +21,7 @@ const server = http.createServer((req, res) => {
     }
 
     let ext = path.parse(filename).ext;
-    // maps file extension to MIME typere
+    // maps file extension to MIME type
     let MIME_TYPE = {
         '.ico': 'image/png',
         '.html': 'text/html',
