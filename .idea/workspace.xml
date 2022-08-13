@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds starting sequence and revamps rooms">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/style.css" afterDir="false" />
-    </list>
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Changes rooms to roomID system and implements deck shuffling" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -161,7 +156,14 @@
       <option name="project" value="LOCAL" />
       <updated>1660163564268</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="Changes rooms to roomID system and implements deck shuffling">
+      <created>1660358029212</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1660358029212</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -191,6 +193,7 @@
     <MESSAGE value="Adds custom images and showAllImages() debug function" />
     <MESSAGE value="Adds readme and refactors Gameplay file" />
     <MESSAGE value="Adds starting sequence and revamps rooms" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adds starting sequence and revamps rooms" />
+    <MESSAGE value="Changes rooms to roomID system and implements deck shuffling" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changes rooms to roomID system and implements deck shuffling" />
   </component>
 </project>
