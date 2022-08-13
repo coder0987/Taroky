@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Renames card art to match systemized names">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds a TEMPORARY favicon. Emphasis on temporary.">
+      <change afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,11 +27,12 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\profe\IdeaProjects\TarokyWeb" />
@@ -173,7 +173,14 @@
       <option name="project" value="LOCAL" />
       <updated>1660358152971</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Adds a TEMPORARY favicon. Emphasis on temporary.">
+      <created>1660358833532</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1660358833532</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -188,6 +195,7 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="Title" />
     <MESSAGE value="Server.js file added" />
     <MESSAGE value="Adds board initialization and other fundamental structures" />
@@ -205,6 +213,7 @@
     <MESSAGE value="Adds starting sequence and revamps rooms" />
     <MESSAGE value="Changes rooms to roomID system and implements deck shuffling" />
     <MESSAGE value="Renames card art to match systemized names" />
-    <option name="LAST_COMMIT_MESSAGE" value="Renames card art to match systemized names" />
+    <MESSAGE value="Adds a TEMPORARY favicon. Emphasis on temporary." />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds a TEMPORARY favicon. Emphasis on temporary." />
   </component>
 </project>
