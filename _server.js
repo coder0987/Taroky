@@ -77,25 +77,26 @@ for (let v=0;v<22;v++)
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];}
 function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.nextStep={player:'host',action:'start',time:Date.now()};}
 function shuffleDeck(deck,shuffleType) {
-    let tempDeck=[...deck]; deck=[];
+    let tempDeck=[...deck];
     switch (shuffleType) {
-        case 1: /*cut*/     let half=tempDeck.length/2; for(let i=0;i<half;i++){deck[i]=tempDeck[half+i];} for(let i=half;i<tempDeck.length;i++){deck[i]=tempDeck[i-half];} return deck;
-        case 2: /*riffle*/  for (let i=0;i<tempDeck.length;i++) {deck.push(tempDeck.splice(i,1));}while (tempDeck.length>0) {deck.push(tempDeck.splice(0,1));} return deck;
-        case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
-        default: return tempDeck;
+        case 1: /*cut*/     return tempDeck;
+        case 2: /*riffle*/  return tempDeck;
+        case 3: /*randomize*/return tempDeck;
+        default: return [...tempDeck];
     }
 }
 /*Cards are kept in several locations.
-Between games, cards are kept in room[roomNumber]['deck']
-At the beginning of the game, cards are dealt out and stored in Players' hands at room[roomNumber]['players'][i].hand
-Cards are also dealt to the Talon at room[roomNumber]['board'].talon
-Players then draw cards appropriately and discard. Those cards are stored in room[roomNumber]['players'][i].discard
-During play, up to 4 cards can be 'on the table' and are stored in rooms[roomNumber]['board'].table
-During Prever draw, the Prever player may reject the first set of 3 cards from the talon. These cards are stored in rooms[roomNumber]['board'].preverTalon
+Between games, cards are kept in room[roomID]['deck']
+At the beginning of the game, cards are dealt out and stored in Players' hands at room[roomID]['players'][i].hand
+Cards are also dealt to the Talon at room[roomID]['board'].talon
+Players then draw cards appropriately and discard. Those cards are stored in room[roomID]['players'][i].discard
+During play, up to 4 cards can be 'on the table' and are stored in rooms[roomID]['board'].table
+During Prever draw, the Prever player may reject the first set of 3 cards from the talon. These cards are stored in rooms[roomID]['board'].preverTalon
 */
 
 io.sockets.on('connection', function(socket) {
-    let socketId = Math.random()*100000000000000000;
+    let socketId = Math.random()*1000000000000000000;
+    console.log('Player joined with socketID ' + socketId);
     SOCKET_LIST[socketId] = socket;
 
     players[socketId] = {'id':socketId,'pid':-1,'room':-1,'pn':-1,'socket':socket};
@@ -128,25 +129,27 @@ io.sockets.on('connection', function(socket) {
         delete SOCKET_LIST[socketId];
     });
 
-    socket.on('roomConnect', function(roomNumber) {
+    socket.on('roomConnect', function(roomID) {
         let connected = false;
-        if (rooms[roomNumber] && rooms[roomNumber]['playerCount'] < 4 && players[socketId].room == -1) {
+        if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && players[socketId].room == -1) {
             for (let i=0;i<4;i++) {
-                if (rooms[roomNumber]['players'][i].type == PLAYER_TYPE.ROBOT) {
-                    rooms[roomNumber]['players'][i].type = PLAYER_TYPE.HUMAN;
-                    rooms[roomNumber]['players'][i].socket = socketId;
-                    rooms[roomNumber]['players'][i].pid = players[socketId].pid;
-                    rooms[roomNumber]['playerCount'] = rooms[roomNumber]['playerCount'] + 1;
-                    socket.emit('roomConnected', roomNumber);
+                if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
+                    rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
+                    rooms[roomID]['players'][i].socket = socketId;
+                    rooms[roomID]['players'][i].pid = players[socketId].pid;
+                    rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
+                    socket.emit('roomConnected', roomID);
                     connected = true;
-                    players[socketId]['room'] = roomNumber;
+                    players[socketId]['room'] = roomID;
                     players[socketId]['pn'] = i;
-                    if (rooms[roomNumber]['playerCount'] == 1) {
-                        rooms[roomNumber]['host'] = socketId;
+                    if (rooms[roomID]['playerCount'] == 1) {
+                        rooms[roomID]['host'] = socketId;
                         socket.emit('roomHost');
-                    }
-                    if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
-                        socket.emit('youStart');
+                        if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
+                            socket.emit('youStart');
+                        } else {
+                            socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
+                        }
                     } else {
                         socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
                     }
@@ -154,10 +157,9 @@ io.sockets.on('connection', function(socket) {
                 }
             }
         } else {
-            console.log('Invalid attempt to connect to room ' + roomNumber);
-            console.log('Available rooms: ' + JSON.stringify(rooms));
+            console.log('Invalid attempt to connect to room ' + roomID);
         }
-        if (!connected) socket.emit('roomNotConnected',roomNumber);
+        if (!connected) socket.emit('roomNotConnected',roomID);
     });
     socket.on('startGame',function(){
         if (rooms[players[socketId].room]['host']==socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
@@ -174,14 +176,35 @@ io.sockets.on('connection', function(socket) {
             socket.emit('shuffle');
         } else {
             console.warn('Failed attempt to start the game in room ' + players[socketId].room + ' by player ' + socketId);
+            if (rooms[players[socketId].room]['host']==socketId) {
+                //Player is host but game was already started
+                console.warn('Player is host but game was already started. Informing host of the next step');
+                socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
+            } else {
+                console.warn('Player is not the host. The host is ' + rooms[players[socketId].room]['host']);
+                console.warn('Player info: ' + JSON.stringify(rooms[players[socketId].room][players[socketId].pn]));
+            }
         }
     });
     socket.on('shuffle', function(type, again) {
+        if (!rooms[players[socketId].room]) {return;}
         if (rooms[players[socketId].room]['board']['nextStep'].action=='shuffle' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
             if (type > 0 && type < 4) {
                 //1: cut, 2: riffle, 3: randomize
-                rooms[players[socketId].room]['deck'] = shuffleDeck(rooms[players[socketId].room['deck']],type);
+                rooms[players[socketId].room]['deck'] = shuffleDeck(rooms[players[socketId].room]['deck'],type);
             }
+            if (!again) {
+                rooms[players[socketId].room]['board']['nextStep'].action='cut';
+                rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn']+3)%4;//The player before the dealer must cut, then the dealer must shuffle
+                rooms[players[socketId].room]['board']['nextStep'].time=Date.now();
+                for (let i=0; i<4; i++) {
+                      if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
+                          players[rooms[players[socketId].room]['players'][i].socket].socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
+                      }
+                }
+            }
+        } else {
+            console.warn('Illegal shuffle attempt in room ' + players[socketId].room + ' by player ' + socketId);
         }
     });
 });
@@ -193,13 +216,9 @@ function tick() {
         ticking = true;
         for (let i in rooms) {
             //Operations
-            if (rooms[i] && rooms[i].playerCount == 0) {
-                //rooms.splice(i,1);
-                //Eventually figure out how to delete empty rooms
-                if (rooms[i]['board']['nextStep']['action'] != 'start') {
-                    delete rooms[i];
-                    console.log('Stopped empty game in room ' + i);
-                }
+            if (rooms[i] && rooms[i].playerCount == 0 && rooms[i]['board']['nextStep']['action'] != 'start') {
+                delete rooms[i];
+                console.log('Stopped empty game in room ' + i);
             }
         }
         for(let i in players){
@@ -207,12 +226,14 @@ function tick() {
                 players[i]['socket'].emit('returnRooms',simplifiedRooms);
             }
         }
-        if (Object.keys(rooms).length == 0 || numEmptyRooms() == 0) {
+        if (Object.keys(rooms).length == 0) {
+            rooms['Main'] = {'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
+        } else if (numEmptyRooms() == 0) {
             rooms[Object.keys(rooms).length] = {'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
         }
-        simplifiedRooms = [];
+        simplifiedRooms = {};
         for (let i in rooms) {
-            if (rooms[i]) simplifiedRooms.push(rooms[i].playerCount); else console.log('Room ' + i + ' mysteriously vanished: ' + JSON.stringify(rooms[i]));
+            if (rooms[i]) simplifiedRooms[i] = {'count':rooms[i].playerCount}; else console.log('Room ' + i + ' mysteriously vanished: ' + JSON.stringify(rooms[i]));
         }
         ticking = false;
     }

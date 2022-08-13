@@ -9,7 +9,7 @@ let ticker;
 let players;
 let deck;
 let socket;
-let availableRooms=[];
+let availableRooms={};
 let drawnRooms=[];
 let connectingToRoom = false;
 let inGame = false;
@@ -98,9 +98,9 @@ window.onload = () => {
     socket.on('returnRooms', function(returnRooms) {
         availableRooms = returnRooms;
         if (!checkRoomsEquality(availableRooms,drawnRooms)) {
-            drawnRooms = [...availableRooms];
+            drawnRooms = {...availableRooms};
             document.getElementById('rooms').innerHTML = '';
-            for (let i=0; i<drawnRooms.length;i++) {
+            for (let i in drawnRooms) {
                 appendButton('rooms',i);
             }
         }
@@ -122,10 +122,10 @@ window.onload = () => {
         inGame = true;
         document.getElementById('rooms').innerHTML = '';
         connectingToRoom = false;
-        addMessage('Connected to room ' + (roomConnected+1));
+        addMessage('Connected to room ' + (roomConnected));
     });
     socket.on('roomNotConnected', function(roomNotConnected){
-        addMessage('Failed to connect to room ' + (roomNotConnected+1));
+        addMessage('Failed to connect to room ' + (roomNotConnected));
         connectingToRoom = false;
     });
     socket.on('roomHost', function() {
@@ -152,26 +152,40 @@ window.onload = () => {
     socket.on('shuffle', function() {
         addMessage('You are shuffling.');
         createCardBack(document.getElementById('center'));
+        document.getElementById('centerCardBack').addEventListener('mouseenter',function() {
+            addMessage('Shuffling...');
+        });
+        document.getElementById('centerCardBack').addEventListener('mousemove',function() {
+            //Shuffle the cards
+            addMessage('.');
+            socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
+        });
+        document.getElementById('centerCardBack').addEventListener('mouseleave',function() {
+            let toRemove = document.getElementById('centerCardBack');
+            document.getElementById('center').removeChild(toRemove);
+            addMessage('Shuffled!');
+            socket.emit('shuffle',0,false);
+        });
     });
 }
 
 function buttonClick() {
     if (!connectingToRoom) {
-        connectingToRoom=true;socket.emit('roomConnect',this.roomNumber);addMessage('Connecting to room ' + (this.roomNumber+1) + '...');
+        connectingToRoom=true;socket.emit('roomConnect',this.roomID);addMessage('Connecting to room ' + (this.roomID) + '...');
     } else {addError('Already connecting to a room!');}
 }
 
-function appendButton(elementId, roomNumb){
+function appendButton(elementId, theRoomID){
     const bDiv = document.createElement('div');
 	const button = document.createElement('button');
     button.type = 'button';
-	button.innerHTML = 'Room ' + (roomNumb+1);
+	button.innerHTML = 'Room ' + (theRoomID);
     button.class = 'roomSelector';
-    bDiv.roomNumber = roomNumb;
+    bDiv.roomID = theRoomID;
     bDiv.addEventListener('click', buttonClick);
 	document.getElementById(elementId).appendChild(bDiv);
     bDiv.appendChild(button);
 }
 
-function checkRoomsEquality(a,b) {if (a.length != b.length) {return false;}for (let i=0;i<a.length;i++) {if (a[i] != b[i])return false;}return true;}
+function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (a[i].count != b[i].count) {return false;}}return true;}
 
