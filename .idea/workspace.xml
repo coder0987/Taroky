@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds a TEMPORARY favicon. Emphasis on temporary.">
-      <change afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds a TODO file">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,6 +16,14 @@
   <component name="GithubDefaultAccount">
     <option name="defaultAccountId" value="b485fb26-1d44-4d44-b58a-6c0cb51427f3" />
   </component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="159e3990-b632-430d-a397-ab935f62ec74" />
+        <option name="url" value="https://github.com/coder0987/Taroky.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -27,12 +35,12 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\profe\IdeaProjects\TarokyWeb" />
@@ -180,7 +188,14 @@
       <option name="project" value="LOCAL" />
       <updated>1660358833532</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="Adds a TODO file">
+      <created>1660359279340</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1660359279341</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -214,6 +229,7 @@
     <MESSAGE value="Changes rooms to roomID system and implements deck shuffling" />
     <MESSAGE value="Renames card art to match systemized names" />
     <MESSAGE value="Adds a TEMPORARY favicon. Emphasis on temporary." />
-    <option name="LAST_COMMIT_MESSAGE" value="Adds a TEMPORARY favicon. Emphasis on temporary." />
+    <MESSAGE value="Adds a TODO file" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds a TODO file" />
   </component>
 </project>
