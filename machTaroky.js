@@ -5,6 +5,7 @@ const BLACK_VALUE = {0: 'Seven',1: 'Eight',2: 'Nine',3: 'Ten',4: 'Jack',5: 'Ride
 const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz'};
 const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
+const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 let ticker;
 let players;
 let deck;
@@ -83,6 +84,28 @@ function hostRoom() {
     tools.appendChild(startGame);
 }
 
+function cut() {
+    let div = document.getElementById('center');
+    for (let i in cutTypes) {
+        let cutButton = document.createElement('button');
+        cutButton.innerHTML = i;
+        cutButton.id = 'cutB' + i;
+        cutButton.addEventListener('click', function(){
+            socket.emit('cut',this.innerHTML);
+            hasCut();
+            addMessage('You have cut the deck.');
+        });
+    }
+}
+function hasCut() {
+    let div = document.getElementById('center');
+    for (let i in div.children) {
+        if (i.id.substring(0,4) == 'cutB') {
+            div.removeChild(i);
+        }
+    }
+}
+
 window.onload = () => {
     generateDeck();
     socket = io();
@@ -140,6 +163,9 @@ window.onload = () => {
     socket.on('message', function(theMessage) {
         addMessage(theMessage);
     });
+    socket.on('broadcast', function(theBroadcast) {
+        alert(theBroadcast);
+    });
     socket.on('startingGame', function(hostPN, pN) {
         hostNumber = hostPN;
         playerNumber = pN;
@@ -147,7 +173,17 @@ window.onload = () => {
         addMessage('You are player ' + (pN+1));
     });
     socket.on('nextAction', function(action) {
-        addMessage('Next action: ' + JSON.stringify(action));
+        if (action.player == playerNumber) {
+            switch (action.action) {
+                case 'cut':
+                    cut();
+                    break;
+                default:
+                    addMessage('Unknown action: ' + JSON.stringify(action));
+            }
+        } else {
+            addMessage('Player ' + action.player + ' is performing the action ' + action.action);
+        }
     });
     socket.on('shuffle', function() {
         addMessage('You are shuffling.');

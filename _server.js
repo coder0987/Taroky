@@ -75,7 +75,7 @@ for (let s=0;s<4;s++)
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];}
-function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.nextStep={player:'host',action:'start',time:Date.now()};}
+function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.nextStep={player:'host',action:'start',time:Date.now()};this.cutStyle='';}
 function shuffleDeck(deck,shuffleType) {
     let tempDeck=[...deck];
     switch (shuffleType) {
@@ -92,7 +92,50 @@ Cards are also dealt to the Talon at room[roomID]['board'].talon
 Players then draw cards appropriately and discard. Those cards are stored in room[roomID]['players'][i].discard
 During play, up to 4 cards can be 'on the table' and are stored in rooms[roomID]['board'].table
 During Prever draw, the Prever player may reject the first set of 3 cards from the talon. These cards are stored in rooms[roomID]['board'].preverTalon
+
+Cut Style and significant temporary data that must be stored between actions:
+This info is stored at room[roomID]['board']
+See the Board object declaration above for more info
+
+Public, Private, and Hidden information
+Some information should be accessible by everyone. Some only by certain players. Some only by this server instance.
+Public information:
+- nextAction
+- cutStyle
+- Called point cards
+- Called I on the end
+- Called valat
+- Called contra (and number of contras)
+- Cards on the table
+- Most recent trick in discard
+- Player chip count
+
+Private information:
+- player hands
+- preverTalon (prever can see it)
+
+Hidden information:
+- Deck
+- Talon
+- Discard
+- player info such as id
 */
+
+// @PARAM nextAction, room NOT ROOMID
+function robotAction(action,room) {
+    //This function will complete ANY action that a player is otherwise expected to complete
+    //When called, this function will complete the action regardless of whether a player should be tasked with completing it
+    //This is useful for player TIMEOUT, or when a player takes too long to complete an action
+    //This will also be used when less than 4 players are seated at a table, or when a player leaves after the game has begun
+    //Note: the game will NEVER continue after all 4 players have left. There will always be at least 1 player seated at the table.
+
+}
+
+function broadcast(message) {
+    for (let i in SOCKET_LIST) {
+        SOCKET_LIST[i].emit('broadcast',message);
+    }
+}//Debug function
 
 io.sockets.on('connection', function(socket) {
     let socketId = Math.random()*1000000000000000000;
@@ -145,6 +188,7 @@ io.sockets.on('connection', function(socket) {
                     if (rooms[roomID]['playerCount'] == 1) {
                         rooms[roomID]['host'] = socketId;
                         socket.emit('roomHost');
+                        console.log('New room host in room ' + roomID);
                         if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
                             socket.emit('youStart');
                         } else {
@@ -172,6 +216,7 @@ io.sockets.on('connection', function(socket) {
                 if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
                     players[rooms[players[socketId].room]['players'][i].socket].socket.emit('startingGame',rooms[players[socketId].room['host']],i);//Inform the players of game beginning. Host is assumed to be shuffler.
                 }
+                //TODO: Robot and AI interactions
             }
             socket.emit('shuffle');
         } else {
@@ -195,17 +240,38 @@ io.sockets.on('connection', function(socket) {
             }
             if (!again) {
                 rooms[players[socketId].room]['board']['nextStep'].action='cut';
-                rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn']+3)%4;//The player before the dealer must cut, then the dealer must shuffle
+                rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn']+3)%4;//The player before the dealer must cut, then the dealer must deal
                 rooms[players[socketId].room]['board']['nextStep'].time=Date.now();
                 for (let i=0; i<4; i++) {
-                      if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
-                          players[rooms[players[socketId].room]['players'][i].socket].socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
-                      }
+                    if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
+                        players[rooms[players[socketId].room]['players'][i].socket].socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
+                    } else if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.ROBOT && rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn'] == i) {
+                        //TODO: Robot and AI interactions
+                    }
+
                 }
             }
         } else {
             console.warn('Illegal shuffle attempt in room ' + players[socketId].room + ' by player ' + socketId);
         }
+    });
+    socket.on('cut', function(style) {
+        if (!rooms[players[socketId].room]) {return;}
+            if (rooms[players[socketId].room]['board']['nextStep'].action=='cut' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+                if (style=='Cut') rooms[players[socketId].room]['deck'] = shuffleDeck(rooms[players[socketId].room]['deck'],1);
+
+                rooms[players[socketId].room]['board']['nextStep'].action='deal';
+                rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn']+1)%4;//The player after the cutter must deal
+                rooms[players[socketId].room]['board']['nextStep'].time=Date.now();
+                rooms[players[socketId].room]['board']['cutStyle'] = style;//For the dealer
+                for (let i=0; i<4; i++) {
+                    if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
+                        players[rooms[players[socketId].room]['players'][i].socket].socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
+                    } else if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.ROBOT && rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn'] == i) {
+                        //TODO: Robot and AI interactions
+                    }
+                }
+            }
     });
 });
 
