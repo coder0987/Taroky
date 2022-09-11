@@ -122,13 +122,24 @@ Hidden information:
 */
 
 // @PARAM nextAction, room NOT ROOMID
-function robotAction(action,room) {
+function autoAction(action,room) {
     //This function will complete ANY action that a player is otherwise expected to complete
     //When called, this function will complete the action regardless of whether a player should be tasked with completing it
     //This is useful for player TIMEOUT, or when a player takes too long to complete an action
     //This will also be used when less than 4 players are seated at a table, or when a player leaves after the game has begun
     //Note: the game will NEVER continue after all 4 players have left. There will always be at least 1 player seated at the table.
 
+}
+function robotAction(action,room) {
+    //Takes the action automatically IF and only IF the robot is supposed to
+}
+function playerAction(action,room) {
+    //Prompts the player to take an action IF and only IF the player is supposed to
+    //Works closely with action callbacks
+}
+
+function aiAction(action,room) {
+    //Uses the AI to take an action IF and only IF the AI is supposed to
 }
 
 function broadcast(message) {
@@ -245,7 +256,7 @@ io.sockets.on('connection', function(socket) {
                 for (let i=0; i<4; i++) {
                     if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
                         players[rooms[players[socketId].room]['players'][i].socket].socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
-                    } else if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.ROBOT && rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn'] == i) {
+                    } else if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.ROBOT && rooms[players[socketId].room]['board']['nextStep'].player == i) {
                         //TODO: Robot and AI interactions
                     }
 
@@ -267,7 +278,7 @@ io.sockets.on('connection', function(socket) {
                 for (let i=0; i<4; i++) {
                     if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
                         players[rooms[players[socketId].room]['players'][i].socket].socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
-                    } else if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.ROBOT && rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn'] == i) {
+                    } else if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.ROBOT && rooms[players[socketId].room]['board']['nextStep'].player == i) {
                         //TODO: Robot and AI interactions
                     }
                 }
