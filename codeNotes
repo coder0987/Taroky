@@ -1,0 +1,79 @@
+This document is for long comments that would otherwise be placed inside of the running code
+This is used to shorten the file length of the code files
+
+## Card Locations (Server)
+
+/*Cards are kept in several locations.
+Between games, cards are kept in room[roomID]['deck']
+At the beginning of the game, cards are dealt out and stored in Players' hands at room[roomID]['players'][i].hand
+Cards are also dealt to the Talon at room[roomID]['board'].talon
+Players then draw cards appropriately and discard. Those cards are stored in room[roomID]['players'][i].discard
+During play, up to 4 cards can be 'on the table' and are stored in rooms[roomID]['board'].table
+During Prever draw, the Prever player may reject the first set of 3 cards from the talon. These cards are stored in rooms[roomID]['board'].preverTalon
+
+Cut Style and significant temporary data that must be stored between actions:
+This info is stored at room[roomID]['board']
+See the Board object declaration above for more info
+
+Public, Private, and Hidden information
+Some information should be accessible by everyone. Some only by certain players. Some only by this server instance.
+Public information:
+- nextAction
+- cutStyle
+- Called point cards
+- Called I on the end
+- Called valat
+- Called contra (and number of contras)
+- Cards on the table
+- Most recent trick in discard
+- Player chip count
+
+Private information:
+- player hands
+- preverTalon (prever can see it)
+
+Hidden information:
+- Deck
+- Talon
+- Discard
+- player info such as id
+
+Action / NextStep:
+- Player | A number based on the seating location of the player | 0,1,2,3
+- Action | The action the player must take | start,shuffle,cut,deal, etc.
+- Time   | The time in millis the action took place | Date.now()
+- These are used for later reference in taking actions, especially in action verification. The time is used for timeouts, allowing disconnected players to continue without input and preventing trolls from blocking rooms
+
+*/
+
+## Action Flow (Server)
+
+
+/*
+Action taking flow:
+    The first action of every game is START
+    The second action is SHUFFLE
+    The third is CUT
+    ETC.
+    The first action defaults to player 0 (the first player to join, usually the host)
+    The action's player is changed to the host whenever the game is not started and the host is not player 0
+    The host starts the game by pressing start
+    The game starts and the second action is *prompted*
+    This second action is always SHUFFLE and always goes back to the host
+    The prompt originates in the START callback socket.on('startGame'
+    The callback then asks the player handler (one of the below action functions) to take the action and inform the room's players
+    If the player action belongs to a human, the handler will instead inform the players of which action is necessary
+    The generic ACTION callback socket.on('action' is used for **all** subsequent actions, whether shuffling cutting or otherwise taking an action
+    This generic ACTION callback will handle all player actions, then inform the handlers based on the taken action
+    Flowchart:
+
+    START (player) -> START callback (server) {IH} -> player action handler (server) -> takeAction SHUFFLE (player) -> ACTION callback SHUFFLE (server) -> player action handler (server) {IH}
+
+    {IH} means inform humans and represents a loop that informs each human in the room by sending a message
+
+    This can easily and flexibly be expanded to encapsulate the entire game.
+    However, an issue arises when you account for bot-taken actions since bots do not have the generic ACTION callback.
+    This is solved by creating a generic ACTION callback for all three (seen below) which is called directly by the ACTION callback
+    Whenever a robot or AI takes an action, it will *always* call on the actionCallback function
+    Every single action must be completed with a call to the action callback function, the only exception being the START action at the beginning of each game
+*/

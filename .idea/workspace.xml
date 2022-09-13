@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds deck cut and begins robot action outline">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds outline for new action interface">
+      <change afterPath="$PROJECT_DIR$/codeNotes" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
     </list>
@@ -210,7 +211,14 @@
       <option name="project" value="LOCAL" />
       <updated>1661987377856</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="Adds outline for new action interface">
+      <created>1662939066781</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1662939066781</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -247,6 +255,7 @@
     <MESSAGE value="Adds a TODO file" />
     <MESSAGE value="Corrects incorrect file names" />
     <MESSAGE value="Adds deck cut and begins robot action outline" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adds deck cut and begins robot action outline" />
+    <MESSAGE value="Adds outline for new action interface" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds outline for new action interface" />
   </component>
 </project>

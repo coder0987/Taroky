@@ -75,8 +75,9 @@ for (let s=0;s<4;s++)
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];}
-function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.nextStep={player:'host',action:'start',time:Date.now()};this.cutStyle='';}
+function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.nextStep={player:0,action:'start',time:Date.now()};this.cutStyle='';}
 function shuffleDeck(deck,shuffleType) {
+    //TODO: Create actual shuffling functions
     let tempDeck=[...deck];
     switch (shuffleType) {
         case 1: /*cut*/     return tempDeck;
@@ -85,61 +86,57 @@ function shuffleDeck(deck,shuffleType) {
         default: return [...tempDeck];
     }
 }
-/*Cards are kept in several locations.
-Between games, cards are kept in room[roomID]['deck']
-At the beginning of the game, cards are dealt out and stored in Players' hands at room[roomID]['players'][i].hand
-Cards are also dealt to the Talon at room[roomID]['board'].talon
-Players then draw cards appropriately and discard. Those cards are stored in room[roomID]['players'][i].discard
-During play, up to 4 cards can be 'on the table' and are stored in rooms[roomID]['board'].table
-During Prever draw, the Prever player may reject the first set of 3 cards from the talon. These cards are stored in rooms[roomID]['board'].preverTalon
-
-Cut Style and significant temporary data that must be stored between actions:
-This info is stored at room[roomID]['board']
-See the Board object declaration above for more info
-
-Public, Private, and Hidden information
-Some information should be accessible by everyone. Some only by certain players. Some only by this server instance.
-Public information:
-- nextAction
-- cutStyle
-- Called point cards
-- Called I on the end
-- Called valat
-- Called contra (and number of contras)
-- Cards on the table
-- Most recent trick in discard
-- Player chip count
-
-Private information:
-- player hands
-- preverTalon (prever can see it)
-
-Hidden information:
-- Deck
-- Talon
-- Discard
-- player info such as id
-*/
+//SEE Card Locations in codeNotes
+//SEE Action Flow in codeNotes
 
 // @PARAM nextAction, room NOT ROOMID
-function autoAction(action,room) {
+function autoAction(action,room,pn) {
     //This function will complete ANY action that a player is otherwise expected to complete
     //When called, this function will complete the action regardless of whether a player should be tasked with completing it
     //This is useful for player TIMEOUT, or when a player takes too long to complete an action
     //This will also be used when less than 4 players are seated at a table, or when a player leaves after the game has begun
-    //Note: the game will NEVER continue after all 4 players have left. There will always be at least 1 player seated at the table.
+    //Note: the game will NEVER continue after all 4 players have left. There will always be at least 1 human player seated at the table.
 
 }
-function robotAction(action,room) {
+
+function robotAction(action,room,pn) {
     //Takes the action automatically IF and only IF the robot is supposed to
+    if (action.player == pn) {
+
+    }
 }
-function playerAction(action,room) {
+function playerAction(action,room,pn) {
     //Prompts the player to take an action IF and only IF the player is supposed to
     //Works closely with action callbacks
 }
 
-function aiAction(action,room) {
+function aiAction(action,room,pn) {
     //Uses the AI to take an action IF and only IF the AI is supposed to
+}
+function actionCallback(action,room,pn) {
+    //This callback will transfer from one action to the next and inform the humans of the action to be taken
+    //In the case that a robot or AI is the required player, this will directly call on the above action handlers
+    //The action is presumed to be verified by it's player takeAction function, not here
+    switch (action.action) {
+        case 'start':
+            console.log('Game is starting in room ' + room.name);
+            action.action = 'shuffle';
+            action.player = pn;//PN does not change because the same person starts and shuffles
+            players[room['players'][pn].socket].socket.emit('shuffle');
+            //TODO: Robot and AI interactions
+            for (let i=0; i<4; i++) {
+                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                    players[room['players'][i].socket].socket.emit('startingGame',room.host,i);//Inform the players of game beginning. Host is assumed to be shuffler.
+                }
+            }
+            break;
+    }
+    action.time = Date.now();
+    for (let i=0; i<4; i++) {
+        if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+            players[room['players'][i].socket].socket.emit('nextAction',action);
+        }
+    }
 }
 
 function broadcast(message) {
@@ -219,17 +216,7 @@ io.sockets.on('connection', function(socket) {
     socket.on('startGame',function(){
         if (rooms[players[socketId].room]['host']==socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
             //Start the game
-            console.log('Game is starting in room ' + players[socketId].room);
-            rooms[players[socketId].room]['board']['nextStep'].action = 'shuffle';
-            rooms[players[socketId].room]['board']['nextStep'].player = players[socketId]['pn'];
-            rooms[players[socketId].room]['board']['nextStep'].time = Date.now();
-            for (let i=0; i<4; i++) {
-                if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
-                    players[rooms[players[socketId].room]['players'][i].socket].socket.emit('startingGame',rooms[players[socketId].room['host']],i);//Inform the players of game beginning. Host is assumed to be shuffler.
-                }
-                //TODO: Robot and AI interactions
-            }
-            socket.emit('shuffle');
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], players[socketId].pn);
         } else {
             console.warn('Failed attempt to start the game in room ' + players[socketId].room + ' by player ' + socketId);
             if (rooms[players[socketId].room]['host']==socketId) {
@@ -243,6 +230,7 @@ io.sockets.on('connection', function(socket) {
         }
     });
     socket.on('shuffle', function(type, again) {
+        //TODO: USE THE ACTION CALLBACK RATHER THAN AN ACTION-SPECIFIC INTERFACE
         if (!rooms[players[socketId].room]) {return;}
         if (rooms[players[socketId].room]['board']['nextStep'].action=='shuffle' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
             if (type > 0 && type < 4) {
@@ -267,6 +255,7 @@ io.sockets.on('connection', function(socket) {
         }
     });
     socket.on('cut', function(style) {
+        //TODO: USE THE ACTION CALLBACK RATHER THAN AN ACTION-SPECIFIC INTERFACE
         if (!rooms[players[socketId].room]) {return;}
             if (rooms[players[socketId].room]['board']['nextStep'].action=='cut' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
                 if (style=='Cut') rooms[players[socketId].room]['deck'] = shuffleDeck(rooms[players[socketId].room]['deck'],1);
@@ -304,9 +293,9 @@ function tick() {
             }
         }
         if (Object.keys(rooms).length == 0) {
-            rooms['Main'] = {'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
+            rooms['Main'] = {'name':'Main','host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
         } else if (numEmptyRooms() == 0) {
-            rooms[Object.keys(rooms).length] = {'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
+            rooms[Object.keys(rooms).length] = {'name':Object.keys(rooms).length,'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
         }
         simplifiedRooms = {};
         for (let i in rooms) {
