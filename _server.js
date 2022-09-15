@@ -75,7 +75,7 @@ for (let s=0;s<4;s++)
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];}
-function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.nextStep={player:0,action:'start',time:Date.now()};this.cutStyle='';}
+function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.nextStep={player:0,action:'start',time:Date.now(),info:null};this.cutStyle='';}
 function shuffleDeck(deck,shuffleType) {
     //TODO: Create actual shuffling functions
     let tempDeck=[...deck];
@@ -102,39 +102,103 @@ function autoAction(action,room,pn) {
 function robotAction(action,room,pn) {
     //Takes the action automatically IF and only IF the robot is supposed to
     if (action.player == pn) {
-
+        //TODO: stuff
+        for (let i=0; i<4; i++) {
+            if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                players[room['players'][i].socket].socket.emit('nextAction',action);
+            }
+        }
     }
 }
 function playerAction(action,room,pn) {
     //Prompts the player to take an action IF and only IF the player is supposed to
     //Works closely with action callbacks
+    switch (action.action) {
+        case 'shuffle':
+            //Do nothing, because its all taken care of by the generic action sender/informer at the end
+            break;
+        default:
+            console.log('Unknown action: ' + action.action);
+            console.trace();
+    }
+    for (let i=0; i<4; i++) {
+        if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+            players[room['players'][i].socket].socket.emit('nextAction',action);
+        }
+    }
 }
 
 function aiAction(action,room,pn) {
     //Uses the AI to take an action IF and only IF the AI is supposed to
+    console.warn('AI not implemented yet!!');
+    console.trace();
+
+    for (let i=0; i<4; i++) {
+        if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+            players[room['players'][i].socket].socket.emit('nextAction',action);
+        }
+    }
 }
 function actionCallback(action,room,pn) {
     //This callback will transfer from one action to the next and inform the humans of the action to be taken
     //In the case that a robot or AI is the required player, this will directly call on the above action handlers
     //The action is presumed to be verified by it's player takeAction function, not here
+    if (!room || !action) {
+        console.warn('Illegal actionCallback: ' + JSON.stringify(room) + ' \n\n ' + JSON.stringify(action) + ' \n\n ' + pn);
+        console.trace();
+        return;
+    }
+    let playerType = room['players'][pn].type;
+    let actionTaken = false;
     switch (action.action) {
         case 'start':
             console.log('Game is starting in room ' + room.name);
             action.action = 'shuffle';
             action.player = pn;//PN does not change because the same person starts and shuffles
-            players[room['players'][pn].socket].socket.emit('shuffle');
-            //TODO: Robot and AI interactions
             for (let i=0; i<4; i++) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                    //Starting the game is a special case. In all other cases, actions completed will inform the players through the take action methods
                     players[room['players'][i].socket].socket.emit('startingGame',room.host,i);//Inform the players of game beginning. Host is assumed to be shuffler.
                 }
             }
+            actionTaken = true;
             break;
+        case 'shuffle':
+            const type = action.info.type;
+            const again = action.info.again;
+            if (type > 0 && type < 4) {
+                //1: cut, 2: riffle, 3: randomize
+                room['deck'] = shuffleDeck(room['deck'],type);
+            }
+            if (!again) {
+                action.action='cut';
+                action.player=(pn+3)%4;//The player before the dealer must cut, then the dealer must deal
+                actionTaken = true;
+            }
+            break;
+        case 'cut':
+            const style = action.info.style;
+            if (style=='Cut') room['deck'] = shuffleDeck(room['deck'],1);
+            action.action='deal';
+            action.player=(players[socketId]['pn']+1)%4;//The player after the cutter must deal
+            room['board']['cutStyle'] = style;//For the dealer
+            actionTaken = true;
+            break;
+        default:
+            console.warn('Unrecognized actionCallback: ' + action.action);
+            console.trace();
     }
-    action.time = Date.now();
-    for (let i=0; i<4; i++) {
-        if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-            players[room['players'][i].socket].socket.emit('nextAction',action);
+    if (actionTaken) {
+        action.time = Date.now();
+        playerType = room['players'][action.player].type;
+
+        //Prompt the next action
+        if (playerType == PLAYER_TYPE.HUMAN) {
+            playerAction(action,room,action.player);
+        } else if (playerType == PLAYER_TYPE.ROBOT) {
+            robotAction(action,room,action.player);
+        } else if (playerType == PLAYER_TYPE.AI) {
+            aiAction(action,room,action.player);
         }
     }
 }
@@ -230,47 +294,19 @@ io.sockets.on('connection', function(socket) {
         }
     });
     socket.on('shuffle', function(type, again) {
-        //TODO: USE THE ACTION CALLBACK RATHER THAN AN ACTION-SPECIFIC INTERFACE
         if (!rooms[players[socketId].room]) {return;}
-        if (rooms[players[socketId].room]['board']['nextStep'].action=='shuffle' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
-            if (type > 0 && type < 4) {
-                //1: cut, 2: riffle, 3: randomize
-                rooms[players[socketId].room]['deck'] = shuffleDeck(rooms[players[socketId].room]['deck'],type);
-            }
-            if (!again) {
-                rooms[players[socketId].room]['board']['nextStep'].action='cut';
-                rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn']+3)%4;//The player before the dealer must cut, then the dealer must deal
-                rooms[players[socketId].room]['board']['nextStep'].time=Date.now();
-                for (let i=0; i<4; i++) {
-                    if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
-                        players[rooms[players[socketId].room]['players'][i].socket].socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
-                    } else if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.ROBOT && rooms[players[socketId].room]['board']['nextStep'].player == i) {
-                        //TODO: Robot and AI interactions
-                    }
-
-                }
-            }
+        if (rooms[players[socketId].room]['board']['nextStep'].action==='shuffle' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info = {type:type,again:again};
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'],rooms[players[socketId].room],rooms[players[socketId].room]['board']['nextStep'].player);
         } else {
             console.warn('Illegal shuffle attempt in room ' + players[socketId].room + ' by player ' + socketId);
         }
     });
     socket.on('cut', function(style) {
-        //TODO: USE THE ACTION CALLBACK RATHER THAN AN ACTION-SPECIFIC INTERFACE
         if (!rooms[players[socketId].room]) {return;}
             if (rooms[players[socketId].room]['board']['nextStep'].action=='cut' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
-                if (style=='Cut') rooms[players[socketId].room]['deck'] = shuffleDeck(rooms[players[socketId].room]['deck'],1);
-
-                rooms[players[socketId].room]['board']['nextStep'].action='deal';
-                rooms[players[socketId].room]['board']['nextStep'].player=(players[socketId]['pn']+1)%4;//The player after the cutter must deal
-                rooms[players[socketId].room]['board']['nextStep'].time=Date.now();
-                rooms[players[socketId].room]['board']['cutStyle'] = style;//For the dealer
-                for (let i=0; i<4; i++) {
-                    if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
-                        players[rooms[players[socketId].room]['players'][i].socket].socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
-                    } else if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.ROBOT && rooms[players[socketId].room]['board']['nextStep'].player == i) {
-                        //TODO: Robot and AI interactions
-                    }
-                }
+                rooms[players[socketId].room]['board']['nextStep'].info.style = style;
+                actionCallback(rooms[players[socketId].room]['board']['nextStep'],rooms[players[socketId].room],rooms[players[socketId].room]['board']['nextStep'].player);
             }
     });
 });

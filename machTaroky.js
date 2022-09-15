@@ -175,6 +175,24 @@ window.onload = () => {
     socket.on('nextAction', function(action) {
         if (action.player == playerNumber) {
             switch (action.action) {
+                case 'shuffle':
+                    addMessage('You are shuffling.');
+                    createCardBack(document.getElementById('center'));
+                    document.getElementById('centerCardBack').addEventListener('mouseenter',function() {
+                        addMessage('Shuffling...');
+                    });
+                    document.getElementById('centerCardBack').addEventListener('mousemove',function() {
+                        //Shuffle the cards
+                        addMessage('.');
+                        socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
+                    });
+                    document.getElementById('centerCardBack').addEventListener('mouseleave',function() {
+                        let toRemove = document.getElementById('centerCardBack');
+                        document.getElementById('center').removeChild(toRemove);
+                        addMessage('Shuffled!');
+                        socket.emit('shuffle',0,false);
+                    });
+                    break;
                 case 'cut':
                     cut();
                     break;
@@ -184,24 +202,6 @@ window.onload = () => {
         } else {
             addMessage('Player ' + action.player + ' is performing the action ' + action.action);
         }
-    });
-    socket.on('shuffle', function() {
-        addMessage('You are shuffling.');
-        createCardBack(document.getElementById('center'));
-        document.getElementById('centerCardBack').addEventListener('mouseenter',function() {
-            addMessage('Shuffling...');
-        });
-        document.getElementById('centerCardBack').addEventListener('mousemove',function() {
-            //Shuffle the cards
-            addMessage('.');
-            socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
-        });
-        document.getElementById('centerCardBack').addEventListener('mouseleave',function() {
-            let toRemove = document.getElementById('centerCardBack');
-            document.getElementById('center').removeChild(toRemove);
-            addMessage('Shuffled!');
-            socket.emit('shuffle',0,false);
-        });
     });
 }
 
