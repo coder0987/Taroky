@@ -239,6 +239,11 @@ io.sockets.on('connection', function(socket) {
                     }
                 }
             }
+            if (rooms[players[socketId].room]['playerCount'] == 0) {
+                //Delete the room
+                delete rooms[players[socketId].room];
+                console.log('Stopped empty game in room ' + players[socketId].room);
+            }
         }
         delete players[socketId];
         delete SOCKET_LIST[socketId];
@@ -289,7 +294,6 @@ io.sockets.on('connection', function(socket) {
                 socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
             } else {
                 console.warn('Player is not the host. The host is ' + rooms[players[socketId].room]['host']);
-                console.warn('Player info: ' + JSON.stringify(rooms[players[socketId].room][players[socketId].pn]));
             }
         }
     });
@@ -331,7 +335,9 @@ function tick() {
         if (Object.keys(rooms).length == 0) {
             rooms['Main'] = {'name':'Main','host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
         } else if (numEmptyRooms() == 0) {
-            rooms[Object.keys(rooms).length] = {'name':Object.keys(rooms).length,'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
+            let i = 1;
+            for (; rooms[i]; i++) {}
+            rooms[i] = {'name':Object.keys(rooms).length,'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
         }
         simplifiedRooms = {};
         for (let i in rooms) {
