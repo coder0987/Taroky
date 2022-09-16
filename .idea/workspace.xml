@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Transfers start, shuffle, and cut to the generic actionCallback">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Fixes preemptive room replacement issue">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -231,7 +232,14 @@
       <option name="project" value="LOCAL" />
       <updated>1663200723916</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="Fixes preemptive room replacement issue">
+      <created>1663286337586</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1663286337586</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -271,6 +279,7 @@
     <MESSAGE value="Adds outline for new action interface" />
     <MESSAGE value="Adds the generic action callback and notes outlining how actions will be taken" />
     <MESSAGE value="Transfers start, shuffle, and cut to the generic actionCallback" />
-    <option name="LAST_COMMIT_MESSAGE" value="Transfers start, shuffle, and cut to the generic actionCallback" />
+    <MESSAGE value="Fixes preemptive room replacement issue" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixes preemptive room replacement issue" />
   </component>
 </project>
