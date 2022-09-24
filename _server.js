@@ -53,7 +53,7 @@ app.get('/',function(req, res) {
 });
 app.use('/client',express.static(__dirname + '/client'));
 
-console.log("Listening on port 8080 (Accessible at http://localhost:8080/ )");
+console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
 
 
 //SOCKETS
@@ -500,4 +500,4 @@ function tick() {
 let interval = setInterval(tick,1000/30.0);//30 FPS
 
 //Begin listening
-server.listen(8080);
+server.listen(8442);
