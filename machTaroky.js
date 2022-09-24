@@ -47,7 +47,7 @@ function generateDeck() {
 function isInHand(element) {
     if (element) {
         for (let i in hand) {
-            if (element.id == hand[i].value + hand[i].suit) return true;
+            if (element.id == hand[i][0].value + hand[i][0].suit) return true;
         }
     }
     return false;
@@ -62,7 +62,7 @@ function drawHand() {
         if (!isInHand(child)) {child.hidden = true;divDeck.appendChild(child);}
     }
     for (let i in hand) {
-        let card = document.getElementById(hand[i].value + hand[i].suit);
+        let card = document.getElementById(hand[i][0].value + hand[i][0].suit);
         divHand.appendChild(card);
         card.hidden = false;
     }
@@ -136,6 +136,11 @@ window.onload = () => {
     });
     socket.on('returnHand', function(returnHand) {
         hand = returnHand;
+        if (hand.length > 0) {
+            let handString = '';
+            for (let i in hand) {handString += hand[i][0].value + ' of ' + hand[i][0].suit + ', ';}
+            addMessage('Your hand is: ' + handString.substring(0,handString.length - 2));
+        }
         drawHand();
     });
     socket.on('returnDeck', function(returnDeck) {
@@ -215,6 +220,10 @@ window.onload = () => {
                     document.getElementById('center').appendChild(goPrever);
                     document.getElementById('center').appendChild(noPrever);
                     break;
+                case 'drawTalon':
+                    addMessage('You are drawing cards from the talon.');
+                    socket.emit('drawTalon');
+                    break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }
@@ -241,6 +250,8 @@ function appendButton(elementId, theRoomID){
 	document.getElementById(elementId).appendChild(bDiv);
     bDiv.appendChild(button);
 }
+
+function ping() {socket.emit('currentAction');}//Debug function
 
 function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (a[i].count != b[i].count) {return false;}}return true;}
 

@@ -62,7 +62,7 @@ const SOCKET_LIST = {};
 const players = {};
 const rooms = {};
 const PLAYER_TYPE = {HUMAN: 0,ROBOT: 1,AI: 2,H: 0,R: 1};
-const SUIT = {0: 'Spades',1: 'Clubs',2: 'Hearts',3: 'Diamonds',4: 'Trump'};
+const SUIT = {0: 'Spade',1: 'Club',2: 'Heart',3: 'Diamond',4: 'Trump'};
 const RED_VALUE = {0: 'Ace',1: 'Two',2: 'Three',3: 'Four',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const BLACK_VALUE = {0: 'Seven',1: 'Eight',2: 'Nine',3: 'Ten',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz'};
@@ -113,6 +113,8 @@ function robotAction(action,room,pn) {
             case 'prever':
                 action.action = 'passPrever';
                 break;
+            case 'drawTalon':
+                break;
             default:
                 console.warn('Unknown robot action: ' + action.action);
         }
@@ -132,6 +134,10 @@ function playerAction(action,room,pn) {
             //Do nothing, because its all taken care of by the generic action sender/informer at the end
         case 'cut':
         case 'deal':
+        case 'prever':
+        case 'callPrever':
+        case 'passPrever':
+        case 'drawTalon':
             break;
         default:
             console.log('Unknown action: ' + action.action);
@@ -167,6 +173,9 @@ function actionCallback(action,room,pn) {
     let playerType = room['players'][pn].type;
     let actionTaken = false;
     let style;
+
+    console.log('Action taken: ' + action.player + ' took action ' + action.action + ' with info ' + JSON.stringify(action.info) + ' in room ' + room.name);
+
     switch (action.action) {
         case 'start':
             console.log('Game is starting in room ' + room.name);
@@ -245,35 +254,44 @@ function actionCallback(action,room,pn) {
             action.player = room['board'].povenost;
             actionTaken = true;
             break;
+        case 'prever':
+            break;//ignore this
         case 'callPrever':
+            console.warn('prever doesn\'t work yet');
             //TODO: Prever
             break;
         case 'passPrever':
             action.player = (action.player+1)%4;
             if (action.player == room['board'].povenost) {
                 action.action = 'drawTalon';
+            } else {
+                action.action = 'prever';
             }
             actionTaken = true;
             break;
         case 'drawTalon':
             if (action.player == room['board'].povenost) {
-                room['players'][action.player].hand.push(room['board'].talon.splice(0,1));
-                room['players'][action.player].hand.push(room['board'].talon.splice(0,1));
-                room['players'][action.player].hand.push(room['board'].talon.splice(0,1));
-                room['players'][action.player].hand.push(room['board'].talon.splice(0,1));
+                room['players'][action.player].hand.push(room['board'].talon.splice(0,1)[0]);
+                room['players'][action.player].hand.push(room['board'].talon.splice(0,1)[0]);
+                room['players'][action.player].hand.push(room['board'].talon.splice(0,1)[0]);
+                room['players'][action.player].hand.push(room['board'].talon.splice(0,1)[0]);
                 action.player = (action.player+1)%4;
+                actionTaken = true;
             } else {
-                room['players'][action.player].hand.push(room['board'].talon.splice(0,1));
+                room['players'][action.player].hand.push(room['board'].talon.splice(0,1)[0]);
                 if (action.player == (room['board'].povenost+2)%4) {
                     action.player = room['board'].povenost;
                     action.action = 'discard';
+                    actionTaken = true;
                 } else {
                     action.player = (action.player+1)%4;
+                    actionTaken = true;
                 }
             }
             break;
         case 'drawPreverTalon':
             //TODO: Prever talon
+            console.warn('Prever doen\'t work yet');
             break;
         case 'discard':
             room['players'][action.player].hand.splice(action.info.card,1);
@@ -297,6 +315,7 @@ function actionCallback(action,room,pn) {
 
         //Prompt the next action
         if (playerType == PLAYER_TYPE.HUMAN) {
+            players[room['players'][action.player].socket].socket.emit('returnHand',room['players'][action.player].hand);
             playerAction(action,room,action.player);
         } else if (playerType == PLAYER_TYPE.ROBOT) {
             robotAction(action,room,action.player);
@@ -304,6 +323,7 @@ function actionCallback(action,room,pn) {
             aiAction(action,room,action.player);
         }
     }
+    action.info = {};
 }
 
 function broadcast(message) {
@@ -385,6 +405,11 @@ io.sockets.on('connection', function(socket) {
         }
         if (!connected) socket.emit('roomNotConnected',roomID);
     });
+    socket.on('currentAction',function() {
+        if (rooms[players[socketId].room]) {
+            socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
+        }
+    });
     socket.on('startGame', function() {
         if (!rooms[players[socketId].room]) {return;}
         if (rooms[players[socketId].room]['host']==socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
@@ -422,12 +447,19 @@ io.sockets.on('connection', function(socket) {
         }
     });
     socket.on('goPrever', function() {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action=='deal' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action=='prever' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].action = 'callPrever';
             actionCallback(rooms[players[socketId].room]['board']['nextStep'],rooms[players[socketId].room],rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('noPrever', function() {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action=='deal' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action=='prever' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].action = 'passPrever';
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'],rooms[players[socketId].room],rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('drawTalon', function() {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action=='drawTalon' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'],rooms[players[socketId].room],rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });

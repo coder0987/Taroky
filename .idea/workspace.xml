@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Fixes preemptive room replacement issue">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds cut, deal, goPrever, noPrever, drawTalon, and discard">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
@@ -239,7 +239,14 @@
       <option name="project" value="LOCAL" />
       <updated>1663286337586</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Adds cut, deal, goPrever, noPrever, drawTalon, and discard">
+      <created>1663290575938</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1663290575938</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -255,7 +262,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Title" />
     <MESSAGE value="Server.js file added" />
     <MESSAGE value="Adds board initialization and other fundamental structures" />
     <MESSAGE value="Adds multiplayer scalability and functionality using sockets" />
@@ -280,6 +286,7 @@
     <MESSAGE value="Adds the generic action callback and notes outlining how actions will be taken" />
     <MESSAGE value="Transfers start, shuffle, and cut to the generic actionCallback" />
     <MESSAGE value="Fixes preemptive room replacement issue" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes preemptive room replacement issue" />
+    <MESSAGE value="Adds cut, deal, goPrever, noPrever, drawTalon, and discard" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds cut, deal, goPrever, noPrever, drawTalon, and discard" />
   </component>
 </project>
