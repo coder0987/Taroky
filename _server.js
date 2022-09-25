@@ -82,7 +82,7 @@ function shuffleDeck(deck,shuffleType) {
     switch (shuffleType) {
         case 1: /*cut*/     return tempDeck;
         case 2: /*riffle*/  return tempDeck;
-        case 3: /*randomize*/return tempDeck;
+        case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
     }
 }
@@ -308,6 +308,7 @@ function actionCallback(action,room,pn) {
             console.warn('Unrecognized actionCallback: ' + action.action);
             console.trace();
     }
+    action.info = {};
     if (actionTaken) {
         if (action.player > 3 || action.player < 0) console.log(action.action);
         action.time = Date.now();
@@ -323,7 +324,6 @@ function actionCallback(action,room,pn) {
             aiAction(action,room,action.player);
         }
     }
-    action.info = {};
 }
 
 function broadcast(message) {
