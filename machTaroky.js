@@ -16,6 +16,7 @@ let connectingToRoom = false;
 let inGame = false;
 let playerNumber = -1;
 let hostNumber = -1;
+let currentAction;
 let baseDeck = [];
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
@@ -47,13 +48,21 @@ function generateDeck() {
 function isInHand(element) {
     if (element) {
         for (let i in hand) {
-            if (element.id == hand[i][0].value + hand[i][0].suit) return true;
+            if (element.id == hand[i].value + hand[i].suit) return true;
         }
     }
     return false;
 }
 
-function drawHand() {
+function enter() {if (this.style.filter == '') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
+function exit() {this.classList.remove('image-hover-highlight');}
+function clickCard() {if (this.style.filter == '') {discardThis(this.suit,this.value);this.hidden=true;}}
+function discardThis(cardSuit,cardValue) {
+    addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
+   socket.emit('discard',{'suit':cardSuit,'value':cardValue});
+}
+
+function drawHand(withGray) {
     let divHand = document.getElementById('hand');
     let divDeck = document.getElementById('deck');
     let returnToDeck = divHand.children;
@@ -62,9 +71,42 @@ function drawHand() {
         if (!isInHand(child)) {child.hidden = true;divDeck.appendChild(child);}
     }
     for (let i in hand) {
-        let card = document.getElementById(hand[i][0].value + hand[i][0].suit);
+        let card = document.getElementById(hand[i].value + hand[i].suit);
+        card.suit = hand[i].suit;
+        card.value = hand[i].value;
+        if (withGray) {
+            if (hand[i].grayed) {
+                addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
+                card.style.filter = 'grayscale(1)';
+            } else {
+                card.style.filter = '';
+            }
+            card.removeEventListener('mouseenter',enter);//don't want to double-up on events
+            card.removeEventListener('mouseleave',exit);
+            card.removeEventListener('click',clickCard);
+            card.addEventListener('mouseenter', enter);
+            card.addEventListener('mouseleave', exit);
+            card.addEventListener('click',clickCard);
+        } else {
+            card.style.filter = '';
+            card.removeEventListener('mouseenter',enter);
+            card.removeEventListener('mouseleave',exit);
+            card.removeEventListener('click',clickCard);
+            card.title = '';
+        }
         divHand.appendChild(card);
         card.hidden = false;
+    }
+}
+
+function emptyHand() {
+    let divHand = document.getElementById('hand');
+    let divDeck = document.getElementById('deck');
+    let returnToDeck = divHand.children;
+    for (let i=returnToDeck.length-1; i>=0; i--) {
+        let child = returnToDeck[i];
+        child.hidden = true;
+        divDeck.appendChild(child);
     }
 }
 
@@ -134,14 +176,14 @@ window.onload = () => {
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
     });
-    socket.on('returnHand', function(returnHand) {
+    socket.on('returnHand', function(returnHand,withGray) {
         hand = returnHand;
         if (hand.length > 0) {
             let handString = '';
-            for (let i in hand) {handString += hand[i][0].value + ' of ' + hand[i][0].suit + ', ';}
+            for (let i in hand) {handString += hand[i].value + ' of ' + hand[i].suit + ', ';}
             addMessage('Your hand is: ' + handString.substring(0,handString.length - 2));
         }
-        drawHand();
+        drawHand(withGray);
     });
     socket.on('returnDeck', function(returnDeck) {
         deck = returnDeck;
@@ -178,6 +220,7 @@ window.onload = () => {
         addMessage('You are player ' + (pN+1));
     });
     socket.on('nextAction', function(action) {
+        currentAction = action;
         if (action.player == playerNumber) {
             switch (action.action) {
                 case 'shuffle':
@@ -224,12 +267,18 @@ window.onload = () => {
                     addMessage('You are drawing cards from the talon.');
                     socket.emit('drawTalon');
                     break;
+                case 'discard':
+                    addMessage('You are discarding. Choose a card to discard.');
+                    break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }
         } else {
             addMessage('Player ' + action.player + ' is performing the action ' + action.action);
         }
+    });
+    socket.on('failedDiscard',function(toDiscard) {
+        addError('Failed to discard the ' + toDiscard.value + ' of ' + toDiscard.suit);
     });
 }
 

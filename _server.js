@@ -115,6 +115,25 @@ function robotAction(action,room,pn) {
                 break;
             case 'drawTalon':
                 break;
+            case 'discard':
+                let hand = room['players'][pn].hand;//linked. Changing one will change the other.
+                let hasNonTrump = false;
+                for (let i in hand) {
+                    if (hand[i].suit != 'Trump') {
+                        hasNonTrump = true;
+                        break;
+                    }
+                }
+                for (let i in hand) {
+                    if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
+                        hand[i].grayed = true;
+                    } else {
+                        hand[i].grayed = false;
+                        action.info.card = hand[i];//A terrible approach to discarding. First available card is ditched.
+                        break;
+                    }
+                }
+                break;
             default:
                 console.warn('Unknown robot action: ' + action.action);
         }
@@ -138,6 +157,24 @@ function playerAction(action,room,pn) {
         case 'callPrever':
         case 'passPrever':
         case 'drawTalon':
+            break;
+        case 'discard':
+            let hand = room['players'][pn].hand;//linked. Changing one will change the other.
+            let hasNonTrump = false;
+            for (let i in hand) {
+                if (hand[i].suit != 'Trump') {
+                    hasNonTrump = true;
+                    break;
+                }
+            }
+            for (let i in hand) {
+                if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
+                    hand[i].grayed = true;
+                } else {
+                    hand[i].grayed = false;
+                }
+            }
+            players[room['players'][pn].socket].socket.emit('returnHand',hand,true);
             break;
         default:
             console.log('Unknown action: ' + action.action);
@@ -213,22 +250,22 @@ function actionCallback(action,room,pn) {
         case 'deal':
             style = room['board']['cutStyle'];
             if (!style) style = 'Cut';
-            for (let i=0; i<6; i++) room['board'].talon[i] = room['deck'].splice(0,1);
+            for (let i=0; i<6; i++) room['board'].talon[i] = room['deck'].splice(0,1)[0];
             switch (style) {
                 case '1':
-                    for (let i=0; room['deck'][0]; i = (i+1)%4) {room['players'][i].hand.push(room['deck'].splice(0,1));}
+                    for (let i=0; room['deck'][0]; i = (i+1)%4) {room['players'][i].hand.push(room['deck'].splice(0,1)[0]);}
                     break;
                 case '2':
-                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<2;c++)room['players'][i].hand.push(room['deck'].splice(0,1));}
+                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<2;c++)room['players'][i].hand.push(room['deck'].splice(0,1)[0]);}
                     break;
                 case '3':
-                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<3;c++)room['players'][i].hand.push(room['deck'].splice(0,1));}
+                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<3;c++)room['players'][i].hand.push(room['deck'].splice(0,1)[0]);}
                     break;
                 case '4':
-                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<4;c++)room['players'][i].hand.push(room['deck'].splice(0,1));}
+                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<4;c++)room['players'][i].hand.push(room['deck'].splice(0,1)[0]);}
                     break;
                 case '12 Straight':
-                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<12;c++)room['players'][i].hand.push(room['deck'].splice(0,1));}
+                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<12;c++)room['players'][i].hand.push(room['deck'].splice(0,1)[0]);}
                     break;
                 case '12':
                     //TODO: Deal by 12s
@@ -236,12 +273,12 @@ function actionCallback(action,room,pn) {
                 case '345':
                     for (let t=3; t<6; t++) {
                         for (let i=0; i < 4; i++) {
-                            for(let c=0;c<t;c++) room['players'][i].hand.push(room['deck'].splice(0,1));
+                            for(let c=0;c<t;c++) room['players'][i].hand.push(room['deck'].splice(0,1)[0]);
                         }
                     }
                     break;
                 default:
-                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<6;c++)room['players'][i].hand.push(room['deck'].splice(0,1));}
+                    for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<6;c++)room['players'][i].hand.push(room['deck'].splice(0,1)[0]);}
                     //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
             if (room['board'].povenost == -1) {
@@ -294,14 +331,30 @@ function actionCallback(action,room,pn) {
             console.warn('Prever doen\'t work yet');
             break;
         case 'discard':
-            room['players'][action.player].hand.splice(action.info.card,1);
-            actionTaken = true;
-            if (room['players'][action.player].hand.length == 12) {
-                action.player = (action.player+1)%4;
-                if (room['players'][action.player].hand.length == 12) {
-                    action.player = room['board'.povenost];
-                    action.action = 'moneyCards';
+            let card = action.info.card;
+            let discarded = false;
+            if (card && card.suit && card.value) {
+                for (let i in room['players'][pn].hand) {
+                    if (room['players'][pn].hand[i].suit == card.suit && room['players'][pn].hand[i].value == card.value) {
+                        room['players'][pn].hand.splice(i,1);
+                        discarded = true;
+                        break;
+                    }
                 }
+            }
+            if (discarded) {
+                actionTaken = true;
+                if (room['players'][action.player].hand.length == 12) {
+                    action.player = (action.player+1)%4;
+                    if (room['players'][action.player].hand.length == 12) {
+                        action.player = room['board'].povenost;
+                        action.action = 'moneyCards';
+                    }
+                }
+            } else {
+                players[room['players'][pn].socket].socket.emit('failedDiscard',card);
+                console.log('Player ' + pn + ' failed to discard the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
             }
             break;
         default:
@@ -310,13 +363,14 @@ function actionCallback(action,room,pn) {
     }
     action.info = {};
     if (actionTaken) {
-        if (action.player > 3 || action.player < 0) console.log(action.action);
+        if (action.player > 3 || action.player < 0) {console.warn('Illegal player number: ' + action.player + ' during action ' + action.action); action.player %= 4;}
+        if (!room['players'][action.player]) {console.warn('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players']));}
         action.time = Date.now();
         playerType = room['players'][action.player].type;
 
         //Prompt the next action
         if (playerType == PLAYER_TYPE.HUMAN) {
-            players[room['players'][action.player].socket].socket.emit('returnHand',room['players'][action.player].hand);
+            players[room['players'][action.player].socket].socket.emit('returnHand',room['players'][action.player].hand,false);
             playerAction(action,room,action.player);
         } else if (playerType == PLAYER_TYPE.ROBOT) {
             robotAction(action,room,action.player);
@@ -463,6 +517,21 @@ io.sockets.on('connection', function(socket) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'],rooms[players[socketId].room],rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
+    socket.on('discard', function(toDiscard) {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action=='discard' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+            let discarded = false;
+            for (let i in rooms[players[socketId].room]['players'][players[socketId]['pn']].hand) {
+                if (!rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].grayed && rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].suit == toDiscard.suit && rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].value == toDiscard.value) {
+                    rooms[players[socketId].room]['board']['nextStep'].info.card = toDiscard;
+                    discarded = true;
+                    actionCallback(rooms[players[socketId].room]['board']['nextStep'],rooms[players[socketId].room],rooms[players[socketId].room]['board']['nextStep'].player);
+                }
+            }
+            if (!discarded) {
+                players[rooms[players[socketId].room]['players'][players[socketId]['pn']].socket].socket.emit('failedDiscard',toDiscard);
+            }
+        }
+    });
 });
 
 function numEmptyRooms() {let emptyRoomCount = 0;for (let i in rooms) {if (rooms[i].playerCount == 0) emptyRoomCount++;}return emptyRoomCount;}
@@ -483,11 +552,11 @@ function tick() {
             }
         }
         if (Object.keys(rooms).length == 0) {
-            rooms['Main'] = {'name':'Main','host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
+            rooms['Main'] = {'name':'Main','host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck].sort(() => Math.random() - 0.5),'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) {}
-            rooms[i] = {'name':Object.keys(rooms).length,'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck],'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
+            rooms[i] = {'name':Object.keys(rooms).length,'host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck].sort(() => Math.random() - 0.5),'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
         }
         simplifiedRooms = {};
         for (let i in rooms) {

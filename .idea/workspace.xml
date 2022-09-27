@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Fixes everything up to discard. Adds hand display.">
-      <change afterPath="$PROJECT_DIR$/run.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/run.sh" afterDir="false" />
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds proper random shuffling and updates README">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gameplay.md" beforeDir="false" afterPath="$PROJECT_DIR$/gameplay.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/style.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -260,7 +258,14 @@
       <option name="project" value="LOCAL" />
       <updated>1664055204260</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="Adds proper random shuffling and updates README">
+      <created>1664144091448</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1664144091448</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -276,7 +281,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Adds board initialization and other fundamental structures" />
     <MESSAGE value="Adds multiplayer scalability and functionality using sockets" />
     <MESSAGE value="removes canvas in preparation for HTML/CSS-based game rendering" />
     <MESSAGE value="Adds room host and card objects" />
@@ -301,6 +305,7 @@
     <MESSAGE value="Fixes preemptive room replacement issue" />
     <MESSAGE value="Adds cut, deal, goPrever, noPrever, drawTalon, and discard" />
     <MESSAGE value="Fixes everything up to discard. Adds hand display." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes everything up to discard. Adds hand display." />
+    <MESSAGE value="Adds proper random shuffling and updates README" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds proper random shuffling and updates README" />
   </component>
 </project>
