@@ -35,7 +35,7 @@ All player then may declare point cards: (DEFINITELY MISSPELLED - LOOK UP PROPER
     4: Uni (0 taroks)
     2: Honery (pronounced pawn-e or ponnie, 4+ 5-point cards)
     4: Rosa-Honery (all 4 kings)
-    6: Rosa-Honery+ (all 4 kings plus another 5-point card)
+    6: Rosa-Honery+ (all 4 kings plus another 5-point card)  
     2: Trul (Skyz, XXI/Mund, I/Pagat)
 
 Some players now have the opportunity to call Contra (fleck) and/or Pagat (I) on the end
@@ -88,6 +88,13 @@ Whichever team has more points wins
 4. Divide by 10 and round
 5. Add I on the end
 6. Multiply by any multipliers (contra / prever going to the bottom and back up)
+
+Alternatively, counting points is very straight-forward if a player called Valat or if a Valat was achieved:
+
+1. 20 points
+2. Add 10 if playing prever
+3. Double it if valat was called
+4. Contra multipliers
 
 2v2:
 
