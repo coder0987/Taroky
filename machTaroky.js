@@ -28,7 +28,7 @@ for (let v=0;v<22;v++)
 function createCardBack(appendedTo) {
     if (document.getElementById(appendedTo.id + 'CardBack')) {console.error('CardBack already exists at ' + appendedTo.id + 'CardBack');return;}
     let cardBack = document.createElement('img');
-    cardBack.src = '/assets/images/TarokyBack.jpg';
+    cardBack.src = '/assets/default-deck/card-back.png';
     cardBack.id = appendedTo.id + 'CardBack';
     appendedTo.appendChild(cardBack);
     return cardBack;
@@ -131,8 +131,13 @@ function hostRoom() {
     let tools = document.getElementById('host');
     let startGame = document.createElement('button');
     startGame.innerHTML = 'Start Game';
-    startGame.addEventListener('click',function(){this.hidden=true;addMessage('Starting...');socket.emit('startGame');});
+    startGame.addEventListener('click',function(){removeHostTools();addMessage('Starting...');socket.emit('startGame');});
+    //EDIT SETTINGS HERE
     tools.appendChild(startGame);
+}
+
+function removeHostTools() {
+    document.getElementById('host').hidden = true;
 }
 
 function cut() {
@@ -170,7 +175,7 @@ window.onload = () => {
         availableRooms = returnRooms;
         refreshing = false;
         if (!inGame && !checkRoomsEquality(availableRooms,drawnRooms)) {
-            drawnRooms = {};
+            drawnRooms = [];
             document.getElementById('rooms').innerHTML = '';
             for (let i in availableRooms) {
                 createRoomCard('rooms',availableRooms[i],i);

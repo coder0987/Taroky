@@ -399,7 +399,8 @@ io.sockets.on('connection', function(socket) {
     }
 
     socket.on('disconnect', function() {
-        if (!players[socketId]) return;
+        if (!players[socketId]) {return;}
+        console.log('Player ' + socketId + ' disconnected');
         if (~players[socketId].room) {
             rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
             rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
@@ -463,6 +464,11 @@ io.sockets.on('connection', function(socket) {
     });
     socket.on('getRooms',function() {
         socket.emit('returnRooms',simplifiedRooms);
+    });
+    socket.on('settings',function(setting,rule) {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['host'] == socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
+            //Update the game rules
+        }
     });
     socket.on('startGame', function() {
         if (!rooms[players[socketId].room]) {console.log('Player failed to start game');return;}
@@ -547,13 +553,6 @@ function tick() {
                 console.log('Stopped empty game in room ' + i);
             }
         }
-        for(let i in players){
-            if (!~players[i]['room'] && !checkRoomsEquality(players[i].roomsSeen,simplifiedRooms)) {
-                //console.log(JSON.stringify(players[i].roomsSeen) + '\n' + JSON.stringify(simplifiedRooms) + '\n' + checkRoomsEquality(players[i].roomsSeen,simplifiedRooms));
-                players[i]['socket'].emit('returnRooms',simplifiedRooms);
-                players[i].roomsSeen = {...simplifiedRooms};
-            }
-        }
         if (Object.keys(rooms).length == 0) {
             rooms['Main'] = {'name':'Main','host':-1,'board': new Board(),'playerCount':0,'deck':[...baseDeck].sort(() => Math.random() - 0.5),'players':[new Player(PLAYER_TYPE.ROBOT),new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)]};
         } else if (numEmptyRooms() == 0) {
@@ -564,6 +563,13 @@ function tick() {
         simplifiedRooms = {};
         for (let i in rooms) {
             if (rooms[i]) simplifiedRooms[i] = {'count':rooms[i].playerCount}; else console.log('Room ' + i + ' mysteriously vanished: ' + JSON.stringify(rooms[i]));
+        }
+        for(let i in players){
+            if (!~players[i]['room'] && !checkRoomsEquality(players[i].roomsSeen,simplifiedRooms)) {
+                //console.log(JSON.stringify(players[i].roomsSeen) + '\n' + JSON.stringify(simplifiedRooms) + '\n' + checkRoomsEquality(players[i].roomsSeen,simplifiedRooms));
+                players[i]['socket'].emit('returnRooms',simplifiedRooms);
+                players[i].roomsSeen = {...simplifiedRooms};
+            }
         }
         ticking = false;
     }
