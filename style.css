@@ -174,3 +174,8 @@ img {
     -ms-filter: brightness(110%);
     transition: all 0.50s;
 }
+
+.roomCard {
+    border-style: solid;
+    padding-left: 10px;
+}

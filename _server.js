@@ -66,7 +66,7 @@ const SUIT = {0: 'Spade',1: 'Club',2: 'Heart',3: 'Diamond',4: 'Trump'};
 const RED_VALUE = {0: 'Ace',1: 'Two',2: 'Three',3: 'Four',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const BLACK_VALUE = {0: 'Seven',1: 'Eight',2: 'Nine',3: 'Ten',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz'};
-let simplifiedRooms = [];
+let simplifiedRooms = {};
 let ticking = false;
 let baseDeck = [];
 for (let s=0;s<4;s++)
@@ -387,22 +387,19 @@ function broadcast(message) {
 }//Debug function
 
 io.sockets.on('connection', function(socket) {
-    let socketId = Math.random()*1000000000000000000;
-    console.log('Player joined with socketID ' + socketId);
-    SOCKET_LIST[socketId] = socket;
-
-    players[socketId] = {'id':socketId,'pid':-1,'room':-1,'pn':-1,'socket':socket};
-
-    socket.on('instanceCheck', function(playerID) {
-        if (players[socketId]) {
-            let allowed = true;
-            for (let i in players) {
-                if (players[i].pid == playerID) {socket.disconnect();allowed = false;}}
-            if (allowed) {players[socketId].pid = playerID;}
-        } else {socket.emit('recheckInstance');}
-    });
+    let socketId = socket.handshake.auth.token;
+    if (socketId === undefined || +socketId == "NaN" || socketId == 0 || socketId == null) {
+        socket.disconnect();//Illegal socket
+        return;
+    }
+    if (!SOCKET_LIST[socketId]) {
+        SOCKET_LIST[socketId] = socket;
+        players[socketId] = {'id':socketId,'pid':-1,'room':-1,'pn':-1,'socket':socket,'roomsSeen':{}};
+        console.log('Player joined with socketID ' + socketId);
+    }
 
     socket.on('disconnect', function() {
+        if (!players[socketId]) return;
         if (~players[socketId].room) {
             rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
             rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
@@ -464,8 +461,11 @@ io.sockets.on('connection', function(socket) {
             socket.emit('nextAction',rooms[players[socketId].room]['board']['nextStep']);
         }
     });
+    socket.on('getRooms',function() {
+        socket.emit('returnRooms',simplifiedRooms);
+    });
     socket.on('startGame', function() {
-        if (!rooms[players[socketId].room]) {return;}
+        if (!rooms[players[socketId].room]) {console.log('Player failed to start game');return;}
         if (rooms[players[socketId].room]['host']==socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], players[socketId].pn);
         } else {
@@ -535,6 +535,7 @@ io.sockets.on('connection', function(socket) {
 });
 
 function numEmptyRooms() {let emptyRoomCount = 0;for (let i in rooms) {if (rooms[i].playerCount == 0) emptyRoomCount++;}return emptyRoomCount;}
+function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (a[i].count != b[i].count) {return false;}}return true;}
 
 function tick() {
     if (!ticking) {
@@ -547,8 +548,10 @@ function tick() {
             }
         }
         for(let i in players){
-            if (!~players[i]['room']) {
+            if (!~players[i]['room'] && !checkRoomsEquality(players[i].roomsSeen,simplifiedRooms)) {
+                //console.log(JSON.stringify(players[i].roomsSeen) + '\n' + JSON.stringify(simplifiedRooms) + '\n' + checkRoomsEquality(players[i].roomsSeen,simplifiedRooms));
                 players[i]['socket'].emit('returnRooms',simplifiedRooms);
+                players[i].roomsSeen = {...simplifiedRooms};
             }
         }
         if (Object.keys(rooms).length == 0) {

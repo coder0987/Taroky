@@ -117,6 +117,15 @@ function showAllCards() {
         toShow[i].hidden = false;
     }
 }//Debug function
+let refreshing;
+function refresh() {
+    if (!refreshing) {
+        refreshing = true;
+        drawnRooms = {};
+        socket.emit('getRooms');
+        addMessage('Refreshing...');
+    }
+}
 
 function hostRoom() {
     let tools = document.getElementById('host');
@@ -150,23 +159,22 @@ function hasCut() {
 
 window.onload = () => {
     generateDeck();
-    socket = io();
 
-    if (localStorage.getItem('tarokyInstance') == 0)
-        localStorage.setItem('tarokyInstance',Math.random());
+    if (!localStorage.getItem('tarokyInstance'))
+        localStorage.setItem('tarokyInstance',Math.random()*1000000000000000000);
 
-    socket.emit('instanceCheck',localStorage.getItem('tarokyInstance'));
+    socket = io({auth: {token: localStorage.getItem('tarokyInstance')}});
 
-    socket.on('recheckInstance', function() {
-        socket.emit('instanceCheck',localStorage.getItem('tarokyInstance'));
-    });
     socket.on('returnRooms', function(returnRooms) {
+        addMessage('refreshed');
         availableRooms = returnRooms;
-        if (!checkRoomsEquality(availableRooms,drawnRooms)) {
-            drawnRooms = {...availableRooms};
+        refreshing = false;
+        if (!inGame && !checkRoomsEquality(availableRooms,drawnRooms)) {
+            drawnRooms = {};
             document.getElementById('rooms').innerHTML = '';
-            for (let i in drawnRooms) {
-                appendButton('rooms',i);
+            for (let i in availableRooms) {
+                createRoomCard('rooms',availableRooms[i],i);
+                drawnRooms.push(availableRooms[i]);
             }
         }
         if (connectingToRoom) {
@@ -288,16 +296,32 @@ function buttonClick() {
     } else {addError('Already connecting to a room!');}
 }
 
-function appendButton(elementId, theRoomID){
+function createRoomCard(elementId, simplifiedRoom, roomId) {
     const bDiv = document.createElement('div');
+    bDiv.classList.add('roomCard');
+    if (simplifiedRoom.count > 3) {
+        bDiv.backgroundColor = 'rgba(255,200,200,0.5)';
+    } else {
+        bDiv.backgroundColor = 'rgba(200,255,200,0.5)';
+    }
+    bDiv.id = 'roomCard' + roomId;
+    const roomCardText = document.createElement('p');
+    bDiv.appendChild(roomCardText);
+    roomCardText.innerHTML = roomId + ' | ' + simplifiedRoom.count + '/4';
+    document.getElementById('rooms').appendChild(bDiv);
+    appendButton('roomCard' + roomId,roomId);
+}
+
+function appendButton(elementId, theRoomID){
+    //const bDiv = document.createElement('div');
 	const button = document.createElement('button');
     button.type = 'button';
 	button.innerHTML = 'Room ' + (theRoomID);
     button.class = 'roomSelector';
-    bDiv.roomID = theRoomID;
-    bDiv.addEventListener('click', buttonClick);
-	document.getElementById(elementId).appendChild(bDiv);
-    bDiv.appendChild(button);
+    button.roomID = theRoomID;
+    button.addEventListener('click', buttonClick);
+	document.getElementById(elementId).appendChild(button);
+    //bDiv.appendChild(button);
 }
 
 function ping() {socket.emit('currentAction');}//Debug function
