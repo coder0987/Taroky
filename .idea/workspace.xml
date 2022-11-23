@@ -1,48 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Updates gameplay">
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/card-back.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/club-jack.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/club-rider.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/diamond-king.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/diamond-queen.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/diamond-walker.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/heart-king.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/heart-walker.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/skyz.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/spade-walker.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-i.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-ii.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-iii.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-iiii.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-ix.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-xi.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-xii.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-xix.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-xx.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/default-deck/trump-xxi.png" afterDir="false" />
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Fixes game-breaking typo and implements new card designs">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/club-king.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/club-king.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/club-queen.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/club-queen.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/diamond-rider.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/diamond-rider.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/heart-queen.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/heart-queen.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/heart-rider.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/heart-rider.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/spade-king.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/spade-king.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/spade-queen.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/spade-queen.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/spade-rider.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/spade-rider.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-v.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-v.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-vi.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-vi.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-vii.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-vii.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-viii.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-viii.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-x.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-xiii.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-xiii.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-xiv.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-xiv.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-xv.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-xv.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-xvi.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-xvi.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-xvii.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-xvii.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/default-deck/trump-xviii.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/default-deck/trump-xviii.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chatbox.js" beforeDir="false" afterPath="$PROJECT_DIR$/chatbox.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -318,7 +281,14 @@
       <option name="project" value="LOCAL" />
       <updated>1669230814187</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Fixes game-breaking typo and implements new card designs">
+      <created>1669234546069</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1669234546069</updated>
+    </task>
+    <option name="localTasksCounter" value="33" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -334,7 +304,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Adds room host and card objects" />
     <MESSAGE value="Refactors room generation and deletion" />
     <MESSAGE value="Adds gameplay summary" />
     <MESSAGE value="Adds a chatbox for future simplicity" />
@@ -359,6 +328,7 @@
     <MESSAGE value="Adds proper random shuffling and updates README" />
     <MESSAGE value="Adds discarding" />
     <MESSAGE value="Updates gameplay" />
-    <option name="LAST_COMMIT_MESSAGE" value="Updates gameplay" />
+    <MESSAGE value="Fixes game-breaking typo and implements new card designs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixes game-breaking typo and implements new card designs" />
   </component>
 </project>

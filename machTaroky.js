@@ -132,8 +132,10 @@ function hostRoom() {
     let startGame = document.createElement('button');
     startGame.innerHTML = 'Start Game';
     startGame.addEventListener('click',function(){removeHostTools();addMessage('Starting...');socket.emit('startGame');});
-    //EDIT SETTINGS HERE
+    let settings = document.createElement('p');
+    settings.innerHTML = 'Settings (coming soon...)';
     tools.appendChild(startGame);
+    tools.appendChild(settings);
 }
 
 function removeHostTools() {
@@ -244,7 +246,6 @@ window.onload = () => {
                     });
                     document.getElementById('centerCardBack').addEventListener('mousemove',function() {
                         //Shuffle the cards
-                        addMessage('.');
                         socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
                     });
                     document.getElementById('centerCardBack').addEventListener('mouseleave',function() {
@@ -282,6 +283,9 @@ window.onload = () => {
                     break;
                 case 'discard':
                     addMessage('You are discarding. Choose a card to discard.');
+                    break;
+                case 'moneyCards':
+                    addMessage('You are calling money cards. You have: ' + action.info.moneyCards);
                     break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));

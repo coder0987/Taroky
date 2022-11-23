@@ -357,6 +357,9 @@ function actionCallback(action,room,pn) {
                 console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
             }
             break;
+        case 'moneyCards':
+            //Determines point which point cards the player has, starting with Povenost and rotating around. Povenost has the option to call Bida or Uni but others are called automatically
+            break;
         default:
             console.warn('Unrecognized actionCallback: ' + action.action);
             console.trace();
