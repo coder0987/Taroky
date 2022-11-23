@@ -1,0 +1,41 @@
+Outline card text
+
+Special points:
+4: Big ones/Taroky (10+ taroks)
+2: Little ones/Tarocky (8-9 taroks)
+2: Bida (1-2 taroks)
+4: Uni (0 taroks)
+2: Honery (4+ 5-point cards)
+4: Rosa-Honery/Kralovske-Honery (all 4 kings)
+6: Rosa-Honery+ (all 4 kings plus another 5-point card)
+2: Trul (Skys, XXI/Mond, I/Pagat)
+
+Back
+
+Valat:
+Win every trick to earn 40 points or lose any trick to lose 40 points
+
+Pagat / I on the end:
+Play the I on the last trick of the round and win the trick to earn 4 points
+If you play the I early or if another player plays a trump on the last trick you lose 4 points
+
+Flek/Contra, Rhea-Contra, Suprhea-Contra:
+Any player not on Povenost's team (or not on Prever's team during a prever match) may call Contra to double the point outcome.
+Povenost or povenost's partner (Prever during a prever game) may call Rhea-Contra to double the points again
+Any player not on Povenost's team may call Suprhea-Contra to double the points again
+
+Reminder card text
+
+The deck is dealt out, 6 cards to the center (the "talon") and 12 to each player
+For the first round in each game, the player who is dealt the II begins as Povenost
+Any player, starting with Povenost and continuing counter-clockwise, may call Prever in order to play alone against the other 3
+If no one does, Povenost draws 4 cards from the talon, then the two players counter-clockwise to povenost each draw 1
+Prever, if called, draws 3 cards. Prever may swap to the bottom 3 cards and then may again swap back to the top 3 cards
+All players then discard down to 12 cards. Players may not discard Kings or Trump cards. In some cases, only Kings and Trump cards may be left. The player may then discard a 1-point trump, but the player must reveal the card as it is discarded
+Povenost then calls the partner, player call point cards, Valat, Pagat, and Contra, and game begins with Povenost leading the first trick
+Play continues counter-clockwise, each player following suit if possible, playing a trump if not, or "sluffing" a card if out of both
+The winner of each trick then collects the card and leads the next until all 12 tricks have been played
+Points are counted (see the other side of this card), Povenost shuffles, and Povenost rotates counter-clockwise
+
+Back
+
