@@ -14,6 +14,7 @@ let availableRooms={};
 let drawnRooms=[];
 let connectingToRoom = false;
 let inGame = false;
+let chipCount = 100;
 let playerNumber = -1;
 let hostNumber = -1;
 let currentAction;
@@ -167,8 +168,11 @@ function hasCut() {
 window.onload = () => {
     generateDeck();
 
-    if (!localStorage.getItem('tarokyInstance'))
-        localStorage.setItem('tarokyInstance',Math.random()*1000000000000000000);
+    if (!localStorage.getItem('tarokyInstance')) {
+        do {
+            localStorage.setItem('tarokyInstance',Math.random()*1000000000000000000);
+        } while (localStorage.getItem('tarokyInstance') == 0);
+    }
 
     socket = io({auth: {token: localStorage.getItem('tarokyInstance')}});
 
@@ -202,6 +206,9 @@ window.onload = () => {
     });
     socket.on('returnDeck', function(returnDeck) {
         deck = returnDeck;
+    });
+    socket.on('returnChips', function(returnChips) {
+        chipCount = returnChips;
     });
     socket.on('roomConnected', function(roomConnected) {
         inGame = true;
@@ -285,7 +292,11 @@ window.onload = () => {
                     addMessage('You are discarding. Choose a card to discard.');
                     break;
                 case 'moneyCards':
-                    addMessage('You are calling money cards. You have: ' + action.info.moneyCards);
+                    addMessage('You are calling money cards');
+                    socket.emit('moneyCards');
+                    break;
+                case 'moneyCardCallback':
+                    addMessage('Player ' + action.player + ' is calling ' + action.info.moneyCards);
                     break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));

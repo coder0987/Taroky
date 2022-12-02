@@ -86,6 +86,30 @@ function shuffleDeck(deck,shuffleType) {
         default: return [...tempDeck];
     }
 }
+function handContainsCard(handToCheck, cardName) {
+    for (let i in handToCheck) {
+        if (handToCheck[i].value == cardName) {
+            return true;
+        }
+    }
+    return false;
+}
+function handHasSuit(handToCheck, suitToCheck) {
+    for (let i in handToCheck) {
+        if (handToCheck[i].suit == suitToCheck) {
+            return true;
+        }
+    }
+    return false;
+}
+function handContains(handToCheck, valueToCheck, suitToCheck) {
+    for (let i in handToCheck) {
+        if (handToCheck[i].value == value && handToCheck[i].suit == suitToCheck) {
+            return true;
+        }
+    }
+    return false;
+}
 //SEE Card Locations in codeNotes
 //SEE Action Flow in codeNotes
 
@@ -134,6 +158,9 @@ function robotAction(action,room,pn) {
                     }
                 }
                 break;
+            case 'moneyCards':
+            case 'moneyCardCallback':
+                break;
             default:
                 console.warn('Unknown robot action: ' + action.action);
         }
@@ -175,6 +202,9 @@ function playerAction(action,room,pn) {
                 }
             }
             players[room['players'][pn].socket].socket.emit('returnHand',hand,true);
+            break;
+        case 'moneyCards':
+        case 'moneyCardCallback':
             break;
         default:
             console.log('Unknown action: ' + action.action);
@@ -359,6 +389,92 @@ function actionCallback(action,room,pn) {
             break;
         case 'moneyCards':
             //Determines point which point cards the player has, starting with Povenost and rotating around. Povenost has the option to call Bida or Uni but others are called automatically
+            let currentHand = room['players'][pn].hand;//linked, not copied
+            //Needed info: trump count, 5-pointer count, trul detection
+            let numTrumps = 0;
+            let fiverCount = 0;
+            let owedChips = 0;
+            action.info.moneyCards = [];
+            for (let i in currentHand) {
+                if (currentHand[i].suit == "Trump") {numTrumps++;}
+                if (currentHand[i].value == "King" || currentHand[i].value == "I" || currentHand.value == "XXI" || currentHand[i].value == "Skyz") {fiverCount++;}
+            }
+            if (numTrumps == 0) {
+                //Uni
+                owedChips += 4;
+                action.info.moneyCards.push("Uni");
+            } else if (numTrumps <= 2) {
+                //Bida
+                owedChips += 2;
+                action.info.moneyCards.push("Bida");
+            } else if (numTrumps >= 10) {
+                //Taroky
+                owedChips += 4;
+                action.info.moneyCards.push("Taroky");
+            } else if (numTrumps >= 8) {
+                //Tarocky
+                owedChips += 2;
+                action.info.moneyCards.push("Tarocky");
+            }
+            if (fiverCount >=3) {
+                //Check for trul
+                if (handContainsCard(currentHand, "I") && handContainsCard(currentHand, "XXI") && handContainsCard("Skyz")) {
+                    //Trul
+                    owedChips += 2;
+                    action.info.moneyCards.push("Trul");
+                }
+                if (hadContains(currentHand, "King", "Spade") && handContains(currentHand, "King", "Club") && hadContains(currentHand, "King", "Heart") && handContains(currentHand, "King", "Diamond")) {
+                    if (fiverCount > 4) {
+                        //Rosa-Honery+
+                        owedChips += 6;
+                        action.info.moneyCards.push("Rosa-Honery+");
+                    } else {
+                        //Rosa-Honery
+                        owedChips += 4;
+                        action.info.moneyCards.push("Rosa-Honery");
+                    }
+                } else if (fiverCount >= 4) {
+                    //Honery
+                    owedChips += 2;
+                    action.info.moneyCards.push("Honery");
+                }
+                //Inform all players of current moneycards
+                for (let i in room['players']) {
+                    if (i==pn) {
+                        room['players'][i].chips += 3 * owedChips;
+                    } else {
+                        room['players'][i].chips -= owedChips;
+                    }
+                    if (playerType == PLAYER_TYPE.HUMAN) {
+                        room['players'][i].socket.emit('returnChips',room['players'][i].chips);
+                        playerAction({'action':'moneyCardCallback','player':pn,'info':action.info.moneyCards},room,action.player);
+                    } else if (playerType == PLAYER_TYPE.ROBOT) {
+                        robotAction({'action':'moneyCardCallback','player':pn,'info':action.info.moneyCards},room,action.player);
+                    } else if (playerType == PLAYER_TYPE.AI) {
+                        aiAction({'action':'moneyCardCallback','player':pn,'info':action.info.moneyCards},room,action.player);
+                    }
+                }
+                //TODO: Call for partner
+
+                action.player = (pn + 1) % 4;
+                if (action.player == room['board'].povenost) {
+                    action.action = 'call';
+                }
+            }
+            break;
+        case 'call':
+            switch (action.info.call) {
+                //TODO: call
+                case 'contra':
+                    //oooh contra
+                    break;
+                case 'valat':
+                    break;
+                case 'Iote':
+                    break;
+                //Pass
+            }
+            //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to the first trick
             break;
         default:
             console.warn('Unrecognized actionCallback: ' + action.action);
@@ -539,6 +655,11 @@ io.sockets.on('connection', function(socket) {
             if (!discarded) {
                 players[rooms[players[socketId].room]['players'][players[socketId]['pn']].socket].socket.emit('failedDiscard',toDiscard);
             }
+        }
+    });
+    socket.on('moneyCards', function() {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action=='moneyCards' && rooms[players[socketId].room]['board']['nextStep'].player==players[socketId]['pn']) {
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'],rooms[players[socketId].room],rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
 });

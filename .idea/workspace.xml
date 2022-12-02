@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Fixes game-breaking typo and implements new card designs">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds temporary chatbox and starts moneycards">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/chatbox.js" beforeDir="false" afterPath="$PROJECT_DIR$/chatbox.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -288,7 +286,14 @@
       <option name="project" value="LOCAL" />
       <updated>1669234546069</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="Adds temporary chatbox and starts moneycards">
+      <created>1669236054565</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1669236054565</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -304,7 +309,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Refactors room generation and deletion" />
     <MESSAGE value="Adds gameplay summary" />
     <MESSAGE value="Adds a chatbox for future simplicity" />
     <MESSAGE value="Fixes logo src attribute" />
@@ -329,6 +333,7 @@
     <MESSAGE value="Adds discarding" />
     <MESSAGE value="Updates gameplay" />
     <MESSAGE value="Fixes game-breaking typo and implements new card designs" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes game-breaking typo and implements new card designs" />
+    <MESSAGE value="Adds temporary chatbox and starts moneycards" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds temporary chatbox and starts moneycards" />
   </component>
 </project>
