@@ -25,6 +25,15 @@ for (let s=0;s<4;s++)
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
 
+/**loader */
+$(document).ready(function() {
+
+    setTimeout(function(){
+        $('body').addClass('loaded');
+    }, 3000);
+ 
+});
+
 /** @PARAM ELEMENT (not an ID) */
 function createCardBack(appendedTo) {
     if (document.getElementById(appendedTo.id + 'CardBack')) {console.error('CardBack already exists at ' + appendedTo.id + 'CardBack');return;}

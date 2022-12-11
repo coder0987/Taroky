@@ -13,7 +13,7 @@ canvas {
 }
 
 body {
-    background-color: var(--green);
+    background-color: var(--white);
     
 }
 
@@ -24,7 +24,7 @@ viewport {
     width: 90%;
     height: 90%; 
 }
-
+/*
 #diamondtup {
 	border-left: 1.5rem solid transparent;
 	border-right: 1.5rem solid transparent;
@@ -138,7 +138,8 @@ viewport {
     position: absolute;
     top: 3.5rem;
     left: 2.4rem;
-}
+}*/
+
 .canvas {
     width: 100%;
     object-fit: contain;
@@ -178,4 +179,56 @@ img {
 .roomCard {
     border-style: solid;
     padding-left: 10px;
+}
+/*LOADER*/
+#loader-wrapper .loader-section {
+    position: fixed;
+    top: 0;
+    width: 51%;
+    height: 100%;
+    background: var(--navy);
+    z-index: 1000;
+}
+#loader {
+    display: block;
+    position: relative;
+    left: 12%;
+
+    z-index: 1001; 
+}
+#loader-wrapper .loader-section.section-left {
+    left: 0;
+}
+ 
+#loader-wrapper .loader-section.section-right {
+    right: 0;
+}
+/* Loaded */
+.loaded #loader-wrapper .loader-section.section-left {
+    -webkit-transform: translateX(-100%);  /* Chrome, Opera 15+, Safari 3.1+ */
+    -ms-transform: translateX(-100%);  /* IE 9 */
+    transform: translateX(-100%);  /* Firefox 16+, IE 10+, Opera */
+    -webkit-transition: all 0.3s 0.3s ease-out;
+    transition: all 0.3s 0.3s ease-out;
+}
+ 
+.loaded #loader-wrapper .loader-section.section-right {
+    -webkit-transform: translateX(100%);  /* Chrome, Opera 15+, Safari 3.1+ */
+    -ms-transform: translateX(100%);  /* IE 9 */
+    transform: translateX(100%);  /* Firefox 16+, IE 10+, Opera */
+    -webkit-transition: all 0.3s 0.3s ease-out;
+    transition: all 0.3s 0.3s ease-out;
+}
+.loaded #loader {
+    opacity: 0;
+    -webkit-transition: all 0.3s ease-out;
+    transition: all 0.3s ease-out;
+}
+.loaded #loader-wrapper {
+    visibility: hidden;
+    -webkit-transform: translateY(-100%);
+    -ms-transform: translateY(-100%);
+        transform: translateY(-100%);
+    -webkit-transition: all 0.3s 0.6s ease-out;
+        transition: all 0.3s 0.6s ease-out;
 }
