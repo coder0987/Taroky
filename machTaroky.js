@@ -28,6 +28,7 @@ for (let v=0;v<22;v++)
 /**loader */
 $(document).ready(function() {
 
+    onLoad();
     setTimeout(function(){
         $('body').addClass('loaded');
     }, 3000);
@@ -174,7 +175,7 @@ function hasCut() {
     }
 }
 
-window.onload = () => {
+function onLoad() {
     generateDeck();
 
     if (!localStorage.getItem('tarokyInstance')) {
@@ -218,6 +219,7 @@ window.onload = () => {
     });
     socket.on('returnChips', function(returnChips) {
         chipCount = returnChips;
+        addMessage('You have ' + chipCount + ' chips');
     });
     socket.on('roomConnected', function(roomConnected) {
         inGame = true;
@@ -305,7 +307,14 @@ window.onload = () => {
                     socket.emit('moneyCards');
                     break;
                 case 'moneyCardCallback':
-                    addMessage('Player ' + action.player + ' is calling ' + action.info.moneyCards);
+                    let calledSomething = false;
+                    for (let i in action.info) {
+                        addMessage('Player ' + action.whoCalled + ' is calling ' + action.info[i]);
+                        calledSomething = true;
+                    }
+                    if (!calledSomething) {
+                        addMessage('Player ' + action.whoCalled + ' is calling nothing');
+                    }
                     break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));

@@ -3,7 +3,7 @@ This is used to shorten the file length of the code files
 
 ## Card Locations (Server)
 
-/*Cards are kept in several locations.
+Cards are kept in several locations.
 Between games, cards are kept in room[roomID]['deck']
 At the beginning of the game, cards are dealt out and stored in Players' hands at room[roomID]['players'][i].hand
 Cards are also dealt to the Talon at room[roomID]['board'].talon

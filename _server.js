@@ -75,7 +75,7 @@ for (let s=0;s<4;s++)
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];}
-function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.povenost=-1;this.nextStep={player:0,action:'start',time:Date.now(),info:null};this.cutStyle='';}
+function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.povenost=-1;this.nextStep={player:0,action:'start',time:Date.now(),info:null};this.cutStyle='';this.moneyCards=[[],[],[],[]];}
 function shuffleDeck(deck,shuffleType) {
     //TODO: Create actual shuffling functions
     let tempDeck=[...deck];
@@ -104,7 +104,7 @@ function handHasSuit(handToCheck, suitToCheck) {
 }
 function handContains(handToCheck, valueToCheck, suitToCheck) {
     for (let i in handToCheck) {
-        if (handToCheck[i].value == value && handToCheck[i].suit == suitToCheck) {
+        if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
             return true;
         }
     }
@@ -394,7 +394,6 @@ function actionCallback(action,room,pn) {
             let numTrumps = 0;
             let fiverCount = 0;
             let owedChips = 0;
-            action.info.moneyCards = [];
             for (let i in currentHand) {
                 if (currentHand[i].suit == "Trump") {numTrumps++;}
                 if (currentHand[i].value == "King" || currentHand[i].value == "I" || currentHand.value == "XXI" || currentHand[i].value == "Skyz") {fiverCount++;}
@@ -402,65 +401,69 @@ function actionCallback(action,room,pn) {
             if (numTrumps == 0) {
                 //Uni
                 owedChips += 4;
-                action.info.moneyCards.push("Uni");
+                room['board'].moneyCards[pn].push("Uni");
             } else if (numTrumps <= 2) {
                 //Bida
                 owedChips += 2;
-                action.info.moneyCards.push("Bida");
+                room['board'].moneyCards[pn].push("Bida");
             } else if (numTrumps >= 10) {
                 //Taroky
                 owedChips += 4;
-                action.info.moneyCards.push("Taroky");
+                room['board'].moneyCards[pn].push("Taroky");
             } else if (numTrumps >= 8) {
                 //Tarocky
                 owedChips += 2;
-                action.info.moneyCards.push("Tarocky");
+                room['board'].moneyCards[pn].push("Tarocky");
             }
             if (fiverCount >=3) {
                 //Check for trul
                 if (handContainsCard(currentHand, "I") && handContainsCard(currentHand, "XXI") && handContainsCard("Skyz")) {
                     //Trul
                     owedChips += 2;
-                    action.info.moneyCards.push("Trul");
+                    room['board'].moneyCards[pn].push("Trul");
                 }
-                if (hadContains(currentHand, "King", "Spade") && handContains(currentHand, "King", "Club") && hadContains(currentHand, "King", "Heart") && handContains(currentHand, "King", "Diamond")) {
+                if (handContains(currentHand, "King", "Spade") && handContains(currentHand, "King", "Club") && hadContains(currentHand, "King", "Heart") && handContains(currentHand, "King", "Diamond")) {
                     if (fiverCount > 4) {
                         //Rosa-Honery+
                         owedChips += 6;
-                        action.info.moneyCards.push("Rosa-Honery+");
+                        room['board'].moneyCards[pn].push("Rosa-Honery+");
                     } else {
                         //Rosa-Honery
                         owedChips += 4;
-                        action.info.moneyCards.push("Rosa-Honery");
+                        room['board'].moneyCards[pn].push("Rosa-Honery");
                     }
                 } else if (fiverCount >= 4) {
                     //Honery
                     owedChips += 2;
-                    action.info.moneyCards.push("Honery");
-                }
-                //Inform all players of current moneycards
-                for (let i in room['players']) {
-                    if (i==pn) {
-                        room['players'][i].chips += 3 * owedChips;
-                    } else {
-                        room['players'][i].chips -= owedChips;
-                    }
-                    if (playerType == PLAYER_TYPE.HUMAN) {
-                        room['players'][i].socket.emit('returnChips',room['players'][i].chips);
-                        playerAction({'action':'moneyCardCallback','player':pn,'info':action.info.moneyCards},room,action.player);
-                    } else if (playerType == PLAYER_TYPE.ROBOT) {
-                        robotAction({'action':'moneyCardCallback','player':pn,'info':action.info.moneyCards},room,action.player);
-                    } else if (playerType == PLAYER_TYPE.AI) {
-                        aiAction({'action':'moneyCardCallback','player':pn,'info':action.info.moneyCards},room,action.player);
-                    }
-                }
-                //TODO: Call for partner
-
-                action.player = (pn + 1) % 4;
-                if (action.player == room['board'].povenost) {
-                    action.action = 'call';
+                    room['board'].moneyCards[pn].push("Honery");
                 }
             }
+            //Inform all players of current moneycards
+            for (let i in room['players']) {
+                if (i==pn) {
+                    room['players'][i].chips += 3 * owedChips;
+                } else {
+                    room['players'][i].chips -= owedChips;
+                }
+                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                    SOCKET_LIST[room['players'][i].socket].emit('returnChips',room['players'][i].chips);
+                    playerAction({'action':'moneyCardCallback','player':i,'whoCalled':pn,'info':room['board'].moneyCards[pn]},room,action.player);
+                } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
+                    robotAction({'action':'moneyCardCallback','player':pn,'info':room['board'].moneyCards[pn]},room,action.player);
+                } else if (room['players'][i].type == PLAYER_TYPE.AI) {
+                    aiAction({'action':'moneyCardCallback','player':pn,'info':room['board'].moneyCards[pn]},room,action.player);
+                }
+            }
+            //TODO: Call for partner
+
+            action.player = (pn + 1) % 4;
+            if (action.player == room['board'].povenost) {
+                action.action = 'call';
+            }
+            actionTaken = true;
+            break;
+        case 'moneyCardCallback':
+            //Extra action just for informing the players. Server does not need to do anything
             break;
         case 'call':
             switch (action.info.call) {
@@ -507,7 +510,7 @@ function broadcast(message) {
 
 io.sockets.on('connection', function(socket) {
     let socketId = socket.handshake.auth.token;
-    if (socketId === undefined || +socketId == "NaN" || socketId == 0 || socketId == null) {
+    if (socketId === undefined || isNaN(socketId) || socketId == 0 || socketId == null) {
         socket.disconnect();//Illegal socket
         return;
     }
