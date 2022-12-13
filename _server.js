@@ -74,8 +74,8 @@ for (let s=0;s<4;s++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
-function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];}
-function Board() {this.talon=[];this.table=[];this.preverTalon=[];this.povenost=-1;this.nextStep={player:0,action:'start',time:Date.now(),info:null};this.cutStyle='';this.moneyCards=[[],[],[],[]];}
+function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];this.tempHand=[];}
+function Board() {this.partnerCard="";this.talon=[];this.table=[];this.preverTalon=[];this.preverTalonStep=0;this.prever=-1;this.playingPrever=false;this.povenost=-1;this.nextStep={player:0,action:'start',time:Date.now(),info:null};this.cutStyle='';this.moneyCards=[[],[],[],[]];}
 function shuffleDeck(deck,shuffleType) {
     //TODO: Create actual shuffling functions
     let tempDeck=[...deck];
@@ -159,8 +159,11 @@ function robotAction(action,room,pn) {
                 }
                 break;
             case 'moneyCards':
-            case 'moneyCardCallback':
                 break;
+            case 'moneyCardCallback':
+                return;//Do nothing for this one. Don't prep for the next action. Don't remind the server. Nothing.
+            case 'call':
+                break;//lol never call anything
             default:
                 console.warn('Unknown robot action: ' + action.action);
         }
@@ -236,6 +239,9 @@ function actionCallback(action,room,pn) {
         console.warn('Illegal actionCallback: ' + JSON.stringify(room) + ' \n\n ' + JSON.stringify(action) + ' \n\n ' + pn);
         console.trace();
         return;
+    }
+    if (!action.info) {
+        action.info = {};
     }
     let playerType = room['players'][pn].type;
     let actionTaken = false;
@@ -324,8 +330,11 @@ function actionCallback(action,room,pn) {
         case 'prever':
             break;//ignore this
         case 'callPrever':
-            console.warn('prever doesn\'t work yet');
-            //TODO: Prever
+            room['board'].playingPrever = true;
+            room['board'].prever = pn;
+            room['board'].preverTalonStep=0;
+            action.action = 'drawPreverTalon';
+            actionTaken = true;
             break;
         case 'passPrever':
             action.player = (action.player+1)%4;
@@ -357,8 +366,21 @@ function actionCallback(action,room,pn) {
             }
             break;
         case 'drawPreverTalon':
-            //TODO: Prever talon
-            console.warn('Prever doen\'t work yet');
+            if (room['board'].preverTalonStep == 0) {
+                room['players'][action.player].tempHand.push(room['board'].talon.splice(0,1)[0]);
+                room['players'][action.player].tempHand.push(room['board'].talon.splice(0,1)[0]);
+                room['players'][action.player].tempHand.push(room['board'].talon.splice(0,1)[0]);
+                actionTaken = true;
+                room['board'].preverTalonStep = 1;
+            } else if (room['board'].preverTalonStep == 1) {
+                if (action.info.accept) {
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0,1)[0]);
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0,1)[0]);
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0,1)[0]);
+                } else {
+                    //TODO: finish this
+                }
+            }
             break;
         case 'discard':
             let card = action.info.card;
@@ -396,7 +418,7 @@ function actionCallback(action,room,pn) {
             let owedChips = 0;
             for (let i in currentHand) {
                 if (currentHand[i].suit == "Trump") {numTrumps++;}
-                if (currentHand[i].value == "King" || currentHand[i].value == "I" || currentHand.value == "XXI" || currentHand[i].value == "Skyz") {fiverCount++;}
+                if (currentHand[i].value == "King" || currentHand[i].value == "I" || currentHand[i].value == "XXI" || currentHand[i].value == "Skyz") {fiverCount++;}
             }
             if (numTrumps == 0) {
                 //Uni
@@ -417,12 +439,12 @@ function actionCallback(action,room,pn) {
             }
             if (fiverCount >=3) {
                 //Check for trul
-                if (handContainsCard(currentHand, "I") && handContainsCard(currentHand, "XXI") && handContainsCard("Skyz")) {
+                if (handContainsCard(currentHand, "I") && handContainsCard(currentHand, "XXI") && handContainsCard(currentHand,"Skyz")) {
                     //Trul
                     owedChips += 2;
                     room['board'].moneyCards[pn].push("Trul");
                 }
-                if (handContains(currentHand, "King", "Spade") && handContains(currentHand, "King", "Club") && hadContains(currentHand, "King", "Heart") && handContains(currentHand, "King", "Diamond")) {
+                if (handContains(currentHand, "King", "Spade") && handContains(currentHand, "King", "Club") && handContains(currentHand, "King", "Heart") && handContains(currentHand, "King", "Diamond")) {
                     if (fiverCount > 4) {
                         //Rosa-Honery+
                         owedChips += 6;
@@ -454,12 +476,34 @@ function actionCallback(action,room,pn) {
                     aiAction({'action':'moneyCardCallback','player':pn,'info':room['board'].moneyCards[pn]},room,action.player);
                 }
             }
-            //TODO: Call for partner
+            if (action.player == room['board'].povenost && !room['board'].playingPrever) {
+                //Call for partner
+                action.action = 'partner';
+            }
+            actionTaken = true;
 
             action.player = (pn + 1) % 4;
             if (action.player == room['board'].povenost) {
                 action.action = 'call';
             }
+            break;
+        case 'partner':
+            let currentHand = room['players'][pn].hand;
+            if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && action.info.callXIX)) {
+                room['board'].partnerCard = "XIX";
+            } else if (!handContainsCard(currentHand, "XVIII")) {
+                room['board'].partnerCard = "XVIII";
+            } else if (!handContainsCard(currentHand, "XVII")) {
+                room['board'].partnerCard = "XVII";
+            } else if (!handContainsCard(currentHand, "XVI")) {
+                room['board'].partnerCard = "XVI";
+            } else if (!handContainsCard(currentHand, "XV")) {
+                room['board'].partnerCard = "XV";
+            } else {
+                room['board'].partnerCard = "XIX";
+            }
+            action.action = 'moneyCards';
+            action.player = (pn + 1) % 4;
             actionTaken = true;
             break;
         case 'moneyCardCallback':
