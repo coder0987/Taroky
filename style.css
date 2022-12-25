@@ -136,7 +136,6 @@ img {
 #loader {
     display: block;
     position: relative;
-    /*left: 12%;*/
     z-index: 1001; 
 }
 #loader-content {
