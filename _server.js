@@ -243,6 +243,7 @@ function actionCallback(action,room,pn) {
     if (!action.info) {
         action.info = {};
     }
+    let currentHand = room['players'][pn].hand;//linked, not copied
     let playerType = room['players'][pn].type;
     let actionTaken = false;
     let style;
@@ -411,7 +412,7 @@ function actionCallback(action,room,pn) {
             break;
         case 'moneyCards':
             //Determines point which point cards the player has, starting with Povenost and rotating around. Povenost has the option to call Bida or Uni but others are called automatically
-            let currentHand = room['players'][pn].hand;//linked, not copied
+
             //Needed info: trump count, 5-pointer count, trul detection
             let numTrumps = 0;
             let fiverCount = 0;
@@ -488,7 +489,6 @@ function actionCallback(action,room,pn) {
             }
             break;
         case 'partner':
-            let currentHand = room['players'][pn].hand;
             if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && action.info.callXIX)) {
                 room['board'].partnerCard = "XIX";
             } else if (!handContainsCard(currentHand, "XVIII")) {
