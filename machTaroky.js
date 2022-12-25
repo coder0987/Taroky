@@ -14,6 +14,7 @@ let availableRooms={};
 let drawnRooms=[];
 let connectingToRoom = false;
 let inGame = false;
+let chipCount = 100;
 let playerNumber = -1;
 let hostNumber = -1;
 let currentAction;
@@ -27,6 +28,7 @@ for (let v=0;v<22;v++)
 /**loader */
 $(document).ready(function() {
 
+    onLoad();
     setTimeout(function(){
         $('body').addClass('loaded');
     }, 3000);
@@ -173,11 +175,14 @@ function hasCut() {
     }
 }
 
-window.onload = () => {
+function onLoad() {
     generateDeck();
 
-    if (!localStorage.getItem('tarokyInstance'))
-        localStorage.setItem('tarokyInstance',Math.random()*1000000000000000000);
+    if (!localStorage.getItem('tarokyInstance')) {
+        do {
+            localStorage.setItem('tarokyInstance',Math.random()*1000000000000000000);
+        } while (localStorage.getItem('tarokyInstance') == 0);
+    }
 
     socket = io({auth: {token: localStorage.getItem('tarokyInstance')}});
 
@@ -211,6 +216,10 @@ window.onload = () => {
     });
     socket.on('returnDeck', function(returnDeck) {
         deck = returnDeck;
+    });
+    socket.on('returnChips', function(returnChips) {
+        chipCount = returnChips;
+        addMessage('You have ' + chipCount + ' chips');
     });
     socket.on('roomConnected', function(roomConnected) {
         inGame = true;
@@ -294,7 +303,18 @@ window.onload = () => {
                     addMessage('You are discarding. Choose a card to discard.');
                     break;
                 case 'moneyCards':
-                    addMessage('You are calling money cards. You have: ' + action.info.moneyCards);
+                    addMessage('You are calling money cards');
+                    socket.emit('moneyCards');
+                    break;
+                case 'moneyCardCallback':
+                    let calledSomething = false;
+                    for (let i in action.info) {
+                        addMessage('Player ' + action.whoCalled + ' is calling ' + action.info[i]);
+                        calledSomething = true;
+                    }
+                    if (!calledSomething) {
+                        addMessage('Player ' + action.whoCalled + ' is calling nothing');
+                    }
                     break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));
