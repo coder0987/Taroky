@@ -77,3 +77,30 @@ Action taking flow:
     Whenever a robot or AI takes an action, it will *always* call on the actionCallback function
     Every single action must be completed with a call to the action callback function, the only exception being the START action at the beginning of each game
 */
+
+## Colors
+
+/*
+The official game colors are as follows:
+Hex code - color name - CSS variable
+  #98ad99 green var(--green)
+  #9D181D red   var(--red)
+  #f5f3f1 white var(--white)
+  #342D27 black var(--black)
+  #E3D6B2 tan
+  #1f3855 navy  var(--navy)
+
+To set the color of an HTML element, add the following to the element's class:
+class - effect
+green   green background, navy text
+navy    navy background, green text
+red     red background, black text
+black   black background, white text
+white   white background, black text
+
+green-txt   green text
+navy-txt    navy text
+red-txt     red text
+black-txt   black text
+white-txt   white text
+*/
