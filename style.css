@@ -24,121 +24,6 @@ viewport {
     width: 90%;
     height: 90%; 
 }
-/*
-#diamondtup {
-	border-left: 1.5rem solid transparent;
-	border-right: 1.5rem solid transparent;
-	border-bottom: 2.2rem solid var(--red);
-    position: absolute;
-    left:1rem;
-
-}
-#diamondtdn {
-    width: 0;
-    height: 0;
-    border-left: 1.5rem solid transparent;
-	border-right: 1.5rem solid transparent;
-	border-top: 2.2rem solid var(--red);
-    position: absolute;
-    top: 2.2rem;
-    left: 1rem;
-}
-#clubc1 {
-    height: 2rem;
-    width: 2rem;
-    background-color: var(--black);
-    border-radius: 50%;
-    position: absolute;
-    left: .9rem;
-}
-#clubc2 {
-    height: 2rem;
-    width: 2rem;
-    background-color: var(--black);
-    border-radius: 50%;
-    position: absolute;
-    left: .2rem;
-    top: 1.5rem;
-}
-#clubc3 {
-    height: 2rem;
-    width: 2rem;
-    background-color: var(--black);
-    border-radius: 50%;
-    position: absolute;
-    left: 1.9rem;
-    top: 1.5rem
-}
-#clubtup {
-    border-left: .5rem solid transparent;
-	border-right: .5rem solid transparent;
-	border-bottom: 1rem solid var(--black);
-    position: absolute;
-    top: 3.5rem;
-    left: 1.6rem;
-}
-#hearts {
-    width: 2rem;
-    height: 2rem;
-	background: var(--red);
-    transform: rotate(45deg);
-    position: absolute;
-    top: 1.7rem;
-    left: 1.75rem;
-}
-#heartc1 {
-    height: 2.2rem;
-    width: 2.2rem;
-    background-color: var(--red);
-    border-radius: 50%;
-    position: absolute;
-    left: .8rem;
-    top: .6rem;
-}
-#heartc2 {
-    height: 2.2rem;
-    width: 2.2rem;
-    background-color: var(--red);
-    border-radius: 50%;
-    position: absolute;
-    left: 2.5rem;
-    top: .6rem;
-}
-#spades {
-    width: 2rem;
-    height: 2rem;
-	background: var(--black);
-    transform: rotate(45deg);
-    position: absolute;
-    top: .75rem;
-    left: 1.9rem;
-}
-#spadec1 {
-    height: 2rem;
-    width: 2rem;
-    background-color: var(--black);
-    border-radius: 50%;
-    position: absolute;
-    left: 1rem;
-    top: 1.55rem;
-}
-#spadec2 {
-    height: 2rem;
-    width: 2rem;
-    background-color: var(--black);
-    border-radius: 50%;
-    position: absolute;
-    left: 2.8rem;
-    top: 1.55rem;
-}
-#spadetup {
-    border-left: .5rem solid transparent;
-	border-right: .5rem solid transparent;
-	border-bottom: 1rem solid var(--black);
-    position: absolute;
-    top: 3.5rem;
-    left: 2.4rem;
-}*/
 
 .canvas {
     width: 100%;
@@ -180,6 +65,16 @@ img {
     border-style: solid;
     padding-left: 10px;
 }
+/*COLOR*/
+#dark .p{
+    color: var(--green);
+}
+
+#light{
+
+}
+
+
 /*LOADER*/
 #loader-wrapper .loader-section {
     position: fixed;
@@ -189,19 +84,21 @@ img {
     background: var(--navy);
     z-index: 1000;
 }
-#loader {
-    display: block;
-    position: relative;
-    left: 12%;
-
-    z-index: 1001; 
-}
 #loader-wrapper .loader-section.section-left {
     left: 0;
 }
  
 #loader-wrapper .loader-section.section-right {
     right: 0;
+}
+#loader {
+    display: block;
+    position: relative;
+    left: 12%;
+    z-index: 1001; 
+}
+#loader-content {
+    
 }
 /* Loaded */
 .loaded #loader-wrapper .loader-section.section-left {
