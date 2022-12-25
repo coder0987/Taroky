@@ -31,6 +31,8 @@ $(document).ready(function() {
     onLoad();
     setTimeout(function(){
         $('body').addClass('loaded');
+        var element = document.getElementById("navbar");
+        element.classList.add("fixed-top");
     }, 3000);
  
 });
@@ -39,6 +41,8 @@ $(document).ready(function() {
 function loadButton() {
 
     $('body').addClass('loaded');
+    var element = document.getElementById("navbar");
+    element.classList.add("fixed-top");
 };
 
 /** @PARAM ELEMENT (not an ID) */
