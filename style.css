@@ -13,7 +13,8 @@ canvas {
 }
 
 body {
-    background-color: var(--green);  
+    background-color: var(--green);
+    padding-top:4rem;  
 }
 
 .canvas {
@@ -149,6 +150,7 @@ img {
 }
 .loaded #loader {
     opacity: 0;
+    display: none;
     -webkit-transition: all 0.3s ease-out;
     transition: all 0.3s ease-out;
 }
