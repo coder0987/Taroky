@@ -13,7 +13,7 @@ canvas {
 }
 
 body {
-    background-color: var(--white);  
+    background-color: var(--green);  
 }
 
 .canvas {
@@ -159,4 +159,17 @@ img {
         transform: translateY(-100%);
     -webkit-transition: all 0.3s 0.6s ease-out;
         transition: all 0.3s 0.6s ease-out;
+}
+
+/* ROOM CARD */
+#roomcard {
+    border: .1rem solid var(--black);
+    border-radius: .5rem;
+    padding:1rem;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    display:inline-block;
+}
+#roomnum {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 3rem;
 }
