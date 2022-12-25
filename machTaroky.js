@@ -35,6 +35,12 @@ $(document).ready(function() {
  
 });
 
+/**load button */
+function loadButton() {
+
+    $('body').addClass('loaded');
+};
+
 /** @PARAM ELEMENT (not an ID) */
 function createCardBack(appendedTo) {
     if (document.getElementById(appendedTo.id + 'CardBack')) {console.error('CardBack already exists at ' + appendedTo.id + 'CardBack');return;}

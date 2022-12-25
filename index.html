@@ -19,47 +19,20 @@
     <script src="/chatbox.js"></script>
     <script src="/machTaroky.js"></script>
 </head>
-<body>
-    <!--
-    <div id="loadscreen container-fluid col-md-12">
-            <div class="row position-absolute top-50 container">
-                <div class="heart col position-relative">
-                    <div id="heartc1"></div>
-                    <div id="heartc2"></div>
-                    <div id="hearts"></div></div>
-                <div class="spade col position-relative">
-                    <div id="spadec1"></div>
-                    <div id="spadec2"></div>
-                    <div id="spades"></div>
-                    <div id="spadetup"></div>
-                </div>
-                <div class="diamond col position-relative">
-                    <div id="diamondtup"></div>
-                    <div id="diamondtdn"></div>
-                </div>
-                <div class="club col position-relative">
-                    <div id="clubc1"></div>
-                    <div id="clubc2"></div>
-                    <div id="clubc3"></div>
-                    <div id="clubtup"></div>
-                </div>
-            </div>
-    </div>
-    -->
-    
+<body>   
 
 <div id="loader-wrapper">
     <div class="loader-section section-left"></div>
     <div class="loader-section section-right"></div>
 </div>
-<div id="loader-content dark">
+<div id="loader-content d-flex align-items-center">
     <div id="loader"><img src="/assets/logo/logo-animation-green.gif" alt="MachTarok" class="col-9 ">
-    <p>&copy; 2022 Samuel and Lauren Mach</p>
-    <button>Page not loading? Click here</button></div>
+    <p class="white-txt justify-content-center">&copy; 2022 Samuel and Lauren Mach</p>
+    <button class="button btn green justify-content-center" id="load" onclick="loadButton()">Page not loading? Click here</button></div>
 </div>
     
     <img src="/assets/logo/logo-full-black.png" alt="MachTarok" class="col-md-8">
-    <button id="refresh" onclick="refresh()">Refresh Rooms</button>
+    <button class="button" id="refresh" onclick="refresh()">Refresh Rooms</button>
     <div id="outer">
         <div id="center"></div>
         <div id="hand"></div>
