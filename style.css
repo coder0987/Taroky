@@ -14,7 +14,7 @@ canvas {
 
 body {
     background-color: var(--green);
-    padding-top:4rem;  
+    padding: 4rem;
 }
 
 .canvas {
@@ -174,4 +174,27 @@ img {
 #roomnum {
     font-family: Georgia, 'Times New Roman', Times, serif;
     font-size: 3rem;
+}
+
+/* TEXT */
+/* see text color settings in COLOR section */
+
+h1 {
+    font-size: 2rem;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+  }
+
+h2 {
+    font-size: 1.5rem;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+h3 {
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+h4 {
+    font-size: 1rem;
+    font-style: italic;
+    font-family: Georgia, 'Times New Roman', Times, serif;
 }

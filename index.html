@@ -38,15 +38,11 @@
     </div>
 </div>
     
-<div id="navbar" class="navbar navy">
-    <div class="container-fluid">
-        <img src="/assets/logo/logo-full-white.png" alt="MachTarok" class="navbar-brand">
-    </div>
-</div>
+<div w3-include-html="/nav.html"></div>
 
 <div class="container">
 
-    <div id="roomcard" class="col-md-3 col-xs-6 white">
+    <div id="roomcard" class="col-md-2 col-sm-3 col-xs-6 white">
         <div id="roomnum" class="d-flex justify-content-center">I</div>
         <span id="players" alt="1 player">&#x25CF; &#x25CB; &#x25CB; &#x25CB;</span> players
     </div>
@@ -67,5 +63,8 @@
     <div id="deck"></div>
 </div>
 
+<script>
+    includeHTML();
+    </script>
 </body>
 </html>

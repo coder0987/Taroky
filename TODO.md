@@ -5,9 +5,10 @@ This file contains a list of things we have yet TODO in no particular order
 ### Front End
 
 * Replace the favicon
-* Finish the card art
 * Make it look pretty (CSS)
-* Add TODOs to this list
+* fix nav display issue for sm and xs screens
+* fix invisible nav toggle
+* fix hover text color changes
 
 ### Back End
 
