@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>BETA - Mach Tarok</title>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/chatbox.js"></script>
+    <script src="/machTaroky.js"></script>
+</head>
+<body>   
+<div w3-include-html="/nav.html"></div>
+
+<div class="container navy-txt">
+    <h1>How to Play Taroky</h1>
+
+    <div id="accordion">
+        <div class="card-header">
+            <a class="btn" data-bs-toggle="collapse" href="#collapse1">
+                <h2>1: Beginning the Game</h2>
+            </a>
+        </div>
+        <div id="collapse1" class="collapse" data-bs-parent="#accordion">
+            <div class="card-body white">
+                <ol>
+                    <li>The game begins when the host player presses 'Start Game'</li>
+                    <li>The server randomizes the deck of cards and chooses which player will start as dealer</li>
+                    <li>The server then prompts the dealer to shuffle</li>
+                    <li>The dealer may choose to shuffle the deck however many times, either randomly or algorithmically. The server shuffles the deck appropriately</li>
+                    <li>The dealer then informs the server the deck is fully shuffled</li>
+                    <li>The server passes the deck clockwise to be cut.</li>
+                    <li>That player may cut or call a special deal</li>
+                    <li>The server then returns the deck to the dealer, who may then deal (Auto-dealing will also be an option)</li>
+                    <li>During the first game at each table, whoever is dealt the II is povenost</li>
+                    <li>The server will reveal povenost and ask povenost to choose between prever or team play</li>
+                    <li>The server will continue counter-clockwise through each player and ask if povenost 'can go' or if that player would like to play prever</li>
+                </ol>
+            </div>
+        </div>
+        <div class="card-header">
+            <a class="btn" data-bs-toggle="collapse" href="#collapse2A">
+                <h2>2A: Povenost (2v2) Play</h2>
+            </a>
+        </div>
+        <div id="collapse2A" class="collapse" data-bs-parent="#accordion">
+            <div class="card-body white">
+                <ol>
+                    <li>Povenost then draws 4 cards from the Talon. The 2 players immediately counter-clockwise from and across from povenost may either draw or pass their cards from the talon.</li>
+                    <li>The final player may refuse or accept a passed card.</li>
+                    <li>Povenost and each other player who drew cards must then discard down to twelve cards.</li>
+                    <li>Povenost then declares teammates (starting with the XIX in a standard game, no lower than XV allowed.)</li>
+                </ol>
+            </div>
+        </div>
+    <h2>Prever (1 v 3) Play</h2>
+        <ol>
+            <li>Prever (the player who declared they would like to play by themself) draws 3 cards from the talon</li>
+            <li>Prever may then lay those cards face up (in prever talon) and draw the remaining 3 cards or keep those cards</li>
+            <li>If the cards were laid down, prever may return to them and lay the other 3 cards face-up in the prever talon</li>
+            <li>Whichever cards were not kept are then discarded in the opposing team's discard pile.</li>
+            <li>Prever must then discard down to twelve cards</li>
+        </ol>
+    <h2>Declaring Point Cards</h2>
+        <ul>
+            <li>4: Big ones (10+ taroks)</li>
+            <li>2: Little ones (8-9 taroks)</li>
+            <li>2: Beda (1-2 taroks)</li>
+            <li>4: Uni (0 taroks)</li>
+            <li>2: Honery (pronounced pawn-e or ponnie, 4+ 5-point cards)</li>
+            <li>4: Rosa-Honery (all 4 kings)</li>
+            <li>6: Rosa-Honery+ (all 4 kings plus another 5-point card)</li>
+            <li>2: Trul (Skyz, XXI/Mund, I/Pagat)</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    includeHTML();
+    </script>
+</body>
+</html>
