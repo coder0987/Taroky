@@ -93,8 +93,8 @@ function cutShuffle(deck, cutPosition) {
     return [...rightSide, ...leftSide];
 }
 function riffleShuffle(deck) {
-    let middle = tempDeck.length / 2;
-    let leftSide = deck.slice(0, Math.floor(tempDeck.length / 2));
+    let middle = deck.length / 2;
+    let leftSide = deck.slice(0, Math.floor(deck.length / 2));
     let rightSide = deck.slice(middle + 1);
     let result = [];
     let leftSideFirst = 0;
