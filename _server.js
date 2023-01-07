@@ -110,6 +110,17 @@ function handContains(handToCheck, valueToCheck, suitToCheck) {
     }
     return false;
 }
+function findPovenost(players) {
+    let value = 1;
+    while(true){ //loop until we find povenost
+        for(let i = 0; i < 4; i++) {
+            if (handContainsCard(room['players'][i].hand, TRUMP_VALUE[value])) {
+                return i; //found povenost
+            }
+        }
+        value++;
+    }
+}
 //SEE Card Locations in codeNotes
 //SEE Action Flow in codeNotes
 
@@ -231,7 +242,8 @@ function aiAction(action,room,pn) {
         }
     }
 }
-function actionCallback(action,room,pn) {
+function actionCallback(action, room, pn) {
+    // an Action is {player_num,action_type,time,info}
     //This callback will transfer from one action to the next and inform the humans of the action to be taken
     //In the case that a robot or AI is the required player, this will directly call on the above action handlers
     //The action is presumed to be verified by it's player takeAction function, not here
@@ -254,7 +266,7 @@ function actionCallback(action,room,pn) {
         case 'start':
             console.log('Game is starting in room ' + room.name);
             action.action = 'shuffle';
-            action.player = pn;//PN does not change because the same person starts and shuffles
+            action.player = pn; //PN does not change because the same person starts and shuffles
             for (let i=0; i<4; i++) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     //Starting the game is a special case. In all other cases, actions completed will inform the players through the take action methods
@@ -319,8 +331,7 @@ function actionCallback(action,room,pn) {
                     //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
             if (room['board'].povenost == -1) {
-                //TODO: Whichever player has the 2 is povenost. Else the 3, 4, 5, 6, etc
-                room['board'].povenost = 0;
+                room['board'].povenost = findPovenost(room['players'])
             } else {
                 room['board'].povenost = (room['board'].povenost+1)%4;
             }
@@ -546,8 +557,10 @@ function actionCallback(action,room,pn) {
     }
     action.info = {};
     if (actionTaken) {
+        //Sanity Check 
         if (action.player > 3 || action.player < 0) {console.warn('Illegal player number: ' + action.player + ' during action ' + action.action); action.player %= 4;}
-        if (!room['players'][action.player]) {console.warn('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players']));}
+        if (!room['players'][action.player]) { console.warn('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players'])); }
+
         action.time = Date.now();
         playerType = room['players'][action.player].type;
 
