@@ -80,11 +80,17 @@ function shuffleDeck(deck,shuffleType) {
     //TODO: Create actual shuffling functions
     let tempDeck=[...deck];
     switch (shuffleType) {
-        case 1: /*cut*/     return tempDeck;
+        case 1: /*cut*/     return cutShuffle(tempDeck,tempDeck.length/2);
         case 2: /*riffle*/  return tempDeck;
         case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
     }
+}
+function cutShuffle(deck, cutPosition) {
+    if (deck.length >= cutPosition) {return deck}
+    let leftSide = deck.slice(0, cutPosition)
+    let rightSide = deck.slice(cutPosition + 1)
+    return [...rightSide,...leftSide]
 }
 function handContainsCard(handToCheck, cardName) {
     for (let i in handToCheck) {
