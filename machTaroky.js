@@ -64,6 +64,10 @@ function generateDeck() {
         card.src = '/assets/default-deck/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '.png';
         document.getElementById('deck').appendChild(card);
     }
+    //Load the card back as well (to decrease load times)
+    let tempCardBack = document.createElement('img');
+    tempCardBack.hidden = true;
+    tempCardBack.src = '/assets/default-deck/card-back.png';
 }
 
 function isInHand(element) {
