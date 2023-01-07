@@ -113,6 +113,9 @@ function riffleShuffle(deck) {
 
 
 }
+function sortHand(hand) {
+    return hand.sort((a, b) => (a.suit > b.suit) ? 1 : (a.suit === b.suit) ? ((a.value > b.value) ? 1 : -1) : -1);
+}
 function handContainsCard(handToCheck, cardName) {
     for (let i in handToCheck) {
         if (handToCheck[i].value == cardName) {
@@ -345,6 +348,9 @@ function actionCallback(action,room,pn) {
                     for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<6;c++)room['players'][i].hand.push(room['deck'].splice(0,1)[0]);}
                     //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
+            //sort players hands
+            for (let i = 0; i < 4; i++) { room['players'][i].hand = sortHand(room['players'][i].hand) }
+
             if (room['board'].povenost == -1) {
                 //Whichever player has the 2 is povenost. Else the 3, 4, 5, 6, etc
                 room['board'].povenost = 0;//TODO: FIX THIS
@@ -773,7 +779,7 @@ function tick() {
     }
 }
 
-let interval = setInterval(tick,1000/30.0);//30 FPS
+let interval = setInterval(tick,1000/60.0);//60 FPS
 
 //Begin listening
 server.listen(8442);
