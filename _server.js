@@ -342,6 +342,7 @@ function actionCallback(action,room,pn) {
                     let hands = [[],[],[],[]];
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i].push(room['deck'].splice(0, 1)[0]); }
                     //have players in order choose hands
+                    //TODO: Create logic for players choosing hands[(0-3)]
                     break;
                 case '345':
                     for (let t=3; t<6; t++) {
