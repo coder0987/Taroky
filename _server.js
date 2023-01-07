@@ -81,7 +81,7 @@ function shuffleDeck(deck,shuffleType) {
     let tempDeck=[...deck];
     switch (shuffleType) {
         case 1: /*cut*/     return cutShuffle(tempDeck,tempDeck.length/2);
-        case 2: /*riffle*/  return riffleShuffle(tempDeck);
+        case 2: /*riffle*/  return riffleShuffle(tempDeck,true);
         case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
     }
@@ -92,14 +92,14 @@ function cutShuffle(deck, cutPosition) {
     let rightSide = deck.slice(cutPosition + 1);
     return [...rightSide, ...leftSide];
 }
-function riffleShuffle(deck) {
+function riffleShuffle(deck, isRandom) {
     let middle = deck.length / 2;
     let leftSide = deck.slice(0, Math.floor(deck.length / 2));
     let rightSide = deck.slice(middle + 1);
     let result = [];
-    let leftSideFirst = 0;
+    let leftSideFirst = 1;
     for (var i = 0; i < leftSide.length; i++) {
-        leftSideFirst = Math.floor(Math.random() * 2);
+        if (isRandom) { leftSideFirst = Math.floor(Math.random() * 2); }
         if (leftSideFirst == 1) {
             result.push(leftSide[i]);
             result.push(rightSide[i]);
