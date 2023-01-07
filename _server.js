@@ -81,7 +81,7 @@ function shuffleDeck(deck,shuffleType) {
     let tempDeck=[...deck];
     switch (shuffleType) {
         case 1: /*cut*/     return cutShuffle(tempDeck,tempDeck.length/2);
-        case 2: /*riffle*/  return tempDeck;
+        case 2: /*riffle*/  return riffleShuffle(tempDeck);
         case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
     }
