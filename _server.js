@@ -114,7 +114,7 @@ function findPovenost(players) {
     let value = 1;
     while(true){ //loop until we find povenost
         for(let i = 0; i < 4; i++) {
-            if (handContainsCard(room['players'][i].hand, TRUMP_VALUE[value])) {
+            if (handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
                 return i; //found povenost
             }
         }
