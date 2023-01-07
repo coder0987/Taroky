@@ -80,8 +80,8 @@ function shuffleDeck(deck,shuffleType) {
     //TODO: Create actual shuffling functions
     let tempDeck=[...deck];
     switch (shuffleType) {
-        case 1: /*cut*/     return tempDeck;
-        case 2: /*riffle*/  return tempDeck;
+        case 1: /*cut*/      return tempDeck;
+        case 2: /*riffle*/   return tempDeck;
         case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
     }
@@ -305,7 +305,7 @@ function actionCallback(action,room,pn) {
                     for (let i=0; room['deck'][0]; i = (i+1)%4) {for(let c=0;c<12;c++)room['players'][i].hand.push(room['deck'].splice(0,1)[0]);}
                     break;
                 case '12':
-                    //TODO: Deal by 12s
+                    //TODO: Deal by 12s (choice)
                     break;
                 case '345':
                     for (let t=3; t<6; t++) {
@@ -319,8 +319,8 @@ function actionCallback(action,room,pn) {
                     //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
             if (room['board'].povenost == -1) {
-                //Whichever player has the 2 is povenost. Else the 3, 4, 5, 6, etc
-                room['board'].povenost = 0;//TODO: FIX THIS
+                //TODO: Whichever player has the 2 is povenost. Else the 3, 4, 5, 6, etc
+                room['board'].povenost = 0;
             } else {
                 room['board'].povenost = (room['board'].povenost+1)%4;
             }
@@ -329,7 +329,7 @@ function actionCallback(action,room,pn) {
             actionTaken = true;
             break;
         case 'prever':
-            break;//ignore this
+            break;//ignore this, the callback is for the players
         case 'callPrever':
             room['board'].playingPrever = true;
             room['board'].prever = pn;
@@ -378,8 +378,23 @@ function actionCallback(action,room,pn) {
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0,1)[0]);
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0,1)[0]);
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0,1)[0]);
+                    //Prever is keeping the intial three cards and will not look at the other three.
+                    //The other three cards now go into Povenost's discard pile, unless Preve is Povenost, in which case the cards go into the next player's discard pile
+                    //The game then continues with Prever discarding down to 12 and point cards as normal
+                    //TODO: Place talon in discard, set up next action
                 } else {
+                    //Prever has rejected the first three cards and will instead take the second three
+                    //The original three return to the talon and the three from the talon enter the temphand. Other players are allowed to view the talon now
+                    //The Prever loss multiplier is doubled here. Prever has a third and final choice to make before we may continue
                     //TODO: finish this
+                }
+            } else if (room['board'].preverTalonStep == 2) {
+                if (action.info.accept) {
+                    //Prever has claimed the second set of cards and basically the same thing happens as if prever had accepted the first half, but the loss multipler is doubled
+                } else {
+                    //Prever rejected the second set and returned to the first set
+                    //Prever swaps the three cards with the talon and the other players are again allowed to view which cards prever rejected
+                    //Finally, the remaining cards in the talon are given to the other team, the loss multiplier is doubled again (now at 4x), and play moves on to discarding
                 }
             }
             break;
@@ -425,16 +440,18 @@ function actionCallback(action,room,pn) {
                 //Uni
                 owedChips += 4;
                 room['board'].moneyCards[pn].push("Uni");
+                //TODO: add choice for povenost
             } else if (numTrumps <= 2) {
                 //Bida
                 owedChips += 2;
                 room['board'].moneyCards[pn].push("Bida");
+                //TODO: add choice for povenost
             } else if (numTrumps >= 10) {
-                //Taroky
+                //Taroky (big ones)
                 owedChips += 4;
                 room['board'].moneyCards[pn].push("Taroky");
             } else if (numTrumps >= 8) {
-                //Tarocky
+                //Tarocky (little ones)
                 owedChips += 2;
                 room['board'].moneyCards[pn].push("Tarocky");
             }
@@ -489,6 +506,7 @@ function actionCallback(action,room,pn) {
             }
             break;
         case 'partner':
+            //TODO: If Povenost has the XIX, povenost may choice to call the XIX and play alone
             if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && action.info.callXIX)) {
                 room['board'].partnerCard = "XIX";
             } else if (!handContainsCard(currentHand, "XVIII")) {
@@ -513,11 +531,10 @@ function actionCallback(action,room,pn) {
             switch (action.info.call) {
                 //TODO: call
                 case 'contra':
-                    //oooh contra
                     break;
                 case 'valat':
                     break;
-                case 'Iote':
+                case 'Iote'://I on the End
                     break;
                 //Pass
             }
