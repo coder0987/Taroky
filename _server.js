@@ -81,7 +81,6 @@ function createDeck() {
     return baseDeck;
 }
 function shuffleDeck(deck,shuffleType) {
-    //TODO: Create actual shuffling functions
     let tempDeck=[...deck];
     switch (shuffleType) {
         case 1: /*cut*/     return cutShuffle(tempDeck,tempDeck.length/2);
@@ -340,6 +339,9 @@ function actionCallback(action,room,pn) {
                     break;
                 case '12':
                     //TODO: Deal by 12s
+                    let hands = [[],[],[],[]];
+                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i].push(room['deck'].splice(0, 1)[0]); }
+                    //have players in order choose hands
                     break;
                 case '345':
                     for (let t=3; t<6; t++) {
