@@ -3,6 +3,7 @@ const url = require('url');
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const { diffieHellman } = require('crypto');
 const app = express();
 
 //Standard file-serving
@@ -121,6 +122,36 @@ function findPovenost(players) {
         value++;
     }
 }
+function grayUndiscardables(hand) {
+    let hasNonTrump = false;
+    for (let i in hand) {
+        if (hand[i].suit != 'Trump') {
+            hasNonTrump = true;
+            break;
+        }
+    }
+    for (let i in hand) {
+        if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
+            hand[i].grayed = true;
+        } else {
+            hand[i].grayed = false;
+        }
+    }
+}
+function robotDiscard(hand, difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: simple choice
+            break;
+        default:
+            //select first discardable
+            for (let i in hand) {
+                if (!hand[i].grayed) {
+                    return hand[i]
+                }
+            }
+    }
+}
 //SEE Card Locations in codeNotes
 //SEE Action Flow in codeNotes
 
@@ -134,7 +165,10 @@ function autoAction(action,room,pn) {
 
 }
 
-function robotAction(action,room,pn) {
+function robotAction(action, room, pn) {
+
+    let hand = room['players'][pn].hand;//linked. Changing one will change the other.
+
     //Takes the action automatically IF and only IF the robot is supposed to
     if (action.player == pn) {
         switch (action.action) {
@@ -151,23 +185,8 @@ function robotAction(action,room,pn) {
             case 'drawTalon':
                 break;
             case 'discard':
-                let hand = room['players'][pn].hand;//linked. Changing one will change the other.
-                let hasNonTrump = false;
-                for (let i in hand) {
-                    if (hand[i].suit != 'Trump') {
-                        hasNonTrump = true;
-                        break;
-                    }
-                }
-                for (let i in hand) {
-                    if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
-                        hand[i].grayed = true;
-                    } else {
-                        hand[i].grayed = false;
-                        action.info.card = hand[i];//A terrible approach to discarding. First available card is ditched.
-                        break;
-                    }
-                }
+                grayUndiscardables(hand);
+                action.info.card = robotDiscard(hand);
                 break;
             case 'moneyCards':
                 break;
@@ -189,10 +208,15 @@ function robotAction(action,room,pn) {
 function playerAction(action,room,pn) {
     //Prompts the player to take an action IF and only IF the player is supposed to
     //Works closely with action callbacks
+
+    let hand = room['players'][pn].hand;//linked. Changing one will change the other.
+
     switch (action.action) {
         case 'shuffle':
             //Do nothing, because its all taken care of by the generic action sender/informer at the end
         case 'cut':
+            //TODO: Should add ability to choose cut position by adding a way to select
+            //      Also add ability to 'knock' and choose how cards dealt
         case 'deal':
         case 'prever':
         case 'callPrever':
@@ -200,26 +224,18 @@ function playerAction(action,room,pn) {
         case 'drawTalon':
             break;
         case 'discard':
-            let hand = room['players'][pn].hand;//linked. Changing one will change the other.
-            let hasNonTrump = false;
-            for (let i in hand) {
-                if (hand[i].suit != 'Trump') {
-                    hasNonTrump = true;
-                    break;
-                }
-            }
-            for (let i in hand) {
-                if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
-                    hand[i].grayed = true;
-                } else {
-                    hand[i].grayed = false;
-                }
-            }
+            grayUndiscardables(hand);
             players[room['players'][pn].socket].socket.emit('returnHand',hand,true);
             break;
         case 'moneyCards':
         case 'moneyCardCallback':
             break;
+        case 'partner':
+            console.log('Partner action: ' + action.action);
+            break;
+        case 'call':
+            console.log('Call action: ' + action.action);
+            break
         default:
             console.log('Unknown action: ' + action.action);
             console.trace();
