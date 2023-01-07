@@ -68,14 +68,18 @@ const BLACK_VALUE = {0: 'Seven',1: 'Eight',2: 'Nine',3: 'Ten',4: 'Jack',5: 'Ride
 const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz'};
 let simplifiedRooms = {};
 let ticking = false;
-let baseDeck = [];
-for (let s=0;s<4;s++)
-    for (let v=0;v<8;v++)
-        baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
-for (let v=0;v<22;v++)
-    baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
+let baseDeck = createDeck();
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];this.tempHand=[];}
-function Board() {this.partnerCard="";this.talon=[];this.table=[];this.preverTalon=[];this.preverTalonStep=0;this.prever=-1;this.playingPrever=false;this.povenost=-1;this.nextStep={player:0,action:'start',time:Date.now(),info:null};this.cutStyle='';this.moneyCards=[[],[],[],[]];}
+function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; }
+function createDeck() {
+    let baseDeck = [];
+    for (let s = 0; s < 4; s++)
+        for (let v = 0; v < 8; v++)
+            baseDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
+    for (let v = 0; v < 22; v++)
+        baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+    return baseDeck;
+}
 function shuffleDeck(deck,shuffleType) {
     //TODO: Create actual shuffling functions
     let tempDeck=[...deck];
