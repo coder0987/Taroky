@@ -88,9 +88,30 @@ function shuffleDeck(deck,shuffleType) {
 }
 function cutShuffle(deck, cutPosition) {
     if (deck.length >= cutPosition) {return deck}
-    let leftSide = deck.slice(0, cutPosition)
-    let rightSide = deck.slice(cutPosition + 1)
-    return [...rightSide,...leftSide]
+    let leftSide = deck.slice(0, cutPosition);
+    let rightSide = deck.slice(cutPosition + 1);
+    return [...rightSide, ...leftSide];
+}
+function riffleShuffle(deck) {
+    let middle = tempDeck.length / 2;
+    let leftSide = deck.slice(0, Math.floor(tempDeck.length / 2));
+    let rightSide = deck.slice(middle + 1);
+    let result = [];
+    let leftSideFirst = 0;
+    for (var i = 0; i < leftSide.length; i++) {
+        leftSideFirst = Math.floor(Math.random() * 2);
+        if (leftSideFirst == 1) {
+            result.push(leftSide[i]);
+            result.push(rightSide[i]);
+        }
+        else {
+            result.push(rightSide[i]);
+            result.push(leftSide[i]);
+        }
+    }
+    return result;
+
+
 }
 function handContainsCard(handToCheck, cardName) {
     for (let i in handToCheck) {
