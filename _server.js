@@ -57,18 +57,39 @@ app.use('/client', express.static(__dirname + '/client'));
 console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
 
 
+//helper func
+function index(dict) {
+    for (let key in dict) {
+        dict[dict[key]] = key;
+    }
+}
+
+
 //SOCKETS
 const io = require('socket.io')(server);
 const SOCKET_LIST = {};
 const players = {};
 const rooms = {};
 const PLAYER_TYPE = { HUMAN: 0, ROBOT: 1, AI: 2, H: 0, R: 1 };
+
 const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump' };
 const RED_VALUE = { 0: 'Ace', 1: 'Two', 2: 'Three', 3: 'Four', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz' };
+
+index(SUIT);
+index(RED_VALUE);
+index(BLACK_VALUE);
+index(TRUMP_VALUE);
+
 let simplifiedRooms = {};
 let ticking = false;
+
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; }
+function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.contraCount = 0; this.valat = -1; this.Iote = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; this.gameNumber = 1; }
+function resetBoardForNextRound(board) { //setup board for next round. dealer of next round is this rounds povenost
+    board.partnerCard = ""; board.talon = []; board.table = []; board.preverTalon = []; board.preverTalonStep = 0; board.prever = -1; board.playingPrever = false; board.contraCount = 0; board.valat = -1; board.Iote = -1; board.nextStep = { player: board.povenost, action: 'start', time: Date.now(), info: null }; board.cutStyle = ''; board.moneyCards = [[], [], [], []]; board.gameNumber++;
+}
 let baseDeck = createDeck();
 function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];this.tempHand=[];}
 function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; }
@@ -98,8 +119,8 @@ function cutShuffle(deck, cutPosition) {
 }
 function riffleShuffle(deck, isRandom) {
     let middle = deck.length / 2;
-    let leftSide = deck.slice(0, Math.floor(deck.length / 2));
-    let rightSide = deck.slice(middle + 1);
+    let leftSide = deck.slice(0, middle);
+    let rightSide = deck.slice(middle);
     let result = [];
     let leftSideFirst = 1;
     for (var i = 0; i < leftSide.length; i++) {
@@ -118,9 +139,10 @@ function riffleShuffle(deck, isRandom) {
 
 }
 function sortHand(hand) {
-    return hand.sort((a, b) => (a.suit > b.suit) ? 1 : (a.suit === b.suit) ? ((a.value > b.value) ? 1 : -1) : -1);
+    return hand.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
 }
 function handContainsCard(handToCheck, cardName) {
+    console.log(handToCheck);
     for (let i in handToCheck) {
         if (handToCheck[i].value == cardName) {
             return true;
