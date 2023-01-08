@@ -76,7 +76,10 @@ for (let s = 0; s < 4; s++)
 for (let v = 0; v < 22; v++)
     baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
 function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; }
-function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; }
+function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.contraCount = 0; this.valat = -1; this.Iote = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; this.gameNumber = 1; }
+function resetBoardForNextRound(board) { //setup board for next round. dealer of next round is this rounds povenost
+    board.partnerCard = ""; board.talon = []; board.table = []; board.preverTalon = []; board.preverTalonStep = 0; board.prever = -1; board.playingPrever = false; board.contraCount = 0; board.valat = -1; board.Iote = -1; board.nextStep = { player: board.povenost, action: 'start', time: Date.now(), info: null }; board.cutStyle = ''; board.moneyCards = [[], [], [], []]; board.gameNumber++;
+}
 function shuffleDeck(deck, shuffleType) {
     //TODO: Create actual shuffling functions
     let tempDeck = [...deck];
@@ -111,8 +114,17 @@ function handContains(handToCheck, valueToCheck, suitToCheck) {
     }
     return false;
 }
+function isCardPlayable(hand, card, leadCard) {
+    if (handHasSuit(hand, leadCard.suit)) {
+        return card.suit == leadCard.suit;
+    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+        return card.suit == 'Trump';
+    } else {
+        return true;
+    }
+}
 function findPovenost(players) {
-    let value = 1;
+    let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povenost is found
     while(true){ //loop until we find povenost
         for(let i = 0; i < 4; i++) {
             if (handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
@@ -138,20 +150,69 @@ function grayUndiscardables(hand) {
         }
     }
 }
+function grayUnplayables(hand, leadCard) {
+    if (handHasSuit(hand, leadCard.suit)) {
+        for (let i in hand) {
+            if (hand[i].suit != leadCard.suit) {
+                hand[i].grayed = true;
+            }
+        }
+    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+        for (let i in hand) {
+            if (hand[i].suit != 'Trump') {
+                hand[i].grayed = true;
+            }
+        }
+    }
+}
+function firstSelectableCard(hand) {
+    for (let i in hand) {
+        if (!hand[i].grayed) {
+            return hand[i];
+        }
+    }
+}
 function robotDiscard(hand, difficulty) {
     switch (difficulty) {
         case 0:
-            //TODO: simple choice
+            //TODO: more difficulty algos
             break;
         default:
             //select first discardable
-            for (let i in hand) {
-                if (!hand[i].grayed) {
-                    return hand[i]
-                }
-            }
+            return firstSelectableCard(hand);
     }
 }
+function robotCall(difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            //select first discardable
+            return;
+    }
+}
+function robotLead(hand, difficulty) {
+    switch(difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            return firstSelectableCard(hand);
+            
+    }
+}
+function robotPlay(hand, difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            //select first selectable
+            return firstSelectableCard(hand);
+    }
+}
+
 //SEE Card Locations in codeNotes
 //SEE Action Flow in codeNotes
 
@@ -193,7 +254,15 @@ function robotAction(action, room, pn) {
             case 'moneyCardCallback':
                 return;//Do nothing for this one. Don't prep for the next action. Don't remind the server. Nothing.
             case 'call':
-                break;//lol never call anything
+                action.info.call = robotCall();
+                break;
+            case 'lead':
+                action.info.card = robotLead(hand);
+                break;
+            case 'play':
+                grayUnplayables(hand);
+                action.info.card = robotPlay(hand);
+                break;
             default:
                 console.warn('Unknown robot action: ' + action.action);
         }
@@ -231,11 +300,19 @@ function playerAction(action, room, pn) {
         case 'moneyCardCallback':
             break;
         case 'partner':
-            console.log('Partner action: ' + action.action);
+            //TODO: choose partner if povenost
             break;
         case 'call':
-            console.log('Call action: ' + action.action);
-            break
+            //TODO: call something if we want
+            break;
+        case 'lead':
+            //TODO: play card first
+            break;
+        case 'play':
+            //TODO: play a card after someone else has lead
+            grayUnplayables(hand);
+            players[room['players'][pn].socket].socket.emit('returnHand', hand, true);
+            break;
         default:
             console.log('Unknown action: ' + action.action);
             console.trace();
@@ -281,13 +358,13 @@ function actionCallback(action, room, pn) {
 
     switch (action.action) {
         case 'start':
-            console.log('Game is starting in room ' + room.name);
+            console.log('Game ' + room['board'].gameNumber + ' is starting in room ' + room.name);
             action.action = 'shuffle';
             action.player = pn;//PN does not change because the same person starts and shuffles
             for (let i = 0; i < 4; i++) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     //Starting the game is a special case. In all other cases, actions completed will inform the players through the take action methods
-                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i);//Inform the players of game beginning. Host is assumed to be shuffler.
+                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber);//Inform the players of game beginning. Host is assumed to be shuffler.
                 }
             }
             actionTaken = true;
@@ -559,6 +636,7 @@ function actionCallback(action, room, pn) {
             switch (action.info.call) {
                 //TODO: call
                 case 'contra':
+                    room['board'].contraCount++;
                     break;
                 case 'valat':
                     break;
@@ -567,6 +645,13 @@ function actionCallback(action, room, pn) {
                 //Pass
             }
             //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to the first trick
+        case 'lead':
+            break;
+        case 'play':
+            break;
+        case 'nextRound':
+            resetBoardForNextRound(room['board']);
+            action.action = 'start';
             break;
         default:
             console.warn('Unrecognized actionCallback: ' + action.action);

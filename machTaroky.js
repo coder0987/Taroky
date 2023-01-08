@@ -260,10 +260,10 @@ function onLoad() {
     socket.on('broadcast', function(theBroadcast) {
         alert(theBroadcast);
     });
-    socket.on('startingGame', function(hostPN, pN) {
+    socket.on('startingGame', function(hostPN, pN, gameNumber) {
         hostNumber = hostPN;
         playerNumber = pN;
-        addMessage('Game Beginning.')
+        addMessage('Game ' + gameNumber + ' Beginning.')
         addMessage('You are player ' + (pN+1));
     });
     socket.on('nextAction', function(action) {
@@ -329,6 +329,14 @@ function onLoad() {
                     if (!calledSomething) {
                         addMessage('Player ' + action.whoCalled + ' is calling nothing');
                     }
+                    break;
+                case 'partner':
+                    addMessage('You are playing with...');
+                    socket.emit('partner');
+                    break;
+                case 'call':
+                    addMessage("You are calling");
+                    socket.emit('call');
                     break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));

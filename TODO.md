@@ -17,4 +17,5 @@ This file contains a list of things we have yet TODO in no particular order
 * Add Artificial Intelligence interactions
 * Add player timeout
 * Finish the base game
+* Add a difficulty selector for Robot players in settings
 * Add TODOs to this list
