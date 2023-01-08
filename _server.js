@@ -69,26 +69,56 @@ const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5:
 const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz' };
 let simplifiedRooms = {};
 let ticking = false;
-let baseDeck = [];
-for (let s = 0; s < 4; s++)
-    for (let v = 0; v < 8; v++)
-        baseDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
-for (let v = 0; v < 22; v++)
-    baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; }
-function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.contraCount = 0; this.valat = -1; this.Iote = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; this.gameNumber = 1; }
-function resetBoardForNextRound(board) { //setup board for next round. dealer of next round is this rounds povenost
-    board.partnerCard = ""; board.talon = []; board.table = []; board.preverTalon = []; board.preverTalonStep = 0; board.prever = -1; board.playingPrever = false; board.contraCount = 0; board.valat = -1; board.Iote = -1; board.nextStep = { player: board.povenost, action: 'start', time: Date.now(), info: null }; board.cutStyle = ''; board.moneyCards = [[], [], [], []]; board.gameNumber++;
+let baseDeck = createDeck();
+function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];this.tempHand=[];}
+function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; }
+function createDeck() {
+    let baseDeck = [];
+    for (let s = 0; s < 4; s++)
+        for (let v = 0; v < 8; v++)
+            baseDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
+    for (let v = 0; v < 22; v++)
+        baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+    return baseDeck;
 }
-function shuffleDeck(deck, shuffleType) {
-    //TODO: Create actual shuffling functions
-    let tempDeck = [...deck];
+function shuffleDeck(deck,shuffleType) {
+    let tempDeck=[...deck];
     switch (shuffleType) {
-        case 1: /*cut*/      return tempDeck;
-        case 2: /*riffle*/   return tempDeck;
+        case 1: /*cut*/     return cutShuffle(tempDeck,tempDeck.length/2);
+        case 2: /*riffle*/  return riffleShuffle(tempDeck,true);
         case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
     }
+}
+function cutShuffle(deck, cutPosition) {
+    if (deck.length >= cutPosition) {return deck}
+    let leftSide = deck.slice(0, cutPosition);
+    let rightSide = deck.slice(cutPosition + 1);
+    return [...rightSide, ...leftSide];
+}
+function riffleShuffle(deck, isRandom) {
+    let middle = deck.length / 2;
+    let leftSide = deck.slice(0, Math.floor(deck.length / 2));
+    let rightSide = deck.slice(middle + 1);
+    let result = [];
+    let leftSideFirst = 1;
+    for (var i = 0; i < leftSide.length; i++) {
+        if (isRandom) { leftSideFirst = Math.floor(Math.random() * 2); }
+        if (leftSideFirst == 1) {
+            result.push(leftSide[i]);
+            result.push(rightSide[i]);
+        }
+        else {
+            result.push(rightSide[i]);
+            result.push(leftSide[i]);
+        }
+    }
+    return result;
+
+
+}
+function sortHand(hand) {
+    return hand.sort((a, b) => (a.suit > b.suit) ? 1 : (a.suit === b.suit) ? ((a.value > b.value) ? 1 : -1) : -1);
 }
 function handContainsCard(handToCheck, cardName) {
     for (let i in handToCheck) {
@@ -411,7 +441,11 @@ function actionCallback(action, room, pn) {
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '12':
-                    //TODO: Deal by 12s (choice)
+                    //TODO: Deal by 12s
+                    let hands = [[],[],[],[]];
+                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i].push(room['deck'].splice(0, 1)[0]); }
+                    //have players in order choose hands
+                    //TODO: Create logic for players choosing hands[(0-3)]
                     break;
                 case '345':
                     for (let t = 3; t < 6; t++) {
@@ -424,6 +458,9 @@ function actionCallback(action, room, pn) {
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                 //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
+            //sort players hands
+            for (let i = 0; i < 4; i++) { room['players'][i].hand = sortHand(room['players'][i].hand) }
+
             if (room['board'].povenost == -1) {
                 room['board'].povenost = findPovenost(room['players'])
             } else {
@@ -879,7 +916,7 @@ function tick() {
     }
 }
 
-let interval = setInterval(tick, 1000 / 30.0);//30 FPS
+let interval = setInterval(tick,1000/60.0);//60 FPS
 
 //Begin listening
 server.listen(8442);
