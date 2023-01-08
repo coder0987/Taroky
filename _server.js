@@ -91,7 +91,7 @@ function resetBoardForNextRound(board) { //setup board for next round. dealer of
     board.partnerCard = ""; board.talon = []; board.table = []; board.preverTalon = []; board.preverTalonStep = 0; board.prever = -1; board.playingPrever = false; board.contraCount = 0; board.valat = -1; board.Iote = -1; board.nextStep = { player: board.povenost, action: 'start', time: Date.now(), info: null }; board.cutStyle = ''; board.moneyCards = [[], [], [], []]; board.gameNumber++;
 }
 let baseDeck = createDeck();
-function Player(type) {this.type = type;this.socket = -1;this.pid = -1;this.chips = 100;this.discard = [];this.hand = [];this.tempHand=[];}
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; }
 function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; }
 function createDeck() {
     let baseDeck = [];
@@ -102,17 +102,17 @@ function createDeck() {
         baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
     return baseDeck;
 }
-function shuffleDeck(deck,shuffleType) {
-    let tempDeck=[...deck];
+function shuffleDeck(deck, shuffleType) {
+    let tempDeck = [...deck];
     switch (shuffleType) {
-        case 1: /*cut*/     return cutShuffle(tempDeck,tempDeck.length/2);
-        case 2: /*riffle*/  return riffleShuffle(tempDeck,true);
+        case 1: /*cut*/     return cutShuffle(tempDeck, tempDeck.length / 2);
+        case 2: /*riffle*/  return riffleShuffle(tempDeck, true);
         case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
     }
 }
 function cutShuffle(deck, cutPosition) {
-    if (deck.length >= cutPosition) {return deck}
+    if (deck.length >= cutPosition) { return deck }
     let leftSide = deck.slice(0, cutPosition);
     let rightSide = deck.slice(cutPosition + 1);
     return [...rightSide, ...leftSide];
@@ -138,7 +138,7 @@ function riffleShuffle(deck, isRandom) {
 
 
 }
-function sortHand(hand) {
+function sortCards(hand) {
     return hand.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
 }
 function handContainsCard(handToCheck, cardName) {
@@ -177,8 +177,8 @@ function isCardPlayable(hand, card, leadCard) {
 }
 function findPovenost(players) {
     let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povenost is found
-    while(true){ //loop until we find povenost
-        for(let i = 0; i < 4; i++) {
+    while (true) { //loop until we find povenost
+        for (let i = 0; i < 4; i++) {
             if (handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
                 return i; //found povenost
             }
@@ -186,6 +186,7 @@ function findPovenost(players) {
         value++;
     }
 }
+//
 function grayUndiscardables(hand) {
     let hasNonTrump = false;
     for (let i in hand) {
@@ -217,6 +218,7 @@ function grayUnplayables(hand, leadCard) {
         }
     }
 }
+//Robot Functions
 function firstSelectableCard(hand) {
     for (let i in hand) {
         if (!hand[i].grayed) {
@@ -240,18 +242,19 @@ function robotCall(difficulty) {
             //TODO: more difficulty algos
             break;
         default:
-            //select first discardable
+            //call nothing lol
             return;
     }
 }
 function robotLead(hand, difficulty) {
-    switch(difficulty) {
+    switch (difficulty) {
         case 0:
             //TODO: more difficulty algos
             break;
         default:
+            //select first playable
             return firstSelectableCard(hand);
-            
+
     }
 }
 function robotPlay(hand, difficulty) {
@@ -260,7 +263,7 @@ function robotPlay(hand, difficulty) {
             //TODO: more difficulty algos
             break;
         default:
-            //select first selectable
+            //select first playable
             return firstSelectableCard(hand);
     }
 }
@@ -336,8 +339,8 @@ function playerAction(action, room, pn) {
         case 'shuffle':
         //Do nothing, because its all taken care of by the generic action sender/informer at the end
         case 'cut':
-            //TODO: Should add ability to choose cut position by adding a way to select
-            //      Also add ability to 'knock' and choose how cards dealt
+        //TODO: Maybe Should add ability to choose cut position by adding a way to select
+        //      Also add ability to 'knock' and choose how cards dealt
         case 'deal':
         case 'prever':
         case 'callPrever':
@@ -346,7 +349,7 @@ function playerAction(action, room, pn) {
             break;
         case 'discard':
             grayUndiscardables(hand);
-            players[room['players'][pn].socket].socket.emit('returnHand',hand,true);
+            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
             break;
         case 'moneyCards':
         case 'moneyCardCallback':
@@ -363,7 +366,7 @@ function playerAction(action, room, pn) {
         case 'play':
             //TODO: play a card after someone else has lead
             grayUnplayables(hand);
-            players[room['players'][pn].socket].socket.emit('returnHand', hand, true);
+            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
             break;
         default:
             console.log('Unknown action: ' + action.action);
@@ -464,7 +467,7 @@ function actionCallback(action, room, pn) {
                     break;
                 case '12':
                     //TODO: Deal by 12s
-                    let hands = [[],[],[],[]];
+                    let hands = [[], [], [], []];
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i].push(room['deck'].splice(0, 1)[0]); }
                     //have players in order choose hands
                     //TODO: Create logic for players choosing hands[(0-3)]
@@ -480,8 +483,6 @@ function actionCallback(action, room, pn) {
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                 //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
-            //sort players hands
-            for (let i = 0; i < 4; i++) { room['players'][i].hand = sortHand(room['players'][i].hand) }
 
             if (room['board'].povenost == -1) {
                 room['board'].povenost = findPovenost(room['players'])
@@ -512,6 +513,7 @@ function actionCallback(action, room, pn) {
             break;
         case 'drawTalon':
             if (action.player == room['board'].povenost) {
+                sortCards(room['board'].talon);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
@@ -535,6 +537,7 @@ function actionCallback(action, room, pn) {
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
+                sortCards(room['players'][action.player].tempHand);
                 actionTaken = true;
                 room['board'].preverTalonStep = 1;
             } else if (room['board'].preverTalonStep == 1) {
@@ -546,19 +549,41 @@ function actionCallback(action, room, pn) {
                     //The other three cards now go into Povenost's discard pile, unless Preve is Povenost, in which case the cards go into the next player's discard pile
                     //The game then continues with Prever discarding down to 12 and point cards as normal
                     //TODO: Place talon in discard, set up next action
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
                 } else {
                     //Prever has rejected the first three cards and will instead take the second three
                     //The original three return to the talon and the three from the talon enter the temphand. Other players are allowed to view the talon now
                     //The Prever loss multiplier is doubled here. Prever has a third and final choice to make before we may continue
-                    //TODO: finish this
+                    let tempForSwap = room['board'].talon;
+                    room['board'].talon = room['players'][action.player].tempHand;
+                    room['players'][action.player].tempHand = tempForSwap;
+
+                    //TODO: Show the talon to other players
+
+                    actionTaken = true;
+                    room['board'].preverTalonStep = 2;
                 }
             } else if (room['board'].preverTalonStep == 2) {
                 if (action.info.accept) {
                     //Prever has claimed the second set of cards and basically the same thing happens as if prever had accepted the first half, but the loss multipler is doubled
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
+
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
                 } else {
                     //Prever rejected the second set and returned to the first set
                     //Prever swaps the three cards with the talon and the other players are again allowed to view which cards prever rejected
                     //Finally, the remaining cards in the talon are given to the other team, the loss multiplier is doubled again (now at 4x), and play moves on to discarding
+                    let tempForSwap = room['board'].talon;
+                    room['board'].talon = room['players'][action.player].tempHand;
+                    room['players'][action.player].tempHand = tempForSwap;
+
+                    //TODO: Show the talon to other players
                 }
             }
             break;
@@ -703,7 +728,7 @@ function actionCallback(action, room, pn) {
                     break;
                 //Pass
             }
-            //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to the first trick
+        //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to the first trick
         case 'lead':
             break;
         case 'play':
@@ -938,7 +963,7 @@ function tick() {
     }
 }
 
-let interval = setInterval(tick,1000/60.0);//60 FPS
+let interval = setInterval(tick, 1000 / 60.0);//60 FPS
 
 //Begin listening
 server.listen(8442);
