@@ -135,11 +135,9 @@ function riffleShuffle(deck, isRandom) {
         }
     }
     return result;
-
-
 }
-function sortCards(hand) {
-    return hand.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
+function sortCards(deck) {
+    return deck.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
 }
 function handContainsCard(handToCheck, cardName) {
     console.log(handToCheck);
@@ -186,7 +184,7 @@ function findPovenost(players) {
         value++;
     }
 }
-//
+//Gray-Out Functions
 function grayUndiscardables(hand) {
     let hasNonTrump = false;
     for (let i in hand) {
@@ -480,8 +478,8 @@ function actionCallback(action, room, pn) {
                     }
                     break;
                 default:
+                    //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
-                //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
 
             if (room['board'].povenost == -1) {
