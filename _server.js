@@ -140,7 +140,6 @@ function sortCards(deck) {
     return deck.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
 }
 function handContainsCard(handToCheck, cardName) {
-    console.log(handToCheck);
     for (let i in handToCheck) {
         if (handToCheck[i].value == cardName) {
             return true;
