@@ -183,6 +183,24 @@ function findPovenost(players) {
         value++;
     }
 }
+function possiblePartners(hand) {
+    //TODO: logic for possible parters { 'value': TRUMP_VALUE[v], 'suit': SUIT[4] }
+    let partners = [];
+    //can always partner with XIX
+    partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
+    //if we hold XIX we can partner with the next lowest trump we don't hold 
+    if (handContainsCard(hand, 'XIX')) {
+        for (let v = 17; v >= 14; v--) {
+            if (handContains(hand, TRUMP_VALUE[v])) {
+                partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+            } else {
+                partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+                break;
+            }
+        }
+    }
+    return partners;
+}
 //Gray-Out Functions
 function grayUndiscardables(hand) {
     let hasNonTrump = false;
@@ -205,12 +223,16 @@ function grayUnplayables(hand, leadCard) {
         for (let i in hand) {
             if (hand[i].suit != leadCard.suit) {
                 hand[i].grayed = true;
+            } else {
+                hand[i].grayed = false;
             }
         }
     } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
         for (let i in hand) {
             if (hand[i].suit != 'Trump') {
                 hand[i].grayed = true;
+            } else {
+                hand[i].grayed = false;
             }
         }
     }
@@ -231,6 +253,17 @@ function robotDiscard(hand, difficulty) {
         default:
             //select first discardable
             return firstSelectableCard(hand);
+    }
+}
+function robotPartner(hand, difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            //always play with XIX
+            return { 'value': 'XIX', 'suit': SUIT[4] };
+;
     }
 }
 function robotCall(difficulty) {
@@ -304,14 +337,21 @@ function robotAction(action, room, pn) {
             case 'moneyCards':
                 break;
             case 'moneyCardCallback':
+                console.log('robotAction() called | action: ' + action.action + ' room: ' + room + ' pn: ' + pn);
                 return;//Do nothing for this one. Don't prep for the next action. Don't remind the server. Nothing.
+            case 'partner':
+                //if povenost choose partner 
+                if (room['board'].povenost == pn) {
+                    action.info.partner = robotPartner(hand);
+                }
+                break;
             case 'call':
                 action.info.call = robotCall();
                 break;
             case 'lead':
                 action.info.card = robotLead(hand);
                 break;
-            case 'play':
+            case 'follow':
                 grayUnplayables(hand);
                 action.info.card = robotPlay(hand);
                 break;
@@ -323,6 +363,7 @@ function robotAction(action, room, pn) {
                 players[room['players'][i].socket].socket.emit('nextAction', action);
             }
         }
+        console.log('robotAction() called | action: ' + action.action + ' pn: ' + pn);
         actionCallback(action, room, pn);
     }
 }
@@ -352,15 +393,19 @@ function playerAction(action, room, pn) {
         case 'moneyCardCallback':
             break;
         case 'partner':
-            //TODO: choose partner if povenost
+            //if povenost choose partner 
+            if (room['board'].povenost == pn) {
+                players[room['players'][pn].socket].socket.emit('returnPossiblePartners', possiblePartners(hand));
+            }
             break;
         case 'call':
             //TODO: call something if we want
             break;
         case 'lead':
-            //TODO: play card first
+            //TODO: play card first in a round
+            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
             break;
-        case 'play':
+        case 'follow':
             //TODO: play a card after someone else has lead
             grayUnplayables(hand);
             players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
@@ -374,6 +419,7 @@ function playerAction(action, room, pn) {
             players[room['players'][i].socket].socket.emit('nextAction', action);
         }
     }
+    console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
 }
 
 function aiAction(action, room, pn) {
@@ -486,6 +532,7 @@ function actionCallback(action, room, pn) {
             } else {
                 room['board'].povenost = (room['board'].povenost + 1) % 4;
             }
+            console.log('server: povenost is ' + room['board'].povenost);
             action.action = 'prever';
             action.player = room['board'].povenost;
             actionTaken = true;
@@ -680,35 +727,28 @@ function actionCallback(action, room, pn) {
                     aiAction({ 'action': 'moneyCardCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 }
             }
-            if (action.player == room['board'].povenost && !room['board'].playingPrever) {
-                //Call for partner
-                action.action = 'partner';
-            }
             actionTaken = true;
 
             action.player = (pn + 1) % 4;
-            if (action.player == room['board'].povenost) {
-                action.action = 'call';
+            if (action.player == room['board'].povenost && !room['board'].playingPrever) {
+                action.action = 'partner';
             }
             break;
         case 'partner':
-            //TODO: If Povenost has the XIX, povenost may choice to call the XIX and play alone
-            if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && action.info.callXIX)) {
-                room['board'].partnerCard = "XIX";
-            } else if (!handContainsCard(currentHand, "XVIII")) {
-                room['board'].partnerCard = "XVIII";
-            } else if (!handContainsCard(currentHand, "XVII")) {
-                room['board'].partnerCard = "XVII";
-            } else if (!handContainsCard(currentHand, "XVI")) {
-                room['board'].partnerCard = "XVI";
-            } else if (!handContainsCard(currentHand, "XV")) {
-                room['board'].partnerCard = "XV";
-            } else {
-                room['board'].partnerCard = "XIX";
+            for (let i in room['players']) {
+                
+                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                    SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
+                    playerAction({ 'action': 'partnerCallback', 'player': i, 'whoCalled': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
+                    robotAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                } else if (room['players'][i].type == PLAYER_TYPE.AI) {
+                    aiAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                }
             }
-            action.action = 'moneyCards';
-            action.player = (pn + 1) % 4;
             actionTaken = true;
+            break;
+        case 'partnerCallback':
             break;
         case 'moneyCardCallback':
             //Extra action just for informing the players. Server does not need to do anything
@@ -738,6 +778,7 @@ function actionCallback(action, room, pn) {
             console.warn('Unrecognized actionCallback: ' + action.action);
             console.trace();
     }
+    console.log('Next Action: ' + action.action);
     action.info = {};
     if (actionTaken) {
 
@@ -920,6 +961,13 @@ io.sockets.on('connection', function (socket) {
     });
     socket.on('moneyCards', function () {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'moneyCards' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('choosePartner', function (partner) {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'partner' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].action = 'chosePartner';
+            rooms[players[socketId].room]['board'].partnerCard = partner;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });

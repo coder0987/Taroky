@@ -9,6 +9,8 @@ const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 let ticker;
 let players;
 let deck;
+let hand;
+let partners;
 let socket;
 let availableRooms={};
 let drawnRooms=[];
@@ -235,6 +237,16 @@ function onLoad() {
         chipCount = returnChips;
         addMessage('You have ' + chipCount + ' chips');
     });
+    socket.on('returnPossiblePartners', function (possiblePartners) {
+        partners = possiblePartners
+        if (partners.length > 1) {
+            let partnerString = '';
+            for (let i in partners) { partnerString += partners[i].value + ', '; }
+            addMessage('You can partner with your choice of the ' + partnerString.substring(0, handString.length - 2));
+        } else if (partners.length==1) {
+            addMessage('You are partnering with the ' + partners[0].value)
+        }
+    });
     socket.on('roomConnected', function(roomConnected) {
         inGame = true;
         document.getElementById('rooms').innerHTML = '';
@@ -295,19 +307,8 @@ function onLoad() {
                     socket.emit('deal');
                     break;
                 case 'prever':
-                    addMessage('Would you like to go prever?');
-                    const goPrever = document.createElement('button');
-                    const noPrever = document.createElement('button');
-                    goPrever.type = 'button';
-                    noPrever.type = 'button';
-                    goPrever.innerHTML = 'Go Prever';
-                    noPrever.innerHTML = 'Pass Prever';
-                    goPrever.id = 'goPrever';
-                    noPrever.id = 'noPrever';
-                    goPrever.addEventListener('click', ()=>{addMessage('You are going prever!');    socket.emit('goPrever');document.getElementById('center').removeChild(document.getElementById('goPrever'));document.getElementById('center').removeChild(document.getElementById('noPrever'));});
-                    noPrever.addEventListener('click', ()=>{addMessage('You are not going prever'); socket.emit('noPrever');document.getElementById('center').removeChild(document.getElementById('goPrever'));document.getElementById('center').removeChild(document.getElementById('noPrever'));});
-                    document.getElementById('center').appendChild(goPrever);
-                    document.getElementById('center').appendChild(noPrever);
+                    addBoldMessage('Would you like to go prever?');
+                    createPreverButtons();
                     break;
                 case 'drawTalon':
                     addMessage('You are drawing cards from the talon.');
@@ -323,26 +324,34 @@ function onLoad() {
                 case 'moneyCardCallback':
                     let calledSomething = false;
                     for (let i in action.info) {
-                        addMessage('Player ' + action.whoCalled + ' is calling ' + action.info[i]);
+                        addMessage('Player ' + (action.whoCalled + 1) + ' is calling ' + action.info[i]);
                         calledSomething = true;
                     }
                     if (!calledSomething) {
-                        addMessage('Player ' + action.whoCalled + ' is calling nothing');
+                        addMessage('Player ' + (action.whoCalled + 1) + ' is calling nothing');
                     }
                     break;
                 case 'partner':
-                    addMessage('You are playing with...');
-                    socket.emit('partner');
+                    addBoldMessage('Who would you like to play with?');
+                    createPartnerButtons(partners);
                     break;
+                case 'partnerCallback':
+                    addMessage('Player ' + '0' + ' is playing with the ' + 'XIX');
                 case 'call':
+                    //TODO:
                     addMessage("You are calling");
                     socket.emit('call');
                     break;
+                case 'lead':
+                    //TODO:
+                    break;
+                case 'follow':
+                    //TODO:
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }
         } else {
-            addMessage('Player ' + action.player + ' is performing the action ' + action.action);
+            addMessage('Player ' + (action.player + 1) + ' is performing the action ' + action.action);
         }
     });
     socket.on('failedDiscard',function(toDiscard) {
@@ -388,3 +397,36 @@ function ping() {socket.emit('currentAction');}//Debug function
 
 function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (a[i].count != b[i].count) {return false;}}return true;}
 
+function createPreverButtons() {
+    const goPrever = document.createElement('button');
+    const noPrever = document.createElement('button');
+    goPrever.type = 'button';
+    noPrever.type = 'button';
+    goPrever.innerHTML = 'Go Prever';
+    noPrever.innerHTML = 'Pass Prever';
+    goPrever.id = 'goPrever';
+    noPrever.id = 'noPrever';
+    goPrever.addEventListener('click', () => { addMessage('You are going prever!'); socket.emit('goPrever'); document.getElementById('center').removeChild(document.getElementById('goPrever')); document.getElementById('center').removeChild(document.getElementById('noPrever')); });
+    noPrever.addEventListener('click', () => { addMessage('You are not going prever'); socket.emit('noPrever'); document.getElementById('center').removeChild(document.getElementById('goPrever')); document.getElementById('center').removeChild(document.getElementById('noPrever')); });
+    document.getElementById('center').appendChild(goPrever);
+    document.getElementById('center').appendChild(noPrever);
+}
+
+function createPartnerButtons(possiblePartners) {
+    for (let i in possiblePartners) {
+        const button = document.createElement('button')
+        button.type = 'button';
+        button.innerHTML = possiblePartners[i].value;
+        button.id = possiblePartners[i].value;
+        button.addEventListener('click', () => { partnerButtonsOnClickListenterTasks(possiblePartners[i].value, possiblePartners); });
+        document.getElementById('center').appendChild(button);
+    }
+}
+
+function partnerButtonsOnClickListenterTasks(cardvalue, possiblePartners) {
+    addMessage('You are playing with ' + cardvalue);
+    socket.emit('partner', cardValue);
+    for (let i in possiblePartners) {
+        document.getElementById('center').removeChild(document.getElementById(possiblePartners[i].value));
+    }
+}
