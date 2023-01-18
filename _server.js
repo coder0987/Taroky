@@ -74,8 +74,23 @@ for (let s = 0; s < 4; s++)
         baseDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
 for (let v = 0; v < 22; v++)
     baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; }
-function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; }
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; }
+function Board() {
+    this.partnerCard = "";
+    this.talon = [];
+    this.table = [];
+    this.preverTalon = [];
+    this.preverTalonStep = 0;
+    this.prever = -1;
+    this.playingPrever = false;
+    this.povenost = -1;
+    this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
+    this.cutStyle = '';
+    this.moneyCards = [[], [], [], []];
+    this.valat = -1;
+    this.iote = -1;
+    this.contra = [-1,-1];
+}
 function shuffleDeck(deck, shuffleType) {
     //TODO: Create actual shuffling functions
     let tempDeck = [...deck];
@@ -520,6 +535,10 @@ function actionCallback(action, room, pn) {
             } else {
                 room['board'].partnerCard = "XIX";
             }
+
+            //TODO: adjust other players' isTeamPovenost
+            room['players'][room['board'].povenost].isTeamPovenost = true;
+
             action.action = 'moneyCards';
             action.player = (pn + 1) % 4;
             actionTaken = true;
@@ -528,17 +547,29 @@ function actionCallback(action, room, pn) {
             //Extra action just for informing the players. Server does not need to do anything
             break;
         case 'call':
-            switch (action.info.call) {
-                //TODO: call
-                case 'contra':
-                    break;
-                case 'valat':
-                    break;
-                case 'Iote'://I on the End
-                    break;
-                //Pass
+            if (action.info.valat && ~room['board'].valat) {
+                //Player called valat
+                room['board'].valat = pn;
+                action.player = room['board'].povenost;
+                action.action = 'iote';//Only one player may call valat
+            } else {
+                action.player = (pn + 1) % 4;
+                if (action.player == room['board'].povenost) {
+                    action.action = 'iote';
+                }
             }
-            //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to the first trick
+            //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to calling iote
+            actionTaken = true;
+
+            break;
+        case 'iote':
+            break;
+        case 'contra':
+            break;
+        case 'play':
+            break;
+        case 'resetBoard':
+            //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneycards, etc.
             break;
         default:
             console.warn('Unrecognized actionCallback: ' + action.action);
