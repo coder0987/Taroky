@@ -178,7 +178,7 @@ function robotAction(action, room, pn) {
             case 'moneyCardCallback':
                 return;//Do nothing for this one. Don't prep for the next action. Don't remind the server. Nothing.
             case 'call':
-                break;//lol never call anything
+                break;
             default:
                 console.warn('Unknown robot action: ' + action.action);
         }
@@ -334,7 +334,7 @@ function actionCallback(action, room, pn) {
                 //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
             if (room['board'].povenost == -1) {
-                //TODO: Whichever player has the 2 is povenost. Else the 3, 4, 5, 6, etc
+                //TODO: Whichever player has the II is povenost. Else the III, IIII, V, VI, etc
                 room['board'].povenost = 0;
             } else {
                 room['board'].povenost = (room['board'].povenost + 1) % 4;
@@ -521,7 +521,7 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'partner':
-            //TODO: If Povenost has the XIX, povenost may choice to call the XIX and play alone
+            //TODO: If Povenost has the XIX, povenost may choose to call the XIX and play alone
             if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && action.info.callXIX)) {
                 room['board'].partnerCard = "XIX";
             } else if (!handContainsCard(currentHand, "XVIII")) {
@@ -562,11 +562,18 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
 
             break;
+        case 'valat':
+            //TODO: Prompt each player to call valat. If any player calls valat, immediately skip to "contra"
+            //Possible variations: IOTE may still be allowed in a valat game, contra may be disallowed
+            break;
         case 'iote':
+            //TODO: Prompt the player with the I to call I on the End
             break;
         case 'contra':
+            //TODO: Prompt each non-povenost (or non-prever, in the case of prever games) to contra. If called, prompt the reverse team. If called, prompt the original team. Then pass
             break;
         case 'play':
+            //TODO: Prompt the leader (starts with Povenost, even in prever games) to play the first card. If a card is already lead, instead prompt the player to follow suit
             break;
         case 'resetBoard':
             //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneycards, etc.

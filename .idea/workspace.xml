@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Finishes moneyCards and adds JQuery">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Fixes crash">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
     </list>
@@ -306,7 +306,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670803096387</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="Fixes crash">
+      <created>1672010795897</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1672010795897</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -322,7 +329,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Fixes logo src attribute" />
     <MESSAGE value="Adds TarokyBack temporary image file" />
     <MESSAGE value="Adds shuffling and game beginning" />
     <MESSAGE value="Adds custom images and showAllImages() debug function" />
@@ -347,6 +353,7 @@
     <MESSAGE value="Adds temporary chatbox and starts moneycards" />
     <MESSAGE value="Adds money cards and begins calls for Valat, I, and Contra" />
     <MESSAGE value="Finishes moneyCards and adds JQuery" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finishes moneyCards and adds JQuery" />
+    <MESSAGE value="Fixes crash" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixes crash" />
   </component>
 </project>
