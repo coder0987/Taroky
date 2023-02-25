@@ -331,16 +331,21 @@ function onLoad() {
                     break;
                 case 'partnerCallback':
                     addMessage('Player ' + '0' + ' is playing with the ' + 'XIX');
-                case 'call':
-                    //TODO:
-                    addMessage("You are calling");
-                    socket.emit('call');
+                case 'valat':
+                    addBoldMessage('Would you like to call valat?');
+                    //TODO: add valat buttons
+                    break;
+                case 'contra':
+                    //TODO: add contra buttons
+                    break;
+                case 'iote':
+                    //TODO: add IOTE buttons
                     break;
                 case 'lead':
-                    //TODO:
+                    //TODO: render hand and prep for user input
                     break;
                 case 'follow':
-                    //TODO:
+                    //TODO: render hand and prep for user input
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }
