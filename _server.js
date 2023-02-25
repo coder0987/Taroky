@@ -85,12 +85,11 @@ index(TRUMP_VALUE);
 let simplifiedRooms = {};
 let ticking = false;
 
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; }
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; }
 function resetBoardForNextRound(board) { //setup board for next round. dealer of next round is this rounds povenost
     board.partnerCard = ""; board.talon = []; board.table = []; board.preverTalon = []; board.preverTalonStep = 0; board.prever = -1; board.playingPrever = false; board.contraCount = 0; board.valat = -1; board.Iote = -1; board.nextStep = { player: board.povenost, action: 'start', time: Date.now(), info: null }; board.cutStyle = ''; board.moneyCards = [[], [], [], []]; board.gameNumber++;
 }
 let baseDeck = createDeck();
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; }
 function Board() {
     this.partnerCard = "";
     this.talon = [];
