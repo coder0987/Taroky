@@ -1128,12 +1128,13 @@ function tick() {
             }
             //TODO: If action.time is greater than Date.now() + room.timeout, automatically complete the action
         }
+        //TODO: Add room class
         if (Object.keys(rooms).length == 0) {
-            rooms['Main'] = { 'settings':['difficulty':DIFFICULTY.EASY], 'name': 'Main', 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
+            rooms['Main'] = { 'settings':{'difficulty':DIFFICULTY.EASY}, 'name': 'Main', 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) { }
-            rooms[i] = { 'settings':['difficulty':DIFFICULTY.EASY], 'name': Object.keys(rooms).length, 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
+            rooms[i] = { 'settings':{'difficulty':DIFFICULTY.EASY}, 'name': Object.keys(rooms).length, 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
         }
         simplifiedRooms = {};
         for (let i in rooms) {
