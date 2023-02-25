@@ -417,6 +417,8 @@ function playerAction(action, room, pn) {
         case 'call':
             //TODO: call something if we want
             break;
+        case 'iote':
+            break;
         case 'lead':
             //TODO: play card first in a round
             players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
@@ -748,7 +750,7 @@ function actionCallback(action, room, pn) {
 
             action.player = (pn + 1) % 4;
             if (action.player == room['board'].povenost) {
-                action.action = 'call';
+                action.action = 'valat';
             }
             break;
         case 'partner':
@@ -791,12 +793,12 @@ function actionCallback(action, room, pn) {
         case 'moneyCardCallback':
             //Extra action just for informing the players. Server does not need to do anything
             break;
-        case 'call':
+        case 'valat':
             if (action.info.valat && ~room['board'].valat) {
                 //Player called valat
                 room['board'].valat = pn;
                 action.player = room['board'].povenost;
-                action.action = 'iote';//Only one player may call valat
+                action.action = 'contra';//Only one player may call valat
             } else {
                 action.player = (pn + 1) % 4;
                 if (action.player == room['board'].povenost) {
@@ -804,30 +806,104 @@ function actionCallback(action, room, pn) {
                 }
             }
             //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to calling iote
-            actionTaken = true;
 
-            break;
-        case 'valat':
-            //TODO: Prompt each player to call valat. If any player calls valat, immediately skip to "contra"
             //Possible variations: IOTE may still be allowed in a valat game, contra may be disallowed
             break;
         case 'iote':
             //TODO: Prompt the player with the I to call I on the End
+            action.action = 'contra';//Skips IOTE altogether, temporary
             break;
         case 'contra':
             //TODO: Prompt each non-povenost (or non-prever, in the case of prever games) to contra. If called, prompt the reverse team. If called, prompt the original team. Then pass
-            room['board'].contraCount++;
+            if (action.info.contra) {
+                room['board'].contraCount++;
+                //TODO: go to first in line on the opposing team
+            } else {
+                //TODO: go to next in line on the current team. If this was the last in line, move on to lead
+                action.action = 'lead';
+                action.player = room['board'].povenost;
+            }
+            actionTaken = true;
             break;
         case 'lead':
-            //TODO: Prompt the leader (starts with Povenost, even in prever games) to play the first card.
+            //TODO: place the played card from action.info.card onto the virtual "board"
+            //TODO: gray out cards for the next player
+            actionTaken = true;
+            action.action = 'play';
+            action.player = (action.player + 1) % 4;
             break;
         case 'play':
-            //TODO: Prompt the player to play a card that follows suit
+            //TODO: place the played card from action.info.card onto the virtual "board"
+            /*Pseudocode
+            if (VIRTUALBOARD.length == 4) {
+                action.action = 'COUNTPOINTS';
+                action.player = room['board'].povenost;
+                actionTaken = true;
+            } else {
+                VIRTUALBOARD.push(action.info.card)
+                action.player = (action.player + 1) % 4;
+                GRAYUNPLAYABLES(room['players'][action.player].hand);
+                //Note hand is automatically returned later on, no need to do so now
+                actionTaken = true;
+            }
+            */
+            break;
+        case 'countPoints':
+            //TODO: count points. Harder difficulties might have manual counting later on
+            /*
+            if (valat) {
+                chipsOwed = room['board'].valat
+            } else {
+                Combine discard piles from all members of each team
+                team1 = [...membersDiscardPiles1];
+                team2 = [...membersDiscardPiles2];
+                Count the point values
+                team1Points = 0;
+                team2Points = 0;
+                for (let i in team1) {
+                    team1Points += team1[i].pointValue;
+                }
+                for (let i in team2) {
+                    team2Points += team2[i].pointValue;
+                }
+                check to make sure it adds to 106
+                if (team1Points + team2Points != 106) {
+                    console.warn('Error: incorrect number of points');
+                }
+                divide by 10 and round
+                chipsOwed = Math.round(team1Points / 10);
+                add IOTE
+                chipsOwed += room['board'].iote * room['board'].ioteMultiplier * 2;
+                Note that iote = -1 for non-povenost team, 0 for no one, 1 for povenost team
+                ioteMultiplier = 2 if called, 1 otherwise. Variable is used for settings later on
+            }
+            chipsOwed *= Math.pow(2, contraCount)
+            if (preverLost) {
+                chipsOwed *= Math.pow(2, preverTalonSwitchCount)
+            }
+
+            for (let i in team1Players) {
+                let tempChipsOwed = chipsOwed;
+                if (team1Players.length == 1) {tempChipsOwed*=3;}
+                if (team1Players.length == 3) {tempChipsOwed/=3;}
+                team1Players[i].chips += tempChipsOwed;
+            }
+            for (let i in team2Players) {
+                let tempChipsOwed = chipsOwed;
+                if (team2Players.length == 1) {tempChipsOwed*=3;}
+                if (team2Players.length == 3) {tempChipsOwed/=3;}
+                team2Players[i].chips -= tempChipsOwed;
+            }
+            actionTaken = true;
+            action.action = 'resetBoard';
+            */
             break;
         case 'resetBoard':
             //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneycards, etc.
+            //Also, iterate povenost by 1
             resetBoardForNextRound(room['board']);
-            action.action = 'start';
+            action.player = room['board'].povenost;//already iterated
+            action.action = 'shuffle';
             break;
         default:
             console.warn('Unrecognized actionCallback: ' + action.action);
@@ -1039,6 +1115,7 @@ function tick() {
                 delete rooms[i];
                 console.log('Stopped empty game in room ' + i);
             }
+            //TODO: If action.time is greater than Date.now() + room.timeout, automatically complete the action
         }
         if (Object.keys(rooms).length == 0) {
             rooms['Main'] = { 'name': 'Main', 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
