@@ -572,7 +572,6 @@ function actionCallback(action, room, pn) {
             break;
         case 'drawTalon':
             if (action.player == room['board'].povenost) {
-                sortCards(room['board'].talon);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
@@ -664,7 +663,7 @@ function actionCallback(action, room, pn) {
                     action.player = (action.player + 1) % 4;
                     if (room['players'][action.player].hand.length == 12) {
                         action.player = room['board'].povenost;
-                        action.action = 'moneyCards';
+                        action.action = 'partner';
                     }
                 }
             } else {
@@ -745,8 +744,8 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
 
             action.player = (pn + 1) % 4;
-            if (action.player == room['board'].povenost && !room['board'].playingPrever) {
-                action.action = 'partner';
+            if (action.player == room['board'].povenost) {
+                action.action = 'call';
             }
             break;
         case 'partner':
@@ -768,14 +767,13 @@ function actionCallback(action, room, pn) {
             //TODO: adjust other players' isTeamPovenost
             room['players'][room['board'].povenost].isTeamPovenost = true;
 
-            action.action = 'moneyCards';
-            action.player = (pn + 1) % 4;
+            action.action = 'moneycards';
             //TODO: Wasn't sure what to merge here so merged mine commented out, not sure what I was doing here looking at it again lol
-            /* 
+            //TODO: It looks like you were informing the players of Povenost's call, which actually we probably should do. I'm not sure why you asked for returnchips though
+
             for (let i in room['players']) {
                 
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-                    SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
                     playerAction({ 'action': 'partnerCallback', 'player': i, 'whoCalled': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
                     robotAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
@@ -783,10 +781,10 @@ function actionCallback(action, room, pn) {
                     aiAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 }
             }
-            */
             actionTaken = true;
             break;
         case 'partnerCallback':
+            //Extra action just for informing the players.
             break;
         case 'moneyCardCallback':
             //Extra action just for informing the players. Server does not need to do anything
