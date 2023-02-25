@@ -3,6 +3,7 @@ const url = require('url');
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
+const { diffieHellman } = require('crypto');
 const app = express();
 
 //Standard file-serving
@@ -56,24 +57,40 @@ app.use('/client', express.static(__dirname + '/client'));
 console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
 
 
+//helper func
+function index(dict) {
+    for (let key in dict) {
+        dict[dict[key]] = key;
+    }
+}
+
+
 //SOCKETS
 const io = require('socket.io')(server);
 const SOCKET_LIST = {};
 const players = {};
 const rooms = {};
 const PLAYER_TYPE = { HUMAN: 0, ROBOT: 1, AI: 2, H: 0, R: 1 };
+
 const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump' };
 const RED_VALUE = { 0: 'Ace', 1: 'Two', 2: 'Three', 3: 'Four', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz' };
+
+index(SUIT);
+index(RED_VALUE);
+index(BLACK_VALUE);
+index(TRUMP_VALUE);
+
 let simplifiedRooms = {};
 let ticking = false;
-let baseDeck = [];
-for (let s = 0; s < 4; s++)
-    for (let v = 0; v < 8; v++)
-        baseDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
-for (let v = 0; v < 22; v++)
-    baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; }
+function Board() { this.partnerCard = ""; this.talon = []; this.table = []; this.preverTalon = []; this.preverTalonStep = 0; this.prever = -1; this.playingPrever = false; this.povenost = -1; this.contraCount = 0; this.valat = -1; this.Iote = -1; this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null }; this.cutStyle = ''; this.moneyCards = [[], [], [], []]; this.gameNumber = 1; }
+function resetBoardForNextRound(board) { //setup board for next round. dealer of next round is this rounds povenost
+    board.partnerCard = ""; board.talon = []; board.table = []; board.preverTalon = []; board.preverTalonStep = 0; board.prever = -1; board.playingPrever = false; board.contraCount = 0; board.valat = -1; board.Iote = -1; board.nextStep = { player: board.povenost, action: 'start', time: Date.now(), info: null }; board.cutStyle = ''; board.moneyCards = [[], [], [], []]; board.gameNumber++;
+}
+let baseDeck = createDeck();
 function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; }
 function Board() {
     this.partnerCard = "";
@@ -91,15 +108,51 @@ function Board() {
     this.iote = -1;
     this.contra = [-1,-1];
 }
+function createDeck() {
+    let baseDeck = [];
+    for (let s = 0; s < 4; s++)
+        for (let v = 0; v < 8; v++)
+            baseDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
+    for (let v = 0; v < 22; v++)
+        baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+    return baseDeck;
+}
 function shuffleDeck(deck, shuffleType) {
-    //TODO: Create actual shuffling functions
     let tempDeck = [...deck];
     switch (shuffleType) {
-        case 1: /*cut*/      return tempDeck;
-        case 2: /*riffle*/   return tempDeck;
+        case 1: /*cut*/     return cutShuffle(tempDeck, tempDeck.length / 2);
+        case 2: /*riffle*/  return riffleShuffle(tempDeck, true);
         case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
     }
+}
+function cutShuffle(deck, cutPosition) {
+    if (deck.length >= cutPosition) { return deck }
+    let leftSide = deck.slice(0, cutPosition);
+    let rightSide = deck.slice(cutPosition + 1);
+    return [...rightSide, ...leftSide];
+}
+function riffleShuffle(deck, isRandom) {
+    let middle = deck.length / 2;
+    let leftSide = deck.slice(0, middle);
+    let rightSide = deck.slice(middle);
+    let result = [];
+    let leftSideFirst = 1;
+    for (var i = 0; i < leftSide.length; i++) {
+        if (isRandom) { leftSideFirst = Math.floor(Math.random() * 2); }
+        if (leftSideFirst == 1) {
+            result.push(leftSide[i]);
+            result.push(rightSide[i]);
+        }
+        else {
+            result.push(rightSide[i]);
+            result.push(leftSide[i]);
+        }
+    }
+    return result;
+}
+function sortCards(deck) {
+    return deck.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
 }
 function handContainsCard(handToCheck, cardName) {
     for (let i in handToCheck) {
@@ -125,6 +178,141 @@ function handContains(handToCheck, valueToCheck, suitToCheck) {
     }
     return false;
 }
+function isCardPlayable(hand, card, leadCard) {
+    if (handHasSuit(hand, leadCard.suit)) {
+        return card.suit == leadCard.suit;
+    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+        return card.suit == 'Trump';
+    } else {
+        return true;
+    }
+}
+function findPovenost(players) {
+    let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povenost is found
+    while (true) { //loop until we find povenost
+        for (let i = 0; i < 4; i++) {
+            if (handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
+                return i; //found povenost
+            }
+        }
+        value++;
+    }
+}
+function possiblePartners(hand) {
+    //TODO: logic for possible parters { 'value': TRUMP_VALUE[v], 'suit': SUIT[4] }
+    let partners = [];
+    //can always partner with XIX
+    partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
+    //if we hold XIX we can partner with the next lowest trump we don't hold 
+    if (handContainsCard(hand, 'XIX')) {
+        for (let v = 17; v >= 14; v--) {
+            if (handContains(hand, TRUMP_VALUE[v])) {
+                partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+            } else {
+                partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+                break;
+            }
+        }
+    }
+    return partners;
+}
+//Gray-Out Functions
+function grayUndiscardables(hand) {
+    let hasNonTrump = false;
+    for (let i in hand) {
+        if (hand[i].suit != 'Trump') {
+            hasNonTrump = true;
+            break;
+        }
+    }
+    for (let i in hand) {
+        if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
+            hand[i].grayed = true;
+        } else {
+            hand[i].grayed = false;
+        }
+    }
+}
+function grayUnplayables(hand, leadCard) {
+    if (handHasSuit(hand, leadCard.suit)) {
+        for (let i in hand) {
+            if (hand[i].suit != leadCard.suit) {
+                hand[i].grayed = true;
+            } else {
+                hand[i].grayed = false;
+            }
+        }
+    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+        for (let i in hand) {
+            if (hand[i].suit != 'Trump') {
+                hand[i].grayed = true;
+            } else {
+                hand[i].grayed = false;
+            }
+        }
+    }
+}
+//Robot Functions
+function firstSelectableCard(hand) {
+    for (let i in hand) {
+        if (!hand[i].grayed) {
+            return hand[i];
+        }
+    }
+}
+function robotDiscard(hand, difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            //select first discardable
+            return firstSelectableCard(hand);
+    }
+}
+function robotPartner(hand, difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            //always play with XIX
+            return { 'value': 'XIX', 'suit': SUIT[4] };
+;
+    }
+}
+function robotCall(difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            //call nothing lol
+            return;
+    }
+}
+function robotLead(hand, difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            //select first playable
+            return firstSelectableCard(hand);
+
+    }
+}
+function robotPlay(hand, difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+            break;
+        default:
+            //select first playable
+            return firstSelectableCard(hand);
+    }
+}
+
 //SEE Card Locations in codeNotes
 //SEE Action Flow in codeNotes
 
@@ -139,6 +327,9 @@ function autoAction(action, room, pn) {
 }
 
 function robotAction(action, room, pn) {
+
+    let hand = room['players'][pn].hand;//linked. Changing one will change the other.
+
     //Takes the action automatically IF and only IF the robot is supposed to
     if (action.player == pn) {
         switch (action.action) {
@@ -155,29 +346,29 @@ function robotAction(action, room, pn) {
             case 'drawTalon':
                 break;
             case 'discard':
-                let hand = room['players'][pn].hand;//linked. Changing one will change the other.
-                let hasNonTrump = false;
-                for (let i in hand) {
-                    if (hand[i].suit != 'Trump') {
-                        hasNonTrump = true;
-                        break;
-                    }
-                }
-                for (let i in hand) {
-                    if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
-                        hand[i].grayed = true;
-                    } else {
-                        hand[i].grayed = false;
-                        action.info.card = hand[i];//A terrible approach to discarding. First available card is ditched.
-                        break;
-                    }
-                }
+                grayUndiscardables(hand);
+                action.info.card = robotDiscard(hand);
                 break;
             case 'moneyCards':
                 break;
             case 'moneyCardCallback':
+                console.log('robotAction() called | action: ' + action.action + ' room: ' + room + ' pn: ' + pn);
                 return;//Do nothing for this one. Don't prep for the next action. Don't remind the server. Nothing.
+            case 'partner':
+                //if povenost choose partner 
+                if (room['board'].povenost == pn) {
+                    action.info.partner = robotPartner(hand);
+                }
+                break;
             case 'call':
+                action.info.call = robotCall();
+                break;
+            case 'lead':
+                action.info.card = robotLead(hand);
+                break;
+            case 'follow':
+                grayUnplayables(hand);
+                action.info.card = robotPlay(hand);
                 break;
             default:
                 console.warn('Unknown robot action: ' + action.action);
@@ -187,16 +378,22 @@ function robotAction(action, room, pn) {
                 players[room['players'][i].socket].socket.emit('nextAction', action);
             }
         }
+        console.log('robotAction() called | action: ' + action.action + ' pn: ' + pn);
         actionCallback(action, room, pn);
     }
 }
 function playerAction(action, room, pn) {
     //Prompts the player to take an action IF and only IF the player is supposed to
     //Works closely with action callbacks
+
+    let hand = room['players'][pn].hand;//linked. Changing one will change the other.
+
     switch (action.action) {
         case 'shuffle':
         //Do nothing, because its all taken care of by the generic action sender/informer at the end
         case 'cut':
+        //TODO: Maybe Should add ability to choose cut position by adding a way to select
+        //      Also add ability to 'knock' and choose how cards dealt
         case 'deal':
         case 'prever':
         case 'callPrever':
@@ -204,25 +401,29 @@ function playerAction(action, room, pn) {
         case 'drawTalon':
             break;
         case 'discard':
-            let hand = room['players'][pn].hand;//linked. Changing one will change the other.
-            let hasNonTrump = false;
-            for (let i in hand) {
-                if (hand[i].suit != 'Trump') {
-                    hasNonTrump = true;
-                    break;
-                }
-            }
-            for (let i in hand) {
-                if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
-                    hand[i].grayed = true;
-                } else {
-                    hand[i].grayed = false;
-                }
-            }
-            players[room['players'][pn].socket].socket.emit('returnHand', hand, true);
+            grayUndiscardables(hand);
+            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
             break;
         case 'moneyCards':
         case 'moneyCardCallback':
+            break;
+        case 'partner':
+            //if povenost choose partner 
+            if (room['board'].povenost == pn) {
+                players[room['players'][pn].socket].socket.emit('returnPossiblePartners', possiblePartners(hand));
+            }
+            break;
+        case 'call':
+            //TODO: call something if we want
+            break;
+        case 'lead':
+            //TODO: play card first in a round
+            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
+            break;
+        case 'follow':
+            //TODO: play a card after someone else has lead
+            grayUnplayables(hand);
+            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
             break;
         default:
             console.log('Unknown action: ' + action.action);
@@ -233,6 +434,7 @@ function playerAction(action, room, pn) {
             players[room['players'][i].socket].socket.emit('nextAction', action);
         }
     }
+    console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
 }
 
 function aiAction(action, room, pn) {
@@ -247,6 +449,8 @@ function aiAction(action, room, pn) {
     }
 }
 function actionCallback(action, room, pn) {
+    // an Action is {player_num,action_type,time,info}
+
     //This callback will transfer from one action to the next and inform the humans of the action to be taken
     //In the case that a robot or AI is the required player, this will directly call on the above action handlers
     //The action is presumed to be verified by it's player takeAction function, not here
@@ -267,13 +471,13 @@ function actionCallback(action, room, pn) {
 
     switch (action.action) {
         case 'start':
-            console.log('Game is starting in room ' + room.name);
+            console.log('Game ' + room['board'].gameNumber + ' is starting in room ' + room.name);
             action.action = 'shuffle';
             action.player = pn;//PN does not change because the same person starts and shuffles
             for (let i = 0; i < 4; i++) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     //Starting the game is a special case. In all other cases, actions completed will inform the players through the take action methods
-                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i);//Inform the players of game beginning. Host is assumed to be shuffler.
+                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber);//Inform the players of game beginning. Host is assumed to be shuffler.
                 }
             }
             actionTaken = true;
@@ -320,7 +524,11 @@ function actionCallback(action, room, pn) {
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '12':
-                    //TODO: Deal by 12s (choice)
+                    //TODO: Deal by 12s
+                    let hands = [[], [], [], []];
+                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i].push(room['deck'].splice(0, 1)[0]); }
+                    //have players in order choose hands
+                    //TODO: Create logic for players choosing hands[(0-3)]
                     break;
                 case '345':
                     for (let t = 3; t < 6; t++) {
@@ -330,15 +538,18 @@ function actionCallback(action, room, pn) {
                     }
                     break;
                 default:
+                    //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
-                //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
             }
+            
             if (room['board'].povenost == -1) {
-                //TODO: Whichever player has the II is povenost. Else the III, IIII, V, VI, etc
-                room['board'].povenost = 0;
+                //Povenost first round choosen by cards
+                room['board'].povenost = findPovenost(room['players'])
             } else {
+                //Povenost rotates after first round
                 room['board'].povenost = (room['board'].povenost + 1) % 4;
             }
+            console.log('server: povenost is ' + room['board'].povenost);
             action.action = 'prever';
             action.player = room['board'].povenost;
             actionTaken = true;
@@ -363,6 +574,7 @@ function actionCallback(action, room, pn) {
             break;
         case 'drawTalon':
             if (action.player == room['board'].povenost) {
+                sortCards(room['board'].talon);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
@@ -386,6 +598,7 @@ function actionCallback(action, room, pn) {
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
+                sortCards(room['players'][action.player].tempHand);
                 actionTaken = true;
                 room['board'].preverTalonStep = 1;
             } else if (room['board'].preverTalonStep == 1) {
@@ -397,19 +610,41 @@ function actionCallback(action, room, pn) {
                     //The other three cards now go into Povenost's discard pile, unless Preve is Povenost, in which case the cards go into the next player's discard pile
                     //The game then continues with Prever discarding down to 12 and point cards as normal
                     //TODO: Place talon in discard, set up next action
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
                 } else {
                     //Prever has rejected the first three cards and will instead take the second three
                     //The original three return to the talon and the three from the talon enter the temphand. Other players are allowed to view the talon now
                     //The Prever loss multiplier is doubled here. Prever has a third and final choice to make before we may continue
-                    //TODO: finish this
+                    let tempForSwap = room['board'].talon;
+                    room['board'].talon = room['players'][action.player].tempHand;
+                    room['players'][action.player].tempHand = tempForSwap;
+
+                    //TODO: Show the talon to other players
+
+                    actionTaken = true;
+                    room['board'].preverTalonStep = 2;
                 }
             } else if (room['board'].preverTalonStep == 2) {
                 if (action.info.accept) {
                     //Prever has claimed the second set of cards and basically the same thing happens as if prever had accepted the first half, but the loss multipler is doubled
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
+                    room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
+
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
                 } else {
                     //Prever rejected the second set and returned to the first set
                     //Prever swaps the three cards with the talon and the other players are again allowed to view which cards prever rejected
                     //Finally, the remaining cards in the talon are given to the other team, the loss multiplier is doubled again (now at 4x), and play moves on to discarding
+                    let tempForSwap = room['board'].talon;
+                    room['board'].talon = room['players'][action.player].tempHand;
+                    room['players'][action.player].tempHand = tempForSwap;
+
+                    //TODO: Show the talon to other players
                 }
             }
             break;
@@ -509,15 +744,11 @@ function actionCallback(action, room, pn) {
                     aiAction({ 'action': 'moneyCardCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 }
             }
-            if (action.player == room['board'].povenost && !room['board'].playingPrever) {
-                //Call for partner
-                action.action = 'partner';
-            }
             actionTaken = true;
 
             action.player = (pn + 1) % 4;
-            if (action.player == room['board'].povenost) {
-                action.action = 'call';
+            if (action.player == room['board'].povenost && !room['board'].playingPrever) {
+                action.action = 'partner';
             }
             break;
         case 'partner':
@@ -541,7 +772,23 @@ function actionCallback(action, room, pn) {
 
             action.action = 'moneyCards';
             action.player = (pn + 1) % 4;
+            //TODO: Wasn't sure what to merge here so merged mine commented out, not sure what I was doing here looking at it again lol
+            /* 
+            for (let i in room['players']) {
+                
+                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                    SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
+                    playerAction({ 'action': 'partnerCallback', 'player': i, 'whoCalled': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
+                    robotAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                } else if (room['players'][i].type == PLAYER_TYPE.AI) {
+                    aiAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                }
+            }
+            */
             actionTaken = true;
+            break;
+        case 'partnerCallback':
             break;
         case 'moneyCardCallback':
             //Extra action just for informing the players. Server does not need to do anything
@@ -571,21 +818,31 @@ function actionCallback(action, room, pn) {
             break;
         case 'contra':
             //TODO: Prompt each non-povenost (or non-prever, in the case of prever games) to contra. If called, prompt the reverse team. If called, prompt the original team. Then pass
+            room['board'].contraCount++;
+            break;
+        case 'lead':
+            //TODO: Prompt the leader (starts with Povenost, even in prever games) to play the first card.
             break;
         case 'play':
-            //TODO: Prompt the leader (starts with Povenost, even in prever games) to play the first card. If a card is already lead, instead prompt the player to follow suit
+            //TODO: Prompt the player to play a card that follows suit
             break;
         case 'resetBoard':
             //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneycards, etc.
+            resetBoardForNextRound(room['board']);
+            action.action = 'start';
             break;
         default:
             console.warn('Unrecognized actionCallback: ' + action.action);
             console.trace();
     }
+    console.log('Next Action: ' + action.action);
     action.info = {};
     if (actionTaken) {
+
+        //Sanity Check 
         if (action.player > 3 || action.player < 0) { console.warn('Illegal player number: ' + action.player + ' during action ' + action.action); action.player %= 4; }
         if (!room['players'][action.player]) { console.warn('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players'])); }
+
         action.time = Date.now();
         playerType = room['players'][action.player].type;
 
@@ -764,6 +1021,13 @@ io.sockets.on('connection', function (socket) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
+    socket.on('choosePartner', function (partner) {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'partner' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].action = 'chosePartner';
+            rooms[players[socketId].room]['board'].partnerCard = partner;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0) emptyRoomCount++; } return emptyRoomCount; }
@@ -801,7 +1065,7 @@ function tick() {
     }
 }
 
-let interval = setInterval(tick, 1000 / 30.0);//30 FPS
+let interval = setInterval(tick, 1000 / 60.0);//60 FPS
 
 //Begin listening
 server.listen(8442);

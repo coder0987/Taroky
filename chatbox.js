@@ -8,6 +8,16 @@ function addMessage(theString) {
     toInsert.innerHTML = theString;
     container.insertBefore(toInsert, container.firstChild);
 }
+function addBoldMessage(theString) {
+    console.log('BOLD: ' + theString);
+    let container = document.getElementById('chatbox');
+    let toInsert = document.createElement("p");
+    let bold = document.createElement('strong');
+    let text = document.createTextNode(theString);
+    bold.appendChild(text);
+    toInsert.appendChild(bold);
+    container.insertBefore(toInsert, container.firstChild);
+}
 function addError(theString) {
     //Maybe make it red or something?
     console.error(theString);
