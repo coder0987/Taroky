@@ -79,7 +79,7 @@ const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 
 
 //TODO: confirm difficulty levels. How many levels do we want? 5 + AI?
 //Note, once the AI is developed it will be easier to adjust difficulty using different AI
-const DIFFICULTY = {SUPER-EASY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
+const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 
 index(SUIT);
 index(RED_VALUE);
