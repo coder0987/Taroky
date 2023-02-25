@@ -77,6 +77,10 @@ const RED_VALUE = { 0: 'Ace', 1: 'Two', 2: 'Three', 3: 'Four', 4: 'Jack', 5: 'Ri
 const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz' };
 
+//TODO: confirm difficulty levels. How many levels do we want? 5 + AI?
+//Note, once the AI is developed it will be easier to adjust difficulty using different AI
+const DIFFICULTY = {SUPER-EASY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
+
 index(SUIT);
 index(RED_VALUE);
 index(BLACK_VALUE);
@@ -358,8 +362,11 @@ function robotAction(action, room, pn) {
                     action.info.partner = robotPartner(hand);
                 }
                 break;
-            case 'call':
-                action.info.call = robotCall();
+            case 'valat':
+                action.info.valat = robotCall(room.settings.difficulty);
+                break;
+            case 'iote':
+            case 'contra':
                 break;
             case 'lead':
                 action.info.card = robotLead(hand);
@@ -368,6 +375,10 @@ function robotAction(action, room, pn) {
                 grayUnplayables(hand);
                 action.info.card = robotPlay(hand);
                 break;
+            case 'countPoints':
+                break;//Point counting will be added later
+            case 'resetBoard':
+                break;//Utilitarian, no input needed
             default:
                 console.warn('Unknown robot action: ' + action.action);
         }
@@ -456,7 +467,7 @@ function actionCallback(action, room, pn) {
 
     //This callback will transfer from one action to the next and inform the humans of the action to be taken
     //In the case that a robot or AI is the required player, this will directly call on the above action handlers
-    //The action is presumed to be verified by it's player takeAction function, not here
+    //The action is presumed to be verified by its player takeAction function, not here
     if (!room || !action) {
         console.warn('Illegal actionCallback: ' + JSON.stringify(room) + ' \n\n ' + JSON.stringify(action) + ' \n\n ' + pn);
         console.trace();
@@ -829,10 +840,10 @@ function actionCallback(action, room, pn) {
             //TODO: place the played card from action.info.card onto the virtual "board"
             //TODO: gray out cards for the next player
             actionTaken = true;
-            action.action = 'play';
+            action.action = 'follow';
             action.player = (action.player + 1) % 4;
             break;
-        case 'play':
+        case 'follow':
             //TODO: place the played card from action.info.card onto the virtual "board"
             /*Pseudocode
             if (VIRTUALBOARD.length == 4) {
@@ -1118,11 +1129,11 @@ function tick() {
             //TODO: If action.time is greater than Date.now() + room.timeout, automatically complete the action
         }
         if (Object.keys(rooms).length == 0) {
-            rooms['Main'] = { 'name': 'Main', 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
+            rooms['Main'] = { 'settings':['difficulty':DIFFICULTY.EASY], 'name': 'Main', 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) { }
-            rooms[i] = { 'name': Object.keys(rooms).length, 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
+            rooms[i] = { 'settings':['difficulty':DIFFICULTY.EASY], 'name': Object.keys(rooms).length, 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
         }
         simplifiedRooms = {};
         for (let i in rooms) {
