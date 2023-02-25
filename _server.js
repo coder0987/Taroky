@@ -408,8 +408,11 @@ function playerAction(action, room, pn) {
         case 'partner':
             //if povenost choose partner 
             if (room['board'].povenost == pn) {
-                players[room['players'][pn].socket].socket.emit('returnPossiblePartners', possiblePartners(hand));
+                action.info.possiblePartners = possiblePartners(hand);
+                //players[room['players'][pn].socket].socket.emit('returnPossiblePartners', possiblePartners(hand));
             }
+            break;
+        case 'partnerCallback':
             break;
         case 'call':
             //TODO: call something if we want
@@ -767,12 +770,11 @@ function actionCallback(action, room, pn) {
             //TODO: adjust other players' isTeamPovenost
             room['players'][room['board'].povenost].isTeamPovenost = true;
 
-            action.action = 'moneycards';
+            action.action = 'moneyCards';
             //TODO: Wasn't sure what to merge here so merged mine commented out, not sure what I was doing here looking at it again lol
             //TODO: It looks like you were informing the players of Povenost's call, which actually we probably should do. I'm not sure why you asked for returnchips though
 
             for (let i in room['players']) {
-                
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     playerAction({ 'action': 'partnerCallback', 'player': i, 'whoCalled': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
@@ -1019,7 +1021,6 @@ io.sockets.on('connection', function (socket) {
     });
     socket.on('choosePartner', function (partner) {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'partner' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
-            rooms[players[socketId].room]['board']['nextStep'].action = 'chosePartner';
             rooms[players[socketId].room]['board'].partnerCard = partner;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }

@@ -237,15 +237,8 @@ function onLoad() {
         chipCount = returnChips;
         addMessage('You have ' + chipCount + ' chips');
     });
-    socket.on('returnPossiblePartners', function (possiblePartners) {
-        partners = possiblePartners
-        if (partners.length > 1) {
-            let partnerString = '';
-            for (let i in partners) { partnerString += partners[i].value + ', '; }
-            addMessage('You can partner with your choice of the ' + partnerString.substring(0, handString.length - 2));
-        } else if (partners.length==1) {
-            addMessage('You are partnering with the ' + partners[0].value)
-        }
+    socket.on('returnPossiblePartners', function(possiblePartners) {
+        partnersReturned(possiblePartners);
     });
     socket.on('roomConnected', function(roomConnected) {
         inGame = true;
@@ -332,6 +325,7 @@ function onLoad() {
                     }
                     break;
                 case 'partner':
+                    partnersReturned(action.info.possiblePartners);
                     addBoldMessage('Who would you like to play with?');
                     createPartnerButtons(partners);
                     break;
@@ -418,15 +412,28 @@ function createPartnerButtons(possiblePartners) {
         button.type = 'button';
         button.innerHTML = possiblePartners[i].value;
         button.id = possiblePartners[i].value;
-        button.addEventListener('click', () => { partnerButtonsOnClickListenterTasks(possiblePartners[i].value, possiblePartners); });
+        button.addEventListener('click', () => {
+            partnerButtonsOnClickListenterTasks(possiblePartners[i].value, possiblePartners);
+        });
         document.getElementById('center').appendChild(button);
     }
 }
 
-function partnerButtonsOnClickListenterTasks(cardvalue, possiblePartners) {
-    addMessage('You are playing with ' + cardvalue);
-    socket.emit('partner', cardValue);
+function partnerButtonsOnClickListenterTasks(cardValue, possiblePartners) {
+    addMessage('You are playing with ' + cardValue);
+    socket.emit('choosePartner', cardValue);
     for (let i in possiblePartners) {
         document.getElementById('center').removeChild(document.getElementById(possiblePartners[i].value));
+    }
+}
+
+function partnersReturned(possiblePartners) {
+    partners = possiblePartners
+    if (partners.length > 1) {
+        let partnerString = '';
+        for (let i in partners) { partnerString += partners[i].value + ', '; }
+        addMessage('You can partner with your choice of the ' + partnerString.substring(0, handString.length - 2));
+    } else if (partners.length==1) {
+        addMessage('You are partnering with the ' + partners[0].value)
     }
 }
