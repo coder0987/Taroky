@@ -275,6 +275,10 @@ function onLoad() {
         currentAction = action;
         if (action.player == playerNumber) {
             switch (action.action) {
+                case 'play':
+                    addMessage('A new game is beginning');
+                    socket.emit('play');
+                    break;
                 case 'shuffle':
                     addMessage('You are shuffling.');
                     createCardBack(document.getElementById('center'));
@@ -347,6 +351,13 @@ function onLoad() {
                     break;
                 case 'follow':
                     //TODO: render hand and prep for user input
+                    break;
+                case 'countPoints':
+                    //TODO
+                    break;
+                case 'resetBoard':
+                    //TODO
+                    break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }

@@ -109,6 +109,7 @@ function Board() {
     this.valat = -1;
     this.iote = -1;
     this.contra = [-1,-1];
+    this.gameNumber = 0;
 }
 function createDeck() {
     let baseDeck = [];
@@ -335,6 +336,7 @@ function robotAction(action, room, pn) {
     //Takes the action automatically IF and only IF the robot is supposed to
     if (action.player == pn) {
         switch (action.action) {
+            case 'play':
             case 'shuffle':
                 break;
             case 'cut':
@@ -401,6 +403,8 @@ function playerAction(action, room, pn) {
     let hand = room['players'][pn].hand;//linked. Changing one will change the other.
 
     switch (action.action) {
+        case 'play':
+            break;
         case 'shuffle':
         //Do nothing, because its all taken care of by the generic action sender/informer at the end
         case 'cut':
@@ -431,7 +435,7 @@ function playerAction(action, room, pn) {
             break;
         case 'partnerCallback':
             players[room['players'][pn].socket].socket.emit('nextAction', action);
-            console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
+            console.log('playerAction() called | action: partnerCallback pn: ' + pn);
             return;//No callback needed. Do not inform every player.
         case 'call':
             //TODO: call something if we want
@@ -493,15 +497,23 @@ function actionCallback(action, room, pn) {
 
     switch (action.action) {
         case 'start':
-            console.log('Game ' + room['board'].gameNumber + ' is starting in room ' + room.name);
+            room['board'].gameNumber = 1;
+            console.log('Game 1 is starting in room ' + room.name);
             action.action = 'shuffle';
-            action.player = pn;//PN does not change because the same person starts and shuffles
+            action.player = pn;//First game, host is assumed to shuffle
             for (let i = 0; i < 4; i++) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     //Starting the game is a special case. In all other cases, actions completed will inform the players through the take action methods
-                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber);//Inform the players of game beginning. Host is assumed to be shuffler.
+                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber);//Inform the players of game beginning.
                 }
             }
+            actionTaken = true;
+            break;
+        case 'play':
+            room['board'].gameNumber++;
+            console.log('Game ' + room['board'].gameNumber + ' is starting in room ' + room.name);
+            action.action = 'shuffle';
+            action.player = (room['board'].povenost+3)%4;
             actionTaken = true;
             break;
         case 'shuffle':
@@ -565,12 +577,10 @@ function actionCallback(action, room, pn) {
             }
             
             if (room['board'].povenost == -1) {
-                //Povenost first round choosen by cards
+                //Povenost first round chosen by cards
                 room['board'].povenost = findPovenost(room['players'])
-            } else {
-                //Povenost rotates after first round
-                room['board'].povenost = (room['board'].povenost + 1) % 4;
             }
+            //Povenost rotation is handled by the board reset function
             console.log('server: povenost is ' + room['board'].povenost);
             action.action = 'prever';
             action.player = room['board'].povenost;
@@ -921,7 +931,7 @@ function actionCallback(action, room, pn) {
             //Also, iterate povenost by 1
             resetBoardForNextRound(room['board']);
             action.player = room['board'].povenost;//already iterated
-            action.action = 'shuffle';
+            action.action = 'play';
             break;
         default:
             console.warn('Unrecognized actionCallback: ' + action.action);
@@ -1053,6 +1063,14 @@ io.sockets.on('connection', function (socket) {
             } else {
                 console.warn('Player is not the host. The host is ' + rooms[players[socketId].room]['host']);
             }
+        }
+    });
+    socket.on('play', function () {
+        if (!rooms[players[socketId].room]) { return; }
+        if (rooms[players[socketId].room]['board']['nextStep'].action === 'play' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        } else {
+            console.warn('Illegal game play attempt in room ' + players[socketId].room + ' by player ' + socketId);
         }
     });
     socket.on('shuffle', function (type, again) {
