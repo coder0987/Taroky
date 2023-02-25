@@ -323,14 +323,15 @@ function onLoad() {
                     if (!calledSomething) {
                         addMessage('Player ' + (action.whoCalled + 1) + ' is calling nothing');
                     }
-                    break;
+                    return;//No callback needed. Do not respond.
                 case 'partner':
                     partnersReturned(action.info.possiblePartners);
                     addBoldMessage('Who would you like to play with?');
                     createPartnerButtons(partners);
                     break;
                 case 'partnerCallback':
-                    addMessage('Player ' + '0' + ' is playing with the ' + 'XIX');
+                    addBoldMessage('Povenost (Player ' + (action.player+1) + ') is playing with the ' + action.info);
+                    return;//No callback needed. Do not respond.
                 case 'valat':
                     addBoldMessage('Would you like to call valat?');
                     //TODO: add valat buttons

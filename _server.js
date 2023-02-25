@@ -362,6 +362,9 @@ function robotAction(action, room, pn) {
                     action.info.partner = robotPartner(hand);
                 }
                 break;
+            case 'partnerCallback':
+                console.log('robotAction() called | action: ' + action.action + ' room: ' + room + ' pn: ' + pn);
+                return;//No callback needed. Do not inform every player.
             case 'valat':
                 action.info.valat = robotCall(room.settings.difficulty);
                 break;
@@ -414,8 +417,11 @@ function playerAction(action, room, pn) {
             players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
             break;
         case 'moneyCards':
-        case 'moneyCardCallback':
             break;
+        case 'moneyCardCallback':
+            players[room['players'][pn].socket].socket.emit('nextAction', action);
+            console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
+            return;//No callback needed. Do not inform every player.
         case 'partner':
             //if povenost choose partner 
             if (room['board'].povenost == pn) {
@@ -424,7 +430,9 @@ function playerAction(action, room, pn) {
             }
             break;
         case 'partnerCallback':
-            break;
+            players[room['players'][pn].socket].socket.emit('nextAction', action);
+            console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
+            return;//No callback needed. Do not inform every player.
         case 'call':
             //TODO: call something if we want
             break;
@@ -765,8 +773,8 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'partner':
-            //TODO: If Povenost has the XIX, povenost may choose to call the XIX and play alone
-            if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && action.info.callXIX)) {
+            let povenostChoice = room['board'].partnerCard;
+            if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && povenostChoice == 'XIX')) {
                 room['board'].partnerCard = "XIX";
             } else if (!handContainsCard(currentHand, "XVIII")) {
                 room['board'].partnerCard = "XVIII";
@@ -784,16 +792,15 @@ function actionCallback(action, room, pn) {
             room['players'][room['board'].povenost].isTeamPovenost = true;
 
             action.action = 'moneyCards';
-            //TODO: Wasn't sure what to merge here so merged mine commented out, not sure what I was doing here looking at it again lol
-            //TODO: It looks like you were informing the players of Povenost's call, which actually we probably should do. I'm not sure why you asked for returnchips though
 
+            //Inform players what Povenost called
             for (let i in room['players']) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-                    playerAction({ 'action': 'partnerCallback', 'player': i, 'whoCalled': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                    playerAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].partnerCard }, room, action.player);
                 } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
-                    robotAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                    robotAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].partnerCard }, room, action.player);
                 } else if (room['players'][i].type == PLAYER_TYPE.AI) {
-                    aiAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                    aiAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].partnerCard }, room, action.player);
                 }
             }
             actionTaken = true;
