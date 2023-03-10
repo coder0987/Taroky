@@ -2,6 +2,7 @@
     --green: #98ad99;
     --red: #9D181D;
     --white: #f5f3f1;
+    --whiteHover: #e2dfdc;
     --black: #342D27;
     --tan: #E3D6B2;
     --navy: #1f3855;
@@ -164,14 +165,17 @@ img {
 }
 
 /* ROOM CARD */
-#roomcard {
+.roomcard {
     border: .1rem solid var(--black);
     border-radius: .5rem;
     padding:1rem;
     font-family: Georgia, 'Times New Roman', Times, serif;
     display:inline-block;
 }
-#roomnum {
+.roomnum {
     font-family: Georgia, 'Times New Roman', Times, serif;
     font-size: 3rem;
+}
+.roomcard:hover {
+    background-color: var(--whiteHover);
 }
