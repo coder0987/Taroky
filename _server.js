@@ -284,7 +284,7 @@ function robotDiscard(hand, difficulty) {
     switch (difficulty) {
         case 0:
             //TODO: more difficulty algos
-            break;
+            return firstSelectableCard(hand);
         default:
             //select first discardable
             return firstSelectableCard(hand);
@@ -294,7 +294,7 @@ function robotPartner(hand, difficulty) {
     switch (difficulty) {
         case 0:
             //TODO: more difficulty algos
-            break;
+            return { 'value': 'XIX', 'suit': SUIT[4] };
         default:
             //always play with XIX
             return { 'value': 'XIX', 'suit': SUIT[4] };
@@ -315,7 +315,7 @@ function robotLead(hand, difficulty) {
     switch (difficulty) {
         case 0:
             //TODO: more difficulty algos
-            break;
+            return firstSelectableCard(hand);
         default:
             //select first playable
             return firstSelectableCard(hand);
@@ -326,7 +326,7 @@ function robotPlay(hand, difficulty) {
     switch (difficulty) {
         case 0:
             //TODO: more difficulty algos
-            break;
+            return firstSelectableCard(hand);
         default:
             //select first playable
             return firstSelectableCard(hand);
@@ -599,7 +599,7 @@ function actionCallback(action, room, pn) {
             }
             //Povenost rotation is handled by the board reset function
             console.log('Server (' + room.name + '): povenost is ' + room['board'].povenost);
-            room.informPlayers('Player ' + ((room['board'].povenost+1)%4) + ' is povenost', MESSAGE_TYPE.POVENOST);
+            room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST);
             action.action = 'prever';
             action.player = room['board'].povenost;
             actionTaken = true;
@@ -863,12 +863,14 @@ function actionCallback(action, room, pn) {
                     action.action = 'iote';
                 }
             }
+            actionTaken = true;
             //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to calling iote
 
             //Possible variations: IOTE may still be allowed in a valat game, contra may be disallowed
             break;
         case 'iote':
             //TODO: Prompt the player with the I to call I on the End
+            actionTaken = true;
             action.action = 'contra';//Skips IOTE altogether, temporary
             break;
         case 'contra':
