@@ -1004,6 +1004,7 @@ io.sockets.on('connection', function (socket) {
         players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {} };
         console.log('Player joined with socketID ' + socketId);
     }
+    //TODO: player auto reconnect
 
     socket.on('disconnect', function () {
         if (!players[socketId]) { return; }
@@ -1222,11 +1223,11 @@ function tick() {
             //Operations
             if (rooms[i] && rooms[i].playerCount == 0 && rooms[i]['board']['nextStep']['action'] != 'start') {
                 delete rooms[i];
+                //TODO: add game stop time out to allow players to reconnect
                 console.log('Stopped empty game in room ' + i);
             }
             //TODO: If action.time is greater than Date.now() + room.timeout, automatically complete the action
         }
-        //TODO: Add room class
         if (Object.keys(rooms).length == 0) {
             rooms['Main'] = new Room('Main');
         } else if (numEmptyRooms() == 0) {
