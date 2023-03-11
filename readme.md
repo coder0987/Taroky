@@ -1,7 +1,7 @@
 ## Mach Taroky
 An online multiplayer Taroky game for 1-4 players.
 
-This project is under active development and the latest beta release is available at https://taroky.samts.us.
+This project is under active development and the latest beta release is available at https://machtarok.com.
 
 For more information on gameplay and rules, see gameplay.md
 
@@ -23,6 +23,6 @@ In both cases, the server will automatically restart on crash. The server will b
 
 ### Credits
 
-Created by Samuel & Lauren Mach
+Created by Samuel, Lauren, and James Mach
 
 Art is credited in /assets/default-deck/deck-info.md
