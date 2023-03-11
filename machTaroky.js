@@ -245,10 +245,12 @@ function onLoad() {
         document.getElementById('rooms').innerHTML = '';
         connectingToRoom = false;
         addMessage('Connected to room ' + (roomConnected));
+        document.getElementById('refresh').hidden = true;
     });
     socket.on('roomNotConnected', function(roomNotConnected){
         addMessage('Failed to connect to room ' + (roomNotConnected));
         connectingToRoom = false;
+        refresh();
         //toggleAvailability(true);
     });
     socket.on('roomHost', function() {
@@ -383,10 +385,25 @@ function toggleAvailability(boolean) {
     }
 }
 */
+function romanize(num) {
+    //Code copied from https://stackoverflow.com/questions/9083037/convert-a-number-into-a-roman-numeral-in-javascript
+    if (isNaN(num))
+        return num;
+    var digits = String(+num).split(""),
+        key = ["","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
+               "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
+               "","I","II","III","IV","V","VI","VII","VIII","IX"],
+        roman = "",
+        i = 3;
+    while (i--)
+        roman = (key[+digits.pop() + (i * 10)] || "") + roman;
+    return Array(+digits.join("") + 1).join("M") + roman;
+}
 
 function buttonClick() {
     //toggleAvailability(false);
     if (!connectingToRoom) {
+        this.firstChild.innerHTML = '⟳';
         connectingToRoom=true;socket.emit('roomConnect',this.roomID);addMessage('Connecting to room ' + (this.roomID) + '...');
     } else {addError('Already connecting to a room!');}
 }
@@ -400,10 +417,10 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     //bDiv.classList.add('available');
     bDiv.id = 'roomCard' + roomId;
     const numberDiv = document.createElement('div');
-    numberDiv.classList.add('roomcardnum');
+    numberDiv.classList.add('roomnum');
     numberDiv.classList.add('d-flex');
     numberDiv.classList.add('justify-content-center');
-    numberDiv.innerHTML = roomId;
+    numberDiv.innerHTML = romanize(roomId);
     numberDiv.id = 'roomNum' + roomId;
     bDiv.appendChild(numberDiv);
     const playerCountSpan = document.createElement('span');
