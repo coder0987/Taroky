@@ -7,6 +7,8 @@ const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2};
+const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3};
+const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE'};
 let ticker;
 let players;
 let deck;
@@ -330,7 +332,7 @@ function onLoad() {
                     break;
                 case 'prever':
                     addBoldMessage('Would you like to go prever?');
-                    createPreverButtons();
+                    createChoiceButtons(BUTTON_TYPE.PREVER);
                     break;
                 case 'drawTalon':
                     addMessage('You are drawing cards from the talon.');
@@ -343,36 +345,23 @@ function onLoad() {
                     addMessage('You are calling money cards');
                     socket.emit('moneyCards');
                     break;
-                case 'moneyCardCallback':
-                    //DEPRECATED. WILL BE REMOVED SOON
-                    let calledSomething = false;
-                    for (let i in action.info) {
-                        addMessage('Player ' + (action.whoCalled + 1) + ' is calling ' + action.info[i]);
-                        calledSomething = true;
-                    }
-                    if (!calledSomething) {
-                        addMessage('Player ' + (action.whoCalled + 1) + ' is calling nothing');
-                    }
-                    return;//No callback needed. Do not respond.
                 case 'partner':
                     //TODO: Completely breaks the game whenever there is more than one option. Not sure why
                     partnersReturned(action.info.possiblePartners);
                     addBoldMessage('Who would you like to play with?');
                     createPartnerButtons(partners);
                     break;
-                case 'partnerCallback':
-                    //DEPRECATED. WILL BE REMOVED SOON
-                    addBoldMessage('Povenost (Player ' + (action.player+1) + ') is playing with the ' + action.info);
-                    return;//No callback needed. Do not respond.
                 case 'valat':
                     addBoldMessage('Would you like to call valat?');
-                    //TODO: add valat buttons
+                    createChoiceButtons(BUTTON_TYPE.VALAT);
                     break;
                 case 'contra':
-                    //TODO: add contra buttons
+                    addBoldMessage('Would you like to call contra?');
+                    createChoiceButtons(BUTTON_TYPE.CONTRA);
                     break;
                 case 'iote':
-                    //TODO: add IOTE buttons
+                    addBoldMessage('Would you like to call I on the end?');
+                    createChoiceButtons(BUTTON_TYPE.IOTE);
                     break;
                 case 'lead':
                     //TODO: render hand and prep for user input
@@ -468,21 +457,6 @@ function ping() {socket.emit('currentAction');}//Debug function
 
 function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (a[i].count != b[i].count) {return false;}}return true;}
 
-function createPreverButtons() {
-    const goPrever = document.createElement('button');
-    const noPrever = document.createElement('button');
-    goPrever.type = 'button';
-    noPrever.type = 'button';
-    goPrever.innerHTML = 'Go Prever';
-    noPrever.innerHTML = 'Pass Prever';
-    goPrever.id = 'goPrever';
-    noPrever.id = 'noPrever';
-    goPrever.addEventListener('click', () => { addMessage('You are going prever!'); socket.emit('goPrever'); document.getElementById('center').removeChild(document.getElementById('goPrever')); document.getElementById('center').removeChild(document.getElementById('noPrever')); });
-    noPrever.addEventListener('click', () => { addMessage('You are not going prever'); socket.emit('noPrever'); document.getElementById('center').removeChild(document.getElementById('goPrever')); document.getElementById('center').removeChild(document.getElementById('noPrever')); });
-    document.getElementById('center').appendChild(goPrever);
-    document.getElementById('center').appendChild(noPrever);
-}
-
 function createPartnerButtons(possiblePartners) {
     for (let i in possiblePartners) {
         const button = document.createElement('button')
@@ -513,4 +487,57 @@ function partnersReturned(possiblePartners) {
     } else if (partners.length==1) {
         addMessage('You are partnering with the ' + partners[0].value)
     }
+}
+
+function createChoiceButtons(buttonType) {
+    const firstButton  = document.createElement('button');
+    const secondButton = document.createElement('button');
+    firstButton.type = 'button';
+    secondButton.type = 'button';
+    firstButton.id = 'go'+TYPE_TABLE[buttonType];
+    secondButton.id = 'no'+TYPE_TABLE[buttonType];
+    firstButton.buttonType = buttonType;
+    secondButton.buttonType = buttonType;
+    firstButton.go = true;
+    secondButton.go = false;
+
+    switch (buttonType) {
+        case BUTTON_TYPE.PREVER:
+            firstButton.innerHTML = 'Go Prever';
+            secondButton.innerHTML = 'Pass Prever';
+            break;
+        case BUTTON_TYPE.VALAT:
+            firstButton.innerHTML = 'Go Valat';
+            secondButton.innerHTML = 'Pass Valat';
+            break;
+        case BUTTON_TYPE.CONTRA:
+            firstButton.innerHTML = 'Call Contra';
+            secondButton.innerHTML = 'Pass Contra';
+            break;
+        case BUTTON_TYPE.IOTE:
+            firstButton.innerHTML = 'Call I on the end';
+            secondButton.innerHTML = 'Pass';
+            break;
+        default:
+            addError('Unknown button type: ' + buttonType);
+    }
+
+    firstButton.addEventListener('click', buttonChoiceCallback);
+    secondButton.addEventListener('click', buttonChoiceCallback);
+    document.getElementById('center').appendChild(firstButton);
+    document.getElementById('center').appendChild(secondButton);
+}
+
+function buttonChoiceCallback() {
+    let buttonType = this.buttonType;
+    let goOrNo = this.go;
+    if (goOrNo) {
+        addMessage('You are going ' + TYPE_TABLE[buttonType] + '!');
+        socket.emit('go'+TYPE_TABLE[buttonType]);
+    } else {
+        addMessage('You are not going '+TYPE_TABLE[buttonType]);
+        socket.emit('no'+TYPE_TABLE[buttonType]);
+    }
+    document.getElementById('center').removeChild(document.getElementById('go'+TYPE_TABLE[buttonType]));
+    document.getElementById('center').removeChild(document.getElementById('no'+TYPE_TABLE[buttonType]));
 }

@@ -80,7 +80,7 @@ const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 
 //TODO: confirm difficulty levels. How many levels do we want? 5 + AI?
 //Note, once the AI is developed it will be easier to adjust difficulty using different AI
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3};
 
 index(SUIT);
 index(RED_VALUE);
@@ -217,6 +217,15 @@ function findPovenost(players) {
         }
         value++;
     }
+}
+function findTheI(players) {
+   for (let i = 0; i < 4; i++) {
+       if (handContainsCard(players[i].hand, TRUMP_VALUE[0])) {
+           return i; //found the I
+       }
+   }
+   console.trace('ERROR: No one has the I');
+   return -1;
 }
 function possiblePartners(hand) {
     //TODO: logic for possible parters { 'value': TRUMP_VALUE[v], 'suit': SUIT[4] }
@@ -372,31 +381,26 @@ function robotAction(action, room, pn) {
                 break;
             case 'moneyCards':
                 break;
-            case 'moneyCardCallback':
-                //DEPRECATED. WILL BE REMOVED SOON (use room.informPlayers)
-                console.log('robotAction() called | action: ' + action.action + ' room: ' + room + ' pn: ' + pn);
-                return;//Do nothing for this one. Don't prep for the next action. Don't remind the server. Nothing.
             case 'partner':
                 //if povenost choose partner 
                 if (room['board'].povenost == pn) {
                     action.info.partner = robotPartner(hand);
                 }
                 break;
-            case 'partnerCallback':
-                //DEPRECATED. WILL BE REMOVED SOON (use room.informPlayers)
-                console.log('robotAction() called | action: ' + action.action + ' room: ' + room + ' pn: ' + pn);
-                return;//No callback needed. Do not inform every player.
             case 'valat':
                 action.info.valat = robotCall(room.settings.difficulty);
                 break;
             case 'iote':
+                console.log('robotAction() called | action: ' + action.action + ' pn: ' + pn);
+                actionCallback(action, room, pn);
+                return;//Don't inform the players who has the I
             case 'contra':
                 break;
             case 'lead':
                 action.info.card = robotLead(hand);
                 break;
             case 'follow':
-                grayUnplayables(hand);
+                grayUnplayables(hand, room.board.leadCard);
                 action.info.card = robotPlay(hand);
                 break;
             case 'countPoints':
@@ -441,10 +445,6 @@ function playerAction(action, room, pn) {
             break;
         case 'moneyCards':
             break;
-        case 'moneyCardCallback':
-            players[room['players'][pn].socket].socket.emit('nextAction', action);
-            console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
-            return;//No callback needed. Do not inform every player.
         case 'partner':
             //if povenost choose partner 
             if (room['board'].povenost == pn) {
@@ -452,22 +452,21 @@ function playerAction(action, room, pn) {
                 //players[room['players'][pn].socket].socket.emit('returnPossiblePartners', possiblePartners(hand));
             }
             break;
-        case 'partnerCallback':
-            players[room['players'][pn].socket].socket.emit('nextAction', action);
-            console.log('playerAction() called | action: partnerCallback pn: ' + pn);
-            return;//No callback needed. Do not inform every player.
-        case 'call':
-            //TODO: call something if we want
+        case 'valat':
+        case 'contra':
+            //Done client-side
             break;
         case 'iote':
-            break;
+            console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
+            players[room['players'][pn].socket].socket.emit('nextAction', action);
+            return;//Don't inform the other players who has the I
         case 'lead':
             //TODO: play card first in a round
             players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
             break;
         case 'follow':
             //TODO: play a card after someone else has lead
-            grayUnplayables(hand);
+            grayUnplayables(hand, room.board.leadCard);
             players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
             break;
         default:
@@ -836,44 +835,36 @@ function actionCallback(action, room, pn) {
 
             //Inform players what Povenost called
             room.informPlayers('Povenost (Player ' + (pn+1) + ') is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER)
-            /*for (let i in room['players']) {
-                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-                    playerAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].partnerCard }, room, action.player);
-                } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
-                    robotAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].partnerCard }, room, action.player);
-                } else if (room['players'][i].type == PLAYER_TYPE.AI) {
-                    aiAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].partnerCard }, room, action.player);
-                }
-            }*/
             actionTaken = true;
-            break;
-        case 'partnerCallback':
-            //Extra action just for informing the players.
-            break;
-        case 'moneyCardCallback':
-            //Extra action just for informing the players. Server does not need to do anything
             break;
         case 'valat':
             if (action.info.valat && ~room['board'].valat) {
                 //Player called valat
                 room['board'].valat = pn;
-                action.player = room['board'].povenost;
+                room.informPlayers('Player ' + (pn+1) + ' called valat', MESSAGE_TYPE.VALAT);
+                action.player = room['board'].povenost;//TODO: see notes in IOTE
+                //TODO: Rules dilemma: if Valat is called, does the calling team still get to call contra if they are not povenost?
                 action.action = 'contra';//Only one player may call valat
             } else {
                 action.player = (pn + 1) % 4;
                 if (action.player == room['board'].povenost) {
+                    action.player = findTheI(room.players);
                     action.action = 'iote';
                 }
             }
             actionTaken = true;
-            //Inform all players of the call, then pass to the next in line UNLESS povenost is up next, in which case move on to calling iote
-
             //Possible variations: IOTE may still be allowed in a valat game, contra may be disallowed
             break;
         case 'iote':
-            //TODO: Prompt the player with the I to call I on the End
+            if (action.info.iote) {
+                room.informPlayers('Player ' + (pn+1) + ' called the I on the end', MESSAGE_TYPE.IOTE);
+                room.board.iote = pn;
+            }
             actionTaken = true;
-            action.action = 'contra';//Skips IOTE altogether, temporary
+            action.player = room.board.povenost;
+            //TODO: go through opposing team, not Povenost team
+            //Also remember that in a prever game, opposing team might be povenost's team
+            action.action = 'contra';
             break;
         case 'contra':
             //TODO: Prompt each non-povenost (or non-prever, in the case of prever games) to contra. If called, prompt the reverse team. If called, prompt the original team. Then pass
@@ -890,7 +881,9 @@ function actionCallback(action, room, pn) {
         case 'lead':
             //TODO: place the played card from action.info.card onto the virtual "board"
             //TODO: gray out cards for the next player
-            actionTaken = true;
+
+            //actionTaken = true;
+            console.log('Game in room ' + room.name + ' has reached the end of the code');
             action.action = 'follow';
             action.player = (action.player + 1) % 4;
             break;
@@ -1178,6 +1171,42 @@ io.sockets.on('connection', function (socket) {
     socket.on('choosePartner', function (partner) {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'partner' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board'].partnerCard = partner;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('goValat', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'valat' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info.valat = true;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('noValat', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'valat' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info.valat = false;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('goContra', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'contra' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info.contra = true;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('noContra', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'contra' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info.contra = false;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('goIOTE', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'iote' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info.iote = true;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('noIOTE', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'iote' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info.iote = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
