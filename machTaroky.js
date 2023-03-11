@@ -6,7 +6,7 @@ const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: '
 const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
-const MESSAGE_TYPE = {PREVER: 0, MONEY_CARDS: 1, PARTNER: 2};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2};
 let ticker;
 let players;
 let deck;
@@ -104,7 +104,7 @@ function drawHand(withGray) {
         card.value = hand[i].value;
         if (withGray) {
             if (hand[i].grayed) {
-                addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
+                //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
                 card.style.filter = 'grayscale(1)';
             } else {
                 card.style.filter = '';
@@ -266,14 +266,25 @@ function onLoad() {
     socket.on('message', function(theMessage) {
         addMessage(theMessage);
     });
-    socket.on('gameMessage', function(theMessage,theMessageType) {
-        addBoldMessage(theMessage);
+    socket.on('gameMessage', function(theMessage,theMessageType,extraInfo) {
+
         switch (theMessageType) {
-            case MESSAGE_TYPE.POVENOST: break;
-            case MESSAGE_TYPE.PARTNER: break;
-            case MESSAGE_TYPE.MONEY_CARDS: break;
+            case MESSAGE_TYPE.POVENOST:
+                if (extraInfo && extraInfo.pn == playerNumber) {
+                    addBoldMessage('You are povenost');
+                } else {
+                    addBoldMessage(theMessage);
+                }
+                break;
+            case MESSAGE_TYPE.PARTNER:
+                addBoldMessage(theMessage);
+                break;
+            case MESSAGE_TYPE.MONEY_CARDS:
+                addBoldMessage(theMessage);
+                break;
             default:
                 addMessage('Game message of unknown type: ' + theMessageType);
+                addBoldMessage(theMessage);
         }
     });
     socket.on('broadcast', function(theBroadcast) {
@@ -333,6 +344,7 @@ function onLoad() {
                     socket.emit('moneyCards');
                     break;
                 case 'moneyCardCallback':
+                    //DEPRECATED. WILL BE REMOVED SOON
                     let calledSomething = false;
                     for (let i in action.info) {
                         addMessage('Player ' + (action.whoCalled + 1) + ' is calling ' + action.info[i]);
@@ -343,11 +355,13 @@ function onLoad() {
                     }
                     return;//No callback needed. Do not respond.
                 case 'partner':
+                    //TODO: Completely breaks the game whenever there is more than one option. Not sure why
                     partnersReturned(action.info.possiblePartners);
                     addBoldMessage('Who would you like to play with?');
                     createPartnerButtons(partners);
                     break;
                 case 'partnerCallback':
+                    //DEPRECATED. WILL BE REMOVED SOON
                     addBoldMessage('Povenost (Player ' + (action.player+1) + ') is playing with the ' + action.info);
                     return;//No callback needed. Do not respond.
                 case 'valat':
@@ -476,13 +490,13 @@ function createPartnerButtons(possiblePartners) {
         button.innerHTML = possiblePartners[i].value;
         button.id = possiblePartners[i].value;
         button.addEventListener('click', () => {
-            partnerButtonsOnClickListenterTasks(possiblePartners[i].value, possiblePartners);
+            partnerButtonsOnClickListenerTasks(possiblePartners[i].value, possiblePartners);
         });
         document.getElementById('center').appendChild(button);
     }
 }
 
-function partnerButtonsOnClickListenterTasks(cardValue, possiblePartners) {
+function partnerButtonsOnClickListenerTasks(cardValue, possiblePartners) {
     addMessage('You are playing with ' + cardValue);
     socket.emit('choosePartner', cardValue);
     for (let i in possiblePartners) {

@@ -80,7 +80,7 @@ const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 
 //TODO: confirm difficulty levels. How many levels do we want? 5 + AI?
 //Note, once the AI is developed it will be easier to adjust difficulty using different AI
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const MESSAGE_TYPE = {PREVER: 0, MONEY_CARDS: 1, PARTNER: 2};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2};
 
 index(SUIT);
 index(RED_VALUE);
@@ -98,10 +98,10 @@ function Room(name) {
     this.playerCount = 0;
     this.deck = [...baseDeck].sort(() => Math.random() - 0.5);
     this.players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
-    this.informPlayers = function(message, messageType) {
+    this.informPlayers = function(message, messageType, extraInfo) {
         for (let i in this.players) {
             if (this.players[i].type == PLAYER_TYPE.HUMAN) {
-                players[this.players[i].socket].socket.emit('gameMessage',message,messageType);
+                players[this.players[i].socket].socket.emit('gameMessage',message,messageType,extraInfo);
             }
         }
     }
@@ -373,6 +373,7 @@ function robotAction(action, room, pn) {
             case 'moneyCards':
                 break;
             case 'moneyCardCallback':
+                //DEPRECATED. WILL BE REMOVED SOON (use room.informPlayers)
                 console.log('robotAction() called | action: ' + action.action + ' room: ' + room + ' pn: ' + pn);
                 return;//Do nothing for this one. Don't prep for the next action. Don't remind the server. Nothing.
             case 'partner':
@@ -382,6 +383,7 @@ function robotAction(action, room, pn) {
                 }
                 break;
             case 'partnerCallback':
+                //DEPRECATED. WILL BE REMOVED SOON (use room.informPlayers)
                 console.log('robotAction() called | action: ' + action.action + ' room: ' + room + ' pn: ' + pn);
                 return;//No callback needed. Do not inform every player.
             case 'valat':
@@ -599,7 +601,7 @@ function actionCallback(action, room, pn) {
             }
             //Povenost rotation is handled by the board reset function
             console.log('Server (' + room.name + '): povenost is ' + room['board'].povenost);
-            room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST);
+            room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
             action.action = 'prever';
             action.player = room['board'].povenost;
             actionTaken = true;
@@ -781,9 +783,9 @@ function actionCallback(action, room, pn) {
             //Inform all players of current moneycards
             let theMessage = 'Player ' + (pn + 1) + ' is calling ';
             let numCalled = 0;
-            for (let i in action.info) {
+            for (let i in room['board'].moneyCards[pn]) {
                 numCalled++;
-                theMessage += ((numCalled>1 ? ', ' : '') + action.info[i]);
+                theMessage += ((numCalled>1 ? ', ' : '') + room['board'].moneyCards[pn][i]);
             }
             if (numCalled == 0) {
                 theMessage += 'nothing';
@@ -1038,7 +1040,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('roomConnect', function (roomID) {
         let connected = false;
-        if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && players[socketId].room == -1) {
+        if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
@@ -1071,7 +1073,11 @@ io.sockets.on('connection', function (socket) {
             } else {
                 console.log('Room ' + roomID + ' does not exist');
             }
-            console.log('Player is in room ' + players[socketId].room);
+            if (players[socketId]) {
+                console.log('Player is in room ' + players[socketId].room);
+            } else {
+                console.log('Player ' + socketId + ' does not exist');
+            }
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
     });
