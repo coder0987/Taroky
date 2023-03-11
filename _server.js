@@ -80,6 +80,7 @@ const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 
 //TODO: confirm difficulty levels. How many levels do we want? 5 + AI?
 //Note, once the AI is developed it will be easier to adjust difficulty using different AI
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
+const MESSAGE_TYPE = {PREVER: 0, MONEY_CARDS: 1, PARTNER: 2};
 
 index(SUIT);
 index(RED_VALUE);
@@ -89,6 +90,22 @@ index(TRUMP_VALUE);
 let simplifiedRooms = {};
 let ticking = false;
 
+function Room(name) {
+    this.settings = {'difficulty':DIFFICULTY.EASY};
+    this.name = name;
+    this.host = -1;
+    this.board = new Board();
+    this.playerCount = 0;
+    this.deck = [...baseDeck].sort(() => Math.random() - 0.5);
+    this.players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
+    this.informPlayers = function(message, messageType) {
+        for (let i in this.players) {
+            if (this.players[i].type == PLAYER_TYPE.HUMAN) {
+                players[this.players[i].socket].socket.emit('gameMessage',message,messageType);
+            }
+        }
+    }
+}
 function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; }
 function resetBoardForNextRound(board) { //setup board for next round. dealer of next round is this rounds povenost
     board.partnerCard = ""; board.talon = []; board.table = []; board.preverTalon = []; board.preverTalonStep = 0; board.prever = -1; board.playingPrever = false; board.contraCount = 0; board.valat = -1; board.Iote = -1; board.nextStep = { player: board.povenost, action: 'start', time: Date.now(), info: null }; board.cutStyle = ''; board.moneyCards = [[], [], [], []]; board.gameNumber++;
@@ -581,7 +598,8 @@ function actionCallback(action, room, pn) {
                 room['board'].povenost = findPovenost(room['players'])
             }
             //Povenost rotation is handled by the board reset function
-            console.log('server: povenost is ' + room['board'].povenost);
+            console.log('Server (' + room.name + '): povenost is ' + room['board'].povenost);
+            room.informPlayers('Player ' + ((room['board'].povenost+1)%4) + ' is povenost', MESSAGE_TYPE.POVENOST);
             action.action = 'prever';
             action.player = room['board'].povenost;
             actionTaken = true;
@@ -759,7 +777,18 @@ function actionCallback(action, room, pn) {
                     room['board'].moneyCards[pn].push("Honery");
                 }
             }
+
             //Inform all players of current moneycards
+            let theMessage = 'Player ' + (pn + 1) + ' is calling ';
+            let numCalled = 0;
+            for (let i in action.info) {
+                numCalled++;
+                theMessage += ((numCalled>1 ? ', ' : '') + action.info[i]);
+            }
+            if (numCalled == 0) {
+                theMessage += 'nothing';
+            }
+            room.informPlayers(theMessage, MESSAGE_TYPE.MONEY_CARDS);
             for (let i in room['players']) {
                 if (i == pn) {
                     room['players'][i].chips += 3 * owedChips;
@@ -768,11 +797,11 @@ function actionCallback(action, room, pn) {
                 }
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
-                    playerAction({ 'action': 'moneyCardCallback', 'player': i, 'whoCalled': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                    //playerAction({ 'action': 'moneyCardCallback', 'player': i, 'whoCalled': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
-                    robotAction({ 'action': 'moneyCardCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                    //robotAction({ 'action': 'moneyCardCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 } else if (room['players'][i].type == PLAYER_TYPE.AI) {
-                    aiAction({ 'action': 'moneyCardCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
+                    //aiAction({ 'action': 'moneyCardCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 }
             }
             actionTaken = true;
@@ -804,7 +833,8 @@ function actionCallback(action, room, pn) {
             action.action = 'moneyCards';
 
             //Inform players what Povenost called
-            for (let i in room['players']) {
+            room.informPlayers('Povenost (Player ' + (pn+1) + ') is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER)
+            /*for (let i in room['players']) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     playerAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].partnerCard }, room, action.player);
                 } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
@@ -812,7 +842,7 @@ function actionCallback(action, room, pn) {
                 } else if (room['players'][i].type == PLAYER_TYPE.AI) {
                     aiAction({ 'action': 'partnerCallback', 'player': pn, 'info': room['board'].partnerCard }, room, action.player);
                 }
-            }
+            }*/
             actionTaken = true;
             break;
         case 'partnerCallback':
@@ -1034,6 +1064,12 @@ io.sockets.on('connection', function (socket) {
             }
         } else {
             console.log('Invalid attempt to connect to room ' + roomID);
+            if (rooms[roomID]) {
+                console.log('Room contains ' + rooms[roomID]['playerCount']);
+            } else {
+                console.log('Room ' + roomID + ' does not exist');
+            }
+            console.log('Player is in room ' + players[socketId].room);
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
     });
@@ -1155,11 +1191,11 @@ function tick() {
         }
         //TODO: Add room class
         if (Object.keys(rooms).length == 0) {
-            rooms['Main'] = { 'settings':{'difficulty':DIFFICULTY.EASY}, 'name': 'Main', 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
+            rooms['Main'] = new Room('Main');
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) { }
-            rooms[i] = { 'settings':{'difficulty':DIFFICULTY.EASY}, 'name': Object.keys(rooms).length, 'host': -1, 'board': new Board(), 'playerCount': 0, 'deck': [...baseDeck].sort(() => Math.random() - 0.5), 'players': [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)] };
+            rooms[i] = new Room(i);
         }
         simplifiedRooms = {};
         for (let i in rooms) {

@@ -6,6 +6,7 @@ const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: '
 const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
+const MESSAGE_TYPE = {PREVER: 0, MONEY_CARDS: 1, PARTNER: 2};
 let ticker;
 let players;
 let deck;
@@ -264,6 +265,16 @@ function onLoad() {
     });
     socket.on('message', function(theMessage) {
         addMessage(theMessage);
+    });
+    socket.on('gameMessage', function(theMessage,theMessageType) {
+        addBoldMessage(theMessage);
+        switch (theMessageType) {
+            case MESSAGE_TYPE.POVENOST: break;
+            case MESSAGE_TYPE.PARTNER: break;
+            case MESSAGE_TYPE.MONEY_CARDS: break;
+            default:
+                addMessage('Game message of unknown type: ' + theMessageType);
+        }
     });
     socket.on('broadcast', function(theBroadcast) {
         alert(theBroadcast);
