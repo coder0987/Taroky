@@ -102,9 +102,10 @@ index(TRUMP_VALUE);
 
 let simplifiedRooms = {};
 let ticking = false;
+let autoActionTimeout;
 
 function Room(name) {
-    this.settings = {'difficulty':DIFFICULTY.EASY};
+    this.settings = {'difficulty':DIFFICULTY.EASY, 'timeout': 30*1000};
     this.name = name;
     this.host = -1;
     this.board = new Board();
@@ -410,7 +411,69 @@ function autoAction(action, room, pn) {
     //This is useful for player TIMEOUT, or when a player takes too long to complete an action
     //This will also be used when less than 4 players are seated at a table, or when a player leaves after the game has begun
     //Note: the game will NEVER continue after all 4 players have left. There will always be at least 1 human player seated at the table.
-
+    if (room.players.pn.type == PLAYER_TYPE.HUMAN) {
+        //Let the player know that the action was completed automatically
+        SOCKET_LIST[room.players.pn.socket].emit('autoAction', action);
+    }
+    let hand = room['players'][pn].hand;
+    switch (action.action) {
+        case 'play':
+        case 'shuffle':
+            break;
+        case 'cut':
+            action.info.style = 'Cut';
+            break;
+        case 'deal':
+            break;
+        case 'prever':
+            action.action = 'passPrever';
+            break;
+        case 'drawTalon':
+            break;
+        case 'discard':
+            grayUndiscardables(hand);
+            action.info.card = robotDiscard(hand, DIFFICULTY.EASY);
+            break;
+        case 'moneyCards':
+            break;
+        case 'partner':
+            //if povenost choose partner
+            if (room['board'].povenost == pn) {
+                action.info.partner = robotPartner(hand, DIFFICULTY.EASY);
+            }
+            break;
+        case 'valat':
+            action.info.valat = robotCall(DIFFICULTY.EASY);
+            break;
+        case 'iote':
+            action.info.iote = robotIOTE(DIFFICULTY.EASY);
+            console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
+            actionCallback(action, room, pn);
+            return;//Don't inform the players who has the I
+        case 'contra':
+            break;
+        case 'lead':
+            unGrayCards(hand);
+            action.info.card = robotLead(hand, DIFFICULTY.EASY);
+            break;
+        case 'follow':
+            grayUnplayables(hand, room.board.leadCard);
+            action.info.card = robotPlay(hand, DIFFICULTY.EASY);
+            break;
+        case 'countPoints':
+            break;//Point counting will be added later
+        case 'resetBoard':
+            break;//Utilitarian, no input needed
+        default:
+            console.warn('Unknown auto action: ' + action.action);
+    }
+    for (let i = 0; i < 4; i++) {
+        if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+            players[room['players'][i].socket].socket.emit('nextAction', action);
+        }
+    }
+    console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
+    actionCallback(action, room, pn);
 }
 
 function robotAction(action, room, pn) {
@@ -1109,6 +1172,10 @@ function actionCallback(action, room, pn) {
         action.time = Date.now();
         playerType = room['players'][action.player].type;
 
+        //Prepare for auto-action if no response is given
+        if (autoActionTimeout) {clearTimeout(autoActionTimeout);}
+        if (room.settings.timeout > 0) {autoActionTimeout = setTimeout(autoAction, room.settings.timeout, action, room, action.player);}
+
         //Prompt the next action
         if (playerType == PLAYER_TYPE.HUMAN) {
             players[room['players'][action.player].socket].socket.emit('returnHand', room['players'][action.player].hand, false);
@@ -1274,6 +1341,17 @@ io.sockets.on('connection', function (socket) {
     socket.on('settings', function (setting, rule) {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['host'] == socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
             //Update the game rules
+            switch (setting) {
+                case 'difficulty':
+                    //TODO: check if difficulty is valid then set room difficulty
+                    break;
+                case 'timeout':
+                    if (!isNaN(rule)) {
+                        rooms[players[socketId].room].settings.timeout = rule;
+                        console.log('Timeout in room ' + players[socketId].room + ' is set to ' + rule);
+                    }
+                    break;
+            }
         }
     });
     socket.on('startGame', function () {
