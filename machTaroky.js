@@ -229,6 +229,11 @@ function onLoad() {
 
     socket = io({auth: {token: localStorage.getItem('tarokyInstance')}});
 
+    socket.on('reload', function() {
+       addMessage('Reloading...');
+       window.location.reload();
+    });
+
     socket.on('returnRooms', function(returnRooms) {
         addMessage('refreshed');
         availableRooms = returnRooms;

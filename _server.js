@@ -5,6 +5,7 @@ const path = require('path');
 const express = require('express');
 const { diffieHellman } = require('crypto');
 const app = express();
+const START_TIME = Date.now();
 
 //Standard file-serving
 const server = http.createServer((req, res) => {
@@ -89,6 +90,8 @@ const VALUE_REVERSE = {
 //Note, once the AI is developed it will be easier to adjust difficulty using different AI
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8};
+
+const JOIN_TIMEOUT = 10000; //Number of milliseconds after server startup which is considered auto-reconnecting after a crash
 
 index(SUIT);
 index(RED_VALUE);
@@ -1117,6 +1120,8 @@ function broadcast(message) {
     }
 }//Debug function
 
+const playerJoinList = {};
+
 io.sockets.on('connection', function (socket) {
     let socketId = socket.handshake.auth.token;
     if (socketId === undefined || isNaN(socketId) || socketId == 0 || socketId == null) {
@@ -1127,6 +1132,10 @@ io.sockets.on('connection', function (socket) {
         SOCKET_LIST[socketId] = socket;
         players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {} };
         console.log('Player joined with socketID ' + socketId);
+        if (Date.now() - START_TIME < JOIN_TIMEOUT && !playerJoinList[socketId]) {
+            socket.emit('reload');//Player auto-reconnected after server crash
+            playerJoinList[socketId] = true;//Don't repeatedly boot the player
+        }
     }
     //TODO: player auto reconnect
 
