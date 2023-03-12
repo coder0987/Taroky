@@ -654,8 +654,6 @@ function actionCallback(action, room, pn) {
             for (let i = 0; i < 4; i++) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     //Starting the game is a special case. In all other cases, actions completed will inform the players through the take action methods
-                    console.log('Informing player ' + i + ' of game start');//debug
-                    SOCKET_LIST[room['players'][i].socket].emit('message','GAME IS STARTING');//debug
                     players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber, room.settings);//Inform the players of game beginning.
                 }
             }
@@ -1273,7 +1271,6 @@ io.sockets.on('connection', function (socket) {
         }
     }
     if (players[socketId] && players[socketId].tempDisconnect) {
-        //TODO: something about this breaks the client-end socket reception
         SOCKET_LIST[socketId] = socket;
         players[socketId].socket = socket;
         console.log('Player ' + socketId + ' auto-reconnected');
@@ -1283,12 +1280,9 @@ io.sockets.on('connection', function (socket) {
     }
 
     socket.on('disconnect', function () {
-        if (!players[socketId].tempDisconnect) {
-            if (players[socketId]) {
-                console.log('Player ' + socketId + ' exists');
-                players[socketId].tempDisconnect = true;
-                players[socketId].roomsSeen = {};
-            }
+        if (players[socketId] && !players[socketId].tempDisconnect) {
+            players[socketId].tempDisconnect = true;
+            players[socketId].roomsSeen = {};
             console.log('Player ' + socketId + ' may have disconnected');
             setTimeout(disconnectPlayerTimeout, DISCONNECT_TIMEOUT, socketId);
         }
@@ -1364,6 +1358,7 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('startGame', function () {
+        if (!players[socketId]) {return;}
         if (!rooms[players[socketId].room]) { console.log('Player failed to start game'); return; }
         if (rooms[players[socketId].room]['host'] == socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], players[socketId].pn);

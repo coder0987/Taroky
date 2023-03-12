@@ -9,6 +9,8 @@ const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8};
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE'};
+const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
+const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
 let ticker;
 let players;
 let deck;
@@ -182,15 +184,63 @@ function refresh() {
     }
 }
 
+function submitSettings(type) {
+    addMessage(type + ' setting submitted');
+    switch (type) {
+        case 'difficulty':
+            socket.emit('settings',type,document.getElementById('difficultySelector').value);
+            break;
+        case 'timeout':
+            socket.emit('settings',type,document.getElementById('timeoutButton').value*1000);
+            break;
+        default:
+            addError('Unknown setting: ' + type);
+    }
+}
+
+function createSettings(tools) {
+    let settings = document.createElement('div');
+    settings.id = 'settings';
+
+    let difficultySelector = document.createElement('select');
+    difficultySelector.id ='difficultySelector';
+    difficultySelector.name = 'Select Difficulty:';
+    for (let i in DIFFICULTY_TABLE) {
+        let difficultySelectOption = document.createElement('option');
+        difficultySelectOption.selected = false;
+        difficultySelectOption.value = i;
+        difficultySelectOption.id = DIFFICULTY_TABLE[i];
+        difficultySelectOption.innerHTML = DIFFICULTY_TABLE[i];
+        difficultySelector.appendChild(difficultySelectOption);
+    }
+    difficultySelector.setAttribute('onchange', 'submitSettings("difficulty")');
+    settings.appendChild(difficultySelector);
+
+    //Create numerical input for timeout (in s, must convert to ms)
+    let timeoutButton = document.createElement('input');
+    timeoutButton.setAttribute('type', 'number');
+    timeoutButton.defaultValue = 30;
+    timeoutButton.min = -1;//-1 or 0 mean no timeout
+    timeoutButton.id = 'timeoutButton';
+    timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
+    settings.appendChild(timeoutButton);
+
+    tools.appendChild(settings);
+}
+
+let roomHosted = false;
 function hostRoom() {
+    document.getElementById('host').hidden = false;
+    if (roomHosted) {
+        return;
+    }
+    roomHosted = true;
     let tools = document.getElementById('host');
     let startGame = document.createElement('button');
     startGame.innerHTML = 'Start Game';
     startGame.addEventListener('click',function(){removeHostTools();addMessage('Starting...');socket.emit('startGame');});
-    let settings = document.createElement('p');
-    settings.innerHTML = 'Settings (coming soon...)';
+    createSettings(tools);
     tools.appendChild(startGame);
-    tools.appendChild(settings);
 }
 
 function removeHostTools() {
@@ -372,6 +422,9 @@ function onLoad() {
         currentAction = action;
         if (action.player == playerNumber) {
             switch (action.action) {
+                case 'start':
+                    hostRoom();
+                    break;
                 case 'play':
                     addMessage('A new game is beginning');
                     socket.emit('play');
