@@ -276,6 +276,11 @@ function onLoad() {
     socket.on('returnPossiblePartners', function(possiblePartners) {
         partnersReturned(possiblePartners);
     });
+    socket.on('returnPN', function(returnPN, returnHostPN) {
+        hostNumber = returnHostPN;
+        playerNumber = returnPN;
+        addMessage('You are player ' + (returnPN+1));
+    });
     socket.on('roomConnected', function(roomConnected) {
         inGame = true;
         document.getElementById('rooms').innerHTML = '';
@@ -399,6 +404,7 @@ function onLoad() {
                 case 'discard':
                     discardingOrPlaying = true;
                     addMessage('You are discarding. Choose a card to discard.');
+                    drawHand(true);
                     break;
                 case 'moneyCards':
                     addMessage('You are calling money cards');
@@ -450,7 +456,8 @@ function onLoad() {
     });
     socket.on('failedPlayCard', function() {
         addError('Failed to play the card');
-    })
+    });
+    refresh();
 }
 
 /* For later

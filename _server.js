@@ -6,6 +6,7 @@ const express = require('express');
 const { diffieHellman } = require('crypto');
 const app = express();
 const START_TIME = Date.now();
+console.log('Server starting at ' + START_TIME);
 
 //Standard file-serving
 const server = http.createServer((req, res) => {
@@ -91,7 +92,8 @@ const VALUE_REVERSE = {
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8};
 
-const JOIN_TIMEOUT = 10000; //Number of milliseconds after server startup which is considered auto-reconnecting after a crash
+const JOIN_TIMEOUT = 20 * 1000; //Number of milliseconds after server startup which is considered auto-reconnecting after a crash
+const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
 index(SUIT);
 index(RED_VALUE);
@@ -290,6 +292,11 @@ function grayUnplayables(hand, leadCard) {
             } else {
                 hand[i].grayed = false;
             }
+        }
+    } else {
+        //Has neither lead suit nor trump. Can play anything
+        for (let i in hand) {
+            hand[i].grayed = false;
         }
     }
 }
@@ -1122,24 +1129,10 @@ function broadcast(message) {
 
 const playerJoinList = {};
 
-io.sockets.on('connection', function (socket) {
-    let socketId = socket.handshake.auth.token;
-    if (socketId === undefined || isNaN(socketId) || socketId == 0 || socketId == null) {
-        socket.disconnect();//Illegal socket
-        return;
-    }
-    if (!SOCKET_LIST[socketId]) {
-        SOCKET_LIST[socketId] = socket;
-        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {} };
-        console.log('Player joined with socketID ' + socketId);
-        if (Date.now() - START_TIME < JOIN_TIMEOUT && !playerJoinList[socketId]) {
-            socket.emit('reload');//Player auto-reconnected after server crash
-            playerJoinList[socketId] = true;//Don't repeatedly boot the player
-        }
-    }
-    //TODO: player auto reconnect
-
-    socket.on('disconnect', function () {
+function disconnectPlayerTimeout(socketId) {
+    //TODO: for some reason this broke everything on firefox desktop but works perfectly on mobile and on chrome
+    //I really don't understand why firefox desktop can't handle this, but oh well
+    if (players[socketId] && players[socketId].tempDisconnect) {
         if (!players[socketId]) { return; }
         console.log('Player ' + socketId + ' disconnected');
         if (~players[socketId].room) {
@@ -1159,10 +1152,70 @@ io.sockets.on('connection', function (socket) {
                 //Delete the room
                 delete rooms[players[socketId].room];
                 console.log('Stopped empty game in room ' + players[socketId].room);
+            } else {
+                rooms[players[socketId].room].informPlayers('Player ' + players[socketId].room + ' disconnected');
             }
         }
+        try {
+            SOCKET_LIST[socketId].disconnect();
+        } catch (ignore) {}
         delete players[socketId];
         delete SOCKET_LIST[socketId];
+
+    } else {
+        console.log('Player ' + socketId + ' didn\'t disconnect after all');
+    }
+}
+
+function autoReconnect(socketId) {
+    if (rooms[players[socketId].room]) {
+        console.log('Sending requested info...');
+        SOCKET_LIST[socketId].emit('roomConnected',players[socketId].room);
+        if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard' ||
+            rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
+            SOCKET_LIST[socketId].emit('returnHand', rooms[players[socketId].room].players[players[socketId].pn].hand, true);
+        } else {
+            SOCKET_LIST[socketId].emit('returnHand', rooms[players[socketId].room].players[players[socketId].pn].hand, false);
+        }
+        SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
+        SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
+        SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
+
+        //TODO: give other necessary info. Player just auto-reconnected and knows nothing
+    }
+}
+
+io.sockets.on('connection', function (socket) {
+    let socketId = socket.handshake.auth.token;
+    if (socketId === undefined || isNaN(socketId) || socketId == 0 || socketId == null) {
+        socket.disconnect();//Illegal socket
+        return;
+    }
+    if (!SOCKET_LIST[socketId]) {
+        SOCKET_LIST[socketId] = socket;
+        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false };
+        console.log('Player joined with socketID ' + socketId);
+        console.log('Join time: ' + Date.now());
+        if (Date.now() - START_TIME < JOIN_TIMEOUT && !playerJoinList[socketId]) {
+            socket.emit('reload');//Player auto-reconnected after server crash
+            playerJoinList[socketId] = true;//Don't repeatedly boot the player
+        }
+    }
+    if (players[socketId] && players[socketId].tempDisconnect) {
+        SOCKET_LIST[socketId] = socket;
+        console.log('Player ' + socketId + ' auto-reconnected');
+        players[socketId].tempDisconnect = false;
+        autoReconnect(socketId);
+    }
+
+    socket.on('disconnect', function () {
+        if (players[socketId]) {
+            console.log('Player ' + socketId + ' exists');
+            players[socketId].tempDisconnect = true;
+            players[socketId].roomsSeen = {};
+        }
+        console.log('Player ' + socketId + ' may have disconnected');
+        setTimeout(disconnectPlayerTimeout, DISCONNECT_TIMEOUT, socketId);
     });
 
     socket.on('roomConnect', function (roomID) {
@@ -1170,6 +1223,7 @@ io.sockets.on('connection', function (socket) {
         if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
+                    rooms[roomID].informPlayers('A new player connected: player ' + (i+1));
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
                     rooms[roomID]['players'][i].socket = socketId;
                     rooms[roomID]['players'][i].pid = players[socketId].pid;
@@ -1209,8 +1263,9 @@ io.sockets.on('connection', function (socket) {
         if (!connected) socket.emit('roomNotConnected', roomID);
     });
     socket.on('currentAction', function () {
-        if (rooms[players[socketId].room]) {
-            socket.emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
+        if (players[socketId] && rooms[players[socketId].room]) {
+            console.log('Player ' + socketId + ' sent a ping');
+            autoReconnect(socketId);
         }
     });
     socket.on('getRooms', function () {
@@ -1392,7 +1447,7 @@ function tick() {
             if (rooms[i]) simplifiedRooms[i] = { 'count': rooms[i].playerCount }; else console.log('Room ' + i + ' mysteriously vanished: ' + JSON.stringify(rooms[i]));
         }
         for (let i in players) {
-            if (!~players[i]['room'] && !checkRoomsEquality(players[i].roomsSeen, simplifiedRooms)) {
+            if (!~players[i]['room'] && !players[i].tempDisconnect && !checkRoomsEquality(players[i].roomsSeen, simplifiedRooms)) {
                 //console.log(JSON.stringify(players[i].roomsSeen) + '\n' + JSON.stringify(simplifiedRooms) + '\n' + checkRoomsEquality(players[i].roomsSeen,simplifiedRooms));
                 players[i]['socket'].emit('returnRooms', simplifiedRooms);
                 players[i].roomsSeen = { ...simplifiedRooms };
