@@ -15,9 +15,17 @@ Prerequisites:
 
 Download and unpack the ZIP file
 
-On Windows, run the run.bat file
+1. Change working directories to the installed folder\
+`cd Taroky`
 
-On Linux, run the run.sh file
+
+2. run `sudo npm install`
+
+
+3. On Windows, run the run.bat file\
+`./run.bat`\
+On Linux, run the run.sh file\
+`sh run.sh`
 
 In both cases, the server will automatically restart on crash. The server will bind to port 8442 by default. Edit the server.listen(8442) statement at the end of _server.js to change this
 
