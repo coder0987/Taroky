@@ -309,7 +309,6 @@ function unGrayCards(hand) {
 }
 
 function whoWon(table, leadPlayer) {
-    console.log('DEBUG: Table is ' + JSON.stringify(table) + '\nLead player: ' + leadPlayer);
     //First card in the table belongs to the leadPlayer
     let trickLeadCard = table[0];
     let trickLeadSuit = trickLeadCard.suit;
@@ -321,7 +320,6 @@ function whoWon(table, leadPlayer) {
             currentWinner = i;
         }
     }
-    console.log(highestTrump);//DEBUG
     if (highestTrump != -1) {
         //If a trump was played, then the highest trump wins
         return (leadPlayer+currentWinner)%4;
@@ -333,7 +331,6 @@ function whoWon(table, leadPlayer) {
             currentWinner = i;
         }
     }
-    console.log(highestOfLeadSuit);//DEBUG
     //No trumps means that the winner is whoever played the card of the lead suit with the highest value
     return (leadPlayer+currentWinner)%4;
 }
@@ -415,9 +412,12 @@ function autoAction(action, room, pn) {
         return;//Room has been deleted
     }
 
-    if (room.players.pn && room.players.pn.type == PLAYER_TYPE.HUMAN) {
+    if (room.players[pn] && room.players[pn].type == PLAYER_TYPE.HUMAN) {
         //Let the player know that the action was completed automatically
-        SOCKET_LIST[room.players.pn.socket].emit('autoAction', action);
+        console.log('AutoAction: informed player ' + pn);
+        SOCKET_LIST[room.players[pn].socket].emit('autoAction', action);
+    } else {
+        console.log('AutoAction: player ' + pn + ' may have disconnected');
     }
     let hand = room['players'][pn].hand;
     switch (action.action) {
@@ -1250,7 +1250,6 @@ function autoReconnect(socketId) {
         SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
         SOCKET_LIST[socketId].emit('returnSettings', rooms[players[socketId].room].settings);
-        //TODO: give other necessary info. Player just auto-reconnected and knows nothing
     }
 }
 

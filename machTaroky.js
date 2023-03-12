@@ -174,6 +174,28 @@ function showAllCards() {
         toShow[i].hidden = false;
     }
 }//Debug function
+
+function startActionTimer() {
+    if (!currentAction || !currentAction.time) {
+        return;
+    }
+    let theTimer = document.getElementById('timer');
+    let actionTime = currentAction.time;
+    let currentTime = Date.now();
+    let actionTimeOut = actionTime + theSettings.timeout;
+    let timeLeft = actionTimeOut - currentTime;
+    if (timeLeft < 0) {
+        stopActionTimer;
+    } else {
+        let timeLeftSeconds = timeLeft / 1000;
+        theTimer.innerHTML = Math.round(timeLeftSeconds);
+        theTimer.hidden = false;
+    }
+}
+function stopActionTimer() {
+    document.getElementById('timer').hidden = true;
+}
+
 let refreshing;
 function refresh() {
     if (!refreshing) {
@@ -329,7 +351,7 @@ function onLoad() {
     });
     socket.on('returnSettings', function(returnSettings) {
         theSettings = returnSettings;
-        addBoldMessage('Playing on difficulty ' + returnSettings.difficulty + ' with timeout ' + returnSettings.timeout);
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + returnSettings.timeout);
     });
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
@@ -407,6 +429,10 @@ function onLoad() {
                 addBoldMessage(theMessage);
         }
     });
+    socket.on('autoAction', function(theAction) {
+        addBoldMessage('Your play timed out and was automatically completed for you');
+        document.getElementById('center').innerHTML = '';//Clear buttons and whatnot from the center
+    });
     socket.on('broadcast', function(theBroadcast) {
         alert(theBroadcast);
     });
@@ -416,10 +442,11 @@ function onLoad() {
         theSettings = returnSettings;
         addMessage('Game ' + gameNumber + ' Beginning.')
         addMessage('You are player ' + (pN+1));
-        addBoldMessage('Playing on difficulty ' + returnSettings.difficulty + ' with timeout ' + returnSettings.timeout);
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + returnSettings.timeout);
     });
     socket.on('nextAction', function(action) {
         currentAction = action;
+        startActionTimer();
         if (action.player == playerNumber) {
             switch (action.action) {
                 case 'start':
@@ -457,6 +484,9 @@ function onLoad() {
                     addBoldMessage('Would you like to go prever?');
                     createChoiceButtons(BUTTON_TYPE.PREVER);
                     break;
+                case 'passPrever':
+                case 'callPrever':
+                    break;//For auto-reconnect
                 case 'drawTalon':
                     addMessage('You are drawing cards from the talon.');
                     socket.emit('drawTalon');
@@ -518,6 +548,7 @@ function onLoad() {
         addError('Failed to play the card');
     });
     refresh();
+    setInterval(() => {startActionTimer();}, 200);
 }
 
 /* For later
@@ -588,7 +619,7 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
 
 function ping() {socket.emit('currentAction');}//Debug function
 
-function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (a[i].count != b[i].count) {return false;}}return true;}
+function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (!b[i] || (a[i].count != b[i].count)) {return false;}}return true;}
 
 function createPartnerButtons(possiblePartners) {
     for (let i in possiblePartners) {
