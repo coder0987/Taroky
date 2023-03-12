@@ -4,11 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adjusts readme">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds client-side timer and bug fixes">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/TODO.md" beforeDir="false" afterPath="$PROJECT_DIR$/TODO.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Taroky.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Taroky.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -68,13 +68,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1657922973299</updated>
-    </task>
-    <task id="LOCAL-00014" summary="Adds custom images and showAllImages() debug function">
-      <created>1659390704140</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1659390704140</updated>
     </task>
     <task id="LOCAL-00015" summary="Adds readme and refactors Gameplay file">
       <created>1659391146618</created>
@@ -412,7 +405,14 @@
       <option name="project" value="LOCAL" />
       <updated>1678655848406</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <task id="LOCAL-00063" summary="Adds client-side timer and bug fixes">
+      <created>1678657419071</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1678657419071</updated>
+    </task>
+    <option name="localTasksCounter" value="64" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -428,7 +428,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Fixes crash" />
     <MESSAGE value="Fixes merge conflicts" />
     <MESSAGE value="Fixes partner system hopefully" />
     <MESSAGE value="Lays out next steps for valat, point counting, and completing the game" />
@@ -453,7 +452,8 @@
     <MESSAGE value="Adds settings client-side and removes node_modules from git" />
     <MESSAGE value="Re-adds bootstrap which was accidentally deleted" />
     <MESSAGE value="Adjusts readme" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adjusts readme" />
+    <MESSAGE value="Adds client-side timer and bug fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds client-side timer and bug fixes" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

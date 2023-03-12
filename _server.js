@@ -112,6 +112,7 @@ function Room(name) {
     this.playerCount = 0;
     this.deck = [...baseDeck].sort(() => Math.random() - 0.5);
     this.players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
+    this.autoAction = 0;
     this.informPlayers = function(message, messageType, extraInfo) {
         for (let i in this.players) {
             if (this.players[i].type == PLAYER_TYPE.HUMAN) {
@@ -464,6 +465,8 @@ function autoAction(action, room, pn) {
             grayUnplayables(hand, room.board.leadCard);
             action.info.card = robotPlay(hand, DIFFICULTY.EASY);
             break;
+        case 'winTrick':
+            break;
         case 'countPoints':
             break;//Point counting will be added later
         case 'resetBoard':
@@ -528,6 +531,8 @@ function robotAction(action, room, pn) {
             case 'follow':
                 grayUnplayables(hand, room.board.leadCard);
                 action.info.card = robotPlay(hand);
+                break;
+            case 'winTrick':
                 break;
             case 'countPoints':
                 break;//Point counting will be added later
@@ -594,6 +599,8 @@ function playerAction(action, room, pn) {
         case 'follow':
             grayUnplayables(hand, room.board.leadCard);
             returnHandState = 1;
+            break;
+        case 'winTrick':
             break;
         default:
             console.log('Unknown action: ' + action.action);
@@ -1061,25 +1068,10 @@ function actionCallback(action, room, pn) {
                 shouldReturnTable = true;
                 //If all players have played a card, determine who won the trick
                 if (action.player == room.board.leadPlayer) {
-                    action.action = 'lead';
+                    action.action = 'winTrick';
                     let trickWinner = whoWon(room.board.table, room.board.leadPlayer);
                     action.player = trickWinner;
                     room.informPlayers('Player ' + (trickWinner+1) + ' won the trick', MESSAGE_TYPE.WINNER, {youMessage: 'You won the trick', pn: trickWinner});
-
-                    //Transfer the table to the winner's discard
-                    room.players[trickWinner].discard.push(room.board.table.splice(0,1)[0]);
-                    room.players[trickWinner].discard.push(room.board.table.splice(0,1)[0]);
-                    room.players[trickWinner].discard.push(room.board.table.splice(0,1)[0]);
-                    room.players[trickWinner].discard.push(room.board.table.splice(0,1)[0]);
-                    room.board.table = [];
-
-                    room.board.leadPlayer = trickWinner;
-
-                    //If players have no more cards in hand, count points
-                    if (room.players[action.player].hand.length == 0) {
-                        action.action = 'countPoints';
-                        action.player = room.board.povenost;
-                    }
                 }
             } else {
                 if (players[pn].type != PLAYER_TYPE.HUMAN) {
@@ -1092,6 +1084,26 @@ function actionCallback(action, room, pn) {
                 if (cardToPlay && cardToPlay.suit && cardToPlay.value) {console.log('Player ' + pn + ' failed to play the ' + action.info.card.value + ' of ' + action.info.card.suit);}
                 console.log(JSON.stringify(cardToPlay));
                 console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+            }
+            break;
+        case 'winTrick':
+            //Separated so the table would return separately
+            actionTaken = true;
+            shouldReturnTable = true;
+            //Transfer the table to the winner's discard
+            room.players[pn].discard.push(room.board.table.splice(0,1)[0]);
+            room.players[pn].discard.push(room.board.table.splice(0,1)[0]);
+            room.players[pn].discard.push(room.board.table.splice(0,1)[0]);
+            room.players[pn].discard.push(room.board.table.splice(0,1)[0]);
+            room.board.table = [];
+
+            room.board.leadPlayer = pn;
+            action.action = 'lead';
+
+            //If players have no more cards in hand, count points
+            if (room.players[action.player].hand.length == 0) {
+                action.action = 'countPoints';
+                action.player = room.board.povenost;
             }
             break;
         case 'countPoints':
@@ -1178,7 +1190,10 @@ function actionCallback(action, room, pn) {
 
         //Prepare for auto-action if no response is given
         if (autoActionTimeout) {clearTimeout(autoActionTimeout);}
-        if (room.settings.timeout > 0) {autoActionTimeout = setTimeout(autoAction, room.settings.timeout, action, room, action.player);}
+        if (room.settings.timeout > 0) {
+            autoActionTimeout = setTimeout(autoAction, room.settings.timeout, action, room, action.player);
+            room.autoAction = autoActionTimeout;
+        }
 
         //Prompt the next action
         if (playerType == PLAYER_TYPE.HUMAN) {
@@ -1219,6 +1234,7 @@ function disconnectPlayerTimeout(socketId) {
             }
             if (rooms[players[socketId].room]['playerCount'] == 0) {
                 //Delete the room
+                clearTimeout(rooms[players[socketId].room].autoAction);
                 delete rooms[players[socketId].room];
                 console.log('Stopped empty game in room ' + players[socketId].room);
             } else {
@@ -1284,6 +1300,12 @@ io.sockets.on('connection', function (socket) {
             players[socketId].roomsSeen = {};
             console.log('Player ' + socketId + ' may have disconnected');
             setTimeout(disconnectPlayerTimeout, DISCONNECT_TIMEOUT, socketId);
+        }
+    });
+
+    socket.on('alive', function(callback) {
+        if (players[socketId]) {
+            callback(!players[socketId].tempDisconnect);//true for connected, false for disconnected
         }
     });
 
@@ -1499,6 +1521,11 @@ io.sockets.on('connection', function (socket) {
             console.log('Illegal card play attempt in room '  + players[socketId].room);
         }
     });
+    socket.on('winTrick', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'winTrick' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0) emptyRoomCount++; } return emptyRoomCount; }
@@ -1510,11 +1537,10 @@ function tick() {
         for (let i in rooms) {
             //Operations
             if (rooms[i] && rooms[i].playerCount == 0 && rooms[i]['board']['nextStep']['action'] != 'start') {
+                clearTimeout(rooms[i].autoAction);
                 delete rooms[i];
-                //TODO: add game stop time out to allow players to reconnect
                 console.log('Stopped empty game in room ' + i);
             }
-            //TODO: If action.time is greater than Date.now() + room.timeout, automatically complete the action
         }
         if (Object.keys(rooms).length == 0) {
             rooms['Main'] = new Room('Main');

@@ -27,6 +27,8 @@ let playerNumber = -1;
 let hostNumber = -1;
 let currentAction;
 let baseDeck = [];
+let returnTableQueue = [];
+let queued = false;
 let discardingOrPlaying = true;
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
@@ -139,6 +141,12 @@ function drawHand(withGray) {
 }
 
 function drawTable() {
+    if (returnTableQueue.length == 0) {
+        queued = false;
+        return;
+    }
+    queued = true;
+    table = returnTableQueue.splice(0,1)[0];
     let divTable = document.getElementById('center');
     let divDeck = document.getElementById('deck');
     let returnToDeck = divTable.children;
@@ -154,6 +162,7 @@ function drawTable() {
         divTable.appendChild(card);
         card.hidden = false;
     }
+    setInterval(drawTable, 5000);//Draw the next table in 3s
 }
 
 function emptyHand() {
@@ -176,7 +185,7 @@ function showAllCards() {
 }//Debug function
 
 function startActionTimer() {
-    if (!currentAction || !currentAction.time) {
+    if (!currentAction || !currentAction.time || !theSettings) {
         return;
     }
     let theTimer = document.getElementById('timer');
@@ -328,16 +337,14 @@ function onLoad() {
     });
     socket.on('returnHand', function(returnHand,withGray) {
         hand = returnHand;
-        if (hand.length > 0) {
-            let handString = '';
-            for (let i in hand) {handString += hand[i].value + ' of ' + hand[i].suit + ', ';}
-            addMessage('Your hand is: ' + handString.substring(0,handString.length - 2));
-        }
         drawHand(withGray);
     });
     socket.on('returnTable', function(returnTable) {
-        table = returnTable;
-        drawTable();
+        returnTableQueue.push(returnTable);
+        //TODO this system is very choppy. It needs to be redone
+        if (!queued) {
+            drawTable();
+        }
     });
     socket.on('returnDeck', function(returnDeck) {
         deck = returnDeck;
@@ -528,6 +535,9 @@ function onLoad() {
                     discardingOrPlaying = false;
                     drawHand(true);
                     break;
+                case 'winTrick':
+                    socket.emit('winTrick');
+                    break;
                 case 'countPoints':
                     //TODO
                     break;
@@ -538,6 +548,9 @@ function onLoad() {
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }
         } else {
+            if (action.action == 'lead' || action.action == 'follow' || action.action == 'winTrick') {
+                return;//No need. Handled by room.informPlayers
+            }
             addMessage('Player ' + (action.player + 1) + ' is performing the action ' + action.action);
         }
     });
@@ -547,26 +560,26 @@ function onLoad() {
     socket.on('failedPlayCard', function() {
         addError('Failed to play the card');
     });
+    socket.on('disconnect', function() {
+        addError('Socket Disconnected! Attempting auto-reconnect...');
+        window.location.reload();
+    })
     refresh();
-    setInterval(() => {startActionTimer();}, 200);
+    setInterval(tick, 200);
 }
 
-/* For later
-function toggleAvailability(boolean) {
-    let tempRoomList = document.getElementById('rooms').getChildren()
-    for (let i in tempRoomList) {
-        if (boolean) {
-            tempRoomList[i].classList.add('available');
-        } else {
-            tempRoomList[i].classList.remove('available');
-        }
+function tick() {
+    startActionTimer();
+    if (inGame) {
+        alive();//DEBUG todo fix this for real
     }
 }
-*/
+
 function romanize(num) {
     //Code copied from https://stackoverflow.com/questions/9083037/convert-a-number-into-a-roman-numeral-in-javascript
     if (isNaN(num))
         return num;
+    if (num==4) {return 'IIII';}//Taroky cards have IIII instead of IV
     var digits = String(+num).split(""),
         key = ["","C","CC","CCC","CD","D","DC","DCC","DCCC","CM",
                "","X","XX","XXX","XL","L","LX","LXX","LXXX","XC",
@@ -579,7 +592,6 @@ function romanize(num) {
 }
 
 function buttonClick() {
-    //toggleAvailability(false);
     if (!connectingToRoom) {
         this.firstChild.innerHTML = '⟳';
         connectingToRoom=true;socket.emit('roomConnect',this.roomID);addMessage('Connecting to room ' + (this.roomID) + '...');
@@ -592,7 +604,6 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     bDiv.classList.add('col-md-3');
     bDiv.classList.add('col-xs-6');
     bDiv.classList.add('white');
-    //bDiv.classList.add('available');
     bDiv.id = 'roomCard' + roomId;
     const numberDiv = document.createElement('div');
     numberDiv.classList.add('roomnum');
@@ -704,4 +715,14 @@ function buttonChoiceCallback() {
     }
     document.getElementById('center').removeChild(document.getElementById('go'+TYPE_TABLE[buttonType]));
     document.getElementById('center').removeChild(document.getElementById('no'+TYPE_TABLE[buttonType]));
+}
+
+function alive() {
+    socket.emit('alive', (callback) => {
+        console.log('The server connection is ' + (callback ? '' : 'not ') + 'alive');
+        if (!callback) {
+            alert('The Socket has Disconnected. Reload page to attempt recovery');
+            window.location.reload();
+        }
+    });
 }
