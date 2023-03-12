@@ -411,7 +411,11 @@ function autoAction(action, room, pn) {
     //This is useful for player TIMEOUT, or when a player takes too long to complete an action
     //This will also be used when less than 4 players are seated at a table, or when a player leaves after the game has begun
     //Note: the game will NEVER continue after all 4 players have left. There will always be at least 1 human player seated at the table.
-    if (room.players.pn.type == PLAYER_TYPE.HUMAN) {
+    if (!room || !room.players) {
+        return;//Room has been deleted
+    }
+
+    if (room.players.pn && room.players.pn.type == PLAYER_TYPE.HUMAN) {
         //Let the player know that the action was completed automatically
         SOCKET_LIST[room.players.pn.socket].emit('autoAction', action);
     }
@@ -650,7 +654,9 @@ function actionCallback(action, room, pn) {
             for (let i = 0; i < 4; i++) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     //Starting the game is a special case. In all other cases, actions completed will inform the players through the take action methods
-                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber);//Inform the players of game beginning.
+                    console.log('Informing player ' + i + ' of game start');//debug
+                    SOCKET_LIST[room['players'][i].socket].emit('message','GAME IS STARTING');//debug
+                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber, room.settings);//Inform the players of game beginning.
                 }
             }
             actionTaken = true;
@@ -1158,7 +1164,7 @@ function actionCallback(action, room, pn) {
     if (shouldReturnTable) {
         for (let i=0; i<4; i++) {
             if (room.players[i].type == PLAYER_TYPE.HUMAN) {
-                players[room['players'][i].socket].socket.emit('returnTable', room.board.table);
+                SOCKET_LIST[room['players'][i].socket].emit('returnTable', room.board.table);
             }
         }
     }
@@ -1178,7 +1184,7 @@ function actionCallback(action, room, pn) {
 
         //Prompt the next action
         if (playerType == PLAYER_TYPE.HUMAN) {
-            players[room['players'][action.player].socket].socket.emit('returnHand', room['players'][action.player].hand, false);
+            SOCKET_LIST[room['players'][action.player].socket].emit('returnHand', room['players'][action.player].hand, false);
             playerAction(action, room, action.player);
         } else if (playerType == PLAYER_TYPE.ROBOT) {
             robotAction(action, room, action.player);
@@ -1197,8 +1203,6 @@ function broadcast(message) {
 const playerJoinList = {};
 
 function disconnectPlayerTimeout(socketId) {
-    //TODO: for some reason this broke everything on firefox desktop but works perfectly on mobile and on chrome
-    //I really don't understand why firefox desktop can't handle this, but oh well
     if (players[socketId] && players[socketId].tempDisconnect) {
         if (!players[socketId]) { return; }
         console.log('Player ' + socketId + ' disconnected');
@@ -1238,6 +1242,7 @@ function autoReconnect(socketId) {
     if (rooms[players[socketId].room]) {
         console.log('Sending requested info...');
         SOCKET_LIST[socketId].emit('roomConnected',players[socketId].room);
+        SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
         if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard' ||
             rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
             SOCKET_LIST[socketId].emit('returnHand', rooms[players[socketId].room].players[players[socketId].pn].hand, true);
@@ -1246,8 +1251,7 @@ function autoReconnect(socketId) {
         }
         SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
-        SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
-
+        SOCKET_LIST[socketId].emit('returnSettings', rooms[players[socketId].room].settings);
         //TODO: give other necessary info. Player just auto-reconnected and knows nothing
     }
 }
@@ -1269,20 +1273,25 @@ io.sockets.on('connection', function (socket) {
         }
     }
     if (players[socketId] && players[socketId].tempDisconnect) {
+        //TODO: something about this breaks the client-end socket reception
         SOCKET_LIST[socketId] = socket;
+        players[socketId].socket = socket;
         console.log('Player ' + socketId + ' auto-reconnected');
         players[socketId].tempDisconnect = false;
+        socket.emit('message','You have been automatically reconnected');//debug
         autoReconnect(socketId);
     }
 
     socket.on('disconnect', function () {
-        if (players[socketId]) {
-            console.log('Player ' + socketId + ' exists');
-            players[socketId].tempDisconnect = true;
-            players[socketId].roomsSeen = {};
+        if (!players[socketId].tempDisconnect) {
+            if (players[socketId]) {
+                console.log('Player ' + socketId + ' exists');
+                players[socketId].tempDisconnect = true;
+                players[socketId].roomsSeen = {};
+            }
+            console.log('Player ' + socketId + ' may have disconnected');
+            setTimeout(disconnectPlayerTimeout, DISCONNECT_TIMEOUT, socketId);
         }
-        console.log('Player ' + socketId + ' may have disconnected');
-        setTimeout(disconnectPlayerTimeout, DISCONNECT_TIMEOUT, socketId);
     });
 
     socket.on('roomConnect', function (roomID) {

@@ -15,6 +15,7 @@ let deck;
 let hand;
 let partners;
 let socket;
+let theSettings;
 let availableRooms={};
 let drawnRooms=[];
 let connectingToRoom = false;
@@ -276,6 +277,10 @@ function onLoad() {
     socket.on('returnPossiblePartners', function(possiblePartners) {
         partnersReturned(possiblePartners);
     });
+    socket.on('returnSettings', function(returnSettings) {
+        theSettings = returnSettings;
+        addBoldMessage('Playing on difficulty ' + returnSettings.difficulty + ' with timeout ' + returnSettings.timeout);
+    });
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
         playerNumber = returnPN;
@@ -355,11 +360,13 @@ function onLoad() {
     socket.on('broadcast', function(theBroadcast) {
         alert(theBroadcast);
     });
-    socket.on('startingGame', function(hostPN, pN, gameNumber) {
+    socket.on('startingGame', function(hostPN, pN, gameNumber, returnSettings) {
         hostNumber = hostPN;
         playerNumber = pN;
+        theSettings = returnSettings;
         addMessage('Game ' + gameNumber + ' Beginning.')
         addMessage('You are player ' + (pN+1));
+        addBoldMessage('Playing on difficulty ' + returnSettings.difficulty + ' with timeout ' + returnSettings.timeout);
     });
     socket.on('nextAction', function(action) {
         currentAction = action;
