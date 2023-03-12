@@ -6,7 +6,7 @@ const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: '
 const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8};
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE'};
 let ticker;
@@ -24,6 +24,7 @@ let playerNumber = -1;
 let hostNumber = -1;
 let currentAction;
 let baseDeck = [];
+let discardingOrPlaying = true;
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
@@ -88,8 +89,13 @@ function enter() {if (this.style.filter == '') {this.classList.add('image-hover-
 function exit() {this.classList.remove('image-hover-highlight');}
 function clickCard() {if (this.style.filter == '') {discardThis(this.suit,this.value);this.hidden=true;}}
 function discardThis(cardSuit,cardValue) {
-    addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
-   socket.emit('discard',{'suit':cardSuit,'value':cardValue});
+    if (discardingOrPlaying) {
+       addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
+       socket.emit('discard',{'suit':cardSuit,'value':cardValue});
+    } else {
+        addMessage('Playing the ' + cardValue + ' of ' + cardSuit);
+        socket.emit('lead',{'suit':cardSuit,'value':cardValue});
+    }
 }
 
 function drawHand(withGray) {
@@ -125,6 +131,24 @@ function drawHand(withGray) {
             card.title = '';
         }
         divHand.appendChild(card);
+        card.hidden = false;
+    }
+}
+
+function drawTable() {
+    let divTable = document.getElementById('center');
+    let divDeck = document.getElementById('deck');
+    let returnToDeck = divTable.children;
+    for (let i=returnToDeck.length-1; i>=0; i--) {
+        let child = returnToDeck[i];
+        child.hidden = true;
+        divDeck.appendChild(child);
+    }
+    for (let i in table) {
+        let card = document.getElementById(table[i].value + table[i].suit);
+        card.suit = table[i].suit;
+        card.value = table[i].value;
+        divTable.appendChild(card);
         card.hidden = false;
     }
 }
@@ -233,6 +257,10 @@ function onLoad() {
         }
         drawHand(withGray);
     });
+    socket.on('returnTable', function(returnTable) {
+        table = returnTable;
+        drawTable();
+    });
     socket.on('returnDeck', function(returnDeck) {
         deck = returnDeck;
     });
@@ -282,7 +310,32 @@ function onLoad() {
                 addBoldMessage(theMessage);
                 break;
             case MESSAGE_TYPE.MONEY_CARDS:
-                addBoldMessage(theMessage);
+                if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
+                break;
+            case MESSAGE_TYPE.LEAD:
+                if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
+                break;
+            case MESSAGE_TYPE.PLAY:
+                if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
+                break;
+            case MESSAGE_TYPE.WINNER:
+                if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
                 break;
             default:
                 addMessage('Game message of unknown type: ' + theMessageType);
@@ -339,6 +392,7 @@ function onLoad() {
                     socket.emit('drawTalon');
                     break;
                 case 'discard':
+                    discardingOrPlaying = true;
                     addMessage('You are discarding. Choose a card to discard.');
                     break;
                 case 'moneyCards':
@@ -364,10 +418,14 @@ function onLoad() {
                     createChoiceButtons(BUTTON_TYPE.IOTE);
                     break;
                 case 'lead':
-                    //TODO: render hand and prep for user input
+                    addBoldMessage('You are leading the trick');
+                    discardingOrPlaying = false;
+                    drawHand(true);
                     break;
                 case 'follow':
-                    //TODO: render hand and prep for user input
+                    addBoldMessage('You are playing a card');
+                    discardingOrPlaying = false;
+                    drawHand(true);
                     break;
                 case 'countPoints':
                     //TODO
@@ -385,6 +443,9 @@ function onLoad() {
     socket.on('failedDiscard',function(toDiscard) {
         addError('Failed to discard the ' + toDiscard.value + ' of ' + toDiscard.suit);
     });
+    socket.on('failedPlayCard', function() {
+        addError('Failed to play the card');
+    })
 }
 
 /* For later

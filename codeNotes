@@ -9,6 +9,7 @@ At the beginning of the game, cards are dealt out and stored in Players' hands a
 Cards are also dealt to the Talon at room[roomID]['board'].talon
 Players then draw cards appropriately and discard. Those cards are stored in room[roomID]['players'][i].discard
 During play, up to 4 cards can be 'on the table' and are stored in rooms[roomID]['board'].table
+The lead card is also placed (as a duplicate) in rooms[roomID]['board'].leadCard
 During Prever draw, the Prever player may reject the first set of 3 cards from the talon. These cards are stored in rooms[roomID]['board'].preverTalon
 
 Cut Style and significant temporary data that must be stored between actions:

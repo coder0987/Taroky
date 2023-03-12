@@ -77,10 +77,18 @@ const RED_VALUE = { 0: 'Ace', 1: 'Two', 2: 'Three', 3: 'Four', 4: 'Jack', 5: 'Ri
 const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz' };
 
+const VALUE_REVERSE = {
+    Ace: 0, Two: 1, Three: 2, Four: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
+    Seven: 0, Eight: 1, Nine: 2, Ten: 3,
+    I: 0, II: 1, III: 2, IIII: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10, XII: 11, XIII: 12,
+    XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
+};
+
+
 //TODO: confirm difficulty levels. How many levels do we want? 5 + AI?
 //Note, once the AI is developed it will be easier to adjust difficulty using different AI
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8};
 
 index(SUIT);
 index(RED_VALUE);
@@ -120,6 +128,7 @@ function Board() {
     this.prever = -1;
     this.playingPrever = false;
     this.povenost = -1;
+    this.leadPlayer = -1;
     this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
     this.cutStyle = '';
     this.moneyCards = [[], [], [], []];
@@ -228,7 +237,7 @@ function findTheI(players) {
    return -1;
 }
 function possiblePartners(hand) {
-    //TODO: logic for possible parters { 'value': TRUMP_VALUE[v], 'suit': SUIT[4] }
+    //TODO: logic for possible partners { 'value': TRUMP_VALUE[v], 'suit': SUIT[4] }
     let partners = [];
     //can always partner with XIX
     partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
@@ -281,6 +290,43 @@ function grayUnplayables(hand, leadCard) {
         }
     }
 }
+function unGrayCards(hand) {
+    //Used to un-gray cards before a player leads
+    for (let i in hand) {
+        hand[i].grayed = false;
+    }
+}
+
+function whoWon(table, leadPlayer) {
+    console.log('DEBUG: Table is ' + JSON.stringify(table) + '\nLead player: ' + leadPlayer);
+    //First card in the table belongs to the leadPlayer
+    let trickLeadCard = table[0];
+    let trickLeadSuit = trickLeadCard.suit;
+    let highestTrump = -1;
+    let currentWinner = 0;//LeadPlayer is assumed to be winning
+    for (let i=0; i<4; i++) {
+        if (table[i].suit == 'Trump' && VALUE_REVERSE[table[i].value] > highestTrump) {
+            highestTrump = VALUE_REVERSE[table[i].value];
+            currentWinner = i;
+        }
+    }
+    console.log(highestTrump);//DEBUG
+    if (highestTrump != -1) {
+        //If a trump was played, then the highest trump wins
+        return (leadPlayer+currentWinner)%4;
+    }
+    let highestOfLeadSuit = VALUE_REVERSE[trickLeadCard.value];
+    for (let i=1; i<4; i++) {
+        if (table[i].suit == trickLeadSuit && VALUE_REVERSE[table[i].value] > highestOfLeadSuit) {
+            highestOfLeadSuit = VALUE_REVERSE[table[i].value];
+            currentWinner = i;
+        }
+    }
+    console.log(highestOfLeadSuit);//DEBUG
+    //No trumps means that the winner is whoever played the card of the lead suit with the highest value
+    return (leadPlayer+currentWinner)%4;
+}
+
 //Robot Functions
 function firstSelectableCard(hand) {
     for (let i in hand) {
@@ -288,6 +334,8 @@ function firstSelectableCard(hand) {
             return hand[i];
         }
     }
+    console.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
+    return hand[0];
 }
 function robotDiscard(hand, difficulty) {
     switch (difficulty) {
@@ -397,6 +445,7 @@ function robotAction(action, room, pn) {
             case 'contra':
                 break;
             case 'lead':
+                unGrayCards(hand);
                 action.info.card = robotLead(hand);
                 break;
             case 'follow':
@@ -424,6 +473,7 @@ function playerAction(action, room, pn) {
     //Works closely with action callbacks
 
     let hand = room['players'][pn].hand;//linked. Changing one will change the other.
+    let returnHandState = -1;
 
     switch (action.action) {
         case 'play':
@@ -441,7 +491,7 @@ function playerAction(action, room, pn) {
             break;
         case 'discard':
             grayUndiscardables(hand);
-            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
+            returnHandState = 1;
             break;
         case 'moneyCards':
             break;
@@ -461,17 +511,21 @@ function playerAction(action, room, pn) {
             players[room['players'][pn].socket].socket.emit('nextAction', action);
             return;//Don't inform the other players who has the I
         case 'lead':
-            //TODO: play card first in a round
-            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
+            unGrayCards(hand);
+            returnHandState = 0;
             break;
         case 'follow':
-            //TODO: play a card after someone else has lead
             grayUnplayables(hand, room.board.leadCard);
-            players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
+            returnHandState = 1;
             break;
         default:
             console.log('Unknown action: ' + action.action);
             console.trace();
+    }
+    if (returnHandState == 0) {
+        players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
+    } else if (returnHandState == 1) {
+        players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
     }
     for (let i = 0; i < 4; i++) {
         if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
@@ -510,6 +564,7 @@ function actionCallback(action, room, pn) {
     let playerType = room['players'][pn].type;
     let actionTaken = false;
     let style;
+    let shouldReturnTable = false;
 
     console.log('Action taken: ' + action.player + ' took action ' + action.action + ' with info ' + JSON.stringify(action.info) + ' in room ' + room.name);
 
@@ -781,15 +836,18 @@ function actionCallback(action, room, pn) {
 
             //Inform all players of current moneycards
             let theMessage = 'Player ' + (pn + 1) + ' is calling ';
+            let yourMoneyCards = 'You are calling ';
             let numCalled = 0;
             for (let i in room['board'].moneyCards[pn]) {
                 numCalled++;
                 theMessage += ((numCalled>1 ? ', ' : '') + room['board'].moneyCards[pn][i]);
+                yourMoneyCards += ((numCalled>1 ? ', ' : '') + room['board'].moneyCards[pn][i]);
             }
             if (numCalled == 0) {
                 theMessage += 'nothing';
+                yourMoneyCards += 'nothing';
             }
-            room.informPlayers(theMessage, MESSAGE_TYPE.MONEY_CARDS);
+            room.informPlayers(theMessage, MESSAGE_TYPE.MONEY_CARDS, {youMessage: yourMoneyCards, pn: pn});
             for (let i in room['players']) {
                 if (i == pn) {
                     room['players'][i].chips += 3 * owedChips;
@@ -834,14 +892,14 @@ function actionCallback(action, room, pn) {
             action.action = 'moneyCards';
 
             //Inform players what Povenost called
-            room.informPlayers('Povenost (Player ' + (pn+1) + ') is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER)
+            room.informPlayers('Povenost (Player ' + (pn+1) + ') is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn});
             actionTaken = true;
             break;
         case 'valat':
             if (action.info.valat && ~room['board'].valat) {
                 //Player called valat
                 room['board'].valat = pn;
-                room.informPlayers('Player ' + (pn+1) + ' called valat', MESSAGE_TYPE.VALAT);
+                room.informPlayers('Player ' + (pn+1) + ' called valat', MESSAGE_TYPE.VALAT, {youMessage: 'You called valat', pn: pn});
                 action.player = room['board'].povenost;//TODO: see notes in IOTE
                 //TODO: Rules dilemma: if Valat is called, does the calling team still get to call contra if they are not povenost?
                 action.action = 'contra';//Only one player may call valat
@@ -857,7 +915,7 @@ function actionCallback(action, room, pn) {
             break;
         case 'iote':
             if (action.info.iote) {
-                room.informPlayers('Player ' + (pn+1) + ' called the I on the end', MESSAGE_TYPE.IOTE);
+                room.informPlayers('Player ' + (pn+1) + ' called the I on the end', MESSAGE_TYPE.IOTE, {youMessage: 'You called the I on the end', pn: pn});
                 room.board.iote = pn;
             }
             actionTaken = true;
@@ -870,41 +928,98 @@ function actionCallback(action, room, pn) {
             //TODO: Prompt each non-povenost (or non-prever, in the case of prever games) to contra. If called, prompt the reverse team. If called, prompt the original team. Then pass
             if (action.info.contra) {
                 room['board'].contraCount++;
+                room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
                 //TODO: go to first in line on the opposing team
             } else {
                 //TODO: go to next in line on the current team. If this was the last in line, move on to lead
+                shouldReturnTable = true;
                 action.action = 'lead';
                 action.player = room['board'].povenost;
+                room.board.leadPlayer = room['board'].povenost;
             }
             actionTaken = true;
             break;
         case 'lead':
-            //TODO: place the played card from action.info.card onto the virtual "board"
-            //TODO: gray out cards for the next player
-
-            //actionTaken = true;
-            console.log('Game in room ' + room.name + ' has reached the end of the code');
-            action.action = 'follow';
-            action.player = (action.player + 1) % 4;
+            let cardToLead = action.info.card;
+            let lead = false;
+            if (cardToLead && cardToLead.suit && cardToLead.value) {
+                for (let i in room['players'][pn].hand) {
+                    if (room['players'][pn].hand[i].suit == cardToLead.suit && room['players'][pn].hand[i].value == cardToLead.value) {
+                        lead = room['players'][pn].hand.splice(i, 1)[0];
+                        break;
+                    }
+                }
+            }
+            if (lead) {
+                actionTaken = true;
+                action.action = 'follow';
+                action.player = (action.player + 1) % 4;
+                room['board'].table.push(lead);
+                room['board'].leadCard = lead;
+                room.informPlayers('Player ' + (pn+1) + ' lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {youMessage: 'You lead the ' + lead.value + ' of ' + lead.suit, pn: pn});
+                shouldReturnTable = true;
+            } else {
+                players[room['players'][pn].socket].socket.emit('failedLeadCard', cardToLead);
+                if (cardToLead && cardToLead.suit && cardToLead.value) {console.log('Player ' + pn + ' failed to lead the ' + action.info.card.value + ' of ' + action.info.card.suit);}
+                console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+            }
             break;
         case 'follow':
-            //TODO: place the played card from action.info.card onto the virtual "board"
-            /*Pseudocode
-            if (VIRTUALBOARD.length == 4) {
-                action.action = 'COUNTPOINTS';
-                action.player = room['board'].povenost;
-                actionTaken = true;
-            } else {
-                VIRTUALBOARD.push(action.info.card)
-                action.player = (action.player + 1) % 4;
-                GRAYUNPLAYABLES(room['players'][action.player].hand);
-                //Note hand is automatically returned later on, no need to do so now
-                actionTaken = true;
+            //Note that the card was verified playable by the socket.on function
+            let cardToPlay = action.info.card;
+            let played = false;
+            if (cardToPlay && cardToPlay.suit && cardToPlay.value) {
+                for (let i in room['players'][pn].hand) {
+                    if (room['players'][pn].hand[i].suit == cardToPlay.suit && room['players'][pn].hand[i].value == cardToPlay.value) {
+                        played = room['players'][pn].hand.splice(i, 1)[0];
+                        break;
+                    }
+                }
             }
-            */
+            if (played) {
+                actionTaken = true;
+                room['board'].table.push(played);
+                action.player = (action.player + 1) % 4;
+                room.informPlayers('Player ' + (pn+1) + ' played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {youMessage: 'You played the ' + played.value + ' of ' + played.suit, pn: pn});
+                shouldReturnTable = true;
+                //If all players have played a card, determine who won the trick
+                if (action.player == room.board.leadPlayer) {
+                    action.action = 'lead';
+                    let trickWinner = whoWon(room.board.table, room.board.leadPlayer);
+                    action.player = trickWinner;
+                    room.informPlayers('Player ' + (trickWinner+1) + ' won the trick', MESSAGE_TYPE.WINNER, {youMessage: 'You won the trick', pn: trickWinner});
+
+                    //Transfer the table to the winner's discard
+                    room.players[trickWinner].discard.push(room.board.table.splice(0,1)[0]);
+                    room.players[trickWinner].discard.push(room.board.table.splice(0,1)[0]);
+                    room.players[trickWinner].discard.push(room.board.table.splice(0,1)[0]);
+                    room.players[trickWinner].discard.push(room.board.table.splice(0,1)[0]);
+                    room.board.table = [];
+
+                    room.board.leadPlayer = trickWinner;
+
+                    //If players have no more cards in hand, count points
+                    if (room.players[action.player].hand.length == 0) {
+                        action.action = 'countPoints';
+                        action.player = room.board.povenost;
+                    }
+                }
+            } else {
+                if (players[pn].type != PLAYER_TYPE.HUMAN) {
+                    console.trace('Robot attempted to play illegal card');
+                    console.log(JSON.stringify(cardToPlay));
+                    console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                    break;
+                }
+                players[room['players'][pn].socket].socket.emit('failedPlayCard', cardToPlay);
+                if (cardToPlay && cardToPlay.suit && cardToPlay.value) {console.log('Player ' + pn + ' failed to play the ' + action.info.card.value + ' of ' + action.info.card.suit);}
+                console.log(JSON.stringify(cardToPlay));
+                console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+            }
             break;
         case 'countPoints':
             //TODO: count points. Harder difficulties might have manual counting later on
+            console.log('Game in room ' + room.name + ' has reached the end of the code');
             /*
             if (valat) {
                 chipsOwed = room['board'].valat
@@ -966,6 +1081,15 @@ function actionCallback(action, room, pn) {
     }
     console.log('Next Action: ' + action.action);
     action.info = {};
+
+    if (shouldReturnTable) {
+        for (let i=0; i<4; i++) {
+            if (room.players[i].type == PLAYER_TYPE.HUMAN) {
+                players[room['players'][i].socket].socket.emit('returnTable', room.board.table);
+            }
+        }
+    }
+
     if (actionTaken) {
 
         //Sanity Check 
@@ -1209,6 +1333,25 @@ io.sockets.on('connection', function (socket) {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'iote' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.iote = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('lead', function (toPlay) {
+        if (rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'lead' || rooms[players[socketId].room]['board']['nextStep'].action == 'follow') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            let played = false;
+            for (let i in rooms[players[socketId].room]['players'][players[socketId]['pn']].hand) {
+                if (!rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].grayed && rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].suit == toPlay.suit && rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].value == toPlay.value) {
+                    rooms[players[socketId].room]['board']['nextStep'].info.card = toPlay;
+                    played = true;
+                    actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+                    break;
+                }
+            }
+            if (!played) {
+                players[rooms[players[socketId].room]['players'][players[socketId]['pn']].socket].socket.emit('failedLead', toPlay);
+                console.log('Player failed to play card in room ' + players[socketId].room + ': ' + JSON.stringify(toPlay));
+            }
+        } else {
+            console.log('Illegal card play attempt in room '  + players[socketId].room);
         }
     });
 });
