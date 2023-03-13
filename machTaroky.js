@@ -7,8 +7,8 @@ const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8};
-const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3};
-const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE'};
+const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4};
+const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni'};
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
 let ticker;
@@ -358,7 +358,7 @@ function onLoad() {
     });
     socket.on('returnSettings', function(returnSettings) {
         theSettings = returnSettings;
-        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + returnSettings.timeout);
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000));
     });
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
@@ -391,7 +391,6 @@ function onLoad() {
         addMessage(theMessage);
     });
     socket.on('gameMessage', function(theMessage,theMessageType,extraInfo) {
-
         switch (theMessageType) {
             case MESSAGE_TYPE.POVENOST:
                 if (extraInfo && extraInfo.pn == playerNumber) {
@@ -503,6 +502,10 @@ function onLoad() {
                     addMessage('You are discarding. Choose a card to discard.');
                     drawHand(true);
                     break;
+                case 'povenostBidaUniChoice':
+                    addBoldMessage('Would you like to call Bida/Uni?');
+                    createChoiceButtons(BUTTON_TYPE.BUC);
+                    break;
                 case 'moneyCards':
                     addMessage('You are calling money cards');
                     socket.emit('moneyCards');
@@ -571,7 +574,7 @@ function onLoad() {
 function tick() {
     startActionTimer();
     if (inGame) {
-        alive();//DEBUG todo fix this for real
+        alive();//DEBUG todo fix this for real, see GitHub issue
     }
 }
 
@@ -691,6 +694,10 @@ function createChoiceButtons(buttonType) {
             break;
         case BUTTON_TYPE.IOTE:
             firstButton.innerHTML = 'Call I on the end';
+            secondButton.innerHTML = 'Pass';
+            break;
+        case BUTTON_TYPE.BUC:
+            firstButton.innerHTML = 'Call Bida/Uni';
             secondButton.innerHTML = 'Pass';
             break;
         default:
