@@ -455,7 +455,7 @@ function autoAction(action, room, pn) {
         case 'prever':
             action.action = 'passPrever';
             break;
-        case 'preverTalon':
+        case 'drawPreverTalon':
         case 'drawTalon':
             break;
         case 'discard':
@@ -538,7 +538,7 @@ function robotAction(action, room, pn) {
             case 'prever':
                 action.action = 'passPrever';
                 break;
-            case 'preverTalon':
+            case 'drawPreverTalon':
             case 'drawTalon':
                 break;
             case 'discard':
@@ -621,7 +621,7 @@ function playerAction(action, room, pn) {
         case 'prever':
         case 'callPrever':
         case 'passPrever':
-        case 'preverTalon':
+        case 'drawPreverTalon':
         case 'drawTalon':
             break;
         case 'discard':
@@ -810,24 +810,6 @@ function actionCallback(action, room, pn) {
             break;
         case 'prever':
             break;//ignore this, the callback is for the players
-        case 'callPrever':
-            room['board'].playingPrever = true;
-            room['board'].prever = pn;
-            room['board'].preverTalonStep = 0;
-            action.action = 'drawPreverTalon';
-            if (room['board'].povenost == pn) {
-                for (let i=0; i<4; i++) {
-                    room['players'][i].isTeamPovenost = false;
-                }
-                room['players'][pn].isTeamPovenost = true;
-            } else {
-                for (let i=0; i<4; i++) {
-                    room['players'][i].isTeamPovenost = true;
-                }
-                room['players'][pn].isTeamPovenost = false;
-            }
-            actionTaken = true;
-            break;
         case 'passPrever':
             action.player = (action.player + 1) % 4;
             if (action.player == room['board'].povenost) {
@@ -857,6 +839,23 @@ function actionCallback(action, room, pn) {
                 }
             }
             break;
+        case 'callPrever':
+            room['board'].playingPrever = true;
+            room['board'].prever = pn;
+            room['board'].preverTalonStep = 0;
+            action.action = 'drawPreverTalon';
+            if (room['board'].povenost == pn) {
+                for (let i=0; i<4; i++) {
+                    room['players'][i].isTeamPovenost = false;
+                }
+                room['players'][pn].isTeamPovenost = true;
+            } else {
+                for (let i=0; i<4; i++) {
+                    room['players'][i].isTeamPovenost = true;
+                }
+                room['players'][pn].isTeamPovenost = false;
+            }
+            //Fallthrough to inform the player
         case 'drawPreverTalon':
             if (room['board'].preverTalonStep == 0) {
                 //Show the initial 3 cards to prever
@@ -883,6 +882,7 @@ function actionCallback(action, room, pn) {
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room.informPlayers('Prever has kept the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':pn,'step':3,'youMessage':'You have kept the first set of cards'});
                     actionTaken = true;
                     action.action = 'discard';
                 } else {
@@ -892,9 +892,9 @@ function actionCallback(action, room, pn) {
                     let temp = [];
 
                     //Show first set of cards to all players
-                    temp.push(tempHand.splice(0,1)[0]);
-                    temp.push(tempHand.splice(0,1)[0]);
-                    temp.push(tempHand.splice(0,1)[0]);
+                    temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
+                    temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
+                    temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
                     room.informPlayers('Prever has rejected the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':1,'youMessage':'You have rejected the first set of cards'});
 
@@ -928,16 +928,17 @@ function actionCallback(action, room, pn) {
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
-                    actionTaken = true;
+                    room.informPlayers('Prever has kept the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':pn,'step':3,'youMessage':'You have kept the second set of cards'});
                     action.action = 'discard';
+                    actionTaken = true;
                 } else {
                     //Prever rejected the second set and returned to the first set
                     //Prever swaps the three cards with the talon and the other players are again allowed to view which cards prever rejected
                     //Finally, the remaining cards in the talon are given to the other team, the loss multiplier is doubled again (now at 4x), and play moves on to discarding
                     let temp = [];
-                    temp.push(tempHand.splice(0,1)[0]);
-                    temp.push(tempHand.splice(0,1)[0]);
-                    temp.push(tempHand.splice(0,1)[0]);
+                    temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
+                    temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
+                    temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
                     room.informPlayers('Prever has rejected the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':2,'youMessage':'You have rejected the second set of cards'});
 
@@ -1125,7 +1126,7 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             break;
         case 'valat':
-            if (action.info.valat && ~room['board'].valat) {
+            if (action.info.valat) {
                 //Player called valat
                 room['board'].valat = pn;
                 room.informPlayers('Player ' + (pn+1) + ' called valat', MESSAGE_TYPE.VALAT, {youMessage: 'You called valat', pn: pn});
@@ -1796,7 +1797,7 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('drawTalon', function () {
-        if (rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' || rooms[players[socketId].room]['board']['nextStep'].action == 'drawPreverTalon') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
@@ -1835,6 +1836,18 @@ io.sockets.on('connection', function (socket) {
     socket.on('choosePartner', function (partner) {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'partner' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board'].partnerCard = partner;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('goPrever Talon', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawPreverTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info.accept = true;
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('noPrever Talon', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawPreverTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].info.accept = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
