@@ -88,7 +88,7 @@ const VALUE_REVERSE = {
 
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9};
 
 const JOIN_TIMEOUT = 20 * 1000; //Number of milliseconds after server startup which is considered auto-reconnecting after a crash
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
@@ -146,6 +146,8 @@ function Board() {
     this.valat = -1;
     this.iote = -1;
     this.contra = [-1,-1];
+    this.firstContraPlayer = -1;
+    this.preverMultiplier = 1;
     this.gameNumber = 0;
 }
 function createDeck() {
@@ -789,6 +791,17 @@ function actionCallback(action, room, pn) {
             room['board'].prever = pn;
             room['board'].preverTalonStep = 0;
             action.action = 'drawPreverTalon';
+            if (room['board'].povenost == pn) {
+                for (let i=0; i<4; i++) {
+                    room['players'][i].isTeamPovenost = false;
+                }
+                room['players'][pn].isTeamPovenost = true;
+            } else {
+                for (let i=0; i<4; i++) {
+                    room['players'][i].isTeamPovenost = true;
+                }
+                room['players'][pn].isTeamPovenost = false;
+            }
             actionTaken = true;
             break;
         case 'passPrever':
@@ -822,10 +835,17 @@ function actionCallback(action, room, pn) {
             break;
         case 'drawPreverTalon':
             if (room['board'].preverTalonStep == 0) {
+                //Show the initial 3 cards to prever
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 sortCards(room['players'][action.player].tempHand);
+
+                //Inform player of cards
+                if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
+                    room.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards':tempHand,'step':0});
+                }
+
                 actionTaken = true;
                 room['board'].preverTalonStep = 1;
             } else if (room['board'].preverTalonStep == 1) {
@@ -833,45 +853,83 @@ function actionCallback(action, room, pn) {
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
-                    //Prever is keeping the intial three cards and will not look at the other three.
-                    //The other three cards now go into Povenost's discard pile, unless Preve is Povenost, in which case the cards go into the next player's discard pile
+                    //Prever is keeping the initial three cards and will not look at the other three.
+                    //The other three cards now go into Povenost's discard pile, unless Prever is Povenost, in which case the cards go into the next player's discard pile
                     //The game then continues with Prever discarding down to 12 and point cards as normal
-                    //TODO: Place talon in discard, set up next action
-                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
-                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
-                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    actionTaken = true;
+                    action.action = 'discard';
                 } else {
                     //Prever has rejected the first three cards and will instead take the second three
                     //The original three return to the talon and the three from the talon enter the temphand. Other players are allowed to view the talon now
                     //The Prever loss multiplier is doubled here. Prever has a third and final choice to make before we may continue
-                    let tempForSwap = room['board'].talon;
-                    room['board'].talon = room['players'][action.player].tempHand;
-                    room['players'][action.player].tempHand = tempForSwap;
+                    let temp = [];
 
-                    //TODO: Show the talon to other players
+                    //Show first set of cards to all players
+                    temp.push(tempHand.splice(0,1)[0]);
+                    temp.push(tempHand.splice(0,1)[0]);
+                    temp.push(tempHand.splice(0,1)[0]);
+
+                    room.informPlayers('Prever has rejected the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':1,'youMessage':'You have rejected the first set of cards'});
+
+                    //Show prever the second set of cards from the talon
+                    room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
+
+                    //Return first set of cards to the talon
+                    room['board'].talon.push(temp.splice(0,1)[0]);
+                    room['board'].talon.push(temp.splice(0,1)[0]);
+                    room['board'].talon.push(temp.splice(0,1)[0]);
+
+                    //Inform prever of cards
+                    if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
+                        room.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards':tempHand,'step':1});
+                    }
 
                     actionTaken = true;
                     room['board'].preverTalonStep = 2;
+                    room['board'].preverMultiplier = 2;
                 }
             } else if (room['board'].preverTalonStep == 2) {
                 if (action.info.accept) {
-                    //Prever has claimed the second set of cards and basically the same thing happens as if prever had accepted the first half, but the loss multipler is doubled
+                    //Prever has claimed the second set of cards and basically the same thing happens as if prever had accepted the first half, but the loss multiplier is doubled
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
 
-                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
-                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
-                    room['players'][action.player].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    //Opposing team claims the first set of cards
+                    room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+                    actionTaken = true;
+                    action.action = 'discard';
                 } else {
                     //Prever rejected the second set and returned to the first set
                     //Prever swaps the three cards with the talon and the other players are again allowed to view which cards prever rejected
                     //Finally, the remaining cards in the talon are given to the other team, the loss multiplier is doubled again (now at 4x), and play moves on to discarding
-                    let tempForSwap = room['board'].talon;
-                    room['board'].talon = room['players'][action.player].tempHand;
-                    room['players'][action.player].tempHand = tempForSwap;
+                    let temp = [];
+                    temp.push(tempHand.splice(0,1)[0]);
+                    temp.push(tempHand.splice(0,1)[0]);
+                    temp.push(tempHand.splice(0,1)[0]);
 
-                    //TODO: Show the talon to other players
+                    room.informPlayers('Prever has rejected the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':2,'youMessage':'You have rejected the second set of cards'});
+
+                    //Give prever the cards from the talon
+                    room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
+                    room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
+
+                    //Give second set of cards to opposing team's discard
+                    room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
+                    room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
+                    room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
+
+                    room['board'].preverMultiplier = 4;
+                    actionTaken = true;
+                    action.action = 'discard';
                 }
             }
             break;
@@ -893,7 +951,15 @@ function actionCallback(action, room, pn) {
                     action.player = (action.player + 1) % 4;
                     if (room['players'][action.player].hand.length == 12) {
                         action.player = room['board'].povenost;
-                        action.action = 'partner';
+                        if (room['board'].playingPrever) {
+                            //A player is going prever. No partner cards
+                            action.action = 'moneyCards';
+                            //Note that prever is calling Bida or Uni no matter what
+                            //If prever has bida or uni, he calls bida or uni. No choice.
+                        } else {
+                            //No player going prever. Povenost will call a partner
+                            action.action = 'partner';
+                        }
                     }
                 }
             } else {
@@ -1039,9 +1105,18 @@ function actionCallback(action, room, pn) {
                 //Player called valat
                 room['board'].valat = pn;
                 room.informPlayers('Player ' + (pn+1) + ' called valat', MESSAGE_TYPE.VALAT, {youMessage: 'You called valat', pn: pn});
-                action.player = room['board'].povenost;//TODO: see notes in IOTE
-                //TODO: Rules dilemma: if Valat is called, does the calling team still get to call contra if they are not povenost?
+                if (room.board.playerPrever) {
+                    //Non-prever team calls contra
+                    action.player = (room.board.prever+1)%4;
+                } else {
+                    //Non-povenost team calls contra
+                    action.player = (room['board'].povenost+1)%4;
+                    if (room.players[action.player].isTeamPovenost) {
+                        action.player = (action.player+1)%4;
+                    }
+                }
                 action.action = 'contra';//Only one player may call valat
+                room.board.firstContraPlayer = action.player;
             } else {
                 action.player = (pn + 1) % 4;
                 if (action.player == room['board'].povenost) {
@@ -1059,22 +1134,82 @@ function actionCallback(action, room, pn) {
             }
             actionTaken = true;
             action.player = room.board.povenost;
-            //TODO: go through opposing team, not Povenost team
-            //Also remember that in a prever game, opposing team might be povenost's team
+            if (room.board.playerPrever) {
+                //Non-prever team calls contra
+                action.player = (room.board.prever+1)%4;
+            } else {
+                //Non-povenost team calls contra
+                action.player = (room['board'].povenost+1)%4;
+                if (room.players[action.player].isTeamPovenost) {
+                    action.player = (action.player+1)%4;
+                }
+            }
             action.action = 'contra';
+            room.board.firstContraPlayer = action.player;
             break;
         case 'contra':
-            //TODO: Prompt each non-povenost (or non-prever, in the case of prever games) to contra. If called, prompt the reverse team. If called, prompt the original team. Then pass
-            if (action.info.contra) {
-                room['board'].contraCount++;
-                room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
-                //TODO: go to first in line on the opposing team
+            if (room.board.playingPrever) {
+                //Playing prever. Fun times. Yay.
+                //TODO
             } else {
-                //TODO: go to next in line on the current team. If this was the last in line, move on to lead
-                shouldReturnTable = true;
-                action.action = 'lead';
-                action.player = room['board'].povenost;
-                room.board.leadPlayer = room['board'].povenost;
+                if (action.info.contra) {
+                    if (room.players[pn].isTeamPovenost) {
+                        //Povenost's team called rhea-contra
+                        room['board'].contra[1] = 1;
+
+                        //Swap play to opposing team
+                        do {
+                            action.player = (action.player+1)%4;
+                        } while (room.players[action.player].isTeamPovenost);
+                        room.board.firstContraPlayer = action.player;
+                    } else {
+                        //Not-povenost's team called either contra or supra-contra
+                        if (room.board.contra[0] == -1) {
+                            //Regular contra
+                            room.board.contra[0] = 1;
+
+                            //Swap play to opposing team
+                            do {
+                                action.player = (action.player+1)%4;
+                            } while (!room.players[action.player].isTeamPovenost);
+                            room.board.firstContraPlayer = action.player;
+                        } else {
+                            //Supra-contra. No more contras can be called
+                            room.board.contra[0] = 2;
+                            shouldReturnTable = true;
+                            action.action = 'lead';
+                            action.player = room['board'].povenost;
+                            room.board.leadPlayer = room['board'].povenost;
+                        }
+                    }
+                    room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
+                } else {
+                    if (room.players[pn].isTeamPovenost) {
+                        //Chance to call rhea-contra
+                        do {
+                            action.player = (action.player+1)%4;
+                        } while (!room.players[action.player].isTeamPovenost);
+                        if (action.player == room.board.firstContraPlayer) {
+                            //It has gone all the way around. No one wants to call contra
+                            shouldReturnTable = true;
+                            action.action = 'lead';
+                            action.player = room['board'].povenost;
+                            room.board.leadPlayer = room['board'].povenost;
+                        }
+                    } else {
+                        //Either no one has called contra or povenost's team has called rhea-contra
+                        do {
+                            action.player = (action.player+1)%4;
+                        } while (room.players[action.player].isTeamPovenost);
+                        if (action.player == room.board.firstContraPlayer) {
+                            //It has gone all the way around. No one wants to call contra
+                            shouldReturnTable = true;
+                            action.action = 'lead';
+                            action.player = room['board'].povenost;
+                            room.board.leadPlayer = room['board'].povenost;
+                        }
+                    }
+                }
             }
             actionTaken = true;
             break;
@@ -1163,7 +1298,7 @@ function actionCallback(action, room, pn) {
             break;
         case 'countPoints':
             //TODO: count points. Harder difficulties might have manual counting later on
-            //In order to count points, first teams must be determined
+
 
             console.log('Game in room ' + room.name + ' has reached the end of the code');
             /*
