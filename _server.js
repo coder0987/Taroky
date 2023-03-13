@@ -6,7 +6,6 @@ const express = require('express');
 const { diffieHellman } = require('crypto');
 const app = express();
 const START_TIME = Date.now();
-console.log('Server starting at ' + START_TIME);
 
 //Standard file-serving
 const server = http.createServer((req, res) => {
@@ -90,7 +89,6 @@ const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
 const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9};
 
-const JOIN_TIMEOUT = 20 * 1000; //Number of milliseconds after server startup which is considered auto-reconnecting after a crash
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
 index(SUIT);
@@ -251,6 +249,7 @@ function findTheI(players) {
 }
 function possiblePartners(hand) {
     //TODO: logic for possible partners { 'value': TRUMP_VALUE[v], 'suit': SUIT[4] }
+    //TODO: Can povenost call *any* number from XIX to the XV if he has all of them, or just the XIX or lowest one?
     let partners = [];
     //can always partner with XIX
     partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
@@ -381,6 +380,14 @@ function robotCall(difficulty) {
             return false;
     }
 }
+function robotContra(difficulty) {
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+        default:
+            return false;
+    }
+}
 function robotPovenostBidaUniChoice(difficulty) {
     switch (difficulty) {
         case 0:
@@ -448,6 +455,7 @@ function autoAction(action, room, pn) {
         case 'prever':
             action.action = 'passPrever';
             break;
+        case 'preverTalon':
         case 'drawTalon':
             break;
         case 'discard':
@@ -475,7 +483,13 @@ function autoAction(action, room, pn) {
             actionCallback(action, room, pn);
             return;//Don't inform the players who has the I
         case 'contra':
-            break;
+        case 'preverContra':
+        case 'preverValatContra':
+        case 'valatContra':
+            action.info.contra = robotContra(DIFFICULTY.EASY);
+            console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
+            actionCallback(action, room, pn);
+            return;
         case 'lead':
             unGrayCards(hand);
             action.info.card = robotLead(hand, DIFFICULTY.EASY);
@@ -524,6 +538,7 @@ function robotAction(action, room, pn) {
             case 'prever':
                 action.action = 'passPrever';
                 break;
+            case 'preverTalon':
             case 'drawTalon':
                 break;
             case 'discard':
@@ -550,7 +565,13 @@ function robotAction(action, room, pn) {
                 actionCallback(action, room, pn);
                 return;//Don't inform the players who has the I
             case 'contra':
-                break;
+            case 'preverContra':
+            case 'preverValatContra':
+            case 'valatContra':
+                action.info.contra = robotContra(room.settings.difficulty);
+                console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
+                actionCallback(action, room, pn);
+                return;
             case 'lead':
                 unGrayCards(hand);
                 action.info.card = robotLead(hand);
@@ -600,6 +621,7 @@ function playerAction(action, room, pn) {
         case 'prever':
         case 'callPrever':
         case 'passPrever':
+        case 'preverTalon':
         case 'drawTalon':
             break;
         case 'discard':
@@ -619,13 +641,15 @@ function playerAction(action, room, pn) {
             }
             break;
         case 'valat':
-        case 'contra':
-            //Done client-side
             break;
+        case 'contra':
+        case 'preverContra':
+        case 'preverValatContra':
+        case 'valatContra':
         case 'iote':
             console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
             players[room['players'][pn].socket].socket.emit('nextAction', action);
-            return;//Don't inform the other players who has the I
+            return;
         case 'lead':
             unGrayCards(hand);
             returnHandState = 0;
@@ -843,7 +867,7 @@ function actionCallback(action, room, pn) {
 
                 //Inform player of cards
                 if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
-                    room.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards':tempHand,'step':0});
+                    room.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards':room['players'][action.player].tempHand,'step':0});
                 }
 
                 actionTaken = true;
@@ -886,7 +910,7 @@ function actionCallback(action, room, pn) {
 
                     //Inform prever of cards
                     if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
-                        room.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards':tempHand,'step':1});
+                        room.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards':room['players'][action.player].tempHand,'step':1});
                     }
 
                     actionTaken = true;
@@ -1105,17 +1129,28 @@ function actionCallback(action, room, pn) {
                 //Player called valat
                 room['board'].valat = pn;
                 room.informPlayers('Player ' + (pn+1) + ' called valat', MESSAGE_TYPE.VALAT, {youMessage: 'You called valat', pn: pn});
-                if (room.board.playerPrever) {
-                    //Non-prever team calls contra
-                    action.player = (room.board.prever+1)%4;
+                if (room.board.playingPrever) {
+                    action.action = 'preverValatContra';
+                    if (room.board.prever != pn) {
+                        //Opposing team called valat. Prever may contra.
+                        action.player = room.board.prever;
+                    } else {
+                        //Prever called valat. Non-prever team calls contra
+                        action.player = (room.board.prever+1)%4;
+                    }
                 } else {
-                    //Non-povenost team calls contra
-                    action.player = (room['board'].povenost+1)%4;
-                    if (room.players[action.player].isTeamPovenost) {
-                        action.player = (action.player+1)%4;
+                    action.action = 'valatContra';
+                    if (room.players[pn].isTeamPovenost) {
+                        //Povenost team called valat. Non-povenost team calls contra
+                        action.player = (room['board'].povenost+1)%4;
+                        if (room.players[action.player].isTeamPovenost) {
+                            action.player = (action.player+1)%4;
+                        }
+                    } else {
+                        //Non-povenost team called valat. Povenost team calls contra
+                        action.player = room['board'].povenost;
                     }
                 }
-                action.action = 'contra';//Only one player may call valat
                 room.board.firstContraPlayer = action.player;
             } else {
                 action.player = (pn + 1) % 4;
@@ -1133,81 +1168,211 @@ function actionCallback(action, room, pn) {
                 room.board.iote = pn;
             }
             actionTaken = true;
-            action.player = room.board.povenost;
-            if (room.board.playerPrever) {
+            if (room.board.playingPrever) {
                 //Non-prever team calls contra
+                action.action = 'preverContra'
                 action.player = (room.board.prever+1)%4;
             } else {
                 //Non-povenost team calls contra
+                action.action = 'contra';
                 action.player = (room['board'].povenost+1)%4;
                 if (room.players[action.player].isTeamPovenost) {
                     action.player = (action.player+1)%4;
                 }
             }
-            action.action = 'contra';
             room.board.firstContraPlayer = action.player;
             break;
-        case 'contra':
-            if (room.board.playingPrever) {
-                //Playing prever. Fun times. Yay.
-                //TODO
-            } else {
-                if (action.info.contra) {
-                    if (room.players[pn].isTeamPovenost) {
-                        //Povenost's team called rhea-contra
-                        room['board'].contra[1] = 1;
+        case 'preverContra':
+            let preverIsPovenost = room.board.prever == room.board.povenost;
+            //If preverIsPovenost, then isTeamPovenost is isTeamPrever and no changes must be made
+            //If !preverIsPovenost, then isTeamPovenost is prever and the roles must be reversed
+            //(isTeamPovenost == preverIsPovenost): isTeamPrever
+            //Note that contra[0] will be opposing team, not necessarily non-povenost team. Opposing team will be non-prever team in this case
+            if (action.info.contra) {
+                if (room.players[pn].isTeamPovenost == preverIsPovenost) {
+                    //Povenost's team called rhea-contra
+                    room['board'].contra[1] = 1;
+
+                    //Swap play to opposing team
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while (room.players[action.player].isTeamPovenost == preverIsPovenost);
+                    room.board.firstContraPlayer = action.player;
+                } else {
+                    //Not-povenost's team called either contra or supra-contra
+                    if (room.board.contra[0] == -1) {
+                        //Regular contra
+                        room.board.contra[0] = 1;
 
                         //Swap play to opposing team
                         do {
                             action.player = (action.player+1)%4;
-                        } while (room.players[action.player].isTeamPovenost);
+                        } while (!(room.players[action.player].isTeamPovenost == preverIsPovenost));
                         room.board.firstContraPlayer = action.player;
                     } else {
-                        //Not-povenost's team called either contra or supra-contra
-                        if (room.board.contra[0] == -1) {
-                            //Regular contra
-                            room.board.contra[0] = 1;
-
-                            //Swap play to opposing team
-                            do {
-                                action.player = (action.player+1)%4;
-                            } while (!room.players[action.player].isTeamPovenost);
-                            room.board.firstContraPlayer = action.player;
-                        } else {
-                            //Supra-contra. No more contras can be called
-                            room.board.contra[0] = 2;
-                            shouldReturnTable = true;
-                            action.action = 'lead';
-                            action.player = room['board'].povenost;
-                            room.board.leadPlayer = room['board'].povenost;
-                        }
+                        //Supra-contra. No more contras can be called
+                        room.board.contra[0] = 2;
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
                     }
-                    room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
+                }
+                room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
+            } else {
+                if (room.players[pn].isTeamPovenost == preverIsPovenost) {
+                    //Chance to call rhea-contra
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while (!(room.players[action.player].isTeamPovenost == preverIsPovenost));
+                    if (action.player == room.board.firstContraPlayer) {
+                        //It has gone all the way around. No one wants to call contra
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
+                    }
                 } else {
-                    if (room.players[pn].isTeamPovenost) {
-                        //Chance to call rhea-contra
+                    //Either no one has called contra or prever's team has called rhea-contra
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while ((room.players[action.player].isTeamPovenost == preverIsPovenost));
+                    if (action.player == room.board.firstContraPlayer) {
+                        //It has gone all the way around. No one wants to call contra
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
+                    }
+                }
+            }
+            actionTaken = true;
+            break;
+        case 'valatContra':
+            //Fallthrough because, strangely enough, valatContra and preverValatContra have the same logic
+            //This is because preverValatContra does not care who prever is, only who povenost's team is and which team called valat
+        case 'preverValatContra':
+            //Because why shouldn't prever call valat and then the opponents call contra?
+            let povenostIsValat = room.players[room.board.valat].isTeamPovenost;
+            //Note that prever would be allowed to call contra first if the opposing team for some reason called valat
+            //If prever called valat, then the opposing team is allowed to call contra
+            //isTeamThatDidn'tCallValat = povenostIsValat == isTeamContra
+            if (action.info.contra) {
+                if (room.players[pn].isTeamPovenost == povenostIsValat) {
+                    //Povenost's team called rhea-contra
+                    room['board'].contra[1] = 1;
+
+                    //Swap play to opposing team
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while (room.players[action.player].isTeamPovenost == povenostIsValat);
+                    room.board.firstContraPlayer = action.player;
+                } else {
+                    //Not-povenost's team called either contra or supra-contra
+                    if (room.board.contra[0] == -1) {
+                        //Regular contra
+                        room.board.contra[0] = 1;
+
+                        //Swap play to opposing team
+                        do {
+                            action.player = (action.player+1)%4;
+                        } while (!(room.players[action.player].isTeamPovenost == povenostIsValat));
+                        room.board.firstContraPlayer = action.player;
+                    } else {
+                        //Supra-contra. No more contras can be called
+                        room.board.contra[0] = 2;
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
+                    }
+                }
+                room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
+            } else {
+                if (room.players[pn].isTeamPovenost == povenostIsValat) {
+                    //Chance to call rhea-contra
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while (!(room.players[action.player].isTeamPovenost == povenostIsValat));
+                    if (action.player == room.board.firstContraPlayer) {
+                        //It has gone all the way around. No one wants to call contra
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
+                    }
+                } else {
+                    //Either no one has called contra or prever's team has called rhea-contra
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while ((room.players[action.player].isTeamPovenost == povenostIsValat));
+                    if (action.player == room.board.firstContraPlayer) {
+                        //It has gone all the way around. No one wants to call contra
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
+                    }
+                }
+            }
+            actionTaken = true;
+            break;
+        case 'contra':
+            if (action.info.contra) {
+                if (room.players[pn].isTeamPovenost) {
+                    //Povenost's team called rhea-contra
+                    room['board'].contra[1] = 1;
+
+                    //Swap play to opposing team
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while (room.players[action.player].isTeamPovenost);
+                    room.board.firstContraPlayer = action.player;
+                } else {
+                    //Not-povenost's team called either contra or supra-contra
+                    if (room.board.contra[0] == -1) {
+                        //Regular contra
+                        room.board.contra[0] = 1;
+
+                        //Swap play to opposing team
                         do {
                             action.player = (action.player+1)%4;
                         } while (!room.players[action.player].isTeamPovenost);
-                        if (action.player == room.board.firstContraPlayer) {
-                            //It has gone all the way around. No one wants to call contra
-                            shouldReturnTable = true;
-                            action.action = 'lead';
-                            action.player = room['board'].povenost;
-                            room.board.leadPlayer = room['board'].povenost;
-                        }
+                        room.board.firstContraPlayer = action.player;
                     } else {
-                        //Either no one has called contra or povenost's team has called rhea-contra
-                        do {
-                            action.player = (action.player+1)%4;
-                        } while (room.players[action.player].isTeamPovenost);
-                        if (action.player == room.board.firstContraPlayer) {
-                            //It has gone all the way around. No one wants to call contra
-                            shouldReturnTable = true;
-                            action.action = 'lead';
-                            action.player = room['board'].povenost;
-                            room.board.leadPlayer = room['board'].povenost;
-                        }
+                        //Supra-contra. No more contras can be called
+                        room.board.contra[0] = 2;
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
+                    }
+                }
+                room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
+            } else {
+                if (room.players[pn].isTeamPovenost) {
+                    //Chance to call rhea-contra
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while (!room.players[action.player].isTeamPovenost);
+                    if (action.player == room.board.firstContraPlayer) {
+                        //It has gone all the way around. No one wants to call contra
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
+                    }
+                } else {
+                    //Either no one has called contra or povenost's team has called rhea-contra
+                    do {
+                        action.player = (action.player+1)%4;
+                    } while (room.players[action.player].isTeamPovenost);
+                    if (action.player == room.board.firstContraPlayer) {
+                        //It has gone all the way around. No one wants to call contra
+                        shouldReturnTable = true;
+                        action.action = 'lead';
+                        action.player = room['board'].povenost;
+                        room.board.leadPlayer = room['board'].povenost;
                     }
                 }
             }
@@ -1405,8 +1570,6 @@ function broadcast(message) {
     }
 }//Debug function
 
-const playerJoinList = {};
-
 function disconnectPlayerTimeout(socketId) {
     if (players[socketId] && players[socketId].tempDisconnect) {
         if (!players[socketId]) { return; }
@@ -1456,8 +1619,11 @@ function autoReconnect(socketId) {
             SOCKET_LIST[socketId].emit('returnHand', rooms[players[socketId].room].players[players[socketId].pn].hand, false);
         }
         SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
-        SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
+
         SOCKET_LIST[socketId].emit('returnSettings', rooms[players[socketId].room].settings);
+        if (rooms[players[socketId].room].board.nextStep.action != 'shuffle') {
+            SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
+        }
         if (!isNaN(rooms[players[socketId].room].povenost)) {
             rooms[players[socketId].room].informPlayer(players[socketId].pn, 'Player ' + (rooms[players[socketId].room].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':rooms[players[socketId].room].povenost});
         }
@@ -1475,10 +1641,6 @@ io.sockets.on('connection', function (socket) {
         players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false };
         console.log('Player joined with socketID ' + socketId);
         console.log('Join time: ' + Date.now());
-        if (Date.now() - START_TIME < JOIN_TIMEOUT && !playerJoinList[socketId]) {
-            socket.emit('reload');//Player auto-reconnected after server crash
-            playerJoinList[socketId] = true;//Don't repeatedly boot the player
-        }
     }
     if (players[socketId] && players[socketId].tempDisconnect) {
         SOCKET_LIST[socketId] = socket;
@@ -1634,7 +1796,7 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('drawTalon', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' || rooms[players[socketId].room]['board']['nextStep'].action == 'drawPreverTalon') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });

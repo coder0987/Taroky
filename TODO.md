@@ -6,6 +6,7 @@ This file contains a list of things we have yet TODO in no particular order
 
 * Replace the favicon
 * Make it look pretty (CSS)
+* Reduce card image quality to save load time
 * Add TODOs to this list
 
 ### Back End

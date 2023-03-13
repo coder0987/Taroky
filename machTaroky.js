@@ -11,6 +11,7 @@ const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni'};
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
+let cardBackLoaded = false;
 let ticker;
 let players;
 let deck;
@@ -56,16 +57,6 @@ function loadButton() {
     element.classList.add("fixed-top");
 };
 
-/** @PARAM ELEMENT (not an ID) */
-function createCardBack(appendedTo) {
-    if (document.getElementById(appendedTo.id + 'CardBack')) {console.error('CardBack already exists at ' + appendedTo.id + 'CardBack');return;}
-    let cardBack = document.createElement('img');
-    cardBack.src = '/assets/default-deck/card-back.png';
-    cardBack.id = appendedTo.id + 'CardBack';
-    appendedTo.appendChild(cardBack);
-    return cardBack;
-}
-
 function generateDeck() {
     for (let i in baseDeck) {
         let card = document.createElement('img');
@@ -75,10 +66,6 @@ function generateDeck() {
         card.src = '/assets/default-deck/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '.png';
         document.getElementById('deck').appendChild(card);
     }
-    //Load the card back as well (to decrease load times)
-    let tempCardBack = document.createElement('img');
-    tempCardBack.hidden = true;
-    tempCardBack.src = '/assets/default-deck/card-back.png';
 }
 
 function isInHand(element) {
@@ -464,17 +451,28 @@ function onLoad() {
                     break;
                 case 'shuffle':
                     addMessage('You are shuffling.');
-                    createCardBack(document.getElementById('center'));
-                    document.getElementById('centerCardBack').addEventListener('mouseenter',function() {
+                    if (cardBackLoaded) {
+                        document.getElementById('center').appendChild(document.getElementById('cardBack'));
+                        document.getElementById('cardBack').hidden = false;
+                    } else {
+                        addMessage('The image has not loaded yet')
+                        document.getElementById('cardBack').addEventListener('load',function() {
+                            document.getElementById('center').appendChild(document.getElementById('cardBack'));
+                            document.getElementById('cardBack').hidden = false;
+                        });
+                    }
+
+                    document.getElementById('cardBack').addEventListener('mouseenter',function() {
                         addMessage('Shuffling...');
                     });
-                    document.getElementById('centerCardBack').addEventListener('mousemove',function() {
+                    document.getElementById('cardBack').addEventListener('mousemove',function() {
                         //Shuffle the cards
                         socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
                     });
-                    document.getElementById('centerCardBack').addEventListener('mouseleave',function() {
-                        let toRemove = document.getElementById('centerCardBack');
-                        document.getElementById('center').removeChild(toRemove);
+                    document.getElementById('cardBack').addEventListener('mouseleave',function() {
+                        this.hidden = true;
+                        let deck = document.getElementById('deck');
+                        deck.appendChild(this);
                         addMessage('Shuffled!');
                         socket.emit('shuffle',0,false);
                     });
@@ -493,6 +491,7 @@ function onLoad() {
                 case 'passPrever':
                 case 'callPrever':
                     break;//For auto-reconnect
+                case 'drawPreverTalon':
                 case 'drawTalon':
                     addMessage('You are drawing cards from the talon.');
                     socket.emit('drawTalon');
@@ -520,6 +519,9 @@ function onLoad() {
                     addBoldMessage('Would you like to call valat?');
                     createChoiceButtons(BUTTON_TYPE.VALAT);
                     break;
+                case 'preverContra':
+                case 'preverValatContra':
+                case 'valatContra':
                 case 'contra':
                     addBoldMessage('Would you like to call contra?');
                     createChoiceButtons(BUTTON_TYPE.CONTRA);
@@ -726,7 +728,6 @@ function buttonChoiceCallback() {
 
 function alive() {
     socket.emit('alive', (callback) => {
-        console.log('The server connection is ' + (callback ? '' : 'not ') + 'alive');
         if (!callback) {
             alert('The Socket has Disconnected. Reload page to attempt recovery');
             window.location.reload();
