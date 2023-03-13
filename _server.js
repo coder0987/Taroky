@@ -660,6 +660,9 @@ function playerAction(action, room, pn) {
             break;
         case 'winTrick':
             break;
+        case 'countPoints':
+            //TODO: show the player the discard pile so they can count on harder difficulties
+            break;
         default:
             console.log('Unknown action: ' + action.action);
             console.trace();

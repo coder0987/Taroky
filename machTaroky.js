@@ -436,6 +436,10 @@ function onLoad() {
                             //Informing everyone of rejection
                             if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
                                 addBoldMessage(extraInfo.youMessage);
+                                if (extraInfo.step==2) {
+                                    returnTableQueue.push([]);
+                                    drawTable();//Clear the cards from the center
+                                }
                             } else {
                                 addBoldMessage(theMessage);
                                 returnTableQueue.push(extraInfo.cards);
