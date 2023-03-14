@@ -87,7 +87,7 @@ const VALUE_REVERSE = {
 
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10};
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
@@ -123,8 +123,29 @@ function Room(name) {
     }
 }
 function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; }
-function resetBoardForNextRound(board) { //setup board for next round. dealer of next round is this rounds povenost
-    board.partnerCard = ""; board.talon = []; board.table = []; board.preverTalon = []; board.preverTalonStep = 0; board.prever = -1; board.playingPrever = false; board.contraCount = 0; board.valat = -1; board.Iote = -1; board.nextStep = { player: board.povenost, action: 'start', time: Date.now(), info: null }; board.cutStyle = ''; board.moneyCards = [[], [], [], []]; board.gameNumber++;
+function resetBoardForNextRound(board, players) { //setup board for next round. dealer of next round is this rounds povenost
+    board.partnerCard = "";
+    board.talon = [];
+    board.table = [];
+    board.preverTalon = [];
+    board.preverTalonStep = 0;
+    board.prever = -1;
+    board.playingPrever = false;
+    board.povenost = (board.povenost+1)%4;
+    board.buc = false;
+    board.leadPlayer = -1;
+    board.valat = -1;
+    board.Iote = -1;
+    board.cutStyle = '';
+    board.moneyCards = [[], [], [], []];
+    board.contra = [-1,-1];
+    board.firstContraPlayer = -1;
+    for (let i in players) {
+        players[i].hand = [];
+        players[i].discard = [];
+        players[i].tempHand = [];
+        players[i].isTeamPovenost = false;
+    }
 }
 let baseDeck = createDeck();
 function Board() {
@@ -145,17 +166,16 @@ function Board() {
     this.iote = -1;
     this.contra = [-1,-1];
     this.firstContraPlayer = -1;
-    this.preverMultiplier = 1;
     this.gameNumber = 0;
 }
 function createDeck() {
-    let baseDeck = [];
+    let theDeck = [];
     for (let s = 0; s < 4; s++)
         for (let v = 0; v < 8; v++)
-            baseDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
+            theDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
     for (let v = 0; v < 22; v++)
-        baseDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
-    return baseDeck;
+        theDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+    return theDeck;
 }
 function shuffleDeck(deck, shuffleType) {
     let tempDeck = [...deck];
@@ -226,6 +246,31 @@ function isCardPlayable(hand, card, leadCard) {
     } else {
         return true;
     }
+}
+function pointValue(card) {
+    if (card.suit == 'Trump') {
+        if (card.value == 'I' || card.value == 'XXI' || card.value == 'Skyz') {
+            return 5;
+        }
+        return 1;
+    }
+    switch (VALUE_REVERSE[card.value]) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            return 1;
+        case 4:
+            return 2;
+        case 5:
+            return 3;
+        case 6:
+            return 4;
+        case 7:
+            return 5;
+    }
+    console.trace('Illegal card. No point value for ' + card);
+    return 0;
 }
 function findPovenost(players) {
     let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povenost is found
@@ -373,6 +418,14 @@ function robotPartner(hand, difficulty) {
 }
 function robotCall(difficulty) {
     //Valat
+    switch (difficulty) {
+        case 0:
+            //TODO: more difficulty algos
+        default:
+            return false;
+    }
+}
+function robotIOTE(difficulty) {
     switch (difficulty) {
         case 0:
             //TODO: more difficulty algos
@@ -967,7 +1020,7 @@ function actionCallback(action, room, pn) {
             if (card && card.suit && card.value) {
                 for (let i in room['players'][pn].hand) {
                     if (room['players'][pn].hand[i].suit == card.suit && room['players'][pn].hand[i].value == card.value) {
-                        room['players'][pn].hand.splice(i, 1);
+                        room.players[pn].discard.push(room['players'][pn].hand.splice(i, 1)[0]);
                         discarded = true;
                         break;
                     }
@@ -1466,64 +1519,173 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'countPoints':
-            //TODO: count points. Harder difficulties might have manual counting later on
-
-
-            console.log('Game in room ' + room.name + ' has reached the end of the code');
-            /*
-            if (valat) {
-                chipsOwed = room['board'].valat
+            let chipsOwed = 0;
+            //Called valat
+            if (room.board.valat != -1) {
+                //Possible settings: room.settings.valat * 2
+                chipsOwed = 40;
+                //TODO: who actually won the valat chips detection
             } else {
-                Combine discard piles from all members of each team
-                team1 = [...membersDiscardPiles1];
-                team2 = [...membersDiscardPiles2];
-                Count the point values
-                team1Points = 0;
-                team2Points = 0;
-                for (let i in team1) {
-                    team1Points += team1[i].pointValue;
-                }
-                for (let i in team2) {
-                    team2Points += team2[i].pointValue;
-                }
-                check to make sure it adds to 106
-                if (team1Points + team2Points != 106) {
-                    console.warn('Error: incorrect number of points');
-                }
-                divide by 10 and round
-                chipsOwed = Math.round(team1Points / 10);
-                add IOTE
-                chipsOwed += room['board'].iote * room['board'].ioteMultiplier * 2;
-                Note that iote = -1 for non-povenost team, 0 for no one, 1 for povenost team
-                ioteMultiplier = 2 if called, 1 otherwise. Variable is used for settings later on
-            }
-            chipsOwed *= Math.pow(2, contraCount)
-            if (preverLost) {
-                chipsOwed *= Math.pow(2, preverTalonSwitchCount)
-            }
+                //No valat called
 
+                //Combine discard piles
+                let povenostTeamDiscard = [];
+                let opposingTeamDiscard = [];
+                for (let i in room.players) {
+                    if (room.players[i].isTeamPovenost) {
+                        for (let j = room.players[i].discard.length-1; j >= 0; j--) {
+                            povenostTeamDiscard.push(room.players[i].discard.splice(0,1)[0]);
+                        }
+                    } else {
+                        for (let j = room.players[i].discard.length-1; j >= 0; j--) {
+                            opposingTeamDiscard.push(room.players[i].discard.splice(0,1)[0]);
+                        }
+                    }
+                }
+                if (povenostTeamDiscard.length == 0 || opposingTeamDiscard.length == 0) {
+                    //Uncalled valat
+                    //Possible settings: room.settings.valat
+                    //TODO: account for discarded cards. This system will never return an uncalled valat because players discard cards after drawing from the talon
+                    chipsOwed = 20;
+                } else {
+                    //No valat
+                    let povenostTeamPoints = 0;
+                    let opposingTeamPoints = 0;
+                    for (let i in povenostTeamDiscard) {
+                        povenostTeamPoints += pointValue(povenostTeamDiscard[i]);
+                    }
+                    for (let i in opposingTeamDiscard) {
+                        opposingTeamPoints += pointValue(opposingTeamDiscard[i]);
+                    }
+
+                    //Sanity check
+                    if (povenostTeamPoints + opposingTeamPoints != 106) {
+                        console.log('-------------------------')
+                        console.warn('Error: incorrect number of points\nPovenost team: ' + povenostTeamPoints + '\nOpposing team: ' + opposingTeamPoints);
+                        console.log(JSON.stringify(povenostTeamDiscard));
+                        console.log(JSON.stringify(opposingTeamDiscard));
+                        //Time to search anywhere and everywhere for the missing cards
+                        console.log('Hands: ')
+                        for (let i in room.players) {
+                            console.log(JSON.stringify(room.players[i].hand))
+                        }
+                        console.log('Discard: ')
+                        for (let i in room.players) {
+                            console.log(JSON.stringify(room.players[i].discard))
+                        }
+                        console.log('TempHands: ')
+                        for (let i in room.players) {
+                            console.log(JSON.stringify(room.players[i].tempHand))
+                        }
+                        console.log('Talon: ')
+                        console.log(JSON.stringify(room.board.talon));
+                        console.log('Prever talon:')
+                        console.log(JSON.stringify(room.board.preverTalon));
+                        console.log('Table: ')
+                        console.log(JSON.stringify(room.board.table));
+                        console.log('Deck: ')
+                        console.log(JSON.stringify(room.deck) + '\n');
+                        //Check which cards are missing from the team point piles
+                        let combinedPointPile = [];
+                        for (let c in povenostTeamDiscard) {
+                            combinedPointPile.push(povenostTeamDiscard[c]);
+                        }
+                        for (let c in opposingTeamDiscard) {
+                            combinedPointPile.push(opposingTeamDiscard[c]);
+                        }
+                        for (let i in baseDeck) {
+                            let found = false;
+                            //Find the matching card in combinedPointPile
+                            for (let j in combinedPointPile) {
+                                if (baseDeck[i].suit == combinedPointPile[j].suit &&
+                                    baseDeck[i].value == combinedPointPile[j].value) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                console.log('Card ' + baseDeck[i].value + ' of ' + baseDeck[i].suit + ' was not found');
+                                console.log('Point value: ' + pointValue(baseDeck[i]));
+                            }
+                        }
+                        console.log('-------------------------')
+                    }
+
+                    chipsOwed = 53 - opposingTeamPoints;//Positive: opposing team pays. Negative: povenost team pays
+                    chipsOwed /= 10;
+                    chipsOwed = Math.round(chipsOwed);
+
+                    if (room.board.playingPrever) {
+                        //Multiply by 3 instead of 2
+                        chipsOwed *= 3;
+                        if (room.players[room.board.prever].isTeamPovenost == (chipsOwed < 0)) {
+                            //Prever lost
+                            chipsOwed *= Math.pow(2,preverTalonStep-1);//*2 for swapping down, *4 for going back up
+                        }
+                    } else {
+                        chipsOwed *= 2;
+                    }
+
+                    if (room.board.contra[0] != -1) {
+                        //*2 for one contra, *4 for two
+                        chipsOwed *= Math.pow(2,room.board.contra[0]);
+                    }
+                    if (room.board.contra[1] != -1) {
+                        chipsOwed *= Math.pow(2,room.board.contra[1]);
+                    }
+                    //TODO: add IOTE detection (Note that iote = -1 for non-povenost team, 0 for no one, 1 for povenost team)
+                }
+            }
+            let team1Players = [];
+            let team2Players = [];
+            for (let i in room.players) {
+                if (room.players[i].isTeamPovenost) {
+                    team1Players.push(room.players[i]);
+                } else {
+                    team2Players.push(room.players[i]);
+                }
+            }
             for (let i in team1Players) {
                 let tempChipsOwed = chipsOwed;
                 if (team1Players.length == 1) {tempChipsOwed*=3;}
-                if (team1Players.length == 3) {tempChipsOwed/=3;}
+                if (team1Players.length == 3) {tempChipsOwed=3;}
                 team1Players[i].chips += tempChipsOwed;
             }
             for (let i in team2Players) {
                 let tempChipsOwed = chipsOwed;
                 if (team2Players.length == 1) {tempChipsOwed*=3;}
-                if (team2Players.length == 3) {tempChipsOwed/=3;}
+                if (team2Players.length == 3) {tempChipsOwed=3;}
                 team2Players[i].chips -= tempChipsOwed;
             }
+
+            if (chipsOwed < 0) {
+                //TODO: make informing the players a bit better
+                //For example, in a prever game say "Prever paid" or "Prever lost"
+                //Also add clarifications on how the points were counted and whatnot
+                room.informPlayers('Povenost\'s team paid ' + (-chipsOwed) + ' chips', MESSAGE_TYPE.PAY);
+            } else {
+                room.informPlayers('Povenost\'s team received ' + chipsOwed + ' chips', MESSAGE_TYPE.PAY);
+            }
+            for (let i in room['players']) {
+                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                    SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
+                }
+            }
+
+            //TODO: test and make sure that the point counting system works properly
+            //Point counting is very complicated with many ifs and whens, there's bound to be bugs somewhere
+
             actionTaken = true;
             action.action = 'resetBoard';
-            */
             break;
         case 'resetBoard':
             //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneycards, etc.
             //Also, iterate povenost by 1
-            resetBoardForNextRound(room['board']);
+            resetBoardForNextRound(room['board'],room.players);
+            room.deck = [...baseDeck].sort(() => Math.random() - 0.5);
             action.player = room['board'].povenost;//already iterated
             action.action = 'play';
+            actionTaken = true;
             break;
         default:
             console.warn('Unrecognized actionCallback: ' + action.action);
@@ -1911,6 +2073,16 @@ io.sockets.on('connection', function (socket) {
     });
     socket.on('winTrick', function () {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'winTrick' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('countPoints', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'countPoints' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('resetBoard', function () {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'resetBoard' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
