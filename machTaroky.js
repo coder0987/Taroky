@@ -38,6 +38,7 @@ const ACTION_TABLE = {
     'countPoints': 'Count Points',
     'resetBoard': 'Reset the Board'
 };
+const START_TIME = Date.now();
 let cardBackLoaded = false;
 let ticker;
 let players;
@@ -56,6 +57,7 @@ let hostNumber = -1;
 let currentAction;
 let baseDeck = [];
 let returnTableQueue = [];
+let currentTable= [];
 let queued = false;
 let discardingOrPlaying = true;
 let timeOffset = 0;
@@ -90,8 +92,9 @@ function generateDeck() {
         let card = document.createElement('img');
         card.hidden = true;
         card.id = baseDeck[i].value + baseDeck[i].suit;
-        card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
+        //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
         card.src = '/assets/default-deck/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '.png';
+        card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
         document.getElementById('deck').appendChild(card);
     }
 }
@@ -139,6 +142,7 @@ function drawHand(withGray) {
         let card = document.getElementById(hand[i].value + hand[i].suit);
         card.suit = hand[i].suit;
         card.value = hand[i].value;
+        card.classList.remove('col-3');//If claimed from prever-talon
         if (withGray) {
             if (hand[i].grayed) {
                 //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
@@ -164,29 +168,64 @@ function drawHand(withGray) {
     }
 }
 
+let tableDrawnTime = Date.now();//ms since START_TIME
 function drawTable() {
-    if (returnTableQueue.length == 0) {
-        queued = false;
+    if (!returnTableQueue[0] || Date.now() - tableDrawnTime < 3000) {
+        //Wait min 3s before redrawing the table
         return;
     }
-    queued = true;
+    tableDrawnTime = Date.now();
     table = returnTableQueue.splice(0,1)[0];
-    let divTable = document.getElementById('table');
-    let divDeck = document.getElementById('deck');
-    let returnToDeck = divTable.children;
-    for (let i=returnToDeck.length-1; i>=0; i--) {
-        let child = returnToDeck[i];
-        child.hidden = true;
-        divDeck.appendChild(child);
+    if (table == [] || table == {} || !table[0]) {
+        //hide the table
+        document.getElementById('table').setAttribute('hidden','hidden');
+    } else {
+        //Table layout: [{'card':data,'pn':num,'lead':boolean},{'card'...}]
+        //Table layout for prever talon: [{'suit':SUIT,'value':VALUE},{'suit'...}]
+        //table[0].card vs table[0]
+        let divTable = document.getElementById('table');
+        let divDeck = document.getElementById('deck');
+        let returnToDeck = divTable.children;
+        for (let i=returnToDeck.length-1; i>=0; i--) {
+            let child = returnToDeck[i];
+            if (child.nodeName == 'IMG') {
+                //Prever talon
+                child.classList.remove('col-3');
+                child.hidden = true;
+                divDeck.appendChild(child);
+            } else {
+                for (let j in child.children) {
+                    if (child.children[j] && child.children[j].nodeName == 'IMG') {
+                        //It's a card
+                        child.children[j].hidden = true;
+                        divDeck.appendChild(child.children[j]);
+                    }
+                }
+            }
+        }
+        document.getElementById('leader').setAttribute('hidden','hidden');
+        if (table[0].suit) {
+            //Prever talon
+            for (let i in table) {
+                let card = document.getElementById(table[i].value + table[i].suit);
+                document.getElementById('table').prepend(card);
+                card.classList.add('col-3');
+                card.removeAttribute('hidden');
+            }
+        } else {
+            for (let i in table) {
+                let card = document.getElementById(table[i].card.value + table[i].card.suit);
+                document.getElementById('p' + (+table[i].pn+1)).appendChild(card);
+                document.getElementById('p' + (+table[i].pn+1)).firstChild.removeAttribute('hidden');
+                if (table[i].lead) {
+                    document.getElementById('p' + (+table[i].pn+1)).appendChild(document.getElementById('leader'));
+                    document.getElementById('leader').removeAttribute('hidden');
+                }
+                card.removeAttribute('hidden');
+            }
+        }
+        document.getElementById('table').removeAttribute('hidden');
     }
-    for (let i in table) {
-        let card = document.getElementById(table[i].value + table[i].suit);
-        card.suit = table[i].suit;
-        card.value = table[i].value;
-        divTable.appendChild(card);
-        card.hidden = false;
-    }
-    setInterval(drawTable, 5000);//Draw the next table in 3s
 }
 
 function emptyHand() {
@@ -242,7 +281,6 @@ function refresh() {
         refreshing = true;
         drawnRooms = {};
         socket.emit('getRooms');
-        addMessage('Refreshing...');
     }
 }
 
@@ -358,7 +396,6 @@ function onLoad() {
     });
 
     socket.on('returnRooms', function(returnRooms) {
-        addMessage('refreshed');
         availableRooms = returnRooms;
         refreshing = false;
         if (!inGame && !checkRoomsEquality(availableRooms,drawnRooms)) {
@@ -382,10 +419,6 @@ function onLoad() {
     });
     socket.on('returnTable', function(returnTable) {
         returnTableQueue.push(returnTable);
-        //TODO this system is very choppy. It needs to be redone
-        if (!queued) {
-            drawTable();
-        }
     });
     socket.on('returnDeck', function(returnDeck) {
         deck = returnDeck;
@@ -496,6 +529,7 @@ function onLoad() {
                 } else {
                     addBoldMessage(theMessage);
                 }
+                currentTable = [];
                 break;
             case MESSAGE_TYPE.PREVER_TALON:
                 switch (extraInfo.step) {
@@ -503,7 +537,6 @@ function onLoad() {
                         //You are prever
                         addBoldMessage('Would you like to keep these cards?');
                         returnTableQueue.push(extraInfo.cards);
-                        drawTable();
                         break;
                     case 1:
                     case 2:
@@ -511,19 +544,16 @@ function onLoad() {
                             //Contains the new set of cards
                             addBoldMessage('Would you like to keep these cards?');
                             returnTableQueue.push(extraInfo.cards);
-                            drawTable();
                         } else {
                             //Informing everyone of rejection
                             if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
                                 addBoldMessage(extraInfo.youMessage);
                                 if (extraInfo.step==2) {
-                                    returnTableQueue.push([]);
-                                    drawTable();//Clear the cards from the center
+                                    returnTableQueue.push([]);//Clear the cards from the center
                                 }
                             } else {
                                 addBoldMessage(theMessage);
                                 returnTableQueue.push(extraInfo.cards);
-                                drawTable();
                             }
                         }
                         break;
@@ -539,10 +569,10 @@ function onLoad() {
             case MESSAGE_TYPE.PAY:
                 if (extraInfo) {
                     addMessage('------------------------')
-                    addMessage('Point Counting:')
                     for (let i=extraInfo.length-1; i>=0; i--) {
                         addMessage(extraInfo[i].name + ': ' + extraInfo[i].value);
                     }
+                    addMessage('Point Counting:')
                     addMessage('------------------------')
                 }
                 addBoldMessage(theMessage);
@@ -586,7 +616,7 @@ function onLoad() {
         }
         currentAction = action;
         startActionTimer();
-        if (document.getElementById('timer').innerHTML < (theSettings.timeout/1000)-0.5) {
+        if (theSettings && theSettings.timeout && document.getElementById('timer').innerHTML < (theSettings.timeout/1000)-0.5) {
             //Timer is off by more than 0.5s
             socket.emit('requestTimeSync');
         }
@@ -736,6 +766,7 @@ function onLoad() {
 
 function tick() {
     startActionTimer();
+    drawTable();
     if (inGame) {
         alive();//DEBUG todo fix this for real, see GitHub issue
     }

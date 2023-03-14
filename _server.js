@@ -1635,12 +1635,12 @@ function actionCallback(action, room, pn) {
             }
             if (lead) {
                 actionTaken = true;
+                shouldReturnTable = true;
                 action.action = 'follow';
                 action.player = (action.player + 1) % 4;
-                room['board'].table.push(lead);
+                room['board'].table.push({'card':lead,'pn':pn,'lead':true});
                 room['board'].leadCard = lead;
-                room.informPlayers('Player ' + (pn+1) + ' lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {youMessage: 'You lead the ' + lead.value + ' of ' + lead.suit, pn: pn});
-                shouldReturnTable = true;
+                room.informPlayers('Player ' + (pn+1) + ' lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {youMessage: 'You lead the ' + lead.value + ' of ' + lead.suit, pn: pn, card: lead});
             } else {
                 if (room['players'][pn].type == PLAYER_TYPE.HUMAN) {
                     SOCKET_LIST[room['players'][pn].socket].emit('failedLeadCard', cardToLead);
@@ -1663,14 +1663,18 @@ function actionCallback(action, room, pn) {
             }
             if (played) {
                 actionTaken = true;
-                room['board'].table.push(played);
-                action.player = (action.player + 1) % 4;
-                room.informPlayers('Player ' + (pn+1) + ' played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {youMessage: 'You played the ' + played.value + ' of ' + played.suit, pn: pn});
                 shouldReturnTable = true;
+                room['board'].table.push({'card':played,'pn':pn,'lead':false});
+                action.player = (action.player + 1) % 4;
+                room.informPlayers('Player ' + (pn+1) + ' played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {youMessage: 'You played the ' + played.value + ' of ' + played.suit, pn: pn, card: played});
                 //If all players have played a card, determine who won the trick
                 if (action.player == room.board.leadPlayer) {
                     action.action = 'winTrick';
-                    let trickWinner = whoWon(room.board.table, room.board.leadPlayer);
+                    let trickCards = [];
+                    for (let i in room.board.table) {
+                        trickCards.push(room.board.table[i].card);
+                    }
+                    let trickWinner = whoWon(trickCards, room.board.leadPlayer);
                     action.player = trickWinner;
                     room.informPlayers('Player ' + (trickWinner+1) + ' won the trick', MESSAGE_TYPE.WINNER, {youMessage: 'You won the trick', pn: trickWinner});
                 }
@@ -1692,10 +1696,10 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             shouldReturnTable = true;
             //Transfer the table to the winner's discard
-            room.players[pn].discard.push(room.board.table.splice(0,1)[0]);
-            room.players[pn].discard.push(room.board.table.splice(0,1)[0]);
-            room.players[pn].discard.push(room.board.table.splice(0,1)[0]);
-            room.players[pn].discard.push(room.board.table.splice(0,1)[0]);
+            room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
+            room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
+            room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
+            room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
             room.board.table = [];
 
             room.board.leadPlayer = pn;
@@ -1922,6 +1926,7 @@ function actionCallback(action, room, pn) {
         //Sanity Check 
         if (action.player > 3 || action.player < 0) { console.warn('Illegal player number: ' + action.player + ' during action ' + action.action); action.player %= 4; }
         if (!room['players'][action.player]) { console.warn('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players'])); }
+
 
         action.time = Date.now();
         playerType = room['players'][action.player].type;
