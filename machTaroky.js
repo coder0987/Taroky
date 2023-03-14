@@ -6,7 +6,7 @@ const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: '
 const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13};
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon'};
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
@@ -134,7 +134,7 @@ function drawTable() {
     }
     queued = true;
     table = returnTableQueue.splice(0,1)[0];
-    let divTable = document.getElementById('center');
+    let divTable = document.getElementById('table');
     let divDeck = document.getElementById('deck');
     let returnToDeck = divTable.children;
     for (let i=returnToDeck.length-1; i>=0; i--) {
@@ -267,22 +267,26 @@ function removeHostTools() {
 
 function cut() {
     let div = document.getElementById('center');
+    div.removeAttribute('hidden');
     for (let i in cutTypes) {
+        console.log('Cut type: ' + cutTypes[i]);
         let cutButton = document.createElement('button');
-        cutButton.innerHTML = i;
-        cutButton.id = 'cutB' + i;
+        cutButton.innerHTML = cutTypes[i];
+        cutButton.id = 'cutB' + cutTypes[i];
         cutButton.addEventListener('click', function(){
             socket.emit('cut',this.innerHTML);
             hasCut();
             addMessage('You have cut the deck.');
         });
+        cutButton.removeAttribute('hidden');
+        div.appendChild(cutButton);
     }
 }
 function hasCut() {
     let div = document.getElementById('center');
-    for (let i in div.children) {
-        if (i.id.substring(0,4) == 'cutB') {
-            div.removeChild(i);
+    for (let i=div.children.length-1; i>=0; i--) {
+        if (div.children[i].id.substring(0,4) == 'cutB') {
+            div.removeChild(document.getElementById(div.children[i].id));
         }
     }
 }
@@ -459,6 +463,15 @@ function onLoad() {
             case MESSAGE_TYPE.PAY:
                 addBoldMessage(theMessage);
                 break;
+            case MESSAGE_TYPE.CONNECT:
+                addBoldMessage(theMessage);
+                break;
+            case MESSAGE_TYPE.DISCONNECT:
+                addBoldMessage(theMessage);
+                break;
+            case MESSAGE_TYPE.SETTING:
+                addBoldMessage(theMessage);
+                break;
             default:
                 addMessage('Game message of unknown type: ' + theMessageType);
                 addBoldMessage(theMessage);
@@ -521,6 +534,7 @@ function onLoad() {
                     break;
                 case 'cut':
                     cut();
+                    addMessage('You are cutting the deck');
                     break;
                 case 'deal':
                     addMessage('You are dealing');
@@ -557,6 +571,7 @@ function onLoad() {
                 case 'partner':
                     //TODO: Completely breaks the game whenever there is more than one option. Not sure why
                     partnersReturned(action.info.possiblePartners);
+                    addMessage(JSON.stringify(possiblePartners));
                     addBoldMessage('Who would you like to play with?');
                     createPartnerButtons(partners);
                     break;

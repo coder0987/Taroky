@@ -87,7 +87,7 @@ const VALUE_REVERSE = {
 
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13};
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
@@ -1718,9 +1718,15 @@ function actionCallback(action, room, pn) {
             room.autoAction = autoActionTimeout;
         }
 
+        //Return player hands
+        for (let i in room.players) {
+            if (playerType == PLAYER_TYPE.HUMAN) {
+                SOCKET_LIST[room['players'][i].socket].emit('returnHand', room['players'][i].hand, false);
+            }
+        }
+
         //Prompt the next action
         if (playerType == PLAYER_TYPE.HUMAN) {
-            SOCKET_LIST[room['players'][action.player].socket].emit('returnHand', room['players'][action.player].hand, false);
             playerAction(action, room, action.player);
         } else if (playerType == PLAYER_TYPE.ROBOT) {
             robotAction(action, room, action.player);
@@ -1745,7 +1751,7 @@ function disconnectPlayerTimeout(socketId) {
             rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
             rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
             rooms[players[socketId].room]['playerCount'] = rooms[players[socketId].room]['playerCount'] - 1;
-            if (rooms[players[socketId].room]['playerCount'] == 1 && rooms[players[socketId].room]['host'] == socketId) {
+            if (rooms[players[socketId].room]['playerCount'] > 0 && rooms[players[socketId].room]['host'] == socketId) {
                 for (let i in rooms[players[socketId].room]['players']) {
                     if (rooms[players[socketId].room]['players'][i].pn == PLAYER_TYPE.HUMAN) {
                         rooms[players[socketId].room]['host'] = rooms[players[socketId].room]['players'][i].socket;
@@ -1759,7 +1765,7 @@ function disconnectPlayerTimeout(socketId) {
                 delete rooms[players[socketId].room];
                 console.log('Stopped empty game in room ' + players[socketId].room);
             } else {
-                rooms[players[socketId].room].informPlayers('Player ' + players[socketId].room + ' disconnected');
+                rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' disconnected',MESSAGE_TYPE.DISCONNECT);
             }
         }
         try {
@@ -1837,7 +1843,7 @@ io.sockets.on('connection', function (socket) {
         if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
-                    rooms[roomID].informPlayers('A new player connected: player ' + (i+1));
+                    rooms[roomID].informPlayers('A new player connected: player ' + (i+1), MESSAGE_TYPE.CONNECT);
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
                     rooms[roomID]['players'][i].socket = socketId;
                     rooms[roomID]['players'][i].pid = players[socketId].pid;
@@ -1893,12 +1899,14 @@ io.sockets.on('connection', function (socket) {
                     if (DIFFICULTY_TABLE[rule]) {
                         rooms[players[socketId].room].settings.difficulty = rule;
                         console.log('Difficulty in room ' + players[socketId].room + ' is set to ' + DIFFICULTY_TABLE[rule]);
+                        rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
                     }
                     break;
                 case 'timeout':
                     if (!isNaN(rule)) {
                         rooms[players[socketId].room].settings.timeout = rule;
                         console.log('Timeout in room ' + players[socketId].room + ' is set to ' + rule);
+                        rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
                     }
                     break;
             }
