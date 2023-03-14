@@ -85,6 +85,7 @@ function clickCard() {
         this.removeEventListener('mouseenter',enter);
         this.removeEventListener('mouseleave',exit);
         this.removeEventListener('click',clickCard);
+        this.classList.remove('image-hover-highlight');
         this.hidden=true;
     }
 }
