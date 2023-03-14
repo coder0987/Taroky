@@ -569,9 +569,7 @@ function onLoad() {
                     socket.emit('moneyCards');
                     break;
                 case 'partner':
-                    //TODO: Completely breaks the game whenever there is more than one option. Not sure why
                     partnersReturned(action.info.possiblePartners);
-                    addMessage(JSON.stringify(possiblePartners));
                     addBoldMessage('Who would you like to play with?');
                     createPartnerButtons(partners);
                     break;
@@ -725,7 +723,7 @@ function partnersReturned(possiblePartners) {
     if (partners.length > 1) {
         let partnerString = '';
         for (let i in partners) { partnerString += partners[i].value + ', '; }
-        addMessage('You can partner with your choice of the ' + partnerString.substring(0, handString.length - 2));
+        addMessage('You can partner with your choice of the ' + partnerString.substring(0, partnerString.length - 2));
     } else if (partners.length==1) {
         addMessage('You are partnering with the ' + partners[0].value)
     }
