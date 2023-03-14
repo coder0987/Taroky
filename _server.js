@@ -1899,6 +1899,7 @@ io.sockets.on('connection', function (socket) {
                     } else {
                         socket.emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
                     }
+                    socket.emit('timeSync', Date.now());
                     break;
                 }
             }
@@ -1916,6 +1917,9 @@ io.sockets.on('connection', function (socket) {
             }
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
+    });
+    socket.on('requestTimeSync', function() {
+        socket.emit('timeSync', Date.now());
     });
     socket.on('currentAction', function () {
         if (players[socketId] && rooms[players[socketId].room]) {

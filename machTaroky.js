@@ -31,6 +31,7 @@ let baseDeck = [];
 let returnTableQueue = [];
 let queued = false;
 let discardingOrPlaying = true;
+let timeOffset = 0;
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
@@ -181,14 +182,13 @@ function showAllCards() {
 }//Debug function
 
 function startActionTimer() {
-    //TODO: sync clock between server and client. Some clients have +/- 30 seconds difference
     if (!currentAction || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
         stopActionTimer();
         return;
     }
     let theTimer = document.getElementById('timer');
     let actionTime = currentAction.time;
-    let currentTime = Date.now();
+    let currentTime = Date.now() - timeOffset;
     let actionTimeOut = actionTime + theSettings.timeout;
     let timeLeft = actionTimeOut - currentTime;
     if (timeLeft < 0) {
@@ -367,6 +367,9 @@ function onLoad() {
         playerNumber = returnPN;
         addMessage('You are player ' + (returnPN+1));
     });
+    socket.on('timeSync', function(theTime) {
+        timeOffset = Date.now() - theTime;
+    });
     socket.on('roomConnected', function(roomConnected) {
         inGame = true;
         document.getElementById('rooms').innerHTML = '';
@@ -514,6 +517,10 @@ function onLoad() {
     socket.on('autoAction', function(theAction) {
         addBoldMessage('Your play timed out and was automatically completed for you');
         document.getElementById('center').innerHTML = '';//Clear buttons and whatnot from the center
+        if (+document.getElementById('timer').innerHTML > 2) {
+            //Timer is more than 2 seconds off
+            socket.emit('requestTimeSync');
+        }
     });
     socket.on('broadcast', function(theBroadcast) {
         alert(theBroadcast);
@@ -527,6 +534,9 @@ function onLoad() {
         addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + returnSettings.timeout);
     });
     socket.on('nextAction', function(action) {
+        if (!inGame) {
+            return; //For when the player leaves the game
+        }
         currentAction = action;
         startActionTimer();
         if (action.player == playerNumber) {
