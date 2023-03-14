@@ -906,5 +906,8 @@ function exitCurrentRoom(value) {
         document.getElementById('deck').appendChild(document.getElementById('cardBack'));
         stopActionTimer();
         document.getElementById('center').innerHTML = '';//clears choice buttons
+        document.getElementById('currentAction').innerHTML = '';
+        document.getElementById('currentPlayer').innerHTML = '';
+        clearChat();
     }
 }

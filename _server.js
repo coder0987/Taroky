@@ -354,7 +354,42 @@ function unGrayCards(hand) {
         hand[i].grayed = false;
     }
 }
-
+function numOfSuit(hand, suit) {
+    let suitCount = 0;
+    for (let i in hand) {
+        if (hand[i].suit == suit) {
+            suitCount++;
+        }
+    }
+    return suitCount;
+}
+function selectCardOfSuit(hand, suit) {
+    for (let i in hand) {
+        if (hand[i].suit == suit) {
+            return hand[i];
+        }
+    }
+    console.warn('Illegal card selection. No cards of suit ' + suit + ' in hand ' + hand);
+    return;
+}
+function handWithoutGray(hand) {
+    let newHand = [...hand];//Not linked
+    for (let i=newHand.length-1; i>=0; i--) {
+        if (newHand[i].grayed) {
+            newHand.splice(i,1);
+        }
+    }
+    return newHand;
+}
+function highestPointValue(hand) {
+    let pv = hand[0];
+    for (let i in hand) {
+        if (pointValue(hand[i]) > pointValue(pv)) {
+            pv = hand[i];
+        }
+    }
+    return pv;
+}
 function whoWon(table, leadPlayer) {
     //First card in the table belongs to the leadPlayer
     let trickLeadCard = table[0];
@@ -392,76 +427,236 @@ function firstSelectableCard(hand) {
     console.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
     return hand[0];
 }
+function trumpChain(hand) {
+    //Returns the number of guaranteed tricks from a hand (trump only)
+    let guarantees = 0;
+    let misses = 0;
+    for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
+        if (handContainsCard(TRUMP_VALUE[i])) {
+            if (misses > 0) {
+                misses--;
+            } else {
+                guarantees++;
+            }
+        } else {
+            misses++;
+        }
+    }
+    return guarantees;
+}
+function unbrokenTrumpChain(hand) {
+    let guarantees = 0;
+    for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
+        if (handContainsCard(TRUMP_VALUE[i])) {
+            guarantees++;
+        } else {
+            return guarantees;
+        }
+    }
+    return guarantees;
+}
+function basicHandRanking(hand) {
+    /*Returns a point-value estimate of how good a hand is
+    Points are given for:
+        -Voided suits (2pt each)
+        -Trump
+        -Trump again, if higher than XV
+        -Trump chain, for each guaranteed win trump (Skyz, then XXI, then XX, etc)
+        -Kings/5-point cards
+    */
+    let handRankingPoints = 0;
+    handRankingPoints += trumpChain(hand);
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump') {
+            handRankingPoints++;
+            if (VALUE_REVERSE(hand[i].value) >= 14) {
+                handRankingPoints++;
+            }
+        }
+        if (pointValue(hand[i]) == 5) {
+            handRankingPoints++;
+        }
+    }
+    for (let i=0; i<4; i++) {
+        if (numOfSuit(SUIT[i] == 0)) {
+            handRankingPoints++;
+        }
+    }
+}
+//ROBOT DIFFICULTY LAYOUT: go from hardest -> easiest so the more difficult algorithms fall back onto the less difficult ones while we haven't yet finsihed
+//RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5
 function robotDiscard(hand, difficulty) {
     switch (difficulty) {
-        case 0:
-            //TODO: more difficulty algos
+        case DIFFICULTY.AI:
+            console.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+            /*TODO: Discard cards from the suit with the least number of possible cards that does not have a king
+                If tied, discard the highest point value
+                This is, of course, after voiding in a suit like normal if possible
+                Priorities: VOID 3 suits, VOID 2 suits, VOID a suit with the most points gained, VOID a suit, PREP a suit for voiding by discarding the higher point-value of that suit when there are only 2 cards of it
+                Else, discard the highest point value*/
+        case DIFFICULTY.HARD:
+            //TODO: check how many suits can be discarded in povenost/prever and discard all of them
+            //Also, if it is possible to void in two different suits but only one card can be discarded, discard the card with the higher point value
+        case DIFFICULTY.NORMAL:
+            //Return whatever card is necessary to void in a suit
+            for (let i=0; i<4; i++) {
+                if (numOfSuit(hand, SUIT[i]) == 1 && numOfSuit(handWithoutGray(hand), SUIT[i])) {
+                    return selectCardOfSuit(hand, SUIT[i])
+                }
+            }
+            //Fallthrough to highest point-value
+        case DIFFICULTY.EASY:
+            //Return highest point value card (most likely a queen)
+            return highestPointValue(handWithoutGray(hand));
+            break;
+        case DIFFICULTY.RUDIMENTARY:
             return firstSelectableCard(hand);
         default:
             //select first discardable
+            console.warn('Unknown difficulty: ' + difficulty);
             return firstSelectableCard(hand);
     }
 }
 function robotPartner(hand, difficulty) {
+    let robotPossiblePartners = possiblePartners(hand);
     switch (difficulty) {
-        case 0:
+        case DIFFICULTY.AI:
+            console.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            if (possiblePartners[1] && basicHandRanking(hand) >= 20) {
+                return possiblePartners[1];//Play by itself
+            }
+        case DIFFICULTY.EASY:
+        case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
             return { 'value': 'XIX', 'suit': SUIT[4] };
         default:
             //always play with XIX
+            console.warn('Unknown difficulty: ' + difficulty);
             return { 'value': 'XIX', 'suit': SUIT[4] };
     }
 }
-function robotCall(difficulty) {
+function robotCall(hand, difficulty) {
     //Valat
     switch (difficulty) {
-        case 0:
+        case DIFFICULTY.AI:
+            console.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            if (unbrokenTrumpChain(hand) >= 8 && basicHandRanking(hand) >= 20) {
+                return true;
+            }
+        case DIFFICULTY.EASY:
+        case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
+            return false;
         default:
+            console.warn('Unknown difficulty: ' + difficulty);
             return false;
     }
 }
-function robotIOTE(difficulty) {
+function robotIOTE(hand, difficulty) {
     switch (difficulty) {
-        case 0:
+        case DIFFICULTY.AI:
+            console.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            if (numOfSuit(hand, SUIT[4]) >= 8) {
+                return true;//Call IOTE if have tarocky or big ones
+            }
+        case DIFFICULTY.EASY:
+        case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
+            return false;
         default:
+            console.warn('Unknown difficulty: ' + difficulty);
             return false;
     }
 }
-function robotContra(difficulty) {
+function robotContra(hand, difficulty) {
     switch (difficulty) {
-        case 0:
+        case DIFFICULTY.AI:
+            console.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+            if (basicHandRanking(hand) >= 18) {
+                return true;
+            }
+        case DIFFICULTY.NORMAL:
+        case DIFFICULTY.EASY:
+        case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
+            return false;
         default:
+            console.warn('Unknown difficulty: ' + difficulty);
             return false;
     }
 }
-function robotPovenostBidaUniChoice(difficulty) {
+function robotPovenostBidaUniChoice(hand, difficulty) {
     switch (difficulty) {
-        case 0:
+        case DIFFICULTY.AI:
+            console.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            return false;//Conceal so it doesn't get flecked
+        case DIFFICULTY.EASY:
+        case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
+            return true;
         default:
+            console.warn('Unknown difficulty: ' + difficulty);
             return false;
     }
 }
 function robotLead(hand, difficulty) {
     switch (difficulty) {
-        case 0:
+        case DIFFICULTY.AI:
+            console.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+            //Possible strategies: run trump until almost out, play kings, reclaim control with trump
+        case DIFFICULTY.NORMAL:
+            //Possible strategies: run trump until out, then play kings
+        case DIFFICULTY.EASY:
+            if (handContainsCard('XIX')) {
+                //My parents were very upset that the robots would not play the XIX
+                //This is the temporary fix
+                return {'suit':SUIT[4],'value':'XIX'};
+            }
+        case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
             return firstSelectableCard(hand);
         default:
+            console.warn('Unknown difficulty: ' + difficulty);
             //select first playable
             return firstSelectableCard(hand);
 
     }
 }
 function robotPlay(hand, difficulty) {
+    //TODO: add context. Robots need to know: the table, if partners have been revealed, money cards, povenost, valat, contra, IOTE, etc
     switch (difficulty) {
-        case 0:
+        case DIFFICULTY.AI:
+            console.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            //If last in line and no trumps have been played, play the I unless IOTE was called
+            //If last in line and low on trump, play the XXI
+        case DIFFICULTY.EASY:
+            //Over-under. If it can beat the current highest card, play the highest one available. Otherwise, play the lowest non-I trump available
+            //If last in line, play the lowest winning card
+        case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
             return firstSelectableCard(hand);
         default:
+            console.warn('Unknown difficulty: ' + difficulty);
             //select first playable
             return firstSelectableCard(hand);
     }
@@ -524,10 +719,10 @@ function autoAction(action, room, pn) {
             }
             break;
         case 'valat':
-            action.info.valat = robotCall(DIFFICULTY.EASY);
+            action.info.valat = robotCall(hand, DIFFICULTY.EASY);
             break;
         case 'iote':
-            action.info.iote = robotIOTE(DIFFICULTY.EASY);
+            action.info.iote = robotIOTE(hand, DIFFICULTY.EASY);
             console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
             actionCallback(action, room, pn);
             return;//Don't inform the players who has the I
@@ -535,7 +730,7 @@ function autoAction(action, room, pn) {
         case 'preverContra':
         case 'preverValatContra':
         case 'valatContra':
-            action.info.contra = robotContra(DIFFICULTY.EASY);
+            action.info.contra = robotContra(hand, DIFFICULTY.EASY);
             console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
             actionCallback(action, room, pn);
             return;
@@ -592,24 +787,25 @@ function robotAction(action, room, pn) {
                 break;
             case 'discard':
                 grayUndiscardables(hand);
-                action.info.card = robotDiscard(hand);
+                action.info.card = robotDiscard(hand, room.settings.difficulty);
                 break;
             case 'povenostBidaUniChoice':
                 fakeMoneyCards = true;
                 action.action = 'moneyCards';
-                room.board.buc = robotPovenostBidaUniChoice(room.settings.difficulty);
+                room.board.buc = robotPovenostBidaUniChoice(hand, room.settings.difficulty);
             case 'moneyCards':
                 break;
             case 'partner':
                 //if povenost choose partner 
                 if (room['board'].povenost == pn) {
-                    action.info.partner = robotPartner(hand);
+                    action.info.partner = robotPartner(hand, room.settings.difficulty);
                 }
                 break;
             case 'valat':
-                action.info.valat = robotCall(room.settings.difficulty);
+                action.info.valat = robotCall(hand, room.settings.difficulty);
                 break;
             case 'iote':
+                action.info.iote = robotIOTE(hand, room.settings.difficulty)
                 console.log('robotAction() called | action: ' + action.action + ' pn: ' + pn);
                 actionCallback(action, room, pn);
                 return;//Don't inform the players who has the I
@@ -617,17 +813,17 @@ function robotAction(action, room, pn) {
             case 'preverContra':
             case 'preverValatContra':
             case 'valatContra':
-                action.info.contra = robotContra(room.settings.difficulty);
+                action.info.contra = robotContra(hand, room.settings.difficulty);
                 console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
                 actionCallback(action, room, pn);
                 return;
             case 'lead':
                 unGrayCards(hand);
-                action.info.card = robotLead(hand);
+                action.info.card = robotLead(hand, room.settings.difficulty);
                 break;
             case 'follow':
                 grayUnplayables(hand, room.board.leadCard);
-                action.info.card = robotPlay(hand);
+                action.info.card = robotPlay(hand, room.settings.difficulty);
                 break;
             case 'winTrick':
                 break;
