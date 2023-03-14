@@ -1640,16 +1640,20 @@ function actionCallback(action, room, pn) {
             for (let i in team1Players) {
                 let tempChipsOwed = chipsOwed;
                 if (team1Players.length == 1) {tempChipsOwed*=3;}
-                if (team1Players.length == 3) {tempChipsOwed=3;}
                 team1Players[i].chips += tempChipsOwed;
             }
             for (let i in team2Players) {
                 let tempChipsOwed = chipsOwed;
                 if (team2Players.length == 1) {tempChipsOwed*=3;}
-                if (team2Players.length == 3) {tempChipsOwed=3;}
                 team2Players[i].chips -= tempChipsOwed;
             }
-
+            if (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips != 400) {
+                console.warn('Incorrect chip count! Total count: ' + (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips))
+                console.log('Player 1: ' + room.players[0].chips)
+                console.log('Player 2: ' + room.players[2].chips)
+                console.log('Player 3: ' + room.players[3].chips)
+                console.log('Player 4: ' + room.players[4].chips)
+            }
             if (chipsOwed < 0) {
                 //TODO: make informing the players a bit better
                 //For example, in a prever game say "Prever paid" or "Prever lost"
