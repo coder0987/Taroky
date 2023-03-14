@@ -177,10 +177,11 @@ function createDeck() {
         theDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
     return theDeck;
 }
-function shuffleDeck(deck, shuffleType) {
+function shuffleDeck(deck, shuffleType, cutLocation) {
     let tempDeck = [...deck];
+    cutLocation = cutLocation || tempDeck.length / 2;
     switch (shuffleType) {
-        case 1: /*cut*/     return cutShuffle(tempDeck, tempDeck.length / 2);
+        case 1: /*cut*/     return cutShuffle(tempDeck, cutLocation);
         case 2: /*riffle*/  return riffleShuffle(tempDeck, true);
         case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
         default: return [...tempDeck];
@@ -483,7 +484,7 @@ function basicHandRanking(hand) {
         }
     }
 }
-//ROBOT DIFFICULTY LAYOUT: go from hardest -> easiest so the more difficult algorithms fall back onto the less difficult ones while we haven't yet finsihed
+//ROBOT DIFFICULTY LAYOUT: go from hardest -> easiest so the more difficult algorithms fall back onto the less difficult ones while we haven't yet finished
 //RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5
 function robotDiscard(hand, difficulty) {
     switch (difficulty) {
@@ -513,7 +514,7 @@ function robotDiscard(hand, difficulty) {
         case DIFFICULTY.RUDIMENTARY:
             return firstSelectableCard(hand);
         default:
-            //select first discardable
+            //select first discard-able
             console.warn('Unknown difficulty: ' + difficulty);
             return firstSelectableCard(hand);
     }
@@ -860,8 +861,6 @@ function playerAction(action, room, pn) {
         case 'shuffle':
         //Do nothing, because its all taken care of by the generic action sender/informer at the end
         case 'cut':
-        //TODO: Maybe Should add ability to choose cut position by adding a way to select
-        //      Also add ability to 'knock' and choose how cards dealt
         case 'deal':
         case 'prever':
         case 'callPrever':
@@ -1001,7 +1000,7 @@ function actionCallback(action, room, pn) {
             break;
         case 'cut':
             style = action.info.style;
-            if (style == 'Cut') room['deck'] = shuffleDeck(room['deck'], 1);
+            if (style == 'Cut') room['deck'] = shuffleDeck(room['deck'], 1, action.info.location);
             action.action = 'deal';
             action.player = (pn + 1) % 4;//The player after the cutter must deal
             room['board']['cutStyle'] = style;//For the dealer
@@ -1136,7 +1135,7 @@ function actionCallback(action, room, pn) {
                     action.action = 'discard';
                 } else {
                     //Prever has rejected the first three cards and will instead take the second three
-                    //The original three return to the talon and the three from the talon enter the temphand. Other players are allowed to view the talon now
+                    //The original three return to the talon and the three from the talon enter the tempHand. Other players are allowed to view the talon now
                     //The Prever loss multiplier is doubled here. Prever has a third and final choice to make before we may continue
                     let temp = [];
 
@@ -1302,7 +1301,7 @@ function actionCallback(action, room, pn) {
                 }
             }
 
-            //Inform all players of current moneycards
+            //Inform all players of current moneyCards
             let theMessage = 'Player ' + (pn + 1) + ' is calling ';
             let yourMoneyCards = 'You are calling ';
             let numCalled = 0;
@@ -1871,7 +1870,7 @@ function actionCallback(action, room, pn) {
             action.action = 'resetBoard';
             break;
         case 'resetBoard':
-            //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneycards, etc.
+            //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneyCards, etc.
             //Also, iterate povenost by 1
             resetBoardForNextRound(room['board'],room.players);
             room.deck = [...baseDeck].sort(() => Math.random() - 0.5);
@@ -2180,10 +2179,13 @@ io.sockets.on('connection', function (socket) {
             console.warn('Illegal shuffle attempt in room ' + players[socketId].room + ' by player ' + socketId);
         }
     });
-    socket.on('cut', function (style) {
+    socket.on('cut', function (style, location) {
         if (!rooms[players[socketId].room]) { return; }
         if (rooms[players[socketId].room]['board']['nextStep'].action == 'cut' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.style = style;
+            if (location && !isNaN(location) && location > 7 && location < 47) {
+                rooms[players[socketId].room]['board']['nextStep'].info.location = location;
+            }
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });

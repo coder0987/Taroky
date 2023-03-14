@@ -312,7 +312,13 @@ function cut() {
         cutButton.innerHTML = cutTypes[i];
         cutButton.id = 'cutB' + cutTypes[i];
         cutButton.addEventListener('click', function(){
-            socket.emit('cut',this.innerHTML);
+            if (this.innerHTML == 'Cut') {
+                //TODO: prompt user for cut location and return that with this
+                //Must be 7 < cut location < 47 (7 from either end)
+                socket.emit('cut',this.innerHTML,30);
+            } else {
+                socket.emit('cut',this.innerHTML);
+            }
             hasCut();
             addMessage('You have cut the deck.');
         });
