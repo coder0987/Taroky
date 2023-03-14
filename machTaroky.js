@@ -79,7 +79,15 @@ function isInHand(element) {
 
 function enter() {if (this.style.filter == '') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
 function exit() {this.classList.remove('image-hover-highlight');}
-function clickCard() {if (this.style.filter == '') {discardThis(this.suit,this.value);this.hidden=true;}}
+function clickCard() {
+    if (this.style.filter == '') {
+        discardThis(this.suit,this.value);
+        this.removeEventListener('mouseenter',enter);
+        this.removeEventListener('mouseleave',exit);
+        this.removeEventListener('click',clickCard);
+        this.hidden=true;
+    }
+}
 function discardThis(cardSuit,cardValue) {
     if (discardingOrPlaying) {
        addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
@@ -172,7 +180,7 @@ function showAllCards() {
 }//Debug function
 
 function startActionTimer() {
-    if (!currentAction || !currentAction.time || !theSettings) {
+    if (!currentAction || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
         return;
     }
     let theTimer = document.getElementById('timer');
@@ -189,7 +197,7 @@ function startActionTimer() {
     }
 }
 function stopActionTimer() {
-    document.getElementById('timer').hidden = true;
+    document.getElementById('timer').hidden = 'hidden';
 }
 
 let refreshing;
@@ -361,7 +369,9 @@ function onLoad() {
         document.getElementById('rooms').innerHTML = '';
         connectingToRoom = false;
         addMessage('Connected to room ' + (roomConnected));
-        document.getElementById('refresh').hidden = true;
+        let exitRoom = document.getElementById('refresh');
+        exitRoom.innerHTML = 'Leave the Room';
+        exitRoom.setAttribute('onclick','exitCurrentRoom()');
     });
     socket.on('roomNotConnected', function(roomNotConnected){
         addMessage('Failed to connect to room ' + (roomNotConnected));
@@ -394,6 +404,27 @@ function onLoad() {
                 addBoldMessage(theMessage);
                 break;
             case MESSAGE_TYPE.MONEY_CARDS:
+                if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
+                break;
+            case MESSAGE_TYPE.VALAT:
+                if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
+                break;
+            case MESSAGE_TYPE.IOTE:
+                if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
+                break;
+            case MESSAGE_TYPE.CONTRA:
                 if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
                     addBoldMessage(extraInfo.youMessage);
                 } else {
@@ -565,6 +596,8 @@ function onLoad() {
                     createChoiceButtons(BUTTON_TYPE.BUC);
                     break;
                 case 'moneyCards':
+                    returnTableQueue.push([]);
+                    drawTable();//To clear prever talon from the center
                     addMessage('You are calling money cards');
                     socket.emit('moneyCards');
                     break;
@@ -795,4 +828,40 @@ function alive() {
             window.location.reload();
         }
     });
+}
+
+let exitTimeout;
+function exitCurrentRoom(value) {
+    if (!value) {
+        document.getElementById('refresh').innerHTML = 'Are you sure?';
+        document.getElementById('refresh').setAttribute('onclick','exitCurrentRoom(true)');
+        exitTimeout = setTimeout(() => {
+            document.getElementById('refresh').innerHTML = 'Leave the Room';
+            document.getElementById('refresh').setAttribute('onclick','exitCurrentRoom()');
+        }, 10000);
+    } else {
+        clearTimeout(exitTimeout);
+        socket.emit('exitRoom');
+        hand = [];
+        drawHand();
+        returnTableQueue = [[]];
+        drawTable();
+        document.getElementById('refresh').innerHTML = '&#10227; Refresh Rooms';
+        document.getElementById('refresh').setAttribute('onclick','refresh()');
+        theSettings={};
+        availableRooms={};
+        drawnRooms=[];
+        connectingToRoom = false;
+        inGame = false;
+        chipCount = 100;
+        playerNumber = -1;
+        hostNumber = -1;
+        currentAction = null;
+        discardingOrPlaying = true;
+        removeHostTools();
+        document.getElementById('cardBack').setAttribute('hidden','hidden');
+        document.getElementById('deck').appendChild(document.getElementById('cardBack'));
+        stopActionTimer();
+        document.getElementById('center').innerHTML = '';//clears choice buttons
+    }
 }

@@ -1716,8 +1716,8 @@ function actionCallback(action, room, pn) {
 
         //Return player hands
         for (let i in room.players) {
-            if (playerType == PLAYER_TYPE.HUMAN) {
-                SOCKET_LIST[room['players'][i].socket].emit('returnHand', room['players'][i].hand, false);
+            if (playerType == PLAYER_TYPE.HUMAN && SOCKET_LIST[room['players'][i].socket]) {
+                SOCKET_LIST[room['players'][i].socket].emit('returnHand', sortCards(room['players'][i].hand), false);
             }
         }
 
@@ -1786,9 +1786,9 @@ function autoReconnect(socketId) {
         SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
         if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard' ||
             rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
-            SOCKET_LIST[socketId].emit('returnHand', rooms[players[socketId].room].players[players[socketId].pn].hand, true);
+            SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
         } else {
-            SOCKET_LIST[socketId].emit('returnHand', rooms[players[socketId].room].players[players[socketId].pn].hand, false);
+            SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
         }
         SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
 
@@ -1823,12 +1823,47 @@ io.sockets.on('connection', function (socket) {
         autoReconnect(socketId);
     }
 
-    socket.on('disconnect', function () {
+    socket.on('disconnect', function() {
         if (players[socketId] && !players[socketId].tempDisconnect) {
             players[socketId].tempDisconnect = true;
             players[socketId].roomsSeen = {};
             console.log('Player ' + socketId + ' may have disconnected');
             setTimeout(disconnectPlayerTimeout, DISCONNECT_TIMEOUT, socketId);
+        }
+    });
+
+    socket.on('exitRoom', function() {
+        if (players[socketId]) {
+            if (~players[socketId].room) {
+                console.log('Player ' + socketId + ' left room ' + players[socketId].room);
+                rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
+                rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
+                rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
+                rooms[players[socketId].room]['playerCount'] = rooms[players[socketId].room]['playerCount'] - 1;
+                if (rooms[players[socketId].room]['playerCount'] > 0 && rooms[players[socketId].room]['host'] == socketId) {
+                    for (let i in rooms[players[socketId].room]['players']) {
+                        if (rooms[players[socketId].room]['players'][i].pn == PLAYER_TYPE.HUMAN) {
+                            rooms[players[socketId].room]['host'] = rooms[players[socketId].room]['players'][i].socket;
+                            players[rooms[players[socketId].room]['players'][i].socket].socket.emit('roomHost'); break;
+                        }
+                    }
+                }
+                if (rooms[players[socketId].room]['playerCount'] == 0) {
+                    //Delete the room if no one is left in it
+                    clearTimeout(rooms[players[socketId].room].autoAction);
+                    delete rooms[players[socketId].room];
+                    console.log('Stopped empty game in room ' + players[socketId].room);
+                } else {
+                    rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' left the room',MESSAGE_TYPE.DISCONNECT);
+                    if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
+                        //Player was supposed to take an action
+                        autoAction(rooms[players[socketId].room].board.nextStep, rooms[players[socketId].room], players[socketId].pn)
+                    }
+                }
+            }
+            players[socketId]['room'] = -1;
+            players[socketId]['pn'] = -1;
+            players[socketId]['roomsSeen'] = {};
         }
     });
 
@@ -2037,13 +2072,13 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('goContra', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'contra' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'contra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'valatContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverValatContra') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.contra = true;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('noContra', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'contra' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'contra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'valatContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverValatContra') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.contra = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
