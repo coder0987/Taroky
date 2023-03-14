@@ -181,7 +181,9 @@ function showAllCards() {
 }//Debug function
 
 function startActionTimer() {
+    //TODO: sync clock between server and client. Some clients have +/- 30 seconds difference
     if (!currentAction || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
+        stopActionTimer();
         return;
     }
     let theTimer = document.getElementById('timer');
