@@ -197,8 +197,12 @@ function drawTable() {
                 for (let j in child.children) {
                     if (child.children[j] && child.children[j].nodeName == 'IMG') {
                         //It's a card
-                        child.children[j].hidden = true;
+                        child.children[j].setAttribute('hidden','hidden');
                         divDeck.appendChild(child.children[j]);
+                    }
+                    if (child.children[j] && child.children[j].nodeName == 'P') {
+                        //"Player N" or "Trick Leader"
+                        child.children[j].setAttribute('hidden','hidden');
                     }
                 }
             }
