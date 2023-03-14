@@ -221,9 +221,15 @@ function startActionTimer() {
     if (timeLeft < 0) {
         stopActionTimer;
     } else {
+        if (timeLeft > theSettings.timeout) {
+            //Timer is off
+            socket.emit('requestTimeSync');
+            timeLeft = theSettings.timeout;
+        }
         let timeLeftSeconds = timeLeft / 1000;
         theTimer.innerHTML = Math.round(timeLeftSeconds);
         theTimer.hidden = false;
+
     }
 }
 function stopActionTimer() {
@@ -580,6 +586,10 @@ function onLoad() {
         }
         currentAction = action;
         startActionTimer();
+        if (document.getElementById('timer').innerHTML < (theSettings.timeout/1000)-0.5) {
+            //Timer is off by more than 0.5s
+            socket.emit('requestTimeSync');
+        }
         document.getElementById('currentAction').innerHTML = ACTION_TABLE[action.action];
         if (action.player == playerNumber) {
             document.getElementById('currentPlayer').innerHTML = 'Your Move';
