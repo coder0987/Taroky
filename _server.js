@@ -711,6 +711,8 @@ function playerAction(action, room, pn) {
         case 'countPoints':
             //TODO: show the player the discard pile so they can count on harder difficulties
             break;
+        case 'resetBoard':
+            break;
         default:
             console.log('Unknown action: ' + action.action);
             console.trace();
@@ -1756,6 +1758,10 @@ function disconnectPlayerTimeout(socketId) {
                 console.log('Stopped empty game in room ' + players[socketId].room);
             } else {
                 rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' disconnected',MESSAGE_TYPE.DISCONNECT);
+                if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
+                    //Player was supposed to take an action
+                    autoAction(rooms[players[socketId].room].board.nextStep, rooms[players[socketId].room], players[socketId].pn)
+                }
             }
         }
         try {
