@@ -11,6 +11,33 @@ const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TAL
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon'};
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
+const ACTION_TABLE = {
+    'start': 'Start the Game',
+    'play': 'Start the Next Round',
+    'shuffle': 'Shuffle the Deck',
+    'cut': 'Cut the Deck',
+    'deal': 'Deal',
+    'prever': 'Choose to Keep or Pass Prever',
+    'passPrever': 'Chose to Pass Prever',
+    'callPrever': 'Chose to Call Prever',
+    'drawPreverTalon': 'Choose to Keep or Pass the Prever Talon',
+    'drawTalon': 'Draw Cards from the Talon',
+    'discard': 'Discard Down to 12 Cards',
+    'povenostBidaUniChoice': 'Decide Whether to Call Bida/Uni as Povenost',
+    'moneyCards': 'Call Money Cards',
+    'partner': 'Choose a Partner Card',
+    'valat': 'Call or Pass Valat',
+    'preverContra': 'Call or Pass Contra',
+    'preverValatContra': 'Call or Pass Contra',
+    'valatContra': 'Call or Pass Contra',
+    'contra': 'Call or Pass Contra',
+    'iote': 'Call or Pass I on the End',
+    'lead': 'Lead the Trick',
+    'follow': 'Play a Card',
+    'winTrick': 'Collect the Cards from the Trick',
+    'countPoints': 'Count Points',
+    'resetBoard': 'Reset the Board'
+};
 let cardBackLoaded = false;
 let ticker;
 let players;
@@ -539,7 +566,9 @@ function onLoad() {
         }
         currentAction = action;
         startActionTimer();
+        document.getElementById('currentAction').innerHTML = ACTION_TABLE[action.action];
         if (action.player == playerNumber) {
+            document.getElementById('currentPlayer').innerHTML = 'Your Move';
             switch (action.action) {
                 case 'start':
                     hostRoom();
@@ -659,6 +688,7 @@ function onLoad() {
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }
         } else {
+            document.getElementById('currentPlayer').innerHTML = 'Player ' + (action.player+1);
             if (action.action == 'lead' || action.action == 'follow' || action.action == 'winTrick') {
                 return;//No need. Handled by room.informPlayers
             }
