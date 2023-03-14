@@ -293,17 +293,13 @@ function findTheI(players) {
    return -1;
 }
 function possiblePartners(hand) {
-    //TODO: logic for possible partners { 'value': TRUMP_VALUE[v], 'suit': SUIT[4] }
-    //TODO: Can povenost call *any* number from XIX to the XV if he has all of them, or just the XIX or lowest one?
     let partners = [];
     //can always partner with XIX
     partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
     //if we hold XIX we can partner with the next lowest trump we don't hold 
     if (handContainsCard(hand, 'XIX')) {
         for (let v = 17; v >= 14; v--) {
-            if (handContains(hand, TRUMP_VALUE[v])) {
-                partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
-            } else {
+            if (!handContains(hand, TRUMP_VALUE[v])) {
                 partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
                 break;
             }
@@ -690,7 +686,6 @@ function playerAction(action, room, pn) {
             //if povenost choose partner 
             if (room['board'].povenost == pn) {
                 action.info.possiblePartners = possiblePartners(hand);
-                //players[room['players'][pn].socket].socket.emit('returnPossiblePartners', possiblePartners(hand));
             }
             break;
         case 'valat':
@@ -1131,11 +1126,6 @@ function actionCallback(action, room, pn) {
                 }
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
                     SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
-                    //playerAction({ 'action': 'moneyCardCallback', 'player': i, 'whoCalled': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
-                } else if (room['players'][i].type == PLAYER_TYPE.ROBOT) {
-                    //robotAction({ 'action': 'moneyCardCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
-                } else if (room['players'][i].type == PLAYER_TYPE.AI) {
-                    //aiAction({ 'action': 'moneyCardCallback', 'player': pn, 'info': room['board'].moneyCards[pn] }, room, action.player);
                 }
             }
             actionTaken = true;
@@ -1163,7 +1153,7 @@ function actionCallback(action, room, pn) {
 
 
             for (let i=0; i<4; i++) {
-                room['players'][i].isTeamPovenost = handContains(room['players'][i].hand, room['board'].partnerCard.value, room['board'].partnerCard.suit);
+                room['players'][i].isTeamPovenost = handContainsCard(room['players'][i].hand, room['board'].partnerCard);
             }
             room['players'][room['board'].povenost].isTeamPovenost = true;
 
