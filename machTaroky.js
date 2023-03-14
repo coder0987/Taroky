@@ -531,6 +531,14 @@ function onLoad() {
                 }
                 break;
             case MESSAGE_TYPE.PAY:
+                if (extraInfo) {
+                    addMessage('------------------------')
+                    addMessage('Point Counting:')
+                    for (let i=extraInfo.length-1; i>=0; i--) {
+                        addMessage(extraInfo[i].name + ': ' + extraInfo[i].value);
+                    }
+                    addMessage('------------------------')
+                }
                 addBoldMessage(theMessage);
                 break;
             case MESSAGE_TYPE.CONNECT:
@@ -564,7 +572,7 @@ function onLoad() {
         theSettings = returnSettings;
         addMessage('Game ' + gameNumber + ' Beginning.')
         addMessage('You are player ' + (pN+1));
-        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + returnSettings.timeout);
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's');
     });
     socket.on('nextAction', function(action) {
         if (!inGame) {
@@ -688,6 +696,7 @@ function onLoad() {
                     break;
                 case 'resetBoard':
                     addMessage('You are resetting the board');
+                    //TODO: add reset board button so player can analyze game results
                     socket.emit('resetBoard');
                     break;
                 default:

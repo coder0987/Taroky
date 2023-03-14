@@ -625,7 +625,7 @@ function robotLead(hand, difficulty) {
         case DIFFICULTY.NORMAL:
             //Possible strategies: run trump until out, then play kings
         case DIFFICULTY.EASY:
-            if (handContainsCard('XIX')) {
+            if (handContainsCard(hand,'XIX')) {
                 //My parents were very upset that the robots would not play the XIX
                 //This is the temporary fix
                 return {'suit':SUIT[4],'value':'XIX'};
@@ -1642,7 +1642,9 @@ function actionCallback(action, room, pn) {
                 room.informPlayers('Player ' + (pn+1) + ' lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {youMessage: 'You lead the ' + lead.value + ' of ' + lead.suit, pn: pn});
                 shouldReturnTable = true;
             } else {
-                players[room['players'][pn].socket].socket.emit('failedLeadCard', cardToLead);
+                if (room['players'][pn].type == PLAYER_TYPE.HUMAN) {
+                    SOCKET_LIST[room['players'][pn].socket].emit('failedLeadCard', cardToLead);
+                }
                 if (cardToLead && cardToLead.suit && cardToLead.value) {console.log('Player ' + pn + ' failed to lead the ' + action.info.card.value + ' of ' + action.info.card.suit);}
                 console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
             }
@@ -1706,11 +1708,13 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'countPoints':
+            let pointCountMessageTable = [];
             let chipsOwed = 0;
             //Called valat
             if (room.board.valat != -1) {
                 //Possible settings: room.settings.valat * 2
                 chipsOwed = 40;
+                pointCountMessageTable.push({'name':'Called Valat', 'value':40});
                 //TODO: who actually won the valat chips detection
             } else {
                 //No valat called
@@ -1734,6 +1738,7 @@ function actionCallback(action, room, pn) {
                     //Possible settings: room.settings.valat
                     //TODO: account for discarded cards. This system will never return an uncalled valat because players discard cards after drawing from the talon
                     chipsOwed = 20;
+                    pointCountMessageTable.push({'name':'Valat', 'value':20});
                 } else {
                     //No valat
                     let povenostTeamPoints = 0;
@@ -1744,6 +1749,8 @@ function actionCallback(action, room, pn) {
                     for (let i in opposingTeamDiscard) {
                         opposingTeamPoints += pointValue(opposingTeamDiscard[i]);
                     }
+                    pointCountMessageTable.push({'name':'Povenost Team Points', 'value':povenostTeamPoints});
+                    pointCountMessageTable.push({'name':'Opposing Team Points', 'value':opposingTeamPoints});
 
                     //Sanity check
                     if (povenostTeamPoints + opposingTeamPoints != 106) {
@@ -1799,26 +1806,40 @@ function actionCallback(action, room, pn) {
                     }
 
                     chipsOwed = 53 - opposingTeamPoints;//Positive: opposing team pays. Negative: povenost team pays
-                    chipsOwed /= 10;
-                    chipsOwed = Math.round(chipsOwed);
-
+                    pointCountMessageTable.push({'name':'53', 'value':Math.abs(chipsOwed)});
+                    if (chipsOwed > 0) {
+                        chipsOwed += 10;
+                    } else {
+                        chipsOwed -= 10;
+                    }
+                    pointCountMessageTable.push({'name':'Add Ten', 'value':Math.abs(chipsOwed)});
                     if (room.board.playingPrever) {
                         //Multiply by 3 instead of 2
                         chipsOwed *= 3;
+                        pointCountMessageTable.push({'name':'Triple It', 'value':Math.abs(chipsOwed)});
                         if (room.players[room.board.prever].isTeamPovenost == (chipsOwed < 0)) {
                             //Prever lost
                             chipsOwed *= Math.pow(2,preverTalonStep-1);//*2 for swapping down, *4 for going back up
+                            pointCountMessageTable.push({'name':'Double It For Each Prever-Talon Swap', 'value':Math.abs(chipsOwed)});
                         }
                     } else {
                         chipsOwed *= 2;
+                        pointCountMessageTable.push({'name':'Double It', 'value':Math.abs(chipsOwed)});
                     }
+                    chipsOwed /= 10;
+                    chipsOwed = Math.round(chipsOwed);
+                    pointCountMessageTable.push({'name':'Round to Nearest Ten', 'value':Math.abs(chipsOwed)});
+
+
 
                     if (room.board.contra[0] != -1) {
                         //*2 for one contra, *4 for two
                         chipsOwed *= Math.pow(2,room.board.contra[0]);
+                        pointCountMessageTable.push({'name':'Contra', 'value':Math.abs(chipsOwed)});
                     }
                     if (room.board.contra[1] != -1) {
                         chipsOwed *= Math.pow(2,room.board.contra[1]);
+                        pointCountMessageTable.push({'name':'Contra again', 'value':Math.abs(chipsOwed)});
                     }
                     //TODO: add IOTE detection (Note that iote = -1 for non-povenost team, 0 for no one, 1 for povenost team)
                 }
@@ -1853,9 +1874,9 @@ function actionCallback(action, room, pn) {
                 //TODO: make informing the players a bit better
                 //For example, in a prever game say "Prever paid" or "Prever lost"
                 //Also add clarifications on how the points were counted and whatnot
-                room.informPlayers('Povenost\'s team paid ' + (-chipsOwed) + ' chips', MESSAGE_TYPE.PAY);
+                room.informPlayers('Povenost\'s team paid ' + (-chipsOwed) + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
             } else {
-                room.informPlayers('Povenost\'s team received ' + chipsOwed + ' chips', MESSAGE_TYPE.PAY);
+                room.informPlayers('Povenost\'s team received ' + chipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
             }
             for (let i in room['players']) {
                 if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
@@ -1872,10 +1893,13 @@ function actionCallback(action, room, pn) {
         case 'resetBoard':
             //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneyCards, etc.
             //Also, iterate povenost by 1
-            resetBoardForNextRound(room['board'],room.players);
-            room.deck = [...baseDeck].sort(() => Math.random() - 0.5);
-            action.player = room['board'].povenost;//already iterated
-            action.action = 'play';
+            action.player = (action.player+1)%4;
+            if (action.player == room.board.povenost) {
+                resetBoardForNextRound(room['board'],room.players);
+                room.deck = [...baseDeck].sort(() => Math.random() - 0.5);
+                action.player = room['board'].povenost;//already iterated
+                action.action = 'play';
+            }
             actionTaken = true;
             break;
         default:
