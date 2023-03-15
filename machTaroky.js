@@ -443,6 +443,36 @@ function onLoad() {
         playerNumber = returnPN;
         addMessage('You are player ' + (returnPN+1));
     });
+    socket.on('returnRoundInfo', function(theRoundInfo) {
+        if (!theRoundInfo) {return;}
+        //{pn,povenost,prever,preverMultiplier,valat,contra,iote,moneyCards,partnerCard}
+        //null if not existent yet
+        let roundInfoElement = document.getElementById('roundInfo');
+        roundInfoElement.textContent = '';
+        const possibleInfo = {'pn':'You are player ', 'povenost':'Povenost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povenost is Playing With:'};
+        //MoneyCards are handled separately
+        for (let i in possibleInfo) {
+            if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
+                let theInfo = document.createElement('p');
+                theInfo.innerHTML = possibleInfo[i] + +theRoundInfo[i];
+                theInfo.classList.add('col');
+                roundInfoElement.appendChild(theInfo);
+            }
+        }
+        if (theRoundInfo.moneyCards) {
+            for (let i in theRoundInfo.moneyCards) {
+                if (theRoundInfo.moneyCards[i].length > 0) {
+                    let theInfo = document.createElement('p');
+                    theInfo.innerHTML = 'Player ' + (+i+1) + ' called ';
+                    for (let j in theRoundInfo.moneyCards[i]) {
+                        theInfo.innerHTML += theRoundInfo.moneyCards[i][j] + ' ';
+                    }
+                    theInfo.classList.add('col');
+                    roundInfoElement.appendChild(theInfo);
+                }
+            }
+        }
+    });
     socket.on('timeSync', function(theTime) {
         timeOffset = Date.now() - theTime;
     });
@@ -740,8 +770,7 @@ function onLoad() {
                     break;
                 case 'resetBoard':
                     addMessage('You are resetting the board');
-                    //TODO: add reset board button so player can analyze game results
-                    socket.emit('resetBoard');
+                    resetBoardButton();
                     break;
                 default:
                     addMessage('Unknown action: ' + JSON.stringify(action));
@@ -924,6 +953,18 @@ function buttonChoiceCallback() {
     document.getElementById('center').removeChild(document.getElementById('no'+TYPE_TABLE[buttonType]));
 }
 
+function resetBoardButton() {
+    let theButton = document.createElement('button');
+    theButton.innerHTML = 'Reset Board';
+    theButton.id = 'resetBoard';
+    theButton.type = 'button';
+    theButton.addEventListener('click', () => {
+        document.getElementById('center').removeChild(document.getElementById('resetBoard'));
+        socket.emit('resetBoard');
+    });
+    document.getElementById('center').appendChild(theButton);
+}
+
 function alive() {
     socket.emit('alive', (callback) => {
         if (!callback) {
@@ -969,5 +1010,7 @@ function exitCurrentRoom(value) {
         document.getElementById('currentAction').innerHTML = '';
         document.getElementById('currentPlayer').innerHTML = '';
         clearChat();
+        let roundInfoElement = document.getElementById('roundInfo');
+        roundInfoElement.textContent = '';
     }
 }

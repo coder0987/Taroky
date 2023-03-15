@@ -140,6 +140,7 @@ function resetBoardForNextRound(board, players) { //setup board for next round. 
     board.moneyCards = [[], [], [], []];
     board.contra = [-1,-1];
     board.firstContraPlayer = -1;
+    board.importantInfo = {};
     for (let i in players) {
         players[i].hand = [];
         players[i].discard = [];
@@ -167,6 +168,7 @@ function Board() {
     this.contra = [-1,-1];
     this.firstContraPlayer = -1;
     this.gameNumber = 0;
+    this.importantInfo = {};
 }
 function createDeck() {
     let theDeck = [];
@@ -1049,6 +1051,7 @@ function actionCallback(action, room, pn) {
                 //Povenost first round chosen by cards
                 room['board'].povenost = findPovenost(room['players'])
             }
+            room.board.importantInfo.povenost = (room.board.povenost+1);
             //Povenost rotation is handled by the board reset function
             console.log('Server (' + room.name + '): povenost is ' + room['board'].povenost);
             room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
@@ -1091,6 +1094,7 @@ function actionCallback(action, room, pn) {
             room['board'].playingPrever = true;
             room['board'].prever = pn;
             room['board'].preverTalonStep = 0;
+            room.board.importantInfo.prever = (room.board.prever+1);
             action.action = 'drawPreverTalon';
             if (room['board'].povenost == pn) {
                 for (let i=0; i<4; i++) {
@@ -1205,6 +1209,7 @@ function actionCallback(action, room, pn) {
                     action.action = 'discard';
                 }
             }
+            room.board.importantInfo.preverMultiplier = Math.pow(2,room['board'].preverTalonStep - 1);
             break;
         case 'discard':
             let card = action.info.card;
@@ -1325,6 +1330,7 @@ function actionCallback(action, room, pn) {
                     SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
                 }
             }
+            room.board.importantInfo.moneyCards = room.board.moneyCards;
             actionTaken = true;
 
             action.player = (pn + 1) % 4;
@@ -1366,6 +1372,7 @@ function actionCallback(action, room, pn) {
 
             //Inform players what Povenost called
             room.informPlayers('Povenost (Player ' + (pn+1) + ') is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn});
+            room.board.importantInfo.partner = room.board.partnerCard;
             actionTaken = true;
             break;
         case 'valat':
@@ -1373,6 +1380,7 @@ function actionCallback(action, room, pn) {
                 //Player called valat
                 room['board'].valat = pn;
                 room.informPlayers('Player ' + (pn+1) + ' called valat', MESSAGE_TYPE.VALAT, {youMessage: 'You called valat', pn: pn});
+                room.board.importantInfo.valat = pn+1;
                 if (room.board.playingPrever) {
                     action.action = 'preverValatContra';
                     if (room.board.prever != pn) {
@@ -1410,6 +1418,7 @@ function actionCallback(action, room, pn) {
             if (action.info.iote) {
                 room.informPlayers('Player ' + (pn+1) + ' called the I on the end', MESSAGE_TYPE.IOTE, {youMessage: 'You called the I on the end', pn: pn});
                 room.board.iote = pn;
+                room.board.importantInfo.iote = pn+1;
             }
             actionTaken = true;
             if (room.board.playingPrever) {
@@ -1623,6 +1632,9 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             break;
         case 'lead':
+            room.board.importantInfo.contra = Math.pow(2,
+                ~room.board.contra[0] ? room.board.contra[0] +
+                (~room.board.contra[1] ? room.board.contra[1] : 0) : 0);
             let cardToLead = action.info.card;
             let lead = false;
             if (cardToLead && cardToLead.suit && cardToLead.value) {
@@ -1810,7 +1822,7 @@ function actionCallback(action, room, pn) {
                     }
 
                     chipsOwed = 53 - opposingTeamPoints;//Positive: opposing team pays. Negative: povenost team pays
-                    pointCountMessageTable.push({'name':'53', 'value':Math.abs(chipsOwed)});
+                    pointCountMessageTable.push({'name':'Distance from 53', 'value':Math.abs(chipsOwed)});
                     if (chipsOwed > 0) {
                         chipsOwed += 10;
                     } else {
@@ -1938,10 +1950,14 @@ function actionCallback(action, room, pn) {
             room.autoAction = autoActionTimeout;
         }
 
-        //Return player hands
         for (let i in room.players) {
             if (playerType == PLAYER_TYPE.HUMAN && SOCKET_LIST[room['players'][i].socket]) {
+                //Return hands
                 SOCKET_LIST[room['players'][i].socket].emit('returnHand', sortCards(room['players'][i].hand), false);
+                //Return important info
+                room.board.importantInfo.pn = (i+1);
+                SOCKET_LIST[room['players'][i].socket].emit('returnRoundInfo',room.board.importantInfo);
+                room.board.importantInfo.pn = null;
             }
         }
 
@@ -2015,7 +2031,7 @@ function autoReconnect(socketId) {
             SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
         }
         SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
-
+        SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
         SOCKET_LIST[socketId].emit('returnSettings', rooms[players[socketId].room].settings);
         if (rooms[players[socketId].room].board.nextStep.action != 'shuffle') {
             SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
@@ -2085,6 +2101,7 @@ io.sockets.on('connection', function (socket) {
                     }
                 }
             }
+            SOCKET_LIST[socketId].emit('returnRoomInfo',{});
             players[socketId]['room'] = -1;
             players[socketId]['pn'] = -1;
             players[socketId]['roomsSeen'] = {};
