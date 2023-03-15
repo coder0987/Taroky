@@ -1372,7 +1372,7 @@ function actionCallback(action, room, pn) {
 
             //Inform players what Povenost called
             room.informPlayers('Povenost (Player ' + (pn+1) + ') is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn});
-            room.board.importantInfo.partner = room.board.partnerCard;
+            room.board.importantInfo.partnerCard = room.board.partnerCard;
             actionTaken = true;
             break;
         case 'valat':

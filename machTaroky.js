@@ -449,12 +449,12 @@ function onLoad() {
         //null if not existent yet
         let roundInfoElement = document.getElementById('roundInfo');
         roundInfoElement.textContent = '';
-        const possibleInfo = {'pn':'You are player ', 'povenost':'Povenost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povenost is Playing With:'};
+        const possibleInfo = {'pn':'You are player ', 'povenost':'Povenost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povenost is Playing With the '};
         //MoneyCards are handled separately
         for (let i in possibleInfo) {
             if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
                 let theInfo = document.createElement('p');
-                theInfo.innerHTML = possibleInfo[i] + +theRoundInfo[i];
+                theInfo.innerHTML = possibleInfo[i] + (isNaN(+theRoundInfo[i]) ? theRoundInfo[i] : +theRoundInfo[i]);
                 theInfo.classList.add('col');
                 roundInfoElement.appendChild(theInfo);
             }
@@ -645,6 +645,7 @@ function onLoad() {
         addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's');
     });
     socket.on('nextAction', function(action) {
+        clearButtons();
         if (!inGame) {
             return; //For when the player leaves the game
         }
@@ -965,6 +966,15 @@ function resetBoardButton() {
     document.getElementById('center').appendChild(theButton);
 }
 
+function clearButtons() {
+    let center = document.getElementById('center');
+    for (let i=center.children.length-1; i>=0; i--) {
+        if (center.children[i] && center.children[i].nodeName == 'BUTTON') {
+            center.removeChild(center.children[i])
+        }
+    }
+}
+
 function alive() {
     socket.emit('alive', (callback) => {
         if (!callback) {
@@ -1010,7 +1020,6 @@ function exitCurrentRoom(value) {
         document.getElementById('currentAction').innerHTML = '';
         document.getElementById('currentPlayer').innerHTML = '';
         clearChat();
-        let roundInfoElement = document.getElementById('roundInfo');
-        roundInfoElement.textContent = '';
+        document.getElementById('roundInfo').textContent = '';
     }
 }
