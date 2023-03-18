@@ -1,3 +1,10 @@
+//imports
+const Player = require('./player.js');
+const Room = require('./room.js');
+
+
+
+
 const http = require('http');
 const url = require('url');
 const fs = require('fs');
@@ -58,14 +65,6 @@ app.use('/client', express.static(__dirname + '/client'));
 console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
 
 
-//helper func
-function index(dict) {
-    for (let key in dict) {
-        dict[dict[key]] = key;
-    }
-}
-
-
 //SOCKETS
 const io = require('socket.io')(server);
 const SOCKET_LIST = {};
@@ -73,10 +72,6 @@ const players = {};
 const rooms = {};
 const PLAYER_TYPE = { HUMAN: 0, ROBOT: 1, AI: 2, H: 0, R: 1 };
 
-const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump' };
-const RED_VALUE = { 0: 'Ace', 1: 'Two', 2: 'Three', 3: 'Four', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
-const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
-const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz' };
 
 const VALUE_REVERSE = {
     Ace: 0, Two: 1, Three: 2, Four: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
@@ -85,162 +80,18 @@ const VALUE_REVERSE = {
     XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
 };
 
-const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13};
+
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
-index(SUIT);
-index(RED_VALUE);
-index(BLACK_VALUE);
-index(TRUMP_VALUE);
 
 let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 
-function Room(name) {
-    this.settings = {'difficulty':DIFFICULTY.EASY, 'timeout': 30*1000};
-    this.name = name;
-    this.host = -1;
-    this.board = new Board();
-    this.playerCount = 0;
-    this.deck = [...baseDeck].sort(() => Math.random() - 0.5);
-    this.players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
-    this.autoAction = 0;
-    this.informPlayers = function(message, messageType, extraInfo) {
-        for (let i in this.players) {
-            if (this.players[i].type == PLAYER_TYPE.HUMAN) {
-                players[this.players[i].socket].socket.emit('gameMessage',message,messageType,extraInfo);
-            }
-        }
-    }
-    this.informPlayer = function(pn, message, messageType, extraInfo) {
-        if (this.players[pn].type == PLAYER_TYPE.HUMAN) {
-            players[this.players[pn].socket].socket.emit('gameMessage',message,messageType,extraInfo);
-        }
-    }
-}
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; }
-function resetBoardForNextRound(board, players) { //setup board for next round. dealer of next round is this rounds povenost
-    board.partnerCard = "";
-    board.talon = [];
-    board.table = [];
-    board.preverTalon = [];
-    board.preverTalonStep = 0;
-    board.prever = -1;
-    board.playingPrever = false;
-    board.povenost = (board.povenost+1)%4;
-    board.buc = false;
-    board.leadPlayer = -1;
-    board.valat = -1;
-    board.Iote = -1;
-    board.cutStyle = '';
-    board.moneyCards = [[], [], [], []];
-    board.contra = [-1,-1];
-    board.firstContraPlayer = -1;
-    board.importantInfo = {};
-    for (let i in players) {
-        players[i].hand = [];
-        players[i].discard = [];
-        players[i].tempHand = [];
-        players[i].isTeamPovenost = false;
-    }
-}
-let baseDeck = createDeck();
-function Board() {
-    this.partnerCard = "";
-    this.talon = [];
-    this.table = [];
-    this.preverTalon = [];
-    this.preverTalonStep = 0;
-    this.prever = -1;
-    this.playingPrever = false;
-    this.povenost = -1;
-    this.buc = false;
-    this.leadPlayer = -1;
-    this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
-    this.cutStyle = '';
-    this.moneyCards = [[], [], [], []];
-    this.valat = -1;
-    this.iote = -1;
-    this.contra = [-1,-1];
-    this.firstContraPlayer = -1;
-    this.gameNumber = 0;
-    this.importantInfo = {};
-}
-function createDeck() {
-    let theDeck = [];
-    for (let s = 0; s < 4; s++)
-        for (let v = 0; v < 8; v++)
-            theDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
-    for (let v = 0; v < 22; v++)
-        theDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
-    return theDeck;
-}
-function shuffleDeck(deck, shuffleType, cutLocation) {
-    let tempDeck = [...deck];
-    cutLocation = cutLocation || tempDeck.length / 2;
-    switch (shuffleType) {
-        case 1: /*cut*/     return cutShuffle(tempDeck, cutLocation);
-        case 2: /*riffle*/  return riffleShuffle(tempDeck, true);
-        case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
-        default: return [...tempDeck];
-    }
-}
-function cutShuffle(deck, cutPosition) {
-    if (deck.length >= cutPosition) { return deck }
-    let leftSide = deck.slice(0, cutPosition);
-    let rightSide = deck.slice(cutPosition + 1);
-    return [...rightSide, ...leftSide];
-}
-function riffleShuffle(deck, isRandom) {
-    let middle = deck.length / 2;
-    let leftSide = deck.slice(0, middle);
-    let rightSide = deck.slice(middle);
-    let result = [];
-    let leftSideFirst = 1;
-    for (var i = 0; i < leftSide.length; i++) {
-        if (isRandom) { leftSideFirst = Math.floor(Math.random() * 2); }
-        if (leftSideFirst == 1) {
-            result.push(leftSide[i]);
-            result.push(rightSide[i]);
-        }
-        else {
-            result.push(rightSide[i]);
-            result.push(leftSide[i]);
-        }
-    }
-    return result;
-}
-function sortCards(deck) {
-    return deck.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
-}
-function handContainsCard(handToCheck, cardName) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].value == cardName) {
-            return true;
-        }
-    }
-    return false;
-}
-function handHasSuit(handToCheck, suitToCheck) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].suit == suitToCheck) {
-            return true;
-        }
-    }
-    return false;
-}
-function handContains(handToCheck, valueToCheck, suitToCheck) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
-            return true;
-        }
-    }
-    return false;
-}
+
+
+
 function isCardPlayable(hand, card, leadCard) {
     if (handHasSuit(hand, leadCard.suit)) {
         return card.suit == leadCard.suit;
@@ -250,31 +101,7 @@ function isCardPlayable(hand, card, leadCard) {
         return true;
     }
 }
-function pointValue(card) {
-    if (card.suit == 'Trump') {
-        if (card.value == 'I' || card.value == 'XXI' || card.value == 'Skyz') {
-            return 5;
-        }
-        return 1;
-    }
-    switch (VALUE_REVERSE[card.value]) {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-            return 1;
-        case 4:
-            return 2;
-        case 5:
-            return 3;
-        case 6:
-            return 4;
-        case 7:
-            return 5;
-    }
-    console.trace('Illegal card. No point value for ' + card);
-    return 0;
-}
+
 function findPovenost(players) {
     let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povenost is found
     while (true) { //loop until we find povenost
@@ -295,104 +122,7 @@ function findTheI(players) {
    console.trace('ERROR: No one has the I');
    return -1;
 }
-function possiblePartners(hand) {
-    let partners = [];
-    //can always partner with XIX
-    partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
-    //if we hold XIX we can partner with the next lowest trump we don't hold 
-    if (handContainsCard(hand, 'XIX')) {
-        for (let v = 17; v >= 14; v--) {
-            if (!handContains(hand, TRUMP_VALUE[v])) {
-                partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
-                break;
-            }
-        }
-    }
-    return partners;
-}
-//Gray-Out Functions
-function grayUndiscardables(hand) {
-    let hasNonTrump = false;
-    for (let i in hand) {
-        if (hand[i].suit != 'Trump') {
-            hasNonTrump = true;
-            break;
-        }
-    }
-    for (let i in hand) {
-        if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
-            hand[i].grayed = true;
-        } else {
-            hand[i].grayed = false;
-        }
-    }
-}
-function grayUnplayables(hand, leadCard) {
-    if (handHasSuit(hand, leadCard.suit)) {
-        for (let i in hand) {
-            if (hand[i].suit != leadCard.suit) {
-                hand[i].grayed = true;
-            } else {
-                hand[i].grayed = false;
-            }
-        }
-    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
-        for (let i in hand) {
-            if (hand[i].suit != 'Trump') {
-                hand[i].grayed = true;
-            } else {
-                hand[i].grayed = false;
-            }
-        }
-    } else {
-        //Has neither lead suit nor trump. Can play anything
-        for (let i in hand) {
-            hand[i].grayed = false;
-        }
-    }
-}
-function unGrayCards(hand) {
-    //Used to un-gray cards before a player leads
-    for (let i in hand) {
-        hand[i].grayed = false;
-    }
-}
-function numOfSuit(hand, suit) {
-    let suitCount = 0;
-    for (let i in hand) {
-        if (hand[i].suit == suit) {
-            suitCount++;
-        }
-    }
-    return suitCount;
-}
-function selectCardOfSuit(hand, suit) {
-    for (let i in hand) {
-        if (hand[i].suit == suit) {
-            return hand[i];
-        }
-    }
-    console.warn('Illegal card selection. No cards of suit ' + suit + ' in hand ' + hand);
-    return;
-}
-function handWithoutGray(hand) {
-    let newHand = [...hand];//Not linked
-    for (let i=newHand.length-1; i>=0; i--) {
-        if (newHand[i].grayed) {
-            newHand.splice(i,1);
-        }
-    }
-    return newHand;
-}
-function highestPointValue(hand) {
-    let pv = hand[0];
-    for (let i in hand) {
-        if (pointValue(hand[i]) > pointValue(pv)) {
-            pv = hand[i];
-        }
-    }
-    return pv;
-}
+
 function whoWon(table, leadPlayer) {
     //First card in the table belongs to the leadPlayer
     let trickLeadCard = table[0];
@@ -430,34 +160,7 @@ function firstSelectableCard(hand) {
     console.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
     return hand[0];
 }
-function trumpChain(hand) {
-    //Returns the number of guaranteed tricks from a hand (trump only)
-    let guarantees = 0;
-    let misses = 0;
-    for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (handContainsCard(TRUMP_VALUE[i])) {
-            if (misses > 0) {
-                misses--;
-            } else {
-                guarantees++;
-            }
-        } else {
-            misses++;
-        }
-    }
-    return guarantees;
-}
-function unbrokenTrumpChain(hand) {
-    let guarantees = 0;
-    for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (handContainsCard(TRUMP_VALUE[i])) {
-            guarantees++;
-        } else {
-            return guarantees;
-        }
-    }
-    return guarantees;
-}
+
 function basicHandRanking(hand) {
     /*Returns a point-value estimate of how good a hand is
     Points are given for:
@@ -915,9 +618,9 @@ function playerAction(action, room, pn) {
             console.trace();
     }
     if (returnHandState == 0) {
-        players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
+        players[room['players'][pn].socket].socket.emit('returnHand', Deck.sortCards(hand), false);
     } else if (returnHandState == 1) {
-        players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
+        players[room['players'][pn].socket].socket.emit('returnHand', Deck.sortCards(hand), true);
     }
 
     for (let i = 0; i < 4; i++) {
@@ -1114,7 +817,7 @@ function actionCallback(action, room, pn) {
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
-                sortCards(room['players'][action.player].tempHand);
+                Deck.sortCards(room['players'][action.player].tempHand);
 
                 //Inform player of cards
                 if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
@@ -1911,8 +1614,7 @@ function actionCallback(action, room, pn) {
             //Also, iterate povenost by 1
             action.player = (action.player+1)%4;
             if (action.player == room.board.povenost) {
-                resetBoardForNextRound(room['board'],room.players);
-                room.deck = [...baseDeck].sort(() => Math.random() - 0.5);
+                room['board'].resetForNextRound()
                 action.player = room['board'].povenost;//already iterated
                 action.action = 'play';
             }
@@ -1953,7 +1655,7 @@ function actionCallback(action, room, pn) {
         for (let i in room.players) {
             if (playerType == PLAYER_TYPE.HUMAN && SOCKET_LIST[room['players'][i].socket]) {
                 //Return hands
-                SOCKET_LIST[room['players'][i].socket].emit('returnHand', sortCards(room['players'][i].hand), false);
+                SOCKET_LIST[room['players'][i].socket].emit('returnHand', Deck.sortCards(room['players'][i].hand), false);
                 //Return important info
                 room.board.importantInfo.pn = (i+1);
                 SOCKET_LIST[room['players'][i].socket].emit('returnRoundInfo',room.board.importantInfo);
@@ -2026,9 +1728,9 @@ function autoReconnect(socketId) {
         SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
         if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard' ||
             rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
-            SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
+            SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
         } else {
-            SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
+            SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
         }
         SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
