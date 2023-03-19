@@ -1,6 +1,16 @@
 //imports
 const Player = require('./player.js');
 const Room = require('./room.js');
+const { SUIT,
+    SUIT_REVERSE,
+    RED_VALUE,
+    BLACK_VALUE,
+    TRUMP_VALUE,
+    VALUE_REVERSE,
+    DIFFICULTY,
+    DIFFICULTY_TABLE,
+    MESSAGE_TYPE,
+    PLAYER_TYPE } = require('./enums.js');
 
 
 
@@ -70,16 +80,6 @@ const io = require('socket.io')(server);
 const SOCKET_LIST = {};
 const players = {};
 const rooms = {};
-const PLAYER_TYPE = { HUMAN: 0, ROBOT: 1, AI: 2, H: 0, R: 1 };
-
-
-const VALUE_REVERSE = {
-    Ace: 0, Two: 1, Three: 2, Four: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
-    Seven: 0, Eight: 1, Nine: 2, Ten: 3,
-    I: 0, II: 1, III: 2, IIII: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10, XII: 11, XIII: 12,
-    XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
-};
-
 
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted

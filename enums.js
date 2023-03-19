@@ -35,5 +35,6 @@ module.exports = {
     VALUE_REVERSE,
     DIFFICULTY,
     DIFFICULTY_TABLE,
-    MESSAGE_TYPE
+    MESSAGE_TYPE,
+    PLAYER_TYPE
 }

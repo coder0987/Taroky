@@ -50,6 +50,16 @@ class Player {
         return false;
     }
 
+    isCardPlayable(card, leadCard) {
+        if (this.handHasSuit(leadCard.suit)) {
+            return card.suit == leadCard.suit;
+        } else if (leadCard.suit != 'Trump' && this.handHasSuit('Trump')) {
+            return card.suit == 'Trump';
+        } else {
+            return true;
+        }
+    }
+
     //Gray-Out Functions
     grayUndiscardables() {
         let hasNonTrump = false;
@@ -139,11 +149,11 @@ class Player {
         let partners = [];
         //can always partner with XIX
         partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
-        //if we hold XIX we can partner with the next lowest trump we don't hold 
+        //if we hold XIX we can partner with the next lowest trump we don't hold, down to the XV
         if (this.handContainsCard( 'XIX')) {
-            for (let v = 17; v >= 14; v--) {
+            for (let v = 17; v >= 15; v--) {
                 if (!this.handContains( TRUMP_VALUE[v])) {
-                    partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+                    partners.push({ 'value': TRUMP_VALUE[v]-1, 'suit': SUIT[4] });
                     break;
                 }
             }
@@ -180,6 +190,36 @@ class Player {
             }
         }
         return guarantees;
+    }
+
+    basicHandRanking() {
+        /*Returns a point-value estimate of how good a hand is
+        Points are given for:
+            -Voided suits (2pt each)
+            -Trump
+            -Trump again, if higher than XV
+            -Trump chain, for each guaranteed win trump (Skyz, then XXI, then XX, etc)
+            -Kings/5-point cards
+        */
+        let handRankingPoints = 0;
+        handRankingPoints += trumpChain(hand);
+        for (let i in this._hand) {
+            if (hand[i].suit == 'Trump') {
+                handRankingPoints++;
+                if (VALUE_REVERSE(this._hand[i].value) >= 14) {
+                    handRankingPoints++;
+                }
+            }
+            if (pointValue(this._hand[i]) == 5) {
+                handRankingPoints++;
+            }
+        }
+        for (let i = 0; i < 4; i++) {
+            if (numOfSuit(SUIT[i] == 0)) {
+                handRankingPoints++;
+            }
+        }
+        return handRankingPoints;
     }
 
     //Setters
