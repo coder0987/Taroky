@@ -441,7 +441,7 @@ function onLoad() {
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
         playerNumber = returnPN;
-        addMessage('You are player ' + (returnPN+1));
+        addMessage('You are player ' + (+returnPN+1));
     });
     socket.on('returnRoundInfo', function(theRoundInfo) {
         if (!theRoundInfo) {return;}

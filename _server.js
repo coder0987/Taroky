@@ -1365,7 +1365,7 @@ function actionCallback(action, room, pn) {
                 if (currentHand[i].suit == "Trump") { numTrumpsInHand++;}
             }
             if (numTrumpsInHand <= 2) {
-                action.action = 'povenostBidUniChoice';
+                action.action = 'povenostBidaUniChoice';
             } else {
                 action.action = 'moneyCards';
             }
@@ -2184,6 +2184,13 @@ io.sockets.on('connection', function (socket) {
                     break;
                 case 'timeout':
                     if (!isNaN(rule)) {
+                        if (rule <= 0) {
+                            rule = 0;//No timeout for negatives
+                        } else if (rule <= 20000) {
+                            rule = 20000;//20 second min
+                        } else if (rule >= 3600000) {
+                            rule = 3600000;//One hour max
+                        }
                         rooms[players[socketId].room].settings.timeout = rule;
                         console.log('Timeout in room ' + players[socketId].room + ' is set to ' + rule);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
