@@ -2116,7 +2116,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('alive', function(callback) {
         if (players[socketId]) {
-            callback(!players[socketId].tempDisconnect && !SOCKET_LIST[socketId].connected);//true for connected, false for disconnected
+            callback(!players[socketId].tempDisconnect);//true for connected, false for disconnected
         }
     });
 
