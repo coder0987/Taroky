@@ -88,6 +88,7 @@ const VALUE_REVERSE = {
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
 const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13};
+const SENSITIVE_ACTIONS = {'povenostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
@@ -927,7 +928,9 @@ function playerAction(action, room, pn) {
                 players[room['players'][i].socket].socket.emit('nextAction', action);
                 action.action = 'moneyCards';
             }
-            players[room['players'][i].socket].socket.emit('nextAction', action);
+            if (!SENSITIVE_ACTIONS[action.action] || pn == i) {
+                players[room['players'][i].socket].socket.emit('nextAction', action);
+            }
         }
     }
     console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
@@ -1955,7 +1958,6 @@ function actionCallback(action, room, pn) {
                 //Return hands
                 SOCKET_LIST[room['players'][i].socket].emit('returnHand', sortCards(room['players'][i].hand), false);
                 //Return important info
-                //TODO: remove contra, IOTE, and other "sensitive" info from round info so players can't deduce povenost's team
                 room.board.importantInfo.pn = (+i+1);
                 SOCKET_LIST[room['players'][i].socket].emit('returnRoundInfo',room.board.importantInfo);
                 room.board.importantInfo.pn = null;
@@ -2022,7 +2024,6 @@ function disconnectPlayerTimeout(socketId) {
 
 function autoReconnect(socketId) {
     if (rooms[players[socketId].room]) {
-        console.log('Sending requested info...');
         SOCKET_LIST[socketId].emit('roomConnected',players[socketId].room);
         SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
         if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard' ||
@@ -2031,8 +2032,12 @@ function autoReconnect(socketId) {
         } else {
             SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
         }
-        SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
+        if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
+            SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
+        }
+        rooms[players[socketId].room]['board'].importantInfo = players[socketId].pn;
         SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
+        rooms[players[socketId].room]['board'].importantInfo.pn = null;
         SOCKET_LIST[socketId].emit('returnSettings', rooms[players[socketId].room].settings);
         if (rooms[players[socketId].room].board.nextStep.action != 'shuffle') {
             SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
@@ -2111,7 +2116,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('alive', function(callback) {
         if (players[socketId]) {
-            callback(!players[socketId].tempDisconnect);//true for connected, false for disconnected
+            callback(!players[socketId].tempDisconnect && !SOCKET_LIST[socketId].connected);//true for connected, false for disconnected
         }
     });
 
@@ -2136,10 +2141,11 @@ io.sockets.on('connection', function (socket) {
                         if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
                             socket.emit('youStart');
                         } else {
-                            socket.emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
+                            autoReconnect(socketId);
+                            console.warn('ERROR: Player joined empty room with no host that was started');
                         }
                     } else {
-                        socket.emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
+                        autoReconnect(socketId);
                     }
                     socket.emit('timeSync', Date.now());
                     break;
