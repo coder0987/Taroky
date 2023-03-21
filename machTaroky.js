@@ -641,7 +641,7 @@ function onLoad() {
         playerNumber = pN;
         theSettings = returnSettings;
         addMessage('Game ' + gameNumber + ' Beginning.')
-        addMessage('You are player ' + (pN+1));
+        addMessage('You are player ' + (+pN+1));
         addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's');
     });
     socket.on('nextAction', function(action) {

@@ -1955,7 +1955,8 @@ function actionCallback(action, room, pn) {
                 //Return hands
                 SOCKET_LIST[room['players'][i].socket].emit('returnHand', sortCards(room['players'][i].hand), false);
                 //Return important info
-                room.board.importantInfo.pn = (i+1);
+                //TODO: remove contra, IOTE, and other "sensitive" info from round info so players can't deduce povenost's team
+                room.board.importantInfo.pn = (+i+1);
                 SOCKET_LIST[room['players'][i].socket].emit('returnRoundInfo',room.board.importantInfo);
                 room.board.importantInfo.pn = null;
             }
@@ -2192,8 +2193,8 @@ io.sockets.on('connection', function (socket) {
                             rule = 3600000;//One hour max
                         }
                         rooms[players[socketId].room].settings.timeout = rule;
-                        console.log('Timeout in room ' + players[socketId].room + ' is set to ' + rule);
-                        rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
+                        console.log('Timeout in room ' + players[socketId].room + ' is set to ' + (rule/1000) + 's');
+                        rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + (rule/1000) + 's', MESSAGE_TYPE.SETTING);
                     }
                     break;
             }
