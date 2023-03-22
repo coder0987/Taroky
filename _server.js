@@ -92,6 +92,37 @@ const SENSITIVE_ACTIONS = {'povenostBidaUniChoice': true,'contra': true, 'prever
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
+const SERVER = {
+    log: (info, rn) => {
+        if (rn != undefined) {
+            console.log('ROOM ' + rn + ': ' + info);
+        } else {
+            console.log('SERVER: ' + info);
+        }
+    },
+    error: (info, rn) => {
+        if (rn != undefined) {
+            console.warn('ERROR IN ROOM ' + rn + ': ' + info);
+        } else {
+            console.warn('SERVER ERROR: ' + info);
+        }
+    },
+    trace: (info, rn) => {
+        if (rn != undefined) {
+            console.trace('STACK TRACE FOR ROOM ' + rn + ': ' + info);
+        } else {
+            console.trace('SERVER STACK TRACE: ' + info);
+        }
+    },
+    functionCall: (name, ...parameters) => {
+        let paramString = '';
+        parameters.map(p => {
+            if (p) {paramString += p.name + ': ' + p.value;}
+        });
+        console.log(name + '() called | ' + paramString);
+    }
+};
+
 index(SUIT);
 index(RED_VALUE);
 index(BLACK_VALUE);
@@ -273,7 +304,7 @@ function pointValue(card) {
         case 7:
             return 5;
     }
-    console.trace('Illegal card. No point value for ' + card);
+    SERVER.trace('Illegal card. No point value for ' + card);
     return 0;
 }
 function findPovenost(players) {
@@ -293,7 +324,7 @@ function findTheI(players) {
            return i; //found the I
        }
    }
-   console.trace('ERROR: No one has the I');
+   SERVER.trace('ERROR: No one has the I');
    return -1;
 }
 function possiblePartners(hand) {
@@ -373,7 +404,7 @@ function selectCardOfSuit(hand, suit) {
             return hand[i];
         }
     }
-    console.warn('Illegal card selection. No cards of suit ' + suit + ' in hand ' + hand);
+    SERVER.warn('Illegal card selection. No cards of suit ' + suit + ' in hand ' + hand);
     return;
 }
 function handWithoutGray(hand) {
@@ -428,7 +459,7 @@ function firstSelectableCard(hand) {
             return hand[i];
         }
     }
-    console.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
+    SERVER.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
     return hand[0];
 }
 function trumpChain(hand) {
@@ -492,7 +523,7 @@ function basicHandRanking(hand) {
 function robotDiscard(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            console.warn('AI not implemented yet. Defaulting to robot moves');
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
             /*TODO: Discard cards from the suit with the least number of possible cards that does not have a king
                 If tied, discard the highest point value
@@ -518,7 +549,7 @@ function robotDiscard(hand, difficulty) {
             return firstSelectableCard(hand);
         default:
             //select first discard-able
-            console.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty);
             return firstSelectableCard(hand);
     }
 }
@@ -526,7 +557,7 @@ function robotPartner(hand, difficulty) {
     let robotPossiblePartners = possiblePartners(hand);
     switch (difficulty) {
         case DIFFICULTY.AI:
-            console.warn('AI not implemented yet. Defaulting to robot moves');
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -539,7 +570,7 @@ function robotPartner(hand, difficulty) {
             return { 'value': 'XIX', 'suit': SUIT[4] };
         default:
             //always play with XIX
-            console.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty);
             return { 'value': 'XIX', 'suit': SUIT[4] };
     }
 }
@@ -547,7 +578,7 @@ function robotCall(hand, difficulty) {
     //Valat
     switch (difficulty) {
         case DIFFICULTY.AI:
-            console.warn('AI not implemented yet. Defaulting to robot moves');
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -559,14 +590,14 @@ function robotCall(hand, difficulty) {
             //TODO: more difficulty algos
             return false;
         default:
-            console.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty);
             return false;
     }
 }
 function robotIOTE(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            console.warn('AI not implemented yet. Defaulting to robot moves');
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -578,14 +609,14 @@ function robotIOTE(hand, difficulty) {
             //TODO: more difficulty algos
             return false;
         default:
-            console.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty);
             return false;
     }
 }
 function robotContra(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            console.warn('AI not implemented yet. Defaulting to robot moves');
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
             if (basicHandRanking(hand) >= 18) {
@@ -597,14 +628,14 @@ function robotContra(hand, difficulty) {
             //TODO: more difficulty algos
             return false;
         default:
-            console.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty);
             return false;
     }
 }
 function robotPovenostBidaUniChoice(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            console.warn('AI not implemented yet. Defaulting to robot moves');
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -614,14 +645,14 @@ function robotPovenostBidaUniChoice(hand, difficulty) {
             //TODO: more difficulty algos
             return true;
         default:
-            console.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty);
             return false;
     }
 }
 function robotLead(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            console.warn('AI not implemented yet. Defaulting to robot moves');
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
             //Possible strategies: run trump until almost out, play kings, reclaim control with trump
@@ -637,7 +668,7 @@ function robotLead(hand, difficulty) {
             //TODO: more difficulty algos
             return firstSelectableCard(hand);
         default:
-            console.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty);
             //select first playable
             return firstSelectableCard(hand);
 
@@ -647,7 +678,7 @@ function robotPlay(hand, difficulty) {
     //TODO: add context. Robots need to know: the table, if partners have been revealed, money cards, povenost, valat, contra, IOTE, etc
     switch (difficulty) {
         case DIFFICULTY.AI:
-            console.warn('AI not implemented yet. Defaulting to robot moves');
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -660,7 +691,7 @@ function robotPlay(hand, difficulty) {
             //TODO: more difficulty algos
             return firstSelectableCard(hand);
         default:
-            console.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty);
             //select first playable
             return firstSelectableCard(hand);
     }
@@ -682,10 +713,10 @@ function autoAction(action, room, pn) {
 
     if (room.players[pn] && room.players[pn].type == PLAYER_TYPE.HUMAN) {
         //Let the player know that the action was completed automatically
-        console.log('AutoAction: informed player ' + pn);
+        SERVER.log('AutoAction: informed player ' + pn, room.name);
         SOCKET_LIST[room.players[pn].socket].emit('autoAction', action);
     } else {
-        console.log('AutoAction: player ' + pn + ' may have disconnected');
+        SERVER.log('AutoAction: player ' + pn + ' may have disconnected', room.name);
     }
 
     let hand = room['players'][pn].hand;
@@ -727,7 +758,7 @@ function autoAction(action, room, pn) {
             break;
         case 'iote':
             action.info.iote = robotIOTE(hand, DIFFICULTY.EASY);
-            console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
+            SERVER.functionCall('autoAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
             actionCallback(action, room, pn);
             return;//Don't inform the players who has the I
         case 'contra':
@@ -735,7 +766,7 @@ function autoAction(action, room, pn) {
         case 'preverValatContra':
         case 'valatContra':
             action.info.contra = robotContra(hand, DIFFICULTY.EASY);
-            console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
+            SERVER.functionCall('autoAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
             actionCallback(action, room, pn);
             return;
         case 'lead':
@@ -753,7 +784,7 @@ function autoAction(action, room, pn) {
         case 'resetBoard':
             break;//Utilitarian, no input needed
         default:
-            console.warn('Unknown auto action: ' + action.action);
+            SERVER.warn('Unknown auto action: ' + action.action, room.name);
     }
     for (let i = 0; i < 4; i++) {
         if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
@@ -763,7 +794,7 @@ function autoAction(action, room, pn) {
     if (fakeMoneyCards) {
         action.action = 'povenostBidaUniChoice';
     }
-    console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
+    SERVER.functionCall('autoAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
     actionCallback(action, room, pn);
 }
 
@@ -1890,9 +1921,8 @@ function actionCallback(action, room, pn) {
                 console.log('Player 4: ' + room.players[4].chips)
             }
             if (chipsOwed < 0) {
-                //TODO: make informing the players a bit better
-                //For example, in a prever game say "Prever paid" or "Prever lost"
-                //Also add clarifications on how the points were counted and whatnot
+                /* TODO: make informing the players a bit better
+                    For example, in a prever game say "Prever paid" or "Prever lost"*/
                 room.informPlayers('Povenost\'s team paid ' + (-chipsOwed) + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
             } else {
                 room.informPlayers('Povenost\'s team received ' + chipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
@@ -1902,9 +1932,6 @@ function actionCallback(action, room, pn) {
                     SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
                 }
             }
-
-            //TODO: test and make sure that the point counting system works properly
-            //Point counting is very complicated with many ifs and whens, there's bound to be bugs somewhere
 
             actionTaken = true;
             action.action = 'resetBoard';
