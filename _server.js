@@ -175,7 +175,10 @@ function resetBoardForNextRound(board, players) { //setup board for next round. 
     board.buc = false;
     board.leadPlayer = -1;
     board.valat = -1;
-    board.Iote = -1;
+    board.trickWinCount = [0,0];
+    board.hasTheI = -1;
+    board.iote = -1;
+    board.ioteWin = 0;
     board.cutStyle = '';
     board.moneyCards = [[], [], [], []];
     board.contra = [-1,-1];
@@ -204,7 +207,10 @@ function Board() {
     this.cutStyle = '';
     this.moneyCards = [[], [], [], []];
     this.valat = -1;
+    this.trickWinCount = [0,0];
+    this.hasTheI = -1;
     this.iote = -1;
+    this.ioteWin = 0;
     this.contra = [-1,-1];
     this.firstContraPlayer = -1;
     this.gameNumber = 0;
@@ -1067,15 +1073,15 @@ function actionCallback(action, room, pn) {
                 case '4':
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 4; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
-                case '12 Straight':
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
-                    break;
                 case '12':
-                    //TODO: Deal by 12s
+                    /*TODO: Deal by 12s
                     let hands = [[], [], [], []];
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i].push(room['deck'].splice(0, 1)[0]); }
-                    //have players in order choose hands
+                    have players in order choose hands
                     //TODO: Create logic for players choosing hands[(0-3)]
+                    break; fallthrough until 12s logic is complete*/
+                case '12 Straight':
+                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '345':
                     for (let t = 3; t < 6; t++) {
@@ -1457,6 +1463,7 @@ function actionCallback(action, room, pn) {
             //Possible variations: IOTE may still be allowed in a valat game, contra may be disallowed
             break;
         case 'iote':
+            room.board.hasTheI = pn;
             if (action.info.iote) {
                 room.informPlayers('Player ' + (pn+1) + ' called the I on the end', MESSAGE_TYPE.IOTE, {youMessage: 'You called the I on the end', pn: pn});
                 room.board.iote = pn;
@@ -1749,6 +1756,40 @@ function actionCallback(action, room, pn) {
             //Separated so the table would return separately
             actionTaken = true;
             shouldReturnTable = true;
+
+            if (room.players[pn].hand.length == 0) {
+                //Last trick. Check if the I is present
+                let I = false;
+                let otherTrump = false;
+                for (let i in room.board.table) {
+                    if (room.table.board.table[i].value == 'I') {
+                        //IOTE
+                        I = true;
+                    } else if (room.board.table[i].suit == 'Trump') {
+                        //I has been captured
+                        otherTrump = true;
+                    }
+                }
+                if (I) {
+                    //Positive = povenost's team, negative = opposing
+                    if (room.players[room.board.hasTheI].isTeamPovenost) {
+                        //Povenost's team played the I
+                        if (otherTrump) {
+                            room.board.ioteWin = -1;
+                        } else {
+                            room.board.ioteWin = 1;
+                        }
+                    } else {
+                        //Opposing team played the I
+                        if (otherTrump) {
+                            room.board.ioteWin = 1;
+                        } else {
+                            room.board.ioteWin = -1;
+                        }
+                    }
+                }
+            }
+
             //Transfer the table to the winner's discard
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
@@ -1756,6 +1797,11 @@ function actionCallback(action, room, pn) {
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
             room.board.table = [];
 
+            if (room.players[pn].isTeamPovenost) {
+                room.board.trickWinCount[0]++;
+            } else {
+                room.board.trickWinCount[1]++;
+            }
             room.board.leadPlayer = pn;
             action.action = 'lead';
 
@@ -1771,9 +1817,29 @@ function actionCallback(action, room, pn) {
             //Called valat
             if (room.board.valat != -1) {
                 //Possible settings: room.settings.valat * 2
-                chipsOwed = 40;
-                pointCountMessageTable.push({'name':'Called Valat', 'value':40});
-                //TODO: who actually won the valat chips detection
+
+                if (room.players[room.board.valat].isTeamPovenost) {
+                    //Povenost's team called valat
+                    if (room.board.trickWinCount[1] > 0) {
+                        //Opposing team won a trick
+                        chipsOwed = -40;
+                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
+                    } else {
+                        chipsOwed = 40;
+                        pointCountMessageTable.push({'name':'Won a Called Valat', 'value':40});
+                    }
+                } else {
+                    //Opposing team called valat
+                    if (room.board.trickWinCount[0] > 0) {
+                        //Povenost team won a trick
+                        chipsOwed = 40;
+                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
+                    } else {
+                        chipsOwed = -40;
+                        pointCountMessageTable.push({'name':'Won a Called Valat', 'value':40});
+                    }
+                }
+
             } else {
                 //No valat called
 
@@ -1791,12 +1857,19 @@ function actionCallback(action, room, pn) {
                         }
                     }
                 }
-                if (povenostTeamDiscard.length == 0 || opposingTeamDiscard.length == 0) {
+                if (room.board.trickWinCount[0] == 0 || room.board.trickWinCount[1] == 0) {
                     //Uncalled valat
                     //Possible settings: room.settings.valat
-                    //TODO: account for discarded cards. This system will never return an uncalled valat because players discard cards after drawing from the talon
-                    chipsOwed = 20;
-                    pointCountMessageTable.push({'name':'Valat', 'value':20});
+                    if (room.board.trickWinCount[0] == 0) {
+                        //Povenost's team valat'd
+                        chipsOwed = 20;
+                        pointCountMessageTable.push({'name':'Valat', 'value':20});
+                    } else {
+                        //Opposing team valat'd
+                        chipsOwed = -20;
+                        pointCountMessageTable.push({'name':'Valat', 'value':20});
+                    }
+
                 } else {
                     //No valat
                     let povenostTeamPoints = 0;
@@ -1899,8 +1972,30 @@ function actionCallback(action, room, pn) {
                         chipsOwed *= Math.pow(2,room.board.contra[1]);
                         pointCountMessageTable.push({'name':'Contra again', 'value':Math.abs(chipsOwed)});
                     }
-                    //TODO: add IOTE detection (Note that iote = -1 for non-povenost team, 0 for no one, 1 for povenost team)
+
+                    if (room.board.iote != -1 || room.board.ioteWin != 0) {
+                        //IOTE payout
+                        if (room.players[room.board.iote] != -1) {
+                            if (room.board.ioteWin == 1) {
+                                //Povenost team called and won the IOTE
+                                chipsOwed += 4;
+                            } else if (room.board.ioteWin == -1) {
+                                chipsOwed -= 4;
+                            } else {
+                                //Nobody played the I but it was called
+                                chipsOwed += 4 * room.player[room.board.iote].isTeamPovenost ? 1 : -1;
+                            }
+                        } else {
+                            if (room.board.ioteWin == -1) {
+                                chipsOwed -= 2;
+                            } else {
+                                chipsOwed += 2;
+                            }
+                        }
+                        pointCountMessageTable.push({'name':'I on the End', 'value':Math.abs(chipsOwed)});
+                    }
                 }
+                //Possible setting: IOTE and VALAT in the same game
             }
             let team1Players = [];
             let team2Players = [];
