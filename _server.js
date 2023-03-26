@@ -93,6 +93,13 @@ const SENSITIVE_ACTIONS = {'povenostBidaUniChoice': true,'contra': true, 'prever
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
 const SERVER = {
+    //TODO: finish transferring console logs to server
+    /*
+    Why use this instead of console.log()? For future additions. Eventually I want to write console logs to a file for debugging
+    This system should make that easier
+    Separating by room should also help because it will make individual "room history" logs
+    */
+    //TODO: create debug log files ^
     log: (info, rn) => {
         if (rn != undefined) {
             console.log('ROOM ' + rn + ': ' + info);
@@ -132,8 +139,9 @@ let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 
-function Room(name) {
-    this.settings = {'difficulty':DIFFICULTY.EASY, 'timeout': 30*1000};
+function Room(name, debugRoom) {
+    this.debug = debugRoom; //Either undefined or true
+    this.settings = {'difficulty':DIFFICULTY.EASY, 'timeout': 30*1000, 'locked':false};
     this.name = name;
     this.host = -1;
     this.board = new Board();
@@ -2149,7 +2157,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('roomConnect', function (roomID) {
         let connected = false;
-        if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && players[socketId] && players[socketId].room == -1) {
+        if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && !rooms[roomID].settings.locked && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
                     rooms[roomID].informPlayers('A new player connected: player ' + (i+1), MESSAGE_TYPE.CONNECT);
@@ -2182,6 +2190,9 @@ io.sockets.on('connection', function (socket) {
             console.log('Invalid attempt to connect to room ' + roomID);
             if (rooms[roomID]) {
                 console.log('Room contains ' + rooms[roomID]['playerCount']);
+                if (rooms[roomID].locked) {
+                    console.log('Room is locked');
+                }
             } else {
                 console.log('Room ' + roomID + ' does not exist');
             }
@@ -2228,6 +2239,14 @@ io.sockets.on('connection', function (socket) {
                         rooms[players[socketId].room].settings.timeout = rule;
                         console.log('Timeout in room ' + players[socketId].room + ' is set to ' + (rule/1000) + 's');
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + (rule/1000) + 's', MESSAGE_TYPE.SETTING);
+                    }
+                    break;
+                case 'lock':
+                    if (rule) {
+                        //Room may be locked but not unlocked
+                        rooms[players[socketId].room].settings.locked = true;
+                        SERVER.log('This room has been locked by the host', players[socketId].room);
+                        rooms[players[socketId].room].informPlayers('The room has been locked. No more players may join', MESSAGE_TYPE.SETTING);
                     }
                     break;
             }
@@ -2420,7 +2439,7 @@ io.sockets.on('connection', function (socket) {
     });
 });
 
-function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0) emptyRoomCount++; } return emptyRoomCount; }
+function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
 function checkRoomsEquality(a, b) { if (Object.keys(a).length != Object.keys(b).length) { return false; } for (let i in a) { if (a[i].count != b[i].count) { return false; } } return true; }
 
 function tick() {
@@ -2435,6 +2454,7 @@ function tick() {
             }
         }
         if (Object.keys(rooms).length == 0) {
+            rooms['Debug'] = new Room('Debug',true);
             rooms['Main'] = new Room('Main');
         } else if (numEmptyRooms() == 0) {
             let i = 1;
@@ -2443,7 +2463,9 @@ function tick() {
         }
         simplifiedRooms = {};
         for (let i in rooms) {
-            if (rooms[i]) simplifiedRooms[i] = { 'count': rooms[i].playerCount }; else console.log('Room ' + i + ' mysteriously vanished: ' + JSON.stringify(rooms[i]));
+            if (rooms[i] && !rooms[i].settings.locked) {
+                simplifiedRooms[i] = { 'count': rooms[i].playerCount };
+            }
         }
         for (let i in players) {
             if (!~players[i]['room'] && !players[i].tempDisconnect && !checkRoomsEquality(players[i].roomsSeen, simplifiedRooms)) {

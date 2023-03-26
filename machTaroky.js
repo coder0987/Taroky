@@ -297,6 +297,12 @@ function submitSettings(type) {
         case 'timeout':
             socket.emit('settings',type,document.getElementById('timeoutButton').value*1000);
             break;
+        case 'lock':
+            socket.emit('settings',type,true);
+            document.getElementById('settings').removeChild(
+                document.getElementById('lockButton')
+            );
+            break;
         default:
             addError('Unknown setting: ' + type);
     }
@@ -306,6 +312,7 @@ function createSettings(tools) {
     let settings = document.createElement('div');
     settings.id = 'settings';
 
+    //TODO: default difficulty selector to Normal
     let difficultySelector = document.createElement('select');
     difficultySelector.id ='difficultySelector';
     difficultySelector.name = 'Select Difficulty:';
@@ -328,6 +335,15 @@ function createSettings(tools) {
     timeoutButton.id = 'timeoutButton';
     timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
     settings.appendChild(timeoutButton);
+
+    //Create lock button
+    let lockButton = document.createElement('button');
+    lockButton.innerHTML = 'Lock Room';
+    lockButton.id = 'lockButton';
+    lockButton.addEventListener('click', function(){
+        submitSettings("lock");
+    });
+    settings.appendChild(lockButton);
 
     tools.appendChild(settings);
 }
@@ -1004,6 +1020,7 @@ function exitCurrentRoom(value) {
         document.getElementById('refresh').setAttribute('onclick','refresh()');
         theSettings={};
         availableRooms={};
+        drawnRooms=[];
         drawnRooms=[];
         connectingToRoom = false;
         inGame = false;
