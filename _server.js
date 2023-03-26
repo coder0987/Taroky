@@ -349,7 +349,7 @@ function possiblePartners(hand) {
     if (handContainsCard(hand, 'XIX')) {
         for (let v = 17; v >= 15; v--) {
             if (!handContains(hand, TRUMP_VALUE[v])) {
-                partners.push({ 'value': TRUMP_VALUE[v]-1, 'suit': SUIT[4] });
+                partners.push({ 'value': TRUMP_VALUE[v - 1], 'suit': SUIT[4] });
                 break;
             }
         }
@@ -1762,7 +1762,7 @@ function actionCallback(action, room, pn) {
                 let I = false;
                 let otherTrump = false;
                 for (let i in room.board.table) {
-                    if (room.table.board.table[i].value == 'I') {
+                    if (room.board.table[i].value == 'I') {
                         //IOTE
                         I = true;
                     } else if (room.board.table[i].suit == 'Trump') {
