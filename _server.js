@@ -174,6 +174,7 @@ function resetBoardForNextRound(board, players) { //setup board for next round. 
     board.povenost = (board.povenost+1)%4;
     board.buc = false;
     board.leadPlayer = -1;
+    board.leadCard = null;
     board.valat = -1;
     board.trickWinCount = [0,0];
     board.hasTheI = -1;
@@ -203,6 +204,7 @@ function Board() {
     this.povenost = -1;
     this.buc = false;
     this.leadPlayer = -1;
+    this.leadCard = null;
     this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
     this.cutStyle = '';
     this.moneyCards = [[], [], [], []];
@@ -2161,7 +2163,7 @@ function autoReconnect(socketId) {
             grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
             SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
         } else if (rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
-            grayUnplayables(rooms[players[socketId].room].players[players[socketId].pn].hand);
+            grayUnplayables(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].board.leadCard);
             SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
         } else {
             unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
