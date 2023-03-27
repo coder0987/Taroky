@@ -2084,7 +2084,7 @@ function actionCallback(action, room, pn) {
         }
 
         for (let i in room.players) {
-            if (playerType == PLAYER_TYPE.HUMAN && SOCKET_LIST[room['players'][i].socket]) {
+            if (room['players'][i].type == PLAYER_TYPE.HUMAN && SOCKET_LIST[room['players'][i].socket]) {
                 //Return hands
                 SOCKET_LIST[room['players'][i].socket].emit('returnHand', sortCards(room['players'][i].hand), false);
                 //Return important info
@@ -2156,12 +2156,18 @@ function autoReconnect(socketId) {
     if (rooms[players[socketId].room]) {
         SOCKET_LIST[socketId].emit('roomConnected',players[socketId].room);
         SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
-        if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard' ||
-            rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
+
+        if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard') {
+            grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
+            SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
+        } else if (rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
+            grayUnplayables(rooms[players[socketId].room].players[players[socketId].pn].hand);
             SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
         } else {
+            unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
             SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
         }
+
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         }
