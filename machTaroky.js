@@ -299,9 +299,7 @@ function submitSettings(type) {
             break;
         case 'lock':
             socket.emit('settings',type,true);
-            document.getElementById('settings').removeChild(
-                document.getElementById('lockButton')
-            );
+            document.getElementById('lockButton').setAttribute('hidden','hidden');
             break;
         default:
             addError('Unknown setting: ' + type);
@@ -352,6 +350,7 @@ let roomHosted = false;
 function hostRoom() {
     document.getElementById('host').hidden = false;
     if (roomHosted) {
+        document.getElementById('lockButton').removeAttribute('hidden');
         return;
     }
     roomHosted = true;
