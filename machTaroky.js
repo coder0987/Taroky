@@ -432,6 +432,9 @@ function onLoad() {
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
     });
+    socket.on('returnPlayerCount', function(playerCount) {
+        document.getElementById('online').innerHTML = playerCount;
+    });
     socket.on('returnHand', function(returnHand,withGray) {
         hand = returnHand;
         drawHand(withGray);

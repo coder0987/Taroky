@@ -138,6 +138,7 @@ index(TRUMP_VALUE);
 let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
+let numOnlinePlayers = 0;
 
 function Room(name, debugRoom) {
     this.debug = debugRoom; //Either undefined or true
@@ -2146,6 +2147,7 @@ function disconnectPlayerTimeout(socketId) {
         try {
             SOCKET_LIST[socketId].disconnect();
         } catch (ignore) {}
+        numOnlinePlayers--;
         delete players[socketId];
         delete SOCKET_LIST[socketId];
 
@@ -2197,6 +2199,10 @@ io.sockets.on('connection', function (socket) {
         players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false };
         console.log('Player joined with socketID ' + socketId);
         console.log('Join time: ' + Date.now());
+        numOnlinePlayers++;
+        for (let i in SOCKET_LIST) {
+            SOCKET_LIST[i].emit('returnPlayerCount',numOnlinePlayers);
+        }
     }
     if (players[socketId] && players[socketId].tempDisconnect) {
         SOCKET_LIST[socketId] = socket;
@@ -2563,6 +2569,8 @@ function tick() {
             let i = 1;
             for (; rooms[i]; i++) { }
             rooms[i] = new Room(i);
+        } else if (!rooms['Debug']) {
+            rooms['Debug'] = new Room('Debug',true);
         }
         simplifiedRooms = {};
         for (let i in rooms) {
