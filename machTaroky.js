@@ -346,6 +346,10 @@ function createSettings(tools) {
     tools.appendChild(settings);
 }
 
+function debugTools() {
+    //TODO: add debug tools
+}
+
 let roomHosted = false;
 function hostRoom() {
     document.getElementById('host').hidden = false;
@@ -508,6 +512,10 @@ function onLoad() {
         connectingToRoom = false;
         refresh();
         //toggleAvailability(true);
+    });
+    socket.on('debugRoomJoin', function() {
+        addBoldMessage('WARNING: You have joined a debug room. This room is not meant for regular players.\nIf you did not mean to join a debug room, click "Leave the Room" then "Are You Sure?"');
+        debugTools();
     });
     socket.on('roomHost', function() {
         addMessage('You are the room host');

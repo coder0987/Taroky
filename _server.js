@@ -2291,6 +2291,9 @@ io.sockets.on('connection', function (socket) {
                     } else {
                         autoReconnect(socketId);
                     }
+                    if (rooms[roomID].debug) {
+                        socket.emit('debugRoomJoin');
+                    }
                     socket.emit('timeSync', Date.now());
                     break;
                 }
