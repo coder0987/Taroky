@@ -1986,7 +1986,7 @@ function actionCallback(action, room, pn) {
                                 chipsOwed -= 4;
                             } else {
                                 //Nobody played the I but it was called
-                                chipsOwed += 4 * room.player[room.board.iote].isTeamPovenost ? 1 : -1;
+                                chipsOwed += 4 * room.players[room.board.iote].isTeamPovenost ? 1 : -1;
                             }
                         } else {
                             if (room.board.ioteWin == -1) {
