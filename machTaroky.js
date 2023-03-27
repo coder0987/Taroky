@@ -162,6 +162,7 @@ function drawHand(withGray) {
             card.removeEventListener('mouseleave',exit);
             card.removeEventListener('click',clickCard);
             card.title = '';
+            card.classList.remove('image-hover-highlight');
         }
         divHand.appendChild(card);
         card.hidden = false;
