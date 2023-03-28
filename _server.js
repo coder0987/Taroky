@@ -2180,7 +2180,7 @@ function autoReconnect(socketId) {
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         }
-        rooms[players[socketId].room]['board'].importantInfo = players[socketId].pn;
+        rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);
         SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
         rooms[players[socketId].room]['board'].importantInfo.pn = null;
         SOCKET_LIST[socketId].emit('returnSettings', rooms[players[socketId].room].settings);
