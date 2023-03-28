@@ -93,7 +93,7 @@ function generateDeck() {
         card.hidden = true;
         card.id = baseDeck[i].value + baseDeck[i].suit;
         //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
-        card.src = '/assets/default-deck/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '.png';
+        card.src = '/assets/mach-deck-thumb/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '-t.png';
         card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
         document.getElementById('deck').appendChild(card);
     }
