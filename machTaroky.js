@@ -912,6 +912,7 @@ function partnerButtonsOnClickListenerTasks(cardValue, possiblePartners) {
 }
 
 function partnersReturned(possiblePartners) {
+    //TODO: displays XVII when it really means XVIII, but XIX works fine. More testing needs to be done to determine the cause
     partners = possiblePartners
     if (partners.length > 1) {
         let partnerString = '';

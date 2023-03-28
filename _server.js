@@ -7,6 +7,9 @@ const { diffieHellman } = require('crypto');
 const app = express();
 const START_TIME = Date.now();
 
+//Used for non-"production" instances of the server
+const DEBUG_MODE = process.argv[2] == 'debug';
+
 //Standard file-serving
 const server = http.createServer((req, res) => {
     let q = url.parse(req.url, true);
@@ -55,7 +58,6 @@ app.get('/', function (req, res) {
 });
 app.use('/client', express.static(__dirname + '/client'));
 
-console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
 
 
 //helper func
@@ -2595,4 +2597,12 @@ function tick() {
 let interval = setInterval(tick, 1000 / 60.0);//60 FPS
 
 //Begin listening
-server.listen(8442);
+if (DEBUG_MODE) {
+    console.log("DEBUG MODE ACTIVATED");
+    console.log("Listening on port 8443 (Accessible at http://localhost:8443/ )")
+    server.listen(8444);
+} else {
+    console.log("Server running in production mode. For debug mode, run \nnode _server.js debug")
+    console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
+    server.listen(8442);
+}
