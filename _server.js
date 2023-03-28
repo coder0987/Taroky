@@ -7,8 +7,11 @@ const { diffieHellman } = require('crypto');
 const app = express();
 const START_TIME = Date.now();
 
+//COMMAND-LINE ARGUMENTS
+
 //Used for non-"production" instances of the server
 const DEBUG_MODE = process.argv[2] == 'debug';
+const LOG_LEVEL = process.argv[3] || 0;
 
 //Standard file-serving
 const server = http.createServer((req, res) => {
