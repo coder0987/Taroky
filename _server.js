@@ -380,6 +380,20 @@ function grayUndiscardables(hand) {
             hand[i].grayed = false;
         }
     }
+    //If everything is King and Trump, only gray 5-pointers
+    for (let i in hand) {
+        if (!hand[i].grayed) {
+            return;
+        }
+    }
+    unGrayCards(hand);
+    for (let i in hand) {
+        if (hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
+            hand[i].grayed = true;
+        } else {
+            hand[i].grayed = false;
+        }
+    }
 }
 function grayUnplayables(hand, leadCard) {
     if (handHasSuit(hand, leadCard.suit)) {
