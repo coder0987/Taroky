@@ -320,6 +320,9 @@ function createSettings(tools) {
         difficultySelectOption.selected = false;
         difficultySelectOption.value = i;
         difficultySelectOption.id = DIFFICULTY_TABLE[i];
+        if (i==2) {
+            difficultySelectOption.selected = 'selected';
+        }
         difficultySelectOption.innerHTML = DIFFICULTY_TABLE[i];
         difficultySelector.appendChild(difficultySelectOption);
     }
@@ -356,6 +359,8 @@ function hostRoom() {
     document.getElementById('host').hidden = false;
     if (roomHosted) {
         document.getElementById('lockButton').removeAttribute('hidden');
+        document.getElementById('timeoutButton').value = 30;
+        document.getElementById(DIFFICULTY_TABLE[2]).setAttribute('selected','selected');
         return;
     }
     roomHosted = true;
