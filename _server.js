@@ -383,7 +383,7 @@ function grayUndiscardables(hand) {
     //If everything is King and Trump, only gray 5-pointers
     for (let i in hand) {
         if (!hand[i].grayed) {
-            return;
+            return false;
         }
     }
     unGrayCards(hand);
@@ -394,6 +394,7 @@ function grayUndiscardables(hand) {
             hand[i].grayed = false;
         }
     }
+    return true;
 }
 function grayUnplayables(hand, leadCard) {
     if (handHasSuit(hand, leadCard.suit)) {
@@ -1882,7 +1883,7 @@ function actionCallback(action, room, pn) {
                 if (room.board.trickWinCount[0] == 0 || room.board.trickWinCount[1] == 0) {
                     //Uncalled valat
                     //Possible settings: room.settings.valat
-                    if (room.board.trickWinCount[0] == 0) {
+                    if (room.board.trickWinCount[1] == 0) {
                         //Povenost's team valat'd
                         chipsOwed = 20;
                         pointCountMessageTable.push({'name':'Valat', 'value':20});
@@ -2005,7 +2006,7 @@ function actionCallback(action, room, pn) {
                                 chipsOwed -= 4;
                             } else {
                                 //Nobody played the I but it was called
-                                chipsOwed += 4 * room.players[room.board.iote].isTeamPovenost ? 1 : -1;
+                                chipsOwed += 4 * (room.players[room.board.iote].isTeamPovenost ? 1 : -1);
                             }
                         } else {
                             if (room.board.ioteWin == -1) {
