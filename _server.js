@@ -2181,6 +2181,7 @@ function disconnectPlayerTimeout(socketId) {
 }
 
 function autoReconnect(socketId) {
+    SOCKET_LIST[socketId].emit('returnPlayerCount',numOnlinePlayers);
     if (rooms[players[socketId].room]) {
         SOCKET_LIST[socketId].emit('roomConnected',players[socketId].room);
         SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
