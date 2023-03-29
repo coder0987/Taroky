@@ -301,6 +301,7 @@ function submitSettings(type) {
         case 'lock':
             socket.emit('settings',type,true);
             document.getElementById('lockButton').setAttribute('hidden','hidden');
+            document.getElementById('lockButtonP').setAttribute('hidden','hidden');
             break;
         default:
             addError('Unknown setting: ' + type);
@@ -311,7 +312,11 @@ function createSettings(tools) {
     let settings = document.createElement('div');
     settings.id = 'settings';
 
-    //TODO: default difficulty selector to Normal
+    let difficultySelectorP = document.createElement('span');
+    difficultySelectorP.innerHTML = 'Select the difficulty:\t';
+    difficultySelectorP.style='display:inline-block; width: 175px';
+    settings.appendChild(difficultySelectorP);
+
     let difficultySelector = document.createElement('select');
     difficultySelector.id ='difficultySelector';
     difficultySelector.name = 'Select Difficulty:';
@@ -328,8 +333,15 @@ function createSettings(tools) {
     }
     difficultySelector.setAttribute('onchange', 'submitSettings("difficulty")');
     settings.appendChild(difficultySelector);
+    settings.appendChild(document.createElement('br'));
 
     //Create numerical input for timeout (in s, must convert to ms)
+
+    let timeoutSelectorP = document.createElement('span');
+    timeoutSelectorP.innerHTML = 'Timeout (in seconds):\t';
+    timeoutSelectorP.style='display:inline-block; width: 175px';
+    settings.appendChild(timeoutSelectorP);
+
     let timeoutButton = document.createElement('input');
     timeoutButton.setAttribute('type', 'number');
     timeoutButton.defaultValue = 30;
@@ -337,8 +349,15 @@ function createSettings(tools) {
     timeoutButton.id = 'timeoutButton';
     timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
     settings.appendChild(timeoutButton);
+    settings.appendChild(document.createElement('br'));
 
     //Create lock button
+    let lockSelectorP = document.createElement('span');
+    lockSelectorP.innerHTML = 'Prevent Joining:\t';
+    lockSelectorP.style='display:inline-block; width: 175px';
+    lockSelectorP.id = 'lockButtonP';//For hiding when button is clicked
+    settings.appendChild(lockSelectorP);
+
     let lockButton = document.createElement('button');
     lockButton.innerHTML = 'Lock Room';
     lockButton.id = 'lockButton';
@@ -346,6 +365,8 @@ function createSettings(tools) {
         submitSettings("lock");
     });
     settings.appendChild(lockButton);
+    settings.appendChild(document.createElement('br'));
+    settings.appendChild(document.createElement('br'));
 
     tools.appendChild(settings);
 }
@@ -359,6 +380,7 @@ function hostRoom() {
     document.getElementById('host').hidden = false;
     if (roomHosted) {
         document.getElementById('lockButton').removeAttribute('hidden');
+        document.getElementById('lockButtonP').removeAttribute('hidden');
         document.getElementById('timeoutButton').value = 30;
         document.getElementById(DIFFICULTY_TABLE[2]).setAttribute('selected','selected');
         return;
