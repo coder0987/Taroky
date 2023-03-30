@@ -1098,11 +1098,14 @@ function actionCallback(action, room, pn) {
                     break;
                 case '12':
                     /*TODO: Deal by 12s
-                    let hands = [[], [], [], []];
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i].push(room['deck'].splice(0, 1)[0]); }
+                    let room.board.hands = {1:[], 2:[], 3:[], 4:[]};
+                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i+1].push(room['deck'].splice(0, 1)[0]); }
                     have players in order choose hands
                     //TODO: Create logic for players choosing hands[(0-3)]
-                    break; fallthrough until 12s logic is complete*/
+                    action.action = '12choice';
+                    action.player = (action.player+1)%4;
+                    actionTaken = true;
+                    return; fallthrough until 12s logic is complete*/
                 case '12 Straight':
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
@@ -1129,6 +1132,27 @@ function actionCallback(action, room, pn) {
             action.action = 'prever';
             action.player = room['board'].povenost;
             actionTaken = true;
+            break;
+        case '12choice':
+            let chosenHand = action.info.choice;
+            //for (let i in chosenHand) give cards to the player
+            if (room.board.hands[0] || room.board.hands[1] || room.board.hands[2] || room.board.hands[3]) {
+                //At least 1 hand is left
+                action.player = (action.player+1)%4;
+                actionTaken = true;
+            } else {
+                if (room['board'].povenost == -1) {
+                    //Povenost first round chosen by cards
+                    room['board'].povenost = findPovenost(room['players'])
+                }
+                room.board.importantInfo.povenost = (room.board.povenost+1);
+                //Povenost rotation is handled by the board reset function
+                console.log('Server (' + room.name + '): povenost is ' + room['board'].povenost);
+                room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
+                action.action = 'prever';
+                action.player = room['board'].povenost;
+                actionTaken = true;
+            }
             break;
         case 'prever':
             break;//ignore this, the callback is for the players
@@ -2054,7 +2078,8 @@ function actionCallback(action, room, pn) {
             }
             if (chipsOwed < 0) {
                 /* TODO: make informing the players a bit better
-                    For example, in a prever game say "Prever paid" or "Prever lost"*/
+                    For example, in a prever game say "Prever paid" or "Prever lost"
+                    Also, add personalize (Your team lost / your team won) messages */
                 room.informPlayers('Povenost\'s team paid ' + (-chipsOwed) + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
             } else {
                 room.informPlayers('Povenost\'s team received ' + chipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
