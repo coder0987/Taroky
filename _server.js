@@ -1786,14 +1786,13 @@ function actionCallback(action, room, pn) {
 
             if (room.players[pn].hand.length == 0 || (room.board.trickWinCount[0] + room.board.trickWinCount[1] == 11)) {
                 //Last trick. Check if the I is present
-                SERVER.log('Last trick', room.name);
                 let I = false;
                 let otherTrump = false;
                 for (let i in room.board.table) {
-                    if (room.board.table[i].value == 'I') {
+                    if (room.board.table[i].card.value == 'I') {
                         //IOTE
                         I = true;
-                    } else if (room.board.table[i].suit == 'Trump') {
+                    } else if (room.board.table[i].card.suit == 'Trump') {
                         //I has been captured
                         otherTrump = true;
                     }
@@ -1816,7 +1815,6 @@ function actionCallback(action, room, pn) {
                         }
                     }
                 }
-                SERVER.log('IOTE: ' + room.board.ioteWin + ', other trump: ' + otherTrump + ', I: ' + I, room.name);
             }
 
             //Transfer the table to the winner's discard
@@ -2004,7 +2002,8 @@ function actionCallback(action, room, pn) {
 
                     if (room.board.iote != -1 || room.board.ioteWin != 0) {
                         //IOTE payout
-                        if (room.players[room.board.iote] != -1) {
+                        if (room.board.iote != -1) {
+                            //I was called
                             if (room.board.ioteWin == 1) {
                                 //Povenost team called and won the IOTE
                                 chipsOwed += 4;
@@ -2015,6 +2014,7 @@ function actionCallback(action, room, pn) {
                                 chipsOwed += 4 * (room.players[room.board.iote].isTeamPovenost ? 1 : -1);
                             }
                         } else {
+                            //Not called but played on the last trick
                             if (room.board.ioteWin == -1) {
                                 chipsOwed -= 2;
                             } else {

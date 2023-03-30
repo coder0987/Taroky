@@ -39,7 +39,7 @@ When starting the server, use\
 This will activate debug mode and set log level to 5\
 While log level doesn't do anything *yet,* it will soon
 
-This will also switch the service port to 8444, which allows for a development version and a production version to be run simultaneously
+This will also switch the service port to 8448, which allows for a development version and a production version to be run simultaneously
 
 ### Credits
 
