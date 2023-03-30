@@ -1077,8 +1077,17 @@ function exitCurrentRoom(value) {
         currentAction = null;
         discardingOrPlaying = true;
         removeHostTools();
-        document.getElementById('cardBack').setAttribute('hidden','hidden');
-        document.getElementById('deck').appendChild(document.getElementById('cardBack'));
+        if (document.getElementById('cardBack')) {
+            document.getElementById('cardBack').setAttribute('hidden','hidden');
+            document.getElementById('deck').appendChild(document.getElementById('cardBack'));
+        } else {
+            let card = document.createElement('img');
+            card.hidden = true;
+            card.id = 'cardBack';
+            card.src = '/assets/mach-deck-thumb/card-back-t.png';
+            card.alt = 'The back of a card';
+            document.getElementById('deck').appendChild(card);
+        }
         stopActionTimer();
         document.getElementById('center').innerHTML = '';//clears choice buttons
         document.getElementById('currentAction').innerHTML = '';

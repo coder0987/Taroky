@@ -1784,8 +1784,9 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             shouldReturnTable = true;
 
-            if (room.players[pn].hand.length == 0) {
+            if (room.players[pn].hand.length == 0 || (room.board.trickWinCount[0] + room.board.trickWinCount[1] == 11)) {
                 //Last trick. Check if the I is present
+                SERVER.log('Last trick', room.name);
                 let I = false;
                 let otherTrump = false;
                 for (let i in room.board.table) {
@@ -1815,6 +1816,7 @@ function actionCallback(action, room, pn) {
                         }
                     }
                 }
+                SERVER.log('IOTE: ' + room.board.ioteWin + ', other trump: ' + otherTrump + ', I: ' + I, room.name);
             }
 
             //Transfer the table to the winner's discard
@@ -2622,8 +2624,8 @@ let interval = setInterval(tick, 1000 / 60.0);//60 FPS
 //Begin listening
 if (DEBUG_MODE) {
     console.log("DEBUG MODE ACTIVATED");
-    console.log("Listening on port 8443 (Accessible at http://localhost:8443/ )")
-    server.listen(8444);
+    console.log("Listening on port 8448 (Accessible at http://localhost:8448/ )")
+    server.listen(8448);
 } else {
     console.log("Server running in production mode. For debug mode, run \nnode _server.js debug")
     console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
