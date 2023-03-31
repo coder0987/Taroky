@@ -17,6 +17,7 @@ const ACTION_TABLE = {
     'shuffle': 'Shuffle the Deck',
     'cut': 'Cut the Deck',
     'deal': 'Deal',
+    '12choice': 'Choose a hand',
     'prever': 'Choose to Keep or Pass Prever',
     'passPrever': 'Chose to Pass Prever',
     'callPrever': 'Chose to Call Prever',
@@ -552,6 +553,7 @@ function onLoad() {
         hostRoom();
     });
     socket.on('12choice', function(theChoices) {
+        addBoldMessage('Please choose a hand to keep');
         createTwelvesChoiceButton(theChoices);
     });
     socket.on('chatMessage', function(thePlayer,theMessage) {
@@ -932,8 +934,9 @@ function ping() {socket.emit('currentAction');}//Debug function
 function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (!b[i] || (a[i].count != b[i].count)) {return false;}}return true;}
 
 function createTwelvesChoiceButton(choices) {
+    console.log(choices);
     for (let i in choices) {
-        if (choices[i] != undefined) {
+        if (typeof choices[i] !== 'undefined') {
             const button = document.createElement('button')
             button.type = 'button';
             button.innerHTML = choices[i];
@@ -953,6 +956,7 @@ function twelvesChoiceButtonsOnClickListenerTasks(theChoice) {
 }
 
 function createPartnerButtons(possiblePartners) {
+    //TODO: XVIII says XVII but the XVII seems to be working
     for (let i in possiblePartners) {
         const button = document.createElement('button')
         button.type = 'button';

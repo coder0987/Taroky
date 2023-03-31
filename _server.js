@@ -106,21 +106,21 @@ const SERVER = {
     */
     //TODO: create debug log files ^
     log: (info, rn) => {
-        if (rn != undefined) {
+        if (typeof rn !== 'undefined') {
             console.log('ROOM ' + rn + ': ' + info);
         } else {
             console.log('SERVER: ' + info);
         }
     },
     error: (info, rn) => {
-        if (rn != undefined) {
+        if (typeof rn !== 'undefined') {
             console.warn('ERROR IN ROOM ' + rn + ': ' + info);
         } else {
             console.warn('SERVER ERROR: ' + info);
         }
     },
     trace: (info, rn) => {
-        if (rn != undefined) {
+        if (typeof rn !== 'undefined') {
             console.trace('STACK TRACE FOR ROOM ' + rn + ': ' + info);
         } else {
             console.trace('SERVER STACK TRACE: ' + info);
@@ -501,7 +501,7 @@ function firstSelectableCard(hand) {
 }
 function robotChooseHand(theChoices) {
     for (let i in theChoices) {
-        if (theChoices[i] != undefined) {
+        if (typeof theChoices[i] !== 'undefined') {
             return i;
         }
     }
@@ -950,8 +950,8 @@ function playerAction(action, room, pn) {
         case '12choice':
             let tempChoiceArray = {};
             for (let i in room.board.hands) {
-                if (room.board.hands[i] == undefined) {
-                    tempChoiceArray[i] = undefined;
+                if (typeof room.board.hands[i] == 'undefined') {
+                    delete tempChoiceArray[i];
                 } else {
                     tempChoiceArray[i] = i;
                 }
@@ -1122,12 +1122,16 @@ function actionCallback(action, room, pn) {
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 4; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '12':
-                    let room.board.hands = {1:[], 2:[], 3:[], 4:[]};
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i+1].push(room['deck'].splice(0, 1)[0]); }
+                    room.board.hands = {1:[], 2:[], 3:[], 4:[]};
+                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) {
+                        for (let c = 0; c < 12; c++) {
+                            room.board.hands[i+1].push(room['deck'].splice(0, 1)[0]);
+                        }
+                    }
                     action.action = '12choice';
                     action.player = (action.player+1)%4;
                     actionTaken = true;
-                    return;
+                    break;
                 case '12 Straight':
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
@@ -1142,7 +1146,10 @@ function actionCallback(action, room, pn) {
                     //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
             }
-            
+            if (actionTaken) {
+                //12 choice
+                break;
+            }
             if (room['board'].povenost == -1) {
                 //Povenost first round chosen by cards
                 room['board'].povenost = findPovenost(room['players'])
@@ -1161,7 +1168,8 @@ function actionCallback(action, room, pn) {
                 SERVER.error('Chosen hand does not exist',room.name);
                 break;
             }
-            while (chosenHand[0]) {room.players[action.player].hand.push(chosenHand[0].splice(0,1)[0]);}
+            while (chosenHand[0]) {room.players[action.player].hand.push(chosenHand.splice(0,1)[0]);}
+            delete room.board.hands[action.info.choice];
             if (room.board.hands[0] || room.board.hands[1] || room.board.hands[2] || room.board.hands[3]) {
                 //At least 1 hand is left
                 action.player = (action.player+1)%4;
