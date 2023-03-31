@@ -499,6 +499,13 @@ function firstSelectableCard(hand) {
     SERVER.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
     return hand[0];
 }
+function robotChooseHand(theChoices) {
+    for (let i in theChoices) {
+        if (theChoices[i] != undefined) {
+            return i;
+        }
+    }
+}
 function trumpChain(hand) {
     //Returns the number of guaranteed tricks from a hand (trump only)
     let guarantees = 0;
@@ -768,6 +775,9 @@ function autoAction(action, room, pn) {
             break;
         case 'deal':
             break;
+        case '12choice':
+            action.info.choice = robotChooseHand(room.board.hands);
+            break;
         case 'prever':
             action.action = 'passPrever';
             break;
@@ -851,6 +861,9 @@ function robotAction(action, room, pn) {
                 break;
             case 'deal':
                 break;
+            case '12choice':
+                action.info.choice = robotChooseHand(room.board.hands);
+                break;
             case 'prever':
                 action.action = 'passPrever';
                 break;
@@ -933,6 +946,18 @@ function playerAction(action, room, pn) {
         //Do nothing, because its all taken care of by the generic action sender/informer at the end
         case 'cut':
         case 'deal':
+            break;
+        case '12choice':
+            let tempChoiceArray = {};
+            for (let i in room.board.hands) {
+                if (room.board.hands[i] == undefined) {
+                    tempChoiceArray[i] = undefined;
+                } else {
+                    tempChoiceArray[i] = i;
+                }
+            }
+            SOCKET_LIST[room.players[pn].socket].emit('12choice',tempChoiceArray);
+            break;
         case 'prever':
         case 'callPrever':
         case 'passPrever':
@@ -1097,15 +1122,12 @@ function actionCallback(action, room, pn) {
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 4; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '12':
-                    /*TODO: Deal by 12s
                     let room.board.hands = {1:[], 2:[], 3:[], 4:[]};
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)hands[i+1].push(room['deck'].splice(0, 1)[0]); }
-                    have players in order choose hands
-                    //TODO: Create logic for players choosing hands[(0-3)]
                     action.action = '12choice';
                     action.player = (action.player+1)%4;
                     actionTaken = true;
-                    return; fallthrough until 12s logic is complete*/
+                    return;
                 case '12 Straight':
                     for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
@@ -1134,8 +1156,12 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             break;
         case '12choice':
-            let chosenHand = action.info.choice;
-            //for (let i in chosenHand) give cards to the player
+            let chosenHand = room.board.hands[action.info.choice];
+            if (!chosenHand) {
+                SERVER.error('Chosen hand does not exist',room.name);
+                break;
+            }
+            while (chosenHand[0]) {room.players[action.player].hand.push(chosenHand[0].splice(0,1)[0]);}
             if (room.board.hands[0] || room.board.hands[1] || room.board.hands[2] || room.board.hands[3]) {
                 //At least 1 hand is left
                 action.player = (action.player+1)%4;
@@ -2461,6 +2487,15 @@ io.sockets.on('connection', function (socket) {
     });
     socket.on('deal', function () {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'deal' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('chooseHand', function(theChoice) {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == '12choice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            if (isNaN(theChoice) || !rooms[players[socketId].room]['board']['nextStep'].action.info.choice[theChoice]) {
+                return;
+            }
+            rooms[players[socketId].room]['board']['nextStep'].action.info.choice = theChoice;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });

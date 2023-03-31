@@ -551,6 +551,9 @@ function onLoad() {
     socket.on('youStart', function() {
         hostRoom();
     });
+    socket.on('12choice', function(theChoices) {
+        createTwelvesChoiceButton(theChoices);
+    });
     socket.on('chatMessage', function(thePlayer,theMessage) {
         playerSentMessage(thePlayer,theMessage);
     });
@@ -764,6 +767,9 @@ function onLoad() {
                     addMessage('You are dealing');
                     socket.emit('deal');
                     break;
+                case '12choice':
+                    addMessage('You are deciding which hand to keep');
+                    break;
                 case 'prever':
                     addBoldMessage('Would you like to go prever?');
                     createChoiceButtons(BUTTON_TYPE.PREVER);
@@ -864,7 +870,7 @@ function tick() {
     startActionTimer();
     drawTable();
     if (inGame) {
-        alive();//DEBUG todo fix this for real, see GitHub issue
+        alive();
     }
 }
 
@@ -925,6 +931,27 @@ function ping() {socket.emit('currentAction');}//Debug function
 
 function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (!b[i] || (a[i].count != b[i].count)) {return false;}}return true;}
 
+function createTwelvesChoiceButton(choices) {
+    for (let i in choices) {
+        if (choices[i] != undefined) {
+            const button = document.createElement('button')
+            button.type = 'button';
+            button.innerHTML = choices[i];
+            button.id = 'twelvesChoice'+choices[i];
+            button.addEventListener('click', () => {
+                twelvesChoiceButtonsOnClickListenerTasks(choices[i]);
+            });
+            document.getElementById('center').appendChild(button);
+        }
+    }
+}
+
+function twelvesChoiceButtonsOnClickListenerTasks(theChoice) {
+    addMessage('You chose hand number ' + theChoice);
+    socket.emit('chooseHand', theChoice);
+    document.getElementById('center').innerHTML = '';
+}
+
 function createPartnerButtons(possiblePartners) {
     for (let i in possiblePartners) {
         const button = document.createElement('button')
@@ -947,8 +974,7 @@ function partnerButtonsOnClickListenerTasks(cardValue, possiblePartners) {
 }
 
 function partnersReturned(possiblePartners) {
-    //TODO: displays XVII when it really means XVIII, but XIX works fine. More testing needs to be done to determine the cause
-    partners = possiblePartners
+    partners = possiblePartners;
     if (partners.length > 1) {
         let partnerString = '';
         for (let i in partners) { partnerString += partners[i].value + ', '; }
