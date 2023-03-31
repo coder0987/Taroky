@@ -355,7 +355,7 @@ function possiblePartners(hand) {
     partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
     //if we hold XIX we can partner with the next lowest trump we don't hold, down to the XV
     if (handContainsCard(hand, 'XIX')) {
-        for (let v = 17; v >= 15; v--) {
+        for (let v = 18; v >= 15; v--) {
             if (!handContains(hand, TRUMP_VALUE[v])) {
                 partners.push({ 'value': TRUMP_VALUE[v - 1], 'suit': SUIT[4] });
                 break;

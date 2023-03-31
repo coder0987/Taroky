@@ -144,7 +144,7 @@ function drawHand(withGray) {
         let card = document.getElementById(hand[i].value + hand[i].suit);
         card.suit = hand[i].suit;
         card.value = hand[i].value;
-        card.classList.remove('col-3');//If claimed from prever-talon
+        card.classList.remove('col-2');//If claimed from prever-talon
         if (withGray) {
             if (hand[i].grayed) {
                 //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
@@ -193,7 +193,7 @@ function drawTable() {
             let child = returnToDeck[i];
             if (child.nodeName == 'IMG') {
                 //Prever talon
-                child.classList.remove('col-3');
+                child.classList.remove('col-2');
                 child.hidden = true;
                 divDeck.appendChild(child);
             } else {
@@ -216,7 +216,7 @@ function drawTable() {
             for (let i in table) {
                 let card = document.getElementById(table[i].value + table[i].suit);
                 document.getElementById('table').prepend(card);
-                card.classList.add('col-3');
+                card.classList.add('col-2');
                 card.removeAttribute('hidden');
             }
         } else {
@@ -961,7 +961,6 @@ function twelvesChoiceButtonsOnClickListenerTasks(theChoice) {
 }
 
 function createPartnerButtons(possiblePartners) {
-    //TODO: XVIII says XVII but the XVII seems to be working
     for (let i in possiblePartners) {
         const button = document.createElement('button')
         button.type = 'button';
