@@ -1170,7 +1170,7 @@ function actionCallback(action, room, pn) {
             }
             while (chosenHand[0]) {room.players[action.player].hand.push(chosenHand.splice(0,1)[0]);}
             delete room.board.hands[action.info.choice];
-            if (room.board.hands[0] || room.board.hands[1] || room.board.hands[2] || room.board.hands[3]) {
+            if (room.board.hands[1] || room.board.hands[2] || room.board.hands[3] || room.board.hands[4]) {
                 //At least 1 hand is left
                 action.player = (action.player+1)%4;
                 actionTaken = true;
@@ -1374,8 +1374,12 @@ function actionCallback(action, room, pn) {
                     }
                 }
             } else {
-                players[room['players'][pn].socket].socket.emit('failedDiscard', card);
-                console.log('Player ' + pn + ' failed to discard the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                if (players[room['players'][pn].socket]) {
+                    players[room['players'][pn].socket].socket.emit('failedDiscard', card);
+                }
+                if (action.info.card) {
+                    console.log('Player ' + pn + ' failed to discard the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                }
                 console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
             }
             break;
@@ -2500,10 +2504,10 @@ io.sockets.on('connection', function (socket) {
     });
     socket.on('chooseHand', function(theChoice) {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == '12choice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
-            if (isNaN(theChoice) || !rooms[players[socketId].room]['board']['nextStep'].action.info.choice[theChoice]) {
+            if (isNaN(theChoice) || !rooms[players[socketId].room]['board'].hands[theChoice]) {
                 return;
             }
-            rooms[players[socketId].room]['board']['nextStep'].action.info.choice = theChoice;
+            rooms[players[socketId].room]['board']['nextStep'].info.choice = theChoice;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });

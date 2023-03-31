@@ -46,6 +46,7 @@ let players;
 let deck;
 let hand;
 let partners;
+let handChoices;
 let socket;
 let theSettings;
 let availableRooms={};
@@ -554,7 +555,9 @@ function onLoad() {
     });
     socket.on('12choice', function(theChoices) {
         addBoldMessage('Please choose a hand to keep');
+        clearButtons();
         createTwelvesChoiceButton(theChoices);
+        handChoices = theChoices;
     });
     socket.on('chatMessage', function(thePlayer,theMessage) {
         playerSentMessage(thePlayer,theMessage);
@@ -771,6 +774,9 @@ function onLoad() {
                     break;
                 case '12choice':
                     addMessage('You are deciding which hand to keep');
+                    if (handChoices) {
+                        createTwelvesChoiceButton(handChoices);
+                    }
                     break;
                 case 'prever':
                     addBoldMessage('Would you like to go prever?');
@@ -934,10 +940,9 @@ function ping() {socket.emit('currentAction');}//Debug function
 function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (!b[i] || (a[i].count != b[i].count)) {return false;}}return true;}
 
 function createTwelvesChoiceButton(choices) {
-    console.log(choices);
     for (let i in choices) {
         if (typeof choices[i] !== 'undefined') {
-            const button = document.createElement('button')
+            const button = document.createElement('button');
             button.type = 'button';
             button.innerHTML = choices[i];
             button.id = 'twelvesChoice'+choices[i];
