@@ -2826,6 +2826,11 @@ function sigmoid(z) {
     return 1 / (1 + Math.exp(-z));
 }
 
+function sigmoidMatrix(m) {
+    //Assumes input to be an N x 1 matrix
+    return math.divide(1, math.add(1, math.map(math.exp, math.subtract(0,m))));
+}
+
 function AI(seed, mutate) {
     if (seed) {
         //Matrix multiplication: Size[A,B] x Size[B,C] = Size[A,C]
@@ -2854,9 +2859,9 @@ function AI(seed, mutate) {
     this.evaluate = (inputs, output) => {
         let currentRow = math.add(math.multiply(inputs, this.inputWeights), this.layersBias[0]);
         for (let i=0; i<20; i++) {
-            currentRow = math.add(math.multiply(currentRow, math.subset(this.layersWeights, math.index(i)), math.subset(this.layersBias, math.index(i+1))));
+            currentRow = sigmoidMatrix(math.add(math.multiply(currentRow, math.subset(this.layersWeights, math.index(i)), math.subset(this.layersBias, math.index(i+1)))));
         }
-        return math.add(math.multiply(currentRow, math.subset(outputWeights, math.index(output))), math.subset(outputBias, math.index(output)));
+        return sigmoid(math.add(math.multiply(currentRow, math.subset(outputWeights, math.index(output))), math.subset(outputBias, math.index(output))));
     };
 }
 
@@ -2898,7 +2903,7 @@ function startAITraining() {
             After 10 generations, overwrite the file "latest" with the latest gen
             After 100 generations, create a file Date.now() as a backup
             If this save happens too often, it can be expanded later
-        */
+            */
     }
 }
 
