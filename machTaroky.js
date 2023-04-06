@@ -194,6 +194,7 @@ function drawTable() {
             if (child.nodeName == 'IMG') {
                 //Prever talon
                 child.classList.remove('col-2');
+                card.style.filter = '';
                 child.hidden = true;
                 divDeck.appendChild(child);
             } else {
@@ -217,11 +218,13 @@ function drawTable() {
                 let card = document.getElementById(table[i].value + table[i].suit);
                 document.getElementById('table').prepend(card);
                 card.classList.add('col-2');
+                card.style.filter = '';
                 card.removeAttribute('hidden');
             }
         } else {
             for (let i in table) {
                 let card = document.getElementById(table[i].card.value + table[i].card.suit);
+                card.style.filter = '';
                 document.getElementById('p' + (+table[i].pn+1)).appendChild(card);
                 document.getElementById('p' + (+table[i].pn+1)).firstChild.removeAttribute('hidden');
                 if (table[i].lead) {

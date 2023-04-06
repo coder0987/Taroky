@@ -26,6 +26,11 @@ body {
 .button {
     transition-duration: 0.4s;
     opacity: 0.8;
+    /*Disable text selection*/
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .button:hover{
@@ -54,10 +59,6 @@ img {
     transition: all 0.50s;
 }
 
-.roomCard {
-    border-style: solid;
-    padding-left: 10px;
-}
 /*COLOR*/
 .green {
     background-color: var(--green);
@@ -171,6 +172,12 @@ img {
     padding:1rem;
     font-family: Georgia, 'Times New Roman', Times, serif;
     display:inline-block;
+
+    /*Disable text selection*/
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .roomnum {
     font-family: Georgia, 'Times New Roman', Times, serif;

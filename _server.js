@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const { diffieHellman } = require('crypto');
+const math = require('mathjs');
 const app = express();
 const START_TIME = Date.now();
 
@@ -144,6 +145,7 @@ let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
+let latestAI = null;//Instantiated later
 
 function Room(name, debugRoom) {
     this.debug = debugRoom; //Either undefined or true
@@ -2690,6 +2692,217 @@ function tick() {
         ticking = false;
     }
 }
+
+//AI
+
+/*
+    AI theory
+    Taroky is a complicated game. There are two main ways we could possibly implement AI
+    1. Action-base. Give the AI what action is currently happening and let it select a choice
+    2. Prompt-based. Look at all possible options and prompt the AI with each one. The AI will rank each option from 0-1 and the highest rank wins
+    In this project, I'm going to use the second model.
+    Here's how it looks (note that player numbers are using 0 as current player, +1 as player to the right, etc.):
+    Every single value is between 0 and 1. S is for sigmoid
+    INPUTS  (2k x 1)            HIDDEN LAYERS  (2k x 20)        OUTPUTS (14 x 1)
+    0-3   S(chips/100)          Inputs is already the           Discard this
+    4-7   isPovenost            absolutely ludicrous            Play this
+    8-11  isPrever              2k parameters. How many         Keep talon
+    12    preverTalon           Hidden layers do we need?       Keep talon bottom
+    13-44 8 types of            Honestly 20 should be           Keep talon top
+          moneyCards            More than plenty.               Contra
+    45-48 valat                 If hidden layers are 2kx20      Rhea-contra
+    49-52 iote                  That means each layer has       Supra-contra
+    53-56 contra                2k x 2k = 4m parameters,        Prever
+    57    someoneIsValat        x20 layers = 80m parameters     Valat
+    58    someoneIsContra       Which is insane.                IOTE
+    59    someoneIsIOTE                                         povenost b/u choice
+    60    IAmValat              I'll test it out.               Play alone (call XIX)
+    61    IAmIOTE               If it seems really slow         Play together (call lowest)
+    62    IAmPrever             then I'll chop off 1k           Total: 14
+    63-68 PartnerCard           1k x 1k = 1m parameters
+          XIX, then XVIII       x20 = 20m total, much
+          etc                   nicer on my computer.
+
+    CURRENT TRICK INFORMATION
+    69-72 TrickLeader
+    73-76 myPositionInTrick
+    +28   firstCard
+    +28   secondCard
+    +28   thirdCard
+
+    TRICK HISTORY
+    +1    hasBeenPlayed
+    +4    whoLead
+    +4    myPosition
+    +4    whoWon
+    +28   firstCard
+    +28   secondCard
+    +28   thirdCard
+    +28   fourthCard
+    x11   tricks
+
+    MY HAND
+    +28   card
+    x16   Max num cards in hand
+
+    PREVER TALON
+    +28   Card
+    x3    num cards in talon
+
+    PARTNER INFORMATION
+    -Only information the AI should know-
+    +3    isMyPartner
+
+    TRUMP DISCARD
+    +28   card
+    x4    max
+
+    CURRENT CARD/ACTION
+    +28   card
+    +25   number of actions
+
+    Roughly 2k inputs total
+
+    Matrix layout
+
+    Matrix {
+        INPUTS {0,1,0,0... 2k}
+        INPUT_ROW {
+            w, w, w, w... 2k
+            w, w, w, w... 2k
+            ...
+            2k
+        }
+        INPUT_BIAS {b, b, b... 2k}
+        LAYER 1 {0.75, 0.23, 0.01... 2k}
+        L1 = I x IR + IB;
+        2kx1 = 2kx1 x 2kx2k + 2kx1; //Checks out
+        HIDDEN_LAYER_1_ROW {
+            w, w, w, w... 2k
+            w, w, w, w... 2k
+            ...
+            2k
+        }... 20x
+
+        LAYER 20 {0.75, 0.23, 0.01... 2k}
+
+        HIDDEN_LAYER_20_ROW {
+            -------> 2k
+            -------> 2k
+            ...
+            14
+        }
+        L20B = {b, b, b... 14}
+        OUTPUT ROW = L20 x L20R + L20B;
+        1x14 = 1x2k x 2kx14 + 1x14; //Checks out
+
+        Actual matrix:
+        in      = new matrix [2k, 2k]
+        layers  = new matrix [20, 2k, 2k]
+        layersB = new matrix [20,2k]
+        out     = new matrix [2k, 14]
+        outB    = new matrix [14]
+
+        Note that layers has an extra dimension because there are n layers (n=20) and always 1 in and 1 out
+        B has 1 less layer than w because N = O x W + B means that preservation of matrix size requires W to be O-width wide and high, whereas B needs to be O-width wide but only 1 tall
+
+        Also, only the required output must be calculated
+    }
+*/
+
+function generateInputs(room, pn) {
+    //TODO
+    //I really don't want to ),:
+}
+
+function cardToVector(card) {
+    //TODO
+    //Should return a 1x27 vector. First 5 elements are suit, next 22 are value. 0 or 1
+}
+
+function sigmoid(z) {
+    if (z<-10) {return 0;}
+    else if (z>10) {return 1;}
+    return 1 / (1 + Math.exp(-z));
+}
+
+function AI(seed, mutate) {
+    if (seed) {
+        //Matrix multiplication: Size[A,B] x Size[B,C] = Size[A,C]
+        this.inputWeights = seed[0]; // 2k x 2k
+        this.layersWeights = seed[1]; // 20 x 2k x 2k
+        this.layersBias = seed[2]; // 20 x 2k x 1
+        this.outputWeights = seed[3]; // 14 x 2k
+        this.outputBias = seed[4]; // 14 x 1
+    } else {
+        this.inputWeights   = math.random([2000, 2000]); // 2k x 2k
+        this.layersWeights  = math.random([20, 2000, 2000]); // 20 x 2k x 2k
+        this.layersBias     = math.random([20, 2000]); // 20 x 2k x 1
+        this.outputWeights  = math.random([14, 2000]); // 14 x 2k
+        this.outputBias     = math.random([14]); // 14 x 1
+        mutate = 0;
+    }
+    if (mutate) {
+        //Iterate over each and every weight and bias and add mutate * Math.random() to each
+        this.inputWeights  = math.add(this.inputWeights,  math.random([2000, 2000],     mutate));
+        this.layersWeights = math.add(this.layersWeights, math.random([20, 2000, 2000], mutate));
+        this.layersBias    = math.add(this.layersBias,    math.random([21, 2000],       mutate));
+        this.outputWeights = math.add(this.outputWeights, math.random([14, 2000],       mutate));
+        this.outputBias    = math.add(this.outputBias,    math.random([14],             mutate));
+    }
+
+    this.evaluate = (inputs, output) => {
+        let currentRow = math.add(math.multiply(inputs, this.inputWeights), this.layersBias[0]);
+        for (let i=0; i<20; i++) {
+            currentRow = math.add(math.multiply(currentRow, math.subset(this.layersWeights, math.index(i)), math.subset(this.layersBias, math.index(i+1))));
+        }
+        return math.add(math.multiply(currentRow, math.subset(outputWeights, math.index(output))), math.subset(outputBias, math.index(output)));
+    };
+}
+
+function aiFromFile(file) {
+    //Note: file is a location, not an actual file
+    fs.readFile(file, 'utf8', (err, data) => {
+        if (err) {
+            console.log('Error reading file from disk: ' + err);
+            latestAI = new AI(false, 0);
+        } else {
+            // parse JSON string to JSON object
+            latestAI = new AI(JSON.parse(data), 0);
+            startAITraining();
+        }
+    });
+}
+
+function aiToFile(ai, fileName) {
+    fs.writeFile(fileName, JSON.stringify(ai), 'utf8', err => {
+        if (err) {
+          console.log('Error writing file: ${err}');
+        } else {
+          console.log('Saved the latest AI ' + Date.now());
+        }
+    });
+}
+
+let training = false;
+function startAITraining() {
+    //Creates a table for AI to train at. Table is not publicly accessible.
+    if (training) {
+        /*TODO
+            Create a series of 8 rooms with a no-delete flag (and a no-log flag)
+            After each room plays 100 games, take the winner from each
+            The winner from room 1 is used as the "parent" for the next gen
+            Winners of 1-4 compete in room 1
+            Winners of 5-8 compete in room 2
+            1 & children compete in rooms 3-8
+            After 10 generations, overwrite the file "latest" with the latest gen
+            After 100 generations, create a file Date.now() as a backup
+            If this save happens too often, it can be expanded later
+        */
+    }
+}
+
+aiFromFile('latest');//Gets the AI up and running
 
 let interval = setInterval(tick, 1000 / 60.0);//60 FPS
 
