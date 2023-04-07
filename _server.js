@@ -5,14 +5,28 @@ const path = require('path');
 const express = require('express');
 const { diffieHellman } = require('crypto');
 const math = require('mathjs');
+let h5wasm = null;
+
 const app = express();
 const START_TIME = Date.now();
+
+async function importH5wasm() {
+    if (!DEBUG_MODE) {
+        return;
+    }
+    h5wasm = await import("h5wasm");
+    await h5wasm.ready;
+    aiFromFile('latest');
+}
 
 //COMMAND-LINE ARGUMENTS
 
 //Used for non-"production" instances of the server
-const DEBUG_MODE = process.argv[2] == 'debug';
+const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
 const LOG_LEVEL = process.argv[3] || 0;
+const TRAINING_MODE = process.argv[2] == 'train';
+
+importH5wasm();
 
 //Standard file-serving
 const server = http.createServer((req, res) => {
@@ -146,6 +160,7 @@ let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
 let latestAI = null;//Instantiated later
+let trainingRooms = [];
 
 function Room(name, debugRoom) {
     this.debug = debugRoom; //Either undefined or true
@@ -2797,10 +2812,10 @@ function tick() {
         1x14 = 1x2k x 2kx14 + 1x14; //Checks out
 
         Actual matrix:
-        in      = new matrix [2k, 2k]
-        layers  = new matrix [20, 2k, 2k]
-        layersB = new matrix [20,2k]
-        out     = new matrix [2k, 14]
+        in      = new matrix [2k, 1k]
+        layers  = new matrix [20, 1k, 1k]
+        layersB = new matrix [20, 1k]
+        out     = new matrix [1k, 14]
         outB    = new matrix [14]
 
         Note that layers has an extra dimension because there are n layers (n=20) and always 1 in and 1 out
@@ -2834,26 +2849,33 @@ function sigmoidMatrix(m) {
 function AI(seed, mutate) {
     if (seed) {
         //Matrix multiplication: Size[A,B] x Size[B,C] = Size[A,C]
-        this.inputWeights = seed[0]; // 2k x 2k
-        this.layersWeights = seed[1]; // 20 x 2k x 2k
-        this.layersBias = seed[2]; // 20 x 2k x 1
-        this.outputWeights = seed[3]; // 14 x 2k
+        this.inputWeights = seed[0]; // 2k x 1k
+        this.layersWeights = seed[1]; // 20 x 1k x 1k
+        this.layersBias = seed[2]; // 20 x 1k x 1
+        this.outputWeights = seed[3]; // 14 x 1k
         this.outputBias = seed[4]; // 14 x 1
     } else {
-        this.inputWeights   = math.random([2000, 2000]); // 2k x 2k
-        this.layersWeights  = math.random([20, 2000, 2000]); // 20 x 2k x 2k
-        this.layersBias     = math.random([20, 2000]); // 20 x 2k x 1
-        this.outputWeights  = math.random([14, 2000]); // 14 x 2k
-        this.outputBias     = math.random([14]); // 14 x 1
+        this.inputWeightsSize = [2000,1000];
+        this.layersWeights = [20,1000,1000];
+        this.layersBias = [20,1000];
+        this.outputWeights = [14,1000];
+        this.outputBias = [14];
+
+        this.inputWeights   = math.random(math.matrix([this.inputWeightsSize[0], this.inputWeightsSize[1]])); // 2k x 1k
+        this.layersWeights  = math.random(math.matrix([this.layersWeights[0], this.layersWeights[1], this.layersWeights[2]])); // 20 x 1k x 1k
+        this.layersBias     = math.random(math.matrix([this.layersBias[0], this.layersBias[1]])); // 20 x 1k x 1
+        this.outputWeights  = math.random(math.matrix([this.outputWeights[1], this.outputWeights[0]])); // 14 x 1k
+        this.outputBias     = math.random(math.matrix([this.outputBias[0]])); // 14 x 1
+
         mutate = 0;
     }
     if (mutate) {
         //Iterate over each and every weight and bias and add mutate * Math.random() to each
-        this.inputWeights  = math.add(this.inputWeights,  math.random([2000, 2000],     mutate));
-        this.layersWeights = math.add(this.layersWeights, math.random([20, 2000, 2000], mutate));
-        this.layersBias    = math.add(this.layersBias,    math.random([21, 2000],       mutate));
-        this.outputWeights = math.add(this.outputWeights, math.random([14, 2000],       mutate));
-        this.outputBias    = math.add(this.outputBias,    math.random([14],             mutate));
+        this.inputWeights  = math.add(this.inputWeights,  math.random([2000, 1000],     -mutate, mutate));
+        this.layersWeights = math.add(this.layersWeights, math.random([20, 1000, 2000], -mutate, mutate));
+        this.layersBias    = math.add(this.layersBias,    math.random([21, 1000],       -mutate, mutate));
+        this.outputWeights = math.add(this.outputWeights, math.random([14, 1000],       -mutate, mutate));
+        this.outputBias    = math.add(this.outputBias,    math.random([14],             -mutate, mutate));
     }
 
     this.evaluate = (inputs, output) => {
@@ -2867,47 +2889,88 @@ function AI(seed, mutate) {
 
 function aiFromFile(file) {
     //Note: file is a location, not an actual file
-    fs.readFile(file, 'utf8', (err, data) => {
-        if (err) {
-            console.log('Error reading file from disk: ' + err);
-            latestAI = new AI(false, 0);
-        } else {
-            // parse JSON string to JSON object
-            latestAI = new AI(JSON.parse(data), 0);
-            startAITraining();
-        }
-    });
+
+    try {
+        const seed = [];
+        let f = new h5wasm.File("latest", "r");
+        seed[0] = JSON.parse(f.get('/ai/inputWeights', 'r').to_array());
+        seed[1] = JSON.parse(f.get('/ai/layersWeights', 'r').to_array());
+        seed[2] = JSON.parse(f.get('/ai/layersBias', 'r').to_array());
+        seed[3] = JSON.parse(f.get('/ai/outputWeights', 'r').to_array());
+        seed[4] = JSON.parse(f.get('/ai/outputBias', 'r').to_array());
+        latestAI = new AI(seed, 0);
+        console.log('AI loaded successfully');
+        startAITraining();
+    } catch (err) {
+        console.log('Error reading file from disk: ' + err);
+        latestAI = new AI(false, 0);
+        aiToFile(latestAI, 'latest');
+    }
 }
 
 function aiToFile(ai, fileName) {
-    fs.writeFile(fileName, JSON.stringify(ai), 'utf8', err => {
-        if (err) {
-          console.log('Error writing file: ${err}');
-        } else {
-          console.log('Saved the latest AI ' + Date.now());
-        }
-    });
+    try {
+        let saveFile = new h5wasm.File('latest','w');
+        saveFile.create_group('ai');
+
+        let tempInputWeights = [];
+        let inputWeightsShape = ai.inputWeightsSize;
+        ai.inputWeights.forEach(function (value, index, matrix) {
+            tempInputWeights.push(value);//Lines up the 2d array into 1 dimension
+        });
+        saveFile.get('ai').create_dataset('inputWeights', tempInputWeights, inputWeightsShape, '<f');
+
+        let tempLayersWeights = [];
+        let layersWeightsShape = ai.layersWeightsSize;
+        ai.layersWeights.forEach(function (value, index, matrix) {
+            tempLayersWeights.push(value);//Lines up the 2d array into 1 dimension
+        });
+        saveFile.get('ai').create_dataset('layersWeights', tempLayersWeights, layersWeightsShape, '<f');
+
+        let tempLayersBias = [];
+        let layersBiasShape = ai.layersBiasSize;
+        ai.layersBias.forEach(function (value, index, matrix) {
+            tempLayersBias.push(value);//Lines up the 2d array into 1 dimension
+        });
+        saveFile.get('ai').create_dataset('layersBias', tempLayersBias, layersBiasShape, '<f');
+
+        let tempOutputWeights = [];
+        let outputWeightsShape = ai.outputWeightsSize;
+        ai.outputWeights.forEach(function (value, index, matrix) {
+            tempOutputWeights.push(value);//Lines up the 2d array into 1 dimension
+        });
+        saveFile.get('ai').create_dataset('outputWeights', tempOutputWeights, outputWeightsShape, '<f');
+
+        let tempOutputBias = [];
+        let outputBiasShape = ai.outputBiasSize;
+        ai.outputBias.forEach(function (value, index, matrix) {
+            tempOutputBias.push(value);//Lines up the 2d array into 1 dimension
+        });
+        saveFile.get('ai').create_dataset('outputBias', tempOutputBias, outputBiasShape, '<f');
+
+        saveFile.close();
+        console.log('Saved the latest ai ' + Date.now());
+    } catch (err) {
+        console.log('Error writing file: ' + err);
+    }
 }
 
-let training = false;
 function startAITraining() {
     //Creates a table for AI to train at. Table is not publicly accessible.
-    if (training) {
+    if (TRAINING_MODE) {
         /*TODO
             Create a series of 8 rooms with a no-delete flag (and a no-log flag)
             After each room plays 100 games, take the winner from each
             The winner from room 1 is used as the "parent" for the next gen
             Winners of 1-4 compete in room 1
             Winners of 5-8 compete in room 2
-            1 & children compete in rooms 3-8
+            Children compete in rooms 3-8
             After 10 generations, overwrite the file "latest" with the latest gen
             After 100 generations, create a file Date.now() as a backup
             If this save happens too often, it can be expanded later
             */
     }
 }
-
-aiFromFile('latest');//Gets the AI up and running
 
 let interval = setInterval(tick, 1000 / 60.0);//60 FPS
 
