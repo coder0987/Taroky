@@ -1847,7 +1847,7 @@ function actionCallback(action, room, pn) {
                 if (cardToLead && cardToLead.suit && cardToLead.value) {
                     SERVER.warn(room.name,'Player ' + pn + ' failed to lead the ' + action.info.card.value + ' of ' + action.info.card.suit);
                 }
-                SERVER.warn(room.name'Failed to lead. Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                SERVER.warn(room.name,'Failed to lead. Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
             }
             break;
         case 'follow':
