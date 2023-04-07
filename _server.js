@@ -23,7 +23,7 @@ async function importH5wasm() {
 
 //Used for non-"production" instances of the server
 const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
-const LOG_LEVEL = process.argv[3] || 2;//Defaults to INFO level. No traces or debugs.
+const LOG_LEVEL = process.argv[3] || 3;//Defaults to INFO level. No traces or debugs.
 const TRAINING_MODE = process.argv[2] == 'train';
 
 importH5wasm();
@@ -113,7 +113,6 @@ const SENSITIVE_ACTIONS = {'povenostBidaUniChoice': true,'contra': true, 'prever
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
 const SERVER = {
-    //TODO: finish transferring console logs to server
     /*
     Why use this instead of console.log()? For future additions. Eventually I want to write console logs to a file for debugging
     This system should make that easier
@@ -130,33 +129,40 @@ const SERVER = {
     errorTrace: (info, rn) => {
         if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 1) {
             console.trace('ERROR - STACK TRACE FOR ROOM ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 4) {
+        } else if (LOG_LEVEL >= 1) {
             console.trace('ERROR - SERVER STACK TRACE: ' + info);
         }
     },
-    log: (info, rn) => {
+    warn: (info, rn) => {
         if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 2) {
-            console.log('Room ' + rn + ': ' + info);
+            console.trace('Warning - Room ' + rn + ': ' + info);
         } else if (LOG_LEVEL >= 2) {
+            console.trace('Warning - Server: ' + info);
+        }
+    },
+    log: (info, rn) => {
+        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 3) {
+            console.log('Room ' + rn + ': ' + info);
+        } else if (LOG_LEVEL >= 3) {
             console.log('Server: ' + info);
         }
     },
     debug: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 3) {
+        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 4) {
             console.log('(Debug) Room ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 3) {
+        } else if (LOG_LEVEL >= 4) {
             console.warn('(Debug) Server: ' + info);
         }
     },
     trace: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 4) {
+        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 5) {
             console.trace('Trace - Room ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 4) {
+        } else if (LOG_LEVEL >= 5) {
             console.trace('Trace - Server: ' + info);
         }
     },
     functionCall: (name, ...parameters) => {
-        if (rooms[rn].logLevel >= 3) {
+        if (LOG_LEVEL >= 4) {
             let paramString = '';
             parameters.map(p => {
                 if (p) {paramString += ' ' + p.name + ': ' + p.value;}
@@ -187,7 +193,7 @@ function Room(name, debugRoom) {
     this.host = -1;
     this.board = new Board();
     this.playerCount = 0;
-    this.logLevel = LOG_LEVEL;//0: none, 1: errors, 2: info, 3: debug logs, 4: trace
+    this.logLevel = LOG_LEVEL;//0: none, 1: errors, 2: warn, 3: info, 4: debug logs, 5: trace
     this.deck = [...baseDeck].sort(() => Math.random() - 0.5);
     this.players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
     this.autoAction = 0;
@@ -927,7 +933,7 @@ function robotAction(action, room, pn) {
                 break;
             case 'iote':
                 action.info.iote = robotIOTE(hand, room.settings.difficulty)
-                console.log('robotAction() called | action: ' + action.action + ' pn: ' + pn);
+                SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
                 actionCallback(action, room, pn);
                 return;//Don't inform the players who has the I
             case 'contra':
@@ -935,7 +941,7 @@ function robotAction(action, room, pn) {
             case 'preverValatContra':
             case 'valatContra':
                 action.info.contra = robotContra(hand, room.settings.difficulty);
-                console.log('autoAction() called | action: ' + action.action + ' pn: ' + pn);
+                SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
                 actionCallback(action, room, pn);
                 return;
             case 'lead':
@@ -953,7 +959,7 @@ function robotAction(action, room, pn) {
             case 'resetBoard':
                 break;//Utilitarian, no input needed
             default:
-                console.warn('Unknown robot action: ' + action.action);
+                SERVER.warn(room.name,'Unknown robot action: ' + action.action);
         }
         for (let i = 0; i < 4; i++) {
             if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
@@ -963,7 +969,7 @@ function robotAction(action, room, pn) {
         if (fakeMoneyCards) {
             action.action = 'povenostBidaUniChoice';
         }
-        console.log('robotAction() called | action: ' + action.action + ' pn: ' + pn);
+        SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
         actionCallback(action, room, pn);
     }
 }
@@ -1022,7 +1028,7 @@ function playerAction(action, room, pn) {
         case 'preverValatContra':
         case 'valatContra':
         case 'iote':
-            console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
+            SERVER.functionCall('playerAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
             players[room['players'][pn].socket].socket.emit('nextAction', action);
             return;
         case 'lead':
@@ -1041,8 +1047,8 @@ function playerAction(action, room, pn) {
         case 'resetBoard':
             break;
         default:
-            console.log('Unknown action: ' + action.action);
-            console.trace();
+            SERVER.warn('Unknown action: ' + action.action);
+            SERVER.trace();
     }
     if (returnHandState == 0) {
         players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
@@ -1062,13 +1068,20 @@ function playerAction(action, room, pn) {
             }
         }
     }
-    console.log('playerAction() called | action: ' + action.action + ' pn: ' + pn);
+    SERVER.functionCall('playerAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
 }
 
 function aiAction(action, room, pn) {
     //Uses the AI to take an action IF and only IF the AI is supposed to
-    console.warn('AI not implemented yet!!');
-    console.trace();
+    SERVER.error('AI not implemented yet!!');
+    SERVER.errorTrace();
+
+    //TODO: connect to AI
+    //Generate possible choices
+    //If only one choice, choose it
+    //Otherwise, generate inputs
+    //Give the inputs and each choice to the AI and note the number returned
+    //Use the highest-ranked choice
 
     for (let i = 0; i < 4; i++) {
         if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
@@ -1083,8 +1096,8 @@ function actionCallback(action, room, pn) {
     //In the case that a robot or AI is the required player, this will directly call on the above action handlers
     //The action is presumed to be verified by its player takeAction function, not here
     if (!room || !action) {
-        console.warn('Illegal actionCallback: ' + JSON.stringify(room) + ' \n\n ' + JSON.stringify(action) + ' \n\n ' + pn);
-        console.trace();
+        SERVER.error('Illegal actionCallback: ' + JSON.stringify(room) + ' \n\n ' + JSON.stringify(action) + ' \n\n ' + pn);
+        SERVER.errorTrace();
         return;
     }
     if (!action.info) {
@@ -1096,12 +1109,12 @@ function actionCallback(action, room, pn) {
     let style;
     let shouldReturnTable = false;
 
-    console.log('Action taken: ' + action.player + ' took action ' + action.action + ' with info ' + JSON.stringify(action.info) + ' in room ' + room.name);
+    SERVER.functionCall('actionCallback', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name}, {name:'info',value:JSON.stringify(action.info)});
 
     switch (action.action) {
         case 'start':
             room['board'].gameNumber = 1;
-            console.log('Game 1 is starting in room ' + room.name);
+            SERVER.log(room.name, 'Game 1 is starting');
             action.action = 'shuffle';
             action.player = pn;//First game, host is assumed to shuffle
             for (let i = 0; i < 4; i++) {
@@ -1114,7 +1127,7 @@ function actionCallback(action, room, pn) {
             break;
         case 'play':
             room['board'].gameNumber++;
-            console.log('Game ' + room['board'].gameNumber + ' is starting in room ' + room.name);
+            SERVER.log(room.name, 'Game ' + room['board'].gameNumber + ' is starting');
             action.action = 'shuffle';
             action.player = (room['board'].povenost+3)%4;
             actionTaken = true;
@@ -1192,7 +1205,7 @@ function actionCallback(action, room, pn) {
             }
             room.board.importantInfo.povenost = (room.board.povenost+1);
             //Povenost rotation is handled by the board reset function
-            console.log('Server (' + room.name + '): povenost is ' + room['board'].povenost);
+            SERVER.log(room.name,'Povenost is ' + room['board'].povenost);
             room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
             action.action = 'prever';
             action.player = room['board'].povenost;
@@ -1217,7 +1230,7 @@ function actionCallback(action, room, pn) {
                 }
                 room.board.importantInfo.povenost = (room.board.povenost+1);
                 //Povenost rotation is handled by the board reset function
-                console.log('Server (' + room.name + '): povenost is ' + room['board'].povenost);
+                SERVER.log(room.name,'Povenost is ' + room['board'].povenost);
                 room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
                 action.action = 'prever';
                 action.player = room['board'].povenost;
@@ -1414,9 +1427,9 @@ function actionCallback(action, room, pn) {
                     players[room['players'][pn].socket].socket.emit('failedDiscard', card);
                 }
                 if (action.info.card) {
-                    console.log('Player ' + pn + ' failed to discard the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                    SERVER.warn(room.name, 'Player ' + pn + ' failed to discard the ' + action.info.card.value + ' of ' + action.info.card.suit);
                 }
-                console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                SERVER.warn(room.name, 'Failed to discard. Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
             }
             break;
         case 'povenostBidaUniChoice':
@@ -1831,8 +1844,10 @@ function actionCallback(action, room, pn) {
                 if (room['players'][pn].type == PLAYER_TYPE.HUMAN) {
                     SOCKET_LIST[room['players'][pn].socket].emit('failedLeadCard', cardToLead);
                 }
-                if (cardToLead && cardToLead.suit && cardToLead.value) {console.log('Player ' + pn + ' failed to lead the ' + action.info.card.value + ' of ' + action.info.card.suit);}
-                console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                if (cardToLead && cardToLead.suit && cardToLead.value) {
+                    SERVER.warn(room.name,'Player ' + pn + ' failed to lead the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                }
+                SERVER.warn(room.name'Failed to lead. Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
             }
             break;
         case 'follow':
@@ -1866,15 +1881,17 @@ function actionCallback(action, room, pn) {
                 }
             } else {
                 if (players[pn].type != PLAYER_TYPE.HUMAN) {
-                    console.trace('Robot attempted to play illegal card');
-                    console.log(JSON.stringify(cardToPlay));
-                    console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                    SERVER.errorTrace(room.name,'Robot attempted to play illegal card');
+                    SERVER.error(room.name,JSON.stringify(cardToPlay));
+                    SERVER.error(room.name,'Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
                     break;
                 }
                 players[room['players'][pn].socket].socket.emit('failedPlayCard', cardToPlay);
-                if (cardToPlay && cardToPlay.suit && cardToPlay.value) {console.log('Player ' + pn + ' failed to play the ' + action.info.card.value + ' of ' + action.info.card.suit);}
-                console.log(JSON.stringify(cardToPlay));
-                console.log('Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                if (cardToPlay && cardToPlay.suit && cardToPlay.value) {
+                    SERVER.warn(room.name, 'Player ' + pn + ' failed to play the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                }
+                SERVER.warn(room.name,JSON.stringify(cardToPlay));
+                SERVER.warn(room.name,'Failed to follow. Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
             }
             break;
         case 'winTrick':
@@ -2010,31 +2027,31 @@ function actionCallback(action, room, pn) {
 
                     //Sanity check
                     if (povenostTeamPoints + opposingTeamPoints != 106) {
-                        console.log('-------------------------')
-                        console.warn('Error: incorrect number of points\nPovenost team: ' + povenostTeamPoints + '\nOpposing team: ' + opposingTeamPoints);
-                        console.log(JSON.stringify(povenostTeamDiscard));
-                        console.log(JSON.stringify(opposingTeamDiscard));
+                        SERVER.debug(room.name, '-------------------------')
+                        SERVER.error('Error: incorrect number of points\nPovenost team: ' + povenostTeamPoints + '\nOpposing team: ' + opposingTeamPoints);
+                        SERVER.debug(room.name, JSON.stringify(povenostTeamDiscard));
+                        SERVER.debug(room.name, JSON.stringify(opposingTeamDiscard));
                         //Time to search anywhere and everywhere for the missing cards
-                        console.log('Hands: ')
+                        SERVER.debug(room.name, 'Hands: ')
                         for (let i in room.players) {
-                            console.log(JSON.stringify(room.players[i].hand))
+                            SERVER.debug(room.name, JSON.stringify(room.players[i].hand))
                         }
-                        console.log('Discard: ')
+                        SERVER.debug(room.name, 'Discard: ')
                         for (let i in room.players) {
-                            console.log(JSON.stringify(room.players[i].discard))
+                            SERVER.debug(room.name, JSON.stringify(room.players[i].discard))
                         }
-                        console.log('TempHands: ')
+                        SERVER.debug(room.name, 'TempHands: ')
                         for (let i in room.players) {
-                            console.log(JSON.stringify(room.players[i].tempHand))
+                            SERVER.debug(room.name, JSON.stringify(room.players[i].tempHand))
                         }
-                        console.log('Talon: ')
-                        console.log(JSON.stringify(room.board.talon));
-                        console.log('Prever talon:')
-                        console.log(JSON.stringify(room.board.preverTalon));
-                        console.log('Table: ')
-                        console.log(JSON.stringify(room.board.table));
-                        console.log('Deck: ')
-                        console.log(JSON.stringify(room.deck) + '\n');
+                        SERVER.debug(room.name, 'Talon: ')
+                        SERVER.debug(room.name, JSON.stringify(room.board.talon));
+                        SERVER.debug(room.name, 'Prever talon:')
+                        SERVER.debug(room.name, JSON.stringify(room.board.preverTalon));
+                        SERVER.debug(room.name, 'Table: ')
+                        SERVER.debug(room.name, JSON.stringify(room.board.table));
+                        SERVER.debug(room.name, 'Deck: ')
+                        SERVER.debug(room.name, JSON.stringify(room.deck) + '\n');
                         //Check which cards are missing from the team point piles
                         let combinedPointPile = [];
                         for (let c in povenostTeamDiscard) {
@@ -2054,11 +2071,11 @@ function actionCallback(action, room, pn) {
                                 }
                             }
                             if (!found) {
-                                console.log('Card ' + baseDeck[i].value + ' of ' + baseDeck[i].suit + ' was not found');
-                                console.log('Point value: ' + pointValue(baseDeck[i]));
+                                SERVER.debug(room.name, 'Card ' + baseDeck[i].value + ' of ' + baseDeck[i].suit + ' was not found');
+                                SERVER.debug(room.name, 'Point value: ' + pointValue(baseDeck[i]));
                             }
                         }
-                        console.log('-------------------------')
+                        SERVER.debug(room.name, '-------------------------')
                     }
 
                     chipsOwed = 53 - opposingTeamPoints;//Positive: opposing team pays. Negative: povenost team pays
@@ -2144,11 +2161,11 @@ function actionCallback(action, room, pn) {
                 team2Players[i].chips -= tempChipsOwed;
             }
             if (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips != 400) {
-                console.warn('Incorrect chip count! Total count: ' + (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips))
-                console.log('Player 1: ' + room.players[0].chips)
-                console.log('Player 2: ' + room.players[2].chips)
-                console.log('Player 3: ' + room.players[3].chips)
-                console.log('Player 4: ' + room.players[4].chips)
+                SERVER.error(room.name,'Incorrect chip count! Total count: ' + (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips))
+                SERVER.debug(room.name, 'Player 1: ' + room.players[0].chips)
+                SERVER.debug(room.name, 'Player 2: ' + room.players[2].chips)
+                SERVER.debug(room.name, 'Player 3: ' + room.players[3].chips)
+                SERVER.debug(room.name, 'Player 4: ' + room.players[4].chips)
             }
             if (chipsOwed < 0) {
                 /* TODO: make informing the players a bit better
@@ -2180,10 +2197,9 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             break;
         default:
-            console.warn('Unrecognized actionCallback: ' + action.action);
-            console.trace();
+            SERVER.warn(room.name,'Unrecognized actionCallback: ' + action.action);
+            SERVER.trace(room.name,'');
     }
-    console.log('Next Action: ' + action.action);
     action.info = {};
 
     if (shouldReturnTable) {
@@ -2197,8 +2213,8 @@ function actionCallback(action, room, pn) {
     if (actionTaken) {
 
         //Sanity Check 
-        if (action.player > 3 || action.player < 0) { console.warn('Illegal player number: ' + action.player + ' during action ' + action.action); action.player %= 4; }
-        if (!room['players'][action.player]) { console.warn('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players'])); }
+        if (action.player > 3 || action.player < 0) {SERVER.error(room.name,'Illegal player number: ' + action.player + ' during action ' + action.action); action.player %= 4; }
+        if (!room['players'][action.player]) { SERVER.error(room.name,'There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players'])); }
 
 
         action.time = Date.now();
@@ -2242,7 +2258,7 @@ function broadcast(message) {
 function disconnectPlayerTimeout(socketId) {
     if (players[socketId] && players[socketId].tempDisconnect) {
         if (!players[socketId]) { return; }
-        console.log('Player ' + socketId + ' disconnected');
+        SERVER.log('Player ' + socketId + ' disconnected');
         if (~players[socketId].room) {
             rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
             rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
@@ -2259,8 +2275,8 @@ function disconnectPlayerTimeout(socketId) {
             if (rooms[players[socketId].room]['playerCount'] == 0) {
                 //Delete the room
                 clearTimeout(rooms[players[socketId].room].autoAction);
+                SERVER.log(players[socketId].room, 'Game Ended. Closing the room.');
                 delete rooms[players[socketId].room];
-                console.log('Stopped empty game in room ' + players[socketId].room);
             } else {
                 rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' disconnected',MESSAGE_TYPE.DISCONNECT);
                 if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
@@ -2277,7 +2293,7 @@ function disconnectPlayerTimeout(socketId) {
         delete SOCKET_LIST[socketId];
 
     } else {
-        console.log('Player ' + socketId + ' didn\'t disconnect after all');
+        SERVER.debug('Player ' + socketId + ' didn\'t disconnect after all');
     }
 }
 
@@ -2323,8 +2339,8 @@ io.sockets.on('connection', function (socket) {
     if (!SOCKET_LIST[socketId]) {
         SOCKET_LIST[socketId] = socket;
         players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false };
-        console.log('Player joined with socketID ' + socketId);
-        console.log('Join time: ' + Date.now());
+        SERVER.log('Player joined with socketID ' + socketId);
+        SERVER.debug('Join time: ' + Date.now());
         numOnlinePlayers++;
         for (let i in SOCKET_LIST) {
             SOCKET_LIST[i].emit('returnPlayerCount',numOnlinePlayers);
@@ -2333,7 +2349,7 @@ io.sockets.on('connection', function (socket) {
     if (players[socketId] && players[socketId].tempDisconnect) {
         SOCKET_LIST[socketId] = socket;
         players[socketId].socket = socket;
-        console.log('Player ' + socketId + ' auto-reconnected');
+        SERVER.debug('Player ' + socketId + ' auto-reconnected');
         players[socketId].tempDisconnect = false;
         socket.emit('message','You have been automatically reconnected');//debug
         autoReconnect(socketId);
@@ -2343,7 +2359,7 @@ io.sockets.on('connection', function (socket) {
         if (players[socketId] && !players[socketId].tempDisconnect) {
             players[socketId].tempDisconnect = true;
             players[socketId].roomsSeen = {};
-            console.log('Player ' + socketId + ' may have disconnected');
+            SERVER.debug('Player ' + socketId + ' may have disconnected');
             setTimeout(disconnectPlayerTimeout, DISCONNECT_TIMEOUT, socketId);
         }
     });
@@ -2351,7 +2367,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('exitRoom', function() {
         if (players[socketId]) {
             if (~players[socketId].room) {
-                console.log('Player ' + socketId + ' left room ' + players[socketId].room);
+                SERVER.log(players[socketId].room, 'Player ' + socketId + ' left the room');
                 rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
                 rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
                 rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
@@ -2368,7 +2384,7 @@ io.sockets.on('connection', function (socket) {
                     //Delete the room if no one is left in it
                     clearTimeout(rooms[players[socketId].room].autoAction);
                     delete rooms[players[socketId].room];
-                    console.log('Stopped empty game in room ' + players[socketId].room);
+                    SERVER.log(players[socketId].room, 'Stopped empty game');
                 } else {
                     rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' left the room',MESSAGE_TYPE.DISCONNECT);
                     if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
@@ -2407,12 +2423,12 @@ io.sockets.on('connection', function (socket) {
                     if (rooms[roomID]['playerCount'] == 1) {
                         rooms[roomID]['host'] = socketId;
                         socket.emit('roomHost');
-                        console.log('New room host in room ' + roomID);
+                        SERVER.debug(roomID,'New room host');
                         if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
                             socket.emit('youStart');
                         } else {
                             autoReconnect(socketId);
-                            console.warn('ERROR: Player joined empty room with no host that was started');
+                            SERVER.error(roomID,'Player joined empty room with no host that was started');
                         }
                     } else {
                         autoReconnect(socketId);
@@ -2425,19 +2441,19 @@ io.sockets.on('connection', function (socket) {
                 }
             }
         } else {
-            console.log('Invalid attempt to connect to room ' + roomID);
+            SERVER.warn(roomID,'Invalid attempt to connect to room');
             if (rooms[roomID]) {
-                console.log('Room contains ' + rooms[roomID]['playerCount']);
+                SERVER.debug(roomID,'Room contains ' + rooms[roomID]['playerCount'] + ' players');
                 if (rooms[roomID].locked) {
-                    console.log('Room is locked');
+                    SERVER.debug(roomID,'Room is locked');
                 }
             } else {
-                console.log('Room ' + roomID + ' does not exist');
+                SERVER.debug(roomID,'This room does not exist');
             }
             if (players[socketId]) {
-                console.log('Player is in room ' + players[socketId].room);
+                SERVER.debug(roomID,'Player is in room ' + players[socketId].room);
             } else {
-                console.log('Player ' + socketId + ' does not exist');
+                SERVER.debug(roomID,'Player ' + socketId + ' does not exist');
             }
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
@@ -2447,7 +2463,7 @@ io.sockets.on('connection', function (socket) {
     });
     socket.on('currentAction', function () {
         if (players[socketId] && rooms[players[socketId].room]) {
-            console.log('Player ' + socketId + ' sent a ping');
+            SERVER.debug('Player ' + socketId + ' sent a ping');
             autoReconnect(socketId);
         }
     });
@@ -2461,7 +2477,7 @@ io.sockets.on('connection', function (socket) {
                 case 'difficulty':
                     if (DIFFICULTY_TABLE[rule]) {
                         rooms[players[socketId].room].settings.difficulty = rule;
-                        console.log('Difficulty in room ' + players[socketId].room + ' is set to ' + DIFFICULTY_TABLE[rule]);
+                        SERVER.debug(players[socketId].room,'Difficulty is set to ' + DIFFICULTY_TABLE[rule]);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
                     }
                     break;
@@ -2475,7 +2491,7 @@ io.sockets.on('connection', function (socket) {
                             rule = 3600000;//One hour max
                         }
                         rooms[players[socketId].room].settings.timeout = rule;
-                        console.log('Timeout in room ' + players[socketId].room + ' is set to ' + (rule/1000) + 's');
+                        SERVER.debug(players[socketId].room,'Timeout is set to ' + (rule/1000) + 's');
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + (rule/1000) + 's', MESSAGE_TYPE.SETTING);
                     }
                     break;
@@ -2492,17 +2508,17 @@ io.sockets.on('connection', function (socket) {
     });
     socket.on('startGame', function () {
         if (!players[socketId]) {return;}
-        if (!rooms[players[socketId].room]) { console.log('Player failed to start game'); return; }
+        if (!rooms[players[socketId].room]) { SERVER.debug('Player is starting a game while not in a room ' + socketId); return; }
         if (rooms[players[socketId].room]['host'] == socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], players[socketId].pn);
         } else {
-            console.warn('Failed attempt to start the game in room ' + players[socketId].room + ' by player ' + socketId);
+            SERVER.warn(players[socketId].room,'Failed attempt to start the game by player ' + socketId);
             if (rooms[players[socketId].room]['host'] == socketId) {
                 //Player is host but game was already started
-                console.warn('Player is host but game was already started. Informing host of the next step');
+                SERVER.debug(players[socketId].room,'Player is host but the game was already started. Informing host of the next step');
                 socket.emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
             } else {
-                console.warn('Player is not the host. The host is ' + rooms[players[socketId].room]['host']);
+                SERVER.debug('Player is not the host. The host is ' + rooms[players[socketId].room]['host']);
             }
         }
     });
@@ -2511,7 +2527,7 @@ io.sockets.on('connection', function (socket) {
         if (rooms[players[socketId].room]['board']['nextStep'].action === 'play' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         } else {
-            console.warn('Illegal game play attempt in room ' + players[socketId].room + ' by player ' + socketId);
+            SERVER.warn(players[socketId].room,'Illegal game play attempt by player ' + socketId);
         }
     });
     socket.on('shuffle', function (type, again) {
@@ -2520,7 +2536,7 @@ io.sockets.on('connection', function (socket) {
             rooms[players[socketId].room]['board']['nextStep'].info = { type: type, again: again };
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         } else {
-            console.warn('Illegal shuffle attempt in room ' + players[socketId].room + ' by player ' + socketId);
+            SERVER.warn(players[socketId].room,'Illegal shuffle attempt by player ' + socketId);
         }
     });
     socket.on('cut', function (style, location) {
@@ -2663,10 +2679,10 @@ io.sockets.on('connection', function (socket) {
             }
             if (!played) {
                 players[rooms[players[socketId].room]['players'][players[socketId]['pn']].socket].socket.emit('failedLead', toPlay);
-                console.log('Player failed to play card in room ' + players[socketId].room + ': ' + JSON.stringify(toPlay));
+                SERVER.warn(players[socketId].room,'Player failed to play card: ' + JSON.stringify(toPlay));
             }
         } else {
-            console.log('Illegal card play attempt in room '  + players[socketId].room);
+            SERVER.warn(players[socketId].room,'Illegal card play attempt');
         }
     });
     socket.on('winTrick', function () {
@@ -2697,7 +2713,7 @@ function tick() {
             if (rooms[i] && rooms[i].playerCount == 0 && rooms[i]['board']['nextStep']['action'] != 'start') {
                 clearTimeout(rooms[i].autoAction);
                 delete rooms[i];
-                console.log('Stopped empty game in room ' + i);
+                SERVER.log(i,'Stopped empty game');
             }
         }
         if (Object.keys(rooms).length == 0) {
@@ -2718,7 +2734,6 @@ function tick() {
         }
         for (let i in players) {
             if (!~players[i]['room'] && !players[i].tempDisconnect && !checkRoomsEquality(players[i].roomsSeen, simplifiedRooms)) {
-                //console.log(JSON.stringify(players[i].roomsSeen) + '\n' + JSON.stringify(simplifiedRooms) + '\n' + checkRoomsEquality(players[i].roomsSeen,simplifiedRooms));
                 players[i]['socket'].emit('returnRooms', simplifiedRooms);
                 players[i].roomsSeen = { ...simplifiedRooms };
             }
@@ -2922,11 +2937,11 @@ function aiFromFile(file) {
         seed[3] = math.matrix(f.get('/ai/outputWeights', 'r').to_array());
         seed[4] = math.matrix(f.get('/ai/outputBias', 'r').to_array());
         latestAI = new AI(seed, 0);
-        console.log('AI loaded successfully');
+        SERVER.log('AI loaded successfully');
         startAITraining();
         f.close();
     } catch (err) {
-        console.log('Error reading file from disk: ' + err);
+        SERVER.error('Error reading file from disk: ' + err);
         latestAI = new AI(false, 0);
         aiToFile(latestAI, 'latest.5');
     }
@@ -2973,9 +2988,9 @@ function aiToFile(ai, fileName) {
         saveFile.get('ai').create_dataset('outputBias', tempOutputBias, outputBiasShape, '<f');
 
         saveFile.close();
-        console.log('Saved the latest ai ' + Date.now());
+        SERVER.log('Saved the latest ai ' + Date.now());
     } catch (err) {
-        console.log('Error writing file: ' + err);
+        SERVER.error('Error writing file: ' + err);
     }
 }
 
