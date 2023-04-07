@@ -231,6 +231,9 @@ function resetBoardForNextRound(board, players) { //setup board for next round. 
     board.cutStyle = '';
     board.moneyCards = [[], [], [], []];
     board.contra = [-1,-1];
+    board.calledContra = -1;
+    board.rheaContra = -1;
+    board.supraContra = -1;
     board.firstContraPlayer = -1;
     board.importantInfo = {};
     for (let i in players) {
@@ -262,6 +265,9 @@ function Board() {
     this.iote = -1;
     this.ioteWin = 0;
     this.contra = [-1,-1];
+    this.calledContra = -1;
+    this.rheaContra = -1;
+    this.supraContra = -1;
     this.firstContraPlayer = -1;
     this.gameNumber = 0;
     this.importantInfo = {};
@@ -1752,6 +1758,7 @@ function actionCallback(action, room, pn) {
                 if (room.players[pn].isTeamPovenost == preverIsPovenost) {
                     //Povenost's team called rhea-contra
                     room['board'].contra[1] = 1;
+                    room.board.rheaContra = pn;
 
                     //Swap play to opposing team
                     do {
@@ -1763,6 +1770,7 @@ function actionCallback(action, room, pn) {
                     if (room.board.contra[0] == -1) {
                         //Regular contra
                         room.board.contra[0] = 1;
+                        room.board.calledContra = pn;
 
                         //Swap play to opposing team
                         do {
@@ -1772,6 +1780,7 @@ function actionCallback(action, room, pn) {
                     } else {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
+                        room.board.supraContra = pn;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povenost;
@@ -1821,6 +1830,7 @@ function actionCallback(action, room, pn) {
                 if (room.players[pn].isTeamPovenost == povenostIsValat) {
                     //Povenost's team called rhea-contra
                     room['board'].contra[1] = 1;
+                    room.board.rheaContra = pn;
 
                     //Swap play to opposing team
                     do {
@@ -1832,6 +1842,7 @@ function actionCallback(action, room, pn) {
                     if (room.board.contra[0] == -1) {
                         //Regular contra
                         room.board.contra[0] = 1;
+                        room.board.calledContra = pn;
 
                         //Swap play to opposing team
                         do {
@@ -1841,6 +1852,7 @@ function actionCallback(action, room, pn) {
                     } else {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
+                        room.board.supraContra = pn;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povenost;
@@ -1882,6 +1894,7 @@ function actionCallback(action, room, pn) {
                 if (room.players[pn].isTeamPovenost) {
                     //Povenost's team called rhea-contra
                     room['board'].contra[1] = 1;
+                    room.board.rheaContra = pn;
 
                     //Swap play to opposing team
                     do {
@@ -1893,6 +1906,7 @@ function actionCallback(action, room, pn) {
                     if (room.board.contra[0] == -1) {
                         //Regular contra
                         room.board.contra[0] = 1;
+                        room.board.calledContra = pn;
 
                         //Swap play to opposing team
                         do {
@@ -1902,6 +1916,7 @@ function actionCallback(action, room, pn) {
                     } else {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
+                        room.board.supraContra = pn;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povenost;
@@ -3033,7 +3048,7 @@ function generateInputs(room, pn) {
     }
     inputs = inputs.concat(ioteVector);
 
-    //Contra TODO add who called contra to board.contra, board.rheaContra, and board.supraContra
+    //Contra
     let contraVector = new Array(4).fill(0);
     if (theBoard.iote != -1) {
         contraVector[playerPerspective(theBoard.calledContra, pn)] = 1;
@@ -3117,6 +3132,9 @@ function generateInputs(room, pn) {
     this.iote = -1;
     this.ioteWin = 0;
     this.contra = [-1,-1];
+    this.calledContra = -1;
+    this.rheaContra = -1;
+    this.supraContra = -1;
     this.firstContraPlayer = -1;
     this.gameNumber = 0;
     this.importantInfo = {};
