@@ -2835,7 +2835,7 @@ function cardToVector(card) {
     //Should return a 1x27 vector. First 5 elements are suit, next 22 are value. 0 or 1
     var cardVector = new Array(vectorSize).fill(0);
     cardVector[SUIT[card.suit]] = 1;
-    cardVector[VALUE_REVERSE[card.value]] = 1;
+    cardVector[VALUE_REVERSE[card.value]+5] = 1;
     return cardVector;
 }
 
