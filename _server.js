@@ -23,7 +23,7 @@ async function importH5wasm() {
 
 //Used for non-"production" instances of the server
 const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
-const LOG_LEVEL = process.argv[3] || 3;//Defaults to INFO level. No traces or debugs.
+const LOG_LEVEL = process.argv[3] || (DEBUG_MODE ? 5 : 3);//Defaults to INFO level. No traces or debugs.
 const TRAINING_MODE = process.argv[2] == 'train';
 
 importH5wasm();
@@ -888,7 +888,6 @@ function autoAction(action, room, pn) {
     SERVER.functionCall('autoAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
     actionCallback(action, room, pn);
 }
-
 function robotAction(action, room, pn) {
 
     let hand = room['players'][pn].hand;//linked. Changing one will change the other.
@@ -1072,25 +1071,144 @@ function playerAction(action, room, pn) {
     }
     SERVER.functionCall('playerAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
 }
-
 function aiAction(action, room, pn) {
     //Uses the AI to take an action IF and only IF the AI is supposed to
     SERVER.error('AI not implemented yet!!');
     SERVER.errorTrace();
 
-    //TODO: connect to AI
     //Generate possible choices
     //If only one choice, choose it
     //Otherwise, generate inputs
     //Give the inputs and each choice to the AI and note the number returned
     //Use the highest-ranked choice
 
+    /*
+    OUTPUTS (14 x 1)
+    0. Discard this
+    1. Play this
+    2. Keep talon
+    3. Keep talon bottom
+    4. Keep talon top
+    5. Contra
+    6. Rhea-contra
+    7. Supra-contra
+    8. Prever
+    9. Valat
+    10. IOTE
+    11. povenost b/u choice
+    12. Play alone (call XIX)
+    13. Play together (call lowest)
+    Total: 14
+    */
+    let hand = room['players'][pn].hand;
+    let fakeMoneyCards = false;
+
+    if (action.player == pn) {
+        let ranking = 0;
+        let currentAI = room.players[pn].ai;
+        let think = (outputNumber, specialInfo) => {return currentAI.evaluate(generateInputs(room,pn),outputNumber,specialInfo);}
+        switch (action.action) {
+                case 'play':
+                case 'shuffle':
+                    break;
+                case 'cut':
+                    action.info.style = 'Cut';//Since this has 0 effect on gameplay, no ai necessary
+                    break;
+                case 'deal':
+                    break;
+                case '12choice':
+                    action.info.choice = robotChooseHand(room.board.hands);//Again, 0 effect on gameplay
+                    break;
+                case 'prever':
+                    action.action = 'passPrever';
+                    ranking = think(8,false);
+                    if (ranking > 0.5) {
+                        action.action = 'callPrever';
+                    }
+                    break;
+                case 'drawPreverTalon':
+                case 'drawTalon':
+                    break;
+                case 'discard':
+                    grayUndiscardables(hand);
+                    //Rank each card TODO
+
+                    action.info.card = robotDiscard(hand, room.settings.difficulty);
+                    break;
+                case 'povenostBidaUniChoice':
+                    fakeMoneyCards = true;
+                    action.action = 'moneyCards';
+                    ranking = think(11,false);
+                    room.board.buc = false;
+                    if (ranking > 0.5) {
+                        room.board.buc = true;
+                    }
+                case 'moneyCards':
+                    break;
+                case 'partner':
+                    //if povenost choose partner
+                    //Rank each choice TODO
+                    if (room['board'].povenost == pn) {
+                        action.info.partner = robotPartner(hand, room.settings.difficulty);
+                    }
+                    break;
+                case 'valat':
+                    ranking = think(9,false);
+                    action.info.valat = false;
+                    if (ranking > 0.5) {
+                        action.info.valat = true;
+                    }
+                    break;
+                case 'iote':
+                    ranking = think(10,false);
+                    action.info.iote = false;
+                    if (ranking > 0.5) {
+                        action.info.iote = true;
+                    }
+                    SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
+                    actionCallback(action, room, pn);
+                    return;//Don't inform the players who has the I
+                case 'contra':
+                case 'preverContra':
+                case 'preverValatContra':
+                case 'valatContra':
+                    action.info.contra = robotContra(hand, room.settings.difficulty);
+                    //TODO. Remember that contra, rhea-contra, and supra-contra are different outputs
+                    SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
+                    actionCallback(action, room, pn);
+                    return;
+                case 'lead':
+                    //Rank each card TODO
+                    unGrayCards(hand);
+                    action.info.card = robotLead(hand, room.settings.difficulty);
+                    break;
+                case 'follow':
+                    //Rank each card TODO
+                    grayUnplayables(hand, room.board.leadCard);
+                    action.info.card = robotPlay(hand, room.settings.difficulty);
+                    break;
+                case 'winTrick':
+                    break;
+                case 'countPoints':
+                    break;//Point counting will be added later
+                case 'resetBoard':
+                    break;//Utilitarian, no input needed
+                default:
+                    SERVER.warn(room.name,'Unknown ai action: ' + action.action);
+            }
+    }
+
     for (let i = 0; i < 4; i++) {
         if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
             players[room['players'][i].socket].socket.emit('nextAction', action);
         }
     }
+    if (fakeMoneyCards) {
+        action.action = 'povenostBidaUniChoice';
+    }
+    actionCallback(action, room, pn);
 }
+
 function actionCallback(action, room, pn) {
     // an Action is {player_num,action_type,time,info}
 
