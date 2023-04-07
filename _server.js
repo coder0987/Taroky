@@ -16,14 +16,14 @@ async function importH5wasm() {
     }
     h5wasm = await import("h5wasm");
     await h5wasm.ready;
-    aiFromFile('latest');
+    aiFromFile('latest.h5');
 }
 
 //COMMAND-LINE ARGUMENTS
 
 //Used for non-"production" instances of the server
 const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
-const LOG_LEVEL = process.argv[3] || 0;
+const LOG_LEVEL = process.argv[3] || 2;//Defaults to INFO level. No traces or debugs.
 const TRAINING_MODE = process.argv[2] == 'train';
 
 importH5wasm();
@@ -120,33 +120,49 @@ const SERVER = {
     Separating by room should also help because it will make individual "room history" logs
     */
     //TODO: create debug log files ^
-    log: (info, rn) => {
-        if (typeof rn !== 'undefined') {
-            console.log('ROOM ' + rn + ': ' + info);
-        } else {
-            console.log('SERVER: ' + info);
-        }
-    },
     error: (info, rn) => {
-        if (typeof rn !== 'undefined') {
+        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 1) {
             console.warn('ERROR IN ROOM ' + rn + ': ' + info);
-        } else {
+        } else if (LOG_LEVEL >= 1) {
             console.warn('SERVER ERROR: ' + info);
         }
     },
+    errorTrace: (info, rn) => {
+        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 1) {
+            console.trace('ERROR - STACK TRACE FOR ROOM ' + rn + ': ' + info);
+        } else if (LOG_LEVEL >= 4) {
+            console.trace('ERROR - SERVER STACK TRACE: ' + info);
+        }
+    },
+    log: (info, rn) => {
+        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 2) {
+            console.log('Room ' + rn + ': ' + info);
+        } else if (LOG_LEVEL >= 2) {
+            console.log('Server: ' + info);
+        }
+    },
+    debug: (info, rn) => {
+        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 3) {
+            console.log('(Debug) Room ' + rn + ': ' + info);
+        } else if (LOG_LEVEL >= 3) {
+            console.warn('(Debug) Server: ' + info);
+        }
+    },
     trace: (info, rn) => {
-        if (typeof rn !== 'undefined') {
-            console.trace('STACK TRACE FOR ROOM ' + rn + ': ' + info);
-        } else {
-            console.trace('SERVER STACK TRACE: ' + info);
+        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 4) {
+            console.trace('Trace - Room ' + rn + ': ' + info);
+        } else if (LOG_LEVEL >= 4) {
+            console.trace('Trace - Server: ' + info);
         }
     },
     functionCall: (name, ...parameters) => {
-        let paramString = '';
-        parameters.map(p => {
-            if (p) {paramString += p.name + ': ' + p.value;}
-        });
-        console.log(name + '() called | ' + paramString);
+        if (rooms[rn].logLevel >= 3) {
+            let paramString = '';
+            parameters.map(p => {
+                if (p) {paramString += ' ' + p.name + ': ' + p.value;}
+            });
+            console.log(name + '() called | ' + paramString);
+        }
     }
 };
 
@@ -159,7 +175,9 @@ let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
-let latestAI = null;//Instantiated later
+
+let latestAI = null;
+let trainees = [];
 let trainingRooms = [];
 
 function Room(name, debugRoom) {
@@ -169,6 +187,7 @@ function Room(name, debugRoom) {
     this.host = -1;
     this.board = new Board();
     this.playerCount = 0;
+    this.logLevel = LOG_LEVEL;//0: none, 1: errors, 2: info, 3: debug logs, 4: trace
     this.deck = [...baseDeck].sort(() => Math.random() - 0.5);
     this.players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
     this.autoAction = 0;
@@ -2892,7 +2911,7 @@ function aiFromFile(file) {
 
     try {
         const seed = [];
-        let f = new h5wasm.File("latest", "r");
+        let f = new h5wasm.File(file, "r");
         seed[0] = math.matrix(f.get('/ai/inputWeights', 'r').to_array());
         seed[1] = math.matrix(f.get('/ai/layersWeights', 'r').to_array());
         seed[2] = math.matrix(f.get('/ai/layersBias', 'r').to_array());
@@ -2905,13 +2924,13 @@ function aiFromFile(file) {
     } catch (err) {
         console.log('Error reading file from disk: ' + err);
         latestAI = new AI(false, 0);
-        aiToFile(latestAI, 'latest');
+        aiToFile(latestAI, 'latest.5');
     }
 }
 
 function aiToFile(ai, fileName) {
     try {
-        let saveFile = new h5wasm.File('latest','w');
+        let saveFile = new h5wasm.File(fileName,'w');
         saveFile.create_group('ai');
 
         let tempInputWeights = [];
@@ -2959,6 +2978,11 @@ function aiToFile(ai, fileName) {
 function startAITraining() {
     //Creates a table for AI to train at. Table is not publicly accessible.
     if (TRAINING_MODE) {
+        /*The system
+        All AI are based on "latest", the winner so far
+        New AI, training to beat latest, are stored in trainees (an array)
+
+        */
         /*TODO
             Create a series of 8 rooms with a no-delete flag (and a no-log flag)
             After each room plays 100 games, take the winner from each
