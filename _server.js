@@ -2893,14 +2893,15 @@ function aiFromFile(file) {
     try {
         const seed = [];
         let f = new h5wasm.File("latest", "r");
-        seed[0] = JSON.parse(f.get('/ai/inputWeights', 'r').to_array());
-        seed[1] = JSON.parse(f.get('/ai/layersWeights', 'r').to_array());
-        seed[2] = JSON.parse(f.get('/ai/layersBias', 'r').to_array());
-        seed[3] = JSON.parse(f.get('/ai/outputWeights', 'r').to_array());
-        seed[4] = JSON.parse(f.get('/ai/outputBias', 'r').to_array());
+        seed[0] = math.matrix(f.get('/ai/inputWeights', 'r').to_array());
+        seed[1] = math.matrix(f.get('/ai/layersWeights', 'r').to_array());
+        seed[2] = math.matrix(f.get('/ai/layersBias', 'r').to_array());
+        seed[3] = math.matrix(f.get('/ai/outputWeights', 'r').to_array());
+        seed[4] = math.matrix(f.get('/ai/outputBias', 'r').to_array());
         latestAI = new AI(seed, 0);
         console.log('AI loaded successfully');
         startAITraining();
+        f.close();
     } catch (err) {
         console.log('Error reading file from disk: ' + err);
         latestAI = new AI(false, 0);
