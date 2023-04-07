@@ -106,7 +106,7 @@ const VALUE_REVERSE = {
 };
 
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
+const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};
 const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14};
 const SENSITIVE_ACTIONS = {'povenostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
@@ -648,11 +648,13 @@ function robotPartner(hand, difficulty) {
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
             if (possiblePartners[1] && basicHandRanking(hand) >= 20) {
-                return possiblePartners[1];//Play by itself
+                return { 'value': 'XIX', 'suit': SUIT[4] };//Play by itself
             }
         case DIFFICULTY.EASY:
         case DIFFICULTY.RUDIMENTARY:
-            //TODO: more difficulty algos
+            if (possiblePartners[1]) {
+                return possiblePartners[1];//Play with a partner
+            }
             return { 'value': 'XIX', 'suit': SUIT[4] };
         default:
             //always play with XIX
@@ -2752,7 +2754,7 @@ function tick() {
     In this project, I'm going to use the second model.
     Here's how it looks (note that player numbers are using 0 as current player, +1 as player to the right, etc.):
     Every single value is between 0 and 1. S is for sigmoid
-    INPUTS  (2k x 1)            HIDDEN LAYERS  (2k x 20)        OUTPUTS (14 x 1)
+    INPUTS  (2k x 1)            HIDDEN LAYERS  (1k x 20)        OUTPUTS (14 x 1)
     0-3   S(chips/100)          Inputs is already the           Discard this
     4-7   isPovenost            absolutely ludicrous            Play this
     8-11  isPrever              2k parameters. How many         Keep talon
@@ -2861,13 +2863,160 @@ function tick() {
 
 function generateInputs(room, pn) {
     //TODO
-    //I really don't want to ),:
+    const thePlayers = room.players;
+    const theBoard = room.board;
+    let inputs = [];
+
+    //Chips
+    inputs.push(sigmoid(thePlayers[playerOffset(pn, 0)].chips/100));
+    inputs.push(sigmoid(thePlayers[playerOffset(pn, 1)].chips/100));
+    inputs.push(sigmoid(thePlayers[playerOffset(pn, 2)].chips/100));
+    inputs.push(sigmoid(thePlayers[playerOffset(pn, 3)].chips/100));
+
+    //Povenost
+    let povenostVector = new Array(4).fill(0);
+    if (theBoard.povenost != -1) {
+        povenostVector[playerPerspective(theBoard.povenost, pn)] = 1;
+    }
+    inputs = inputs.concat(povenostVector);
+
+    //Prever
+    let preverVector = new Array(4).fill(0);
+    if (theBoard.prever != -1) {
+        preverVector[playerPerspective(theBoard.prever, pn)] = 1;
+    }
+    inputs = inputs.concat(preverVector);
+
+    //Prever talon doubling
+    inputs.push(theBoard.preverTalonStep > 1 ? 1 : 0);
+    inputs.push(theBoard.preverTalonStep > 2 ? 1 : 0);
+
+    //Moneycards
+    let moneyCardsVector = new Array(32).fill(0);
+    const decodeMoneyCards = {'Uni':0,'Bida':1,'Taroky':2,'Tarocky':3,'Trul':4,'Rosa-Honery+':5,'Rosa-Honery':6,'Honery':7};
+    for (let i in theBoard.moneyCards) {
+        for (let j in theBoard.moneyCards[i]) {
+            moneyCardsVector[decodeMoneyCards[j]*4 + playerPerspective(i,pn)];
+        }
+    }
+    inputs = inputs.concat(moneyCardsVector);
+
+    //Valat
+    let valatVector = new Array(4).fill(0);
+    if (theBoard.valat != -1) {
+        valatVector[playerPerspective(theBoard.valat, pn)] = 1;
+    }
+    inputs = inputs.concat(valatVector);
+
+    //I on the End
+    let ioteVector = new Array(4).fill(0);
+    if (theBoard.iote != -1) {
+        ioteVector[playerPerspective(theBoard.iote, pn)] = 1;
+    }
+    inputs = inputs.concat(ioteVector);
+
+    //Contra TODO add who called contra to board.contra, board.rheaContra, and board.supraContra
+    let contraVector = new Array(4).fill(0);
+    if (theBoard.iote != -1) {
+        contraVector[playerPerspective(theBoard.calledContra, pn)] = 1;
+    }
+    inputs = inputs.concat(contraVector);
+
+    //Rhea-Contra
+    let rheaContraVector = new Array(4).fill(0);
+    if (theBoard.iote != -1) {
+        rheaContraVector[playerPerspective(theBoard.rheaContra, pn)] = 1;
+    }
+    inputs = inputs.concat(rheaContraVector);
+
+    //Supra-contra
+    let supraContraVector = new Array(4).fill(0);
+    if (theBoard.iote != -1) {
+        supraContraVector[playerPerspective(theBoard.supraContra, pn)] = 1;
+    }
+    inputs = inputs.concat(supraContraVector);
+
+    //PartnerCard
+    inputs.push(theBoard.partnerCard == 'XIX' ? 1 : 0);
+    inputs.push(theBoard.partnerCard == 'XVIII' ? 1 : 0);
+    inputs.push(theBoard.partnerCard == 'XVII' ? 1 : 0);
+    inputs.push(theBoard.partnerCard == 'XVI' ? 1 : 0);
+    inputs.push(theBoard.partnerCard == 'XV' ? 1 : 0);
+    inputs.push(0);//TODO handContains(partnerCard)
+
+    //CURRENT TRICK INFORMATION
+    //69-72 TrickLeader
+    //73-76 myPositionInTrick
+    //+28   firstCard
+    //+28   secondCard
+    //+28   thirdCard
+
+    //TRICK HISTORY
+    //+1    hasBeenPlayed
+    //+4    whoLead
+    //+4    myPosition
+    //+4    whoWon
+    //+28   firstCard
+    //+28   secondCard
+    //+28   thirdCard
+    //+28   fourthCard
+    //x11   tricks
+    //MY HAND
+    //+28   card
+    //x16   Max num cards in ha
+    //PREVER TALON
+    //+28   Card
+    //x3    num cards in talon
+    //PARTNER INFORMATION
+    //-Only information the AI
+    //+3    isMyPartner
+    //TRUMP DISCARD
+    //+28   card
+    //x4    max
+    //CURRENT CARD/ACTION
+    //+28   card
+    //+25   number of actions
+
+
+    /*Board
+    this.partnerCard = "";
+    this.talon = [];
+    this.table = [];
+    this.preverTalon = [];
+    this.preverTalonStep = 0;
+    this.prever = -1;
+    this.playingPrever = false;
+    this.povenost = -1;
+    this.buc = false;
+    this.leadPlayer = -1;
+    this.leadCard = null;
+    this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
+    this.cutStyle = '';
+    this.moneyCards = [[], [], [], []];
+    this.valat = -1;
+    this.trickWinCount = [0,0];
+    this.hasTheI = -1;
+    this.iote = -1;
+    this.ioteWin = 0;
+    this.contra = [-1,-1];
+    this.firstContraPlayer = -1;
+    this.gameNumber = 0;
+    this.importantInfo = {};
+    */
+}
+
+function playerOffset(startingPlayer, offset) {
+    return (+startingPlayer + +offset)%4;
+}
+
+function playerPerspective(originalPlace, viewpoint) {
+    //Ex. if player 0 is povenost and player 1 is AI, then from AI's view player 3 is povenost
+    return ((+originalPlace - +viewpoint) + 4)%4;
 }
 
 function cardToVector(card) {
-    //TODO
     //Should return a 1x27 vector. First 5 elements are suit, next 22 are value. 0 or 1
-    var cardVector = new Array(vectorSize).fill(0);
+    let cardVector = new Array(27).fill(0);
     cardVector[SUIT[card.suit]] = 1;
     cardVector[VALUE_REVERSE[card.value]+5] = 1;
     return cardVector;
@@ -3028,3 +3177,4 @@ if (DEBUG_MODE) {
     console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
     server.listen(8442);
 }
+console.log("Log level: " + LOG_LEVEL);
