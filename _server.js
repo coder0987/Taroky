@@ -1385,6 +1385,7 @@ function actionCallback(action, room, pn) {
             } else {
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 if (action.player == (room['board'].povenost + 2) % 4) {
+                    //TODO draw or pass choice
                     action.player = room['board'].povenost;
                     action.action = 'discard';
                     actionTaken = true;
