@@ -3146,10 +3146,14 @@ function generateInputs(room, pn) {
     */
 
    /*Player
-   this.hand = [...cards]
    this.type = PLAYER_TYPE.HUMAN/ROBOT/AI
-   this.socket = number
-   this.isTeamPovenost = 1/0
+   this.socket = -1
+   this.pid = -1
+   this.chips = 100
+   this.discard = []
+   this.hand = []
+   this.tempHand = []
+   this.isTeamPovenost = bool
    */
 }
 
