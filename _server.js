@@ -3110,6 +3110,11 @@ function generateInputs(room, pn) {
     //+28   card
     //+25   number of actions
 
+    /*Room
+    room['board'] = {the board}
+    room['players'] = [player1, ... player4]
+    */
+
 
     /*Board
     this.partnerCard = "";
@@ -3139,6 +3144,13 @@ function generateInputs(room, pn) {
     this.gameNumber = 0;
     this.importantInfo = {};
     */
+
+   /*Player
+   this.hand = [...cards]
+   this.type = PLAYER_TYPE.HUMAN/ROBOT/AI
+   this.socket = number
+   this.isTeamPovenost = 1/0
+   */
 }
 
 function playerOffset(startingPlayer, offset) {
