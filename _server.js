@@ -120,42 +120,42 @@ const SERVER = {
     */
     //TODO: create debug log files ^
     error: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 1) {
+        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 1) {
             console.warn('ERROR IN ROOM ' + rn + ': ' + info);
         } else if (LOG_LEVEL >= 1) {
             console.warn('SERVER ERROR: ' + info);
         }
     },
     errorTrace: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 1) {
+        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 1) {
             console.trace('ERROR - STACK TRACE FOR ROOM ' + rn + ': ' + info);
         } else if (LOG_LEVEL >= 1) {
             console.trace('ERROR - SERVER STACK TRACE: ' + info);
         }
     },
     warn: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 2) {
+        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 2) {
             console.trace('Warning - Room ' + rn + ': ' + info);
         } else if (LOG_LEVEL >= 2) {
             console.trace('Warning - Server: ' + info);
         }
     },
     log: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 3) {
+        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 3) {
             console.log('Room ' + rn + ': ' + info);
         } else if (LOG_LEVEL >= 3) {
             console.log('Server: ' + info);
         }
     },
     debug: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 4) {
+        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 4) {
             console.log('(Debug) Room ' + rn + ': ' + info);
         } else if (LOG_LEVEL >= 4) {
             console.warn('(Debug) Server: ' + info);
         }
     },
     trace: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn].logLevel >= 5) {
+        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 5) {
             console.trace('Trace - Room ' + rn + ': ' + info);
         } else if (LOG_LEVEL >= 5) {
             console.trace('Trace - Server: ' + info);
@@ -966,7 +966,7 @@ function robotAction(action, room, pn) {
             case 'resetBoard':
                 break;//Utilitarian, no input needed
             default:
-                SERVER.warn(room.name,'Unknown robot action: ' + action.action);
+                SERVER.warn('Unknown robot action: ' + action.action,room.name);
         }
         for (let i = 0; i < 4; i++) {
             if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
@@ -1200,7 +1200,7 @@ function aiAction(action, room, pn) {
                 case 'resetBoard':
                     break;//Utilitarian, no input needed
                 default:
-                    SERVER.warn(room.name,'Unknown ai action: ' + action.action);
+                    SERVER.warn('Unknown ai action: ' + action.action,room.name);
             }
     }
 
@@ -1240,7 +1240,7 @@ function actionCallback(action, room, pn) {
     switch (action.action) {
         case 'start':
             room['board'].gameNumber = 1;
-            SERVER.log(room.name, 'Game 1 is starting');
+            SERVER.log('Game 1 is starting',room.name);
             action.action = 'shuffle';
             action.player = pn;//First game, host is assumed to shuffle
             for (let i = 0; i < 4; i++) {
@@ -1253,7 +1253,7 @@ function actionCallback(action, room, pn) {
             break;
         case 'play':
             room['board'].gameNumber++;
-            SERVER.log(room.name, 'Game ' + room['board'].gameNumber + ' is starting');
+            SERVER.log('Game ' + room['board'].gameNumber + ' is starting',room.name);
             action.action = 'shuffle';
             action.player = (room['board'].povenost+3)%4;
             actionTaken = true;
@@ -1331,7 +1331,7 @@ function actionCallback(action, room, pn) {
             }
             room.board.importantInfo.povenost = (room.board.povenost+1);
             //Povenost rotation is handled by the board reset function
-            SERVER.log(room.name,'Povenost is ' + room['board'].povenost);
+            SERVER.log('Povenost is ' + room['board'].povenost,room.name);
             room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
             action.action = 'prever';
             action.player = room['board'].povenost;
@@ -1356,7 +1356,7 @@ function actionCallback(action, room, pn) {
                 }
                 room.board.importantInfo.povenost = (room.board.povenost+1);
                 //Povenost rotation is handled by the board reset function
-                SERVER.log(room.name,'Povenost is ' + room['board'].povenost);
+                SERVER.log('Povenost is ' + room['board'].povenost,room.name);
                 room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
                 action.action = 'prever';
                 action.player = room['board'].povenost;
@@ -1553,9 +1553,9 @@ function actionCallback(action, room, pn) {
                     players[room['players'][pn].socket].socket.emit('failedDiscard', card);
                 }
                 if (action.info.card) {
-                    SERVER.warn(room.name, 'Player ' + pn + ' failed to discard the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                    SERVER.warn('Player ' + pn + ' failed to discard the ' + action.info.card.value + ' of ' + action.info.card.suit,room.name);
                 }
-                SERVER.warn(room.name, 'Failed to discard. Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                SERVER.warn('Failed to discard. Cards in hand: ' + JSON.stringify(room['players'][pn].hand),room.name);
             }
             break;
         case 'povenostBidaUniChoice':
@@ -1980,9 +1980,9 @@ function actionCallback(action, room, pn) {
                     SOCKET_LIST[room['players'][pn].socket].emit('failedLeadCard', cardToLead);
                 }
                 if (cardToLead && cardToLead.suit && cardToLead.value) {
-                    SERVER.warn(room.name,'Player ' + pn + ' failed to lead the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                    SERVER.warn('Player ' + pn + ' failed to lead the ' + action.info.card.value + ' of ' + action.info.card.suit,room.name);
                 }
-                SERVER.warn(room.name,'Failed to lead. Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                SERVER.warn('Failed to lead. Cards in hand: ' + JSON.stringify(room['players'][pn].hand),room.name);
             }
             break;
         case 'follow':
@@ -2016,17 +2016,17 @@ function actionCallback(action, room, pn) {
                 }
             } else {
                 if (players[pn].type != PLAYER_TYPE.HUMAN) {
-                    SERVER.errorTrace(room.name,'Robot attempted to play illegal card');
-                    SERVER.error(room.name,JSON.stringify(cardToPlay));
-                    SERVER.error(room.name,'Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                    SERVER.errorTrace('Robot attempted to play illegal card',room.name);
+                    SERVER.error(JSON.stringify(cardToPlay),room.name);
+                    SERVER.error('Cards in hand: ' + JSON.stringify(room['players'][pn].hand),room.name);
                     break;
                 }
                 players[room['players'][pn].socket].socket.emit('failedPlayCard', cardToPlay);
                 if (cardToPlay && cardToPlay.suit && cardToPlay.value) {
-                    SERVER.warn(room.name, 'Player ' + pn + ' failed to play the ' + action.info.card.value + ' of ' + action.info.card.suit);
+                    SERVER.warn('Player ' + pn + ' failed to play the ' + action.info.card.value + ' of ' + action.info.card.suit,room.name);
                 }
-                SERVER.warn(room.name,JSON.stringify(cardToPlay));
-                SERVER.warn(room.name,'Failed to follow. Cards in hand: ' + JSON.stringify(room['players'][pn].hand));
+                SERVER.warn(JSON.stringify(cardToPlay),room.name);
+                SERVER.warn('Failed to follow. Cards in hand: ' + JSON.stringify(room['players'][pn].hand),room.name);
             }
             break;
         case 'winTrick':
@@ -2162,31 +2162,31 @@ function actionCallback(action, room, pn) {
 
                     //Sanity check
                     if (povenostTeamPoints + opposingTeamPoints != 106) {
-                        SERVER.debug(room.name, '-------------------------')
-                        SERVER.error('Error: incorrect number of points\nPovenost team: ' + povenostTeamPoints + '\nOpposing team: ' + opposingTeamPoints);
-                        SERVER.debug(room.name, JSON.stringify(povenostTeamDiscard));
-                        SERVER.debug(room.name, JSON.stringify(opposingTeamDiscard));
+                        SERVER.debug('-------------------------',room.name)
+                        SERVER.error('Error: incorrect number of points\nPovenost team: ' + povenostTeamPoints + '\nOpposing team: ' + opposingTeamPoints,room.name);
+                        SERVER.debug(JSON.stringify(povenostTeamDiscard),room.name);
+                        SERVER.debug(JSON.stringify(opposingTeamDiscard),room.name);
                         //Time to search anywhere and everywhere for the missing cards
-                        SERVER.debug(room.name, 'Hands: ')
+                        SERVER.debug('Hands: ',room.name)
                         for (let i in room.players) {
-                            SERVER.debug(room.name, JSON.stringify(room.players[i].hand))
+                            SERVER.debug(JSON.stringify(room.players[i].hand),room.name)
                         }
-                        SERVER.debug(room.name, 'Discard: ')
+                        SERVER.debug('Discard: ',room.name)
                         for (let i in room.players) {
-                            SERVER.debug(room.name, JSON.stringify(room.players[i].discard))
+                            SERVER.debug(JSON.stringify(room.players[i].discard),room.name)
                         }
-                        SERVER.debug(room.name, 'TempHands: ')
+                        SERVER.debug('TempHands: ',room.name)
                         for (let i in room.players) {
-                            SERVER.debug(room.name, JSON.stringify(room.players[i].tempHand))
+                            SERVER.debug(JSON.stringify(room.players[i].tempHand),room.name)
                         }
-                        SERVER.debug(room.name, 'Talon: ')
-                        SERVER.debug(room.name, JSON.stringify(room.board.talon));
-                        SERVER.debug(room.name, 'Prever talon:')
-                        SERVER.debug(room.name, JSON.stringify(room.board.preverTalon));
-                        SERVER.debug(room.name, 'Table: ')
-                        SERVER.debug(room.name, JSON.stringify(room.board.table));
-                        SERVER.debug(room.name, 'Deck: ')
-                        SERVER.debug(room.name, JSON.stringify(room.deck) + '\n');
+                        SERVER.debug('Talon: ',room.name);
+                        SERVER.debug(JSON.stringify(room.board.talon),room.name);
+                        SERVER.debug('Prever talon:',room.name);
+                        SERVER.debug(JSON.stringify(room.board.preverTalon),room.name);
+                        SERVER.debug('Table: ',room.name);
+                        SERVER.debug(JSON.stringify(room.board.table),room.name);
+                        SERVER.debug('Deck: ',room.name);
+                        SERVER.debug(JSON.stringify(room.deck) + '\n',room.name);
                         //Check which cards are missing from the team point piles
                         let combinedPointPile = [];
                         for (let c in povenostTeamDiscard) {
@@ -2206,11 +2206,11 @@ function actionCallback(action, room, pn) {
                                 }
                             }
                             if (!found) {
-                                SERVER.debug(room.name, 'Card ' + baseDeck[i].value + ' of ' + baseDeck[i].suit + ' was not found');
-                                SERVER.debug(room.name, 'Point value: ' + pointValue(baseDeck[i]));
+                                SERVER.debug('Card ' + baseDeck[i].value + ' of ' + baseDeck[i].suit + ' was not found',room.name);
+                                SERVER.debug('Point value: ' + pointValue(baseDeck[i]),room.name);
                             }
                         }
-                        SERVER.debug(room.name, '-------------------------')
+                        SERVER.debug('-------------------------',room.name)
                     }
 
                     chipsOwed = 53 - opposingTeamPoints;//Positive: opposing team pays. Negative: povenost team pays
@@ -2296,11 +2296,11 @@ function actionCallback(action, room, pn) {
                 team2Players[i].chips -= tempChipsOwed;
             }
             if (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips != 400) {
-                SERVER.error(room.name,'Incorrect chip count! Total count: ' + (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips))
-                SERVER.debug(room.name, 'Player 1: ' + room.players[0].chips)
-                SERVER.debug(room.name, 'Player 2: ' + room.players[2].chips)
-                SERVER.debug(room.name, 'Player 3: ' + room.players[3].chips)
-                SERVER.debug(room.name, 'Player 4: ' + room.players[4].chips)
+                SERVER.error('Incorrect chip count! Total count: ' + (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips),room.name)
+                SERVER.debug( 'Player 1: ' + room.players[0].chips,room.name)
+                SERVER.debug( 'Player 2: ' + room.players[2].chips,room.name)
+                SERVER.debug( 'Player 3: ' + room.players[3].chips,room.name)
+                SERVER.debug( 'Player 4: ' + room.players[4].chips,room.name)
             }
             if (chipsOwed < 0) {
                 /* TODO: make informing the players a bit better
@@ -2332,8 +2332,8 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             break;
         default:
-            SERVER.warn(room.name,'Unrecognized actionCallback: ' + action.action);
-            SERVER.trace(room.name,'');
+            SERVER.warn('Unrecognized actionCallback: ' + action.action,room.name);
+            SERVER.trace('',room.name);
     }
     action.info = {};
 
@@ -2348,8 +2348,8 @@ function actionCallback(action, room, pn) {
     if (actionTaken) {
 
         //Sanity Check 
-        if (action.player > 3 || action.player < 0) {SERVER.error(room.name,'Illegal player number: ' + action.player + ' during action ' + action.action); action.player %= 4; }
-        if (!room['players'][action.player]) { SERVER.error(room.name,'There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players'])); }
+        if (action.player > 3 || action.player < 0) {SERVER.error('Illegal player number: ' + action.player + ' during action ' + action.action,room.name); action.player %= 4; }
+        if (!room['players'][action.player]) { SERVER.error('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players']),room.name); }
 
 
         action.time = Date.now();
@@ -2410,7 +2410,7 @@ function disconnectPlayerTimeout(socketId) {
             if (rooms[players[socketId].room]['playerCount'] == 0) {
                 //Delete the room
                 clearTimeout(rooms[players[socketId].room].autoAction);
-                SERVER.log(players[socketId].room, 'Game Ended. Closing the room.');
+                SERVER.log('Game Ended. Closing the room.',players[socketId].room);
                 delete rooms[players[socketId].room];
             } else {
                 rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' disconnected',MESSAGE_TYPE.DISCONNECT);
@@ -2502,7 +2502,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('exitRoom', function() {
         if (players[socketId]) {
             if (~players[socketId].room) {
-                SERVER.log(players[socketId].room, 'Player ' + socketId + ' left the room');
+                SERVER.log('Player ' + socketId + ' left the room',players[socketId].room);
                 rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
                 rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
                 rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
@@ -2519,7 +2519,7 @@ io.sockets.on('connection', function (socket) {
                     //Delete the room if no one is left in it
                     clearTimeout(rooms[players[socketId].room].autoAction);
                     delete rooms[players[socketId].room];
-                    SERVER.log(players[socketId].room, 'Stopped empty game');
+                    SERVER.log('Stopped empty game',players[socketId].room);
                 } else {
                     rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' left the room',MESSAGE_TYPE.DISCONNECT);
                     if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
@@ -2558,12 +2558,12 @@ io.sockets.on('connection', function (socket) {
                     if (rooms[roomID]['playerCount'] == 1) {
                         rooms[roomID]['host'] = socketId;
                         socket.emit('roomHost');
-                        SERVER.debug(roomID,'New room host');
+                        SERVER.debug('New room host',roomID);
                         if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
                             socket.emit('youStart');
                         } else {
                             autoReconnect(socketId);
-                            SERVER.error(roomID,'Player joined empty room with no host that was started');
+                            SERVER.error('Player joined empty room with no host that was started',roomID);
                         }
                     } else {
                         autoReconnect(socketId);
@@ -2576,19 +2576,19 @@ io.sockets.on('connection', function (socket) {
                 }
             }
         } else {
-            SERVER.warn(roomID,'Invalid attempt to connect to room');
+            SERVER.warn('Invalid attempt to connect to room',roomID);
             if (rooms[roomID]) {
-                SERVER.debug(roomID,'Room contains ' + rooms[roomID]['playerCount'] + ' players');
+                SERVER.debug('Room contains ' + rooms[roomID]['playerCount'] + ' players',roomID);
                 if (rooms[roomID].locked) {
-                    SERVER.debug(roomID,'Room is locked');
+                    SERVER.debug('Room is locked',roomID);
                 }
             } else {
-                SERVER.debug(roomID,'This room does not exist');
+                SERVER.debug('This room does not exist',roomID);
             }
             if (players[socketId]) {
-                SERVER.debug(roomID,'Player is in room ' + players[socketId].room);
+                SERVER.debug('Player is in room ' + players[socketId].room,roomID);
             } else {
-                SERVER.debug(roomID,'Player ' + socketId + ' does not exist');
+                SERVER.debug('Player ' + socketId + ' does not exist',roomID);
             }
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
@@ -2612,7 +2612,7 @@ io.sockets.on('connection', function (socket) {
                 case 'difficulty':
                     if (DIFFICULTY_TABLE[rule]) {
                         rooms[players[socketId].room].settings.difficulty = rule;
-                        SERVER.debug(players[socketId].room,'Difficulty is set to ' + DIFFICULTY_TABLE[rule]);
+                        SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[rule],players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
                     }
                     break;
@@ -2626,7 +2626,7 @@ io.sockets.on('connection', function (socket) {
                             rule = 3600000;//One hour max
                         }
                         rooms[players[socketId].room].settings.timeout = rule;
-                        SERVER.debug(players[socketId].room,'Timeout is set to ' + (rule/1000) + 's');
+                        SERVER.debug('Timeout is set to ' + (rule/1000) + 's',players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + (rule/1000) + 's', MESSAGE_TYPE.SETTING);
                     }
                     break;
@@ -2647,10 +2647,10 @@ io.sockets.on('connection', function (socket) {
         if (rooms[players[socketId].room]['host'] == socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], players[socketId].pn);
         } else {
-            SERVER.warn(players[socketId].room,'Failed attempt to start the game by player ' + socketId);
+            SERVER.warn('Failed attempt to start the game by player ' + socketId,players[socketId].room);
             if (rooms[players[socketId].room]['host'] == socketId) {
                 //Player is host but game was already started
-                SERVER.debug(players[socketId].room,'Player is host but the game was already started. Informing host of the next step');
+                SERVER.debug('Player is host but the game was already started. Informing host of the next step',players[socketId].room);
                 socket.emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
             } else {
                 SERVER.debug('Player is not the host. The host is ' + rooms[players[socketId].room]['host']);
@@ -2662,7 +2662,7 @@ io.sockets.on('connection', function (socket) {
         if (rooms[players[socketId].room]['board']['nextStep'].action === 'play' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         } else {
-            SERVER.warn(players[socketId].room,'Illegal game play attempt by player ' + socketId);
+            SERVER.warn('Illegal game play attempt by player ' + socketId,players[socketId].room);
         }
     });
     socket.on('shuffle', function (type, again) {
@@ -2671,7 +2671,7 @@ io.sockets.on('connection', function (socket) {
             rooms[players[socketId].room]['board']['nextStep'].info = { type: type, again: again };
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         } else {
-            SERVER.warn(players[socketId].room,'Illegal shuffle attempt by player ' + socketId);
+            SERVER.warn('Illegal shuffle attempt by player ' + socketId,players[socketId].room);
         }
     });
     socket.on('cut', function (style, location) {
@@ -2814,10 +2814,10 @@ io.sockets.on('connection', function (socket) {
             }
             if (!played) {
                 players[rooms[players[socketId].room]['players'][players[socketId]['pn']].socket].socket.emit('failedLead', toPlay);
-                SERVER.warn(players[socketId].room,'Player failed to play card: ' + JSON.stringify(toPlay));
+                SERVER.warn('Player failed to play card: ' + JSON.stringify(toPlay),players[socketId].room);
             }
         } else {
-            SERVER.warn(players[socketId].room,'Illegal card play attempt');
+            SERVER.warn('Illegal card play attempt',players[socketId].room);
         }
     });
     socket.on('winTrick', function () {
@@ -2848,7 +2848,7 @@ function tick() {
             if (rooms[i] && rooms[i].playerCount == 0 && rooms[i]['board']['nextStep']['action'] != 'start') {
                 clearTimeout(rooms[i].autoAction);
                 delete rooms[i];
-                SERVER.log(i,'Stopped empty game');
+                SERVER.log('Stopped empty game',i);
             }
         }
         if (Object.keys(rooms).length == 0) {
