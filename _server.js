@@ -107,7 +107,7 @@ const VALUE_REVERSE = {
 
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14};
+const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15};
 const SENSITIVE_ACTIONS = {'povenostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
@@ -186,6 +186,166 @@ let latestAI = null;
 let trainees = [];
 let trainingRooms = [];
 
+function notate(room, notation) {
+    if (notation) {
+        try {
+            if (typeof notation !== "string") {
+                return false;
+            }
+            room = room || new Room('temporary',false);
+            //Return the room
+            let values = notation.split('/');
+            if (values.length > 20 || values.length < 10) {
+                return false;
+            }
+            let players = room.players;
+            for (let i=0; i<4; i++) {
+                if (isNaN(+values[i])) {
+                    return false;
+                }
+                players[i].chips = +values[i];
+            }
+            for (let i=0; i<4; i++) {
+                let theHand = notationToCards(values[i+4]);
+                if (theHand) {
+                    players[i].hand = theHand;
+                } else {
+                    return false;
+                }
+            }
+            let theTalon = notationToCards(values[8]);
+            if (theTalon) {
+                room.board.talon = theTalon;
+            } else {
+                return false;
+            }
+
+            //This is the first point at which the game may reasonably be played from
+            //So, encode the settings if they exist. Then, if no more is present, return the room
+            let theSettings = values[values.length - 1].split(';');
+            for (let i in theSettings) {
+                let [setting,rule] = theSettings[i].split('=');
+                if (u(setting) || u(rule)) {
+                    SERVER.debug('Undefined setting or rule')
+                } else {
+                    switch (setting) {
+                        case 'difficulty':
+                            if (DIFFICULTY_TABLE[rule]) {
+                                room.settings.difficulty = rule;
+                            }
+                            break;
+                        case 'timeout':
+                            rule = +rule;
+                            if (!isNaN(rule)) {
+                                if (rule <= 0) {
+                                    rule = 0;//No timeout for negatives
+                                } else if (rule <= 20000) {
+                                    rule = 20000;//20 second min
+                                } else if (rule >= 3600000) {
+                                    rule = 3600000;//One hour max
+                                }
+                               room.settings.timeout = rule;
+                            }
+                            break;
+                        case 'lock':
+                            if (rule) {
+                                //Room may be locked but not unlocked
+                                rooms[players[socketId].room].settings.locked = true;
+                            }
+                            break;
+                        default:
+                            SERVER.warn('Unknown setting: ' + setting + '=' + rule);
+                    }
+                }
+            }
+            if (values.length === 10) {
+                return room;
+            }
+            //TODO: finish notation decoding. Next is discarding. See TarokyNotation.md
+            return room;
+        } catch (err) {
+            SERVER.debug(err);
+            return false;
+        }
+    }
+    return false;
+}
+
+function u(v) {
+    if (typeof v === 'undefined') {
+        return true;
+    }
+    return false;
+}
+
+function notationToCards(notatedCards) {
+    try {
+        let cards = [];
+        const SUIT_NOTATION = {S:SUIT[0],C:SUIT[1],H:SUIT[2],D:SUIT[3],T:SUIT[4]};
+        const VALUE_NOTATION = {'1':0,'2':1,'3':2,'4':3,'J':4,'R':5,'Q':6,'K':7};
+        //Trump values: +value+1
+        while (notatedCards.length >= 2) {
+            let suit = SUIT_NOTATION[notatedCards.slice(0,1)];
+            if (u(suit)) {
+                return false;
+            }
+            if (suit === SUIT[4]) {
+                let value = TRUMP_VALUE[+notatedCards.slice(0,2)+1];
+                if (u(value)) {return false;}
+                cards.push({'value':value, 'suit': SUIT[4]});
+            } else {
+                let value = VALUE_NOTATION[notatedCards.slice(0,1)];
+                value = (suit === SUIT[0] || suit === SUIT[1]) ? RED_VALUE[value] : BLACK_VALUE[value];
+                if (u(value)) {return false;}
+                cards.push({ 'value': value, 'suit': suit });
+            }
+        }
+        return cards;
+    } catch (err) {
+        SERVER.debug(err);
+        return false;
+    }
+}
+function cardsToNotation(cards) {
+    let theNotation = '';
+    const SUIT_TO_NOTATION = {SUIT[0]: 'S', SUIT[1]: 'C', SUIT[2]: 'H', SUIT[3]: 'D', SUIT[4]: 'T'};
+
+    for (let i in cards) {
+        theNotation += SUIT_TO_NOTATION[cards[i].suit];
+        if (cards[i].suit == SUIT[4]) {
+            //Trump
+            let temp = +VALUE_REVERSE[cards[i].value] + 1;
+            if (temp < 10) {
+                temp = '0' + temp;
+            }
+            theNotation += temp;
+        } else {
+            switch (cards[i].value) {
+                case 'Ace':
+                case 'Seven':
+                    theNotation += '1';
+                    break;
+                case 'Two':
+                case 'Eight':
+                    theNotation += '2';
+                    break;
+                case 'Three':
+                case 'Nine':
+                    theNotation += '3';
+                    break;
+                case 'Four':
+                case 'Ten':
+                    theNotation += '4';
+                    break;
+                default:
+                    theNotation += cards[i].value.substring(0,1);
+            }
+        }
+    }
+    return theNotation;
+}
+
+
 function Room(name, debugRoom) {
     this.debug = debugRoom; //Either undefined or true
     this.settings = {'difficulty':DIFFICULTY.EASY, 'timeout': 30*1000, 'locked':false};
@@ -210,7 +370,7 @@ function Room(name, debugRoom) {
         }
     }
 }
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; }
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; this.savePoints = []; }
 function resetBoardForNextRound(board, players) { //setup board for next round. dealer of next round is this rounds povenost
     board.partnerCard = "";
     board.talon = [];
@@ -236,6 +396,7 @@ function resetBoardForNextRound(board, players) { //setup board for next round. 
     board.supraContra = -1;
     board.firstContraPlayer = -1;
     board.importantInfo = {};
+    board.notation = '';
     for (let i in players) {
         players[i].hand = [];
         players[i].discard = [];
@@ -271,6 +432,7 @@ function Board() {
     this.firstContraPlayer = -1;
     this.gameNumber = 0;
     this.importantInfo = {};
+    this.notation = '';
 }
 function createDeck() {
     let theDeck = [];
@@ -2317,12 +2479,20 @@ function actionCallback(action, room, pn) {
                 }
             }
 
+            room.informPlayers(room.board.notation, MESSAGE_TYPE.NOTATION);
+
             actionTaken = true;
             action.action = 'resetBoard';
             break;
         case 'resetBoard':
             //Reset everything for between matches. The board's properties, the players' hands, povenost alliances, moneyCards, etc.
             //Also, iterate povenost by 1
+            if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
+                if (SOCKET_LIST[room.players[pn].socket] && room.players[pn].savePoints > 0) {
+                    SOCKET_LIST[room.players[pn].socket].emit('returnSavePoints',room.players[pn].savePoints);
+                    room.players[pn].savePoints = [];
+                }
+            }
             action.player = (action.player+1)%4;
             if (action.player == room.board.povenost) {
                 resetBoardForNextRound(room['board'],room.players);
@@ -2594,6 +2764,51 @@ io.sockets.on('connection', function (socket) {
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
     });
+    socket.on('customRoom', function (tarokyNotation, pn) {
+        let connected = false;
+        if (isNaN(pn) || pn < 0 || pn > 4) {
+            return;
+        }
+        if (players[socketId] && players[socketId].room == -1) {
+            let tempRoom = new Room('temporary');
+            //Decode TarokyNotation into the room
+            if (notate(tempRoom,tarokyNotation)) {
+                return;//TODO: finish this
+                let i = 1;
+                for (; rooms['Custom ' + i]; i++) { }
+                let roomID = 'Custom ' + i;
+                tempRoom.name = roomID;
+                rooms[roomID] = tempRoom;
+                rooms[roomID]['players'][pn].type = PLAYER_TYPE.HUMAN;
+                rooms[roomID]['players'][pn].socket = socketId;
+                rooms[roomID]['players'][pn].pid = players[socketId].pid;
+                rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
+                socket.emit('roomConnected', roomID);
+                connected = true;
+                players[socketId]['room'] = roomID;
+                players[socketId]['pn'] = pn;
+                rooms[roomID]['host'] = socketId;
+                autoReconnect(socketId);
+                socket.emit('timeSync', Date.now());
+            }
+        } else {
+            SERVER.warn('Invalid attempt to connect to room',roomID);
+            if (rooms[roomID]) {
+                SERVER.debug('Room contains ' + rooms[roomID]['playerCount'] + ' players',roomID);
+                if (rooms[roomID].locked) {
+                    SERVER.debug('Room is locked',roomID);
+                }
+            } else {
+                SERVER.debug('This room does not exist',roomID);
+            }
+            if (players[socketId]) {
+                SERVER.debug('Player is in room ' + players[socketId].room,roomID);
+            } else {
+                SERVER.debug('Player ' + socketId + ' does not exist',roomID);
+            }
+        }
+        if (!connected) socket.emit('roomNotConnected', roomID);
+    });
     socket.on('requestTimeSync', function() {
         socket.emit('timeSync', Date.now());
     });
@@ -2834,6 +3049,11 @@ io.sockets.on('connection', function (socket) {
     socket.on('resetBoard', function () {
         if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'resetBoard' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('createSavePoint', function() {
+        if (rooms[players[socketId].room] && rooms[players[socketId].room].board.notation.length > 0 && players[socketId].savePoints[players[socketId].savePoints.length - 1] != rooms[players[socketId].room].board.notation) {
+            players[socketId].savePoints.push(rooms[players[socketId].room].board.notation);
         }
     });
 });
