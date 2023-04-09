@@ -38,6 +38,7 @@ When starting the server, use\
 
 This will activate debug mode and set log level to 5\
 These are the log levels:
+
 0.  Server crashes only 
 1. Recoverable Errors 
 2. Warnings 
