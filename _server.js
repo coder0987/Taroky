@@ -228,7 +228,7 @@ function notate(room, notation) {
             let toCheck = theTalon.concat(players[0].hand).concat(players[1].hand).concat(players[2].hand).concat(players[3].hand);
             for (let i in baseDeck) {
                 let found = false;
-                for (let j in combinedPointPile) {
+                for (let j in toCheck) {
                     if (baseDeck[i].suit == toCheck[j].suit &&
                         baseDeck[i].value == toCheck[j].value) {
                         found = true;
@@ -269,6 +269,7 @@ function notate(room, notation) {
                             }
                             break;
                         case 'lock':
+                            rule = !(!rule);
                             if (rule) {
                                 //Room may be locked but not unlocked
                                 rooms[players[socketId].room].settings.locked = true;
@@ -377,10 +378,18 @@ function cardsToNotation(cards) {
     return theNotation;
 }
 
+function setSettingNotation(room) {
+    let settingNotation = '';
+    for (let i in room.settings) {
+        settingNotation += i + '=' + settingNotation[i] + ';';
+    }
+    room.settingsNotation = settingNotation.substring(0,settingNotation.length - 2);
+}
 
 function Room(name, debugRoom) {
     this.debug = debugRoom; //Either undefined or true
-    this.settings = {'difficulty':DIFFICULTY.EASY, 'timeout': 30*1000, 'locked':false};
+    this.settings = {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'locked':false};
+    this.settingsNotation = 'difficulty=2;timeout=30000;locked=false';
     this.name = name;
     this.host = -1;
     this.board = new Board();
@@ -1524,6 +1533,15 @@ function actionCallback(action, room, pn) {
                 room['board'].povenost = findPovenost(room['players'])
             }
             room.board.importantInfo.povenost = (room.board.povenost+1);
+            room.board.notation = '' + room.players[room['board'].povenost].chips + '/'
+                                    + room.players[playerOffset(room['board'].povenost,1)].chips + '/'
+                                    + room.players[playerOffset(room['board'].povenost,2)].chips + '/'
+                                    + room.players[playerOffset(room['board'].povenost,3)].chips + '/'
+                                    + cardsToNotation(room.players[playerOffset(room['board'].povenost,0)].hand) + '/'
+                                    + cardsToNotation(room.players[playerOffset(room['board'].povenost,1)].hand) + '/'
+                                    + cardsToNotation(room.players[playerOffset(room['board'].povenost,2)].hand) + '/'
+                                    + cardsToNotation(room.players[playerOffset(room['board'].povenost,3)].hand) + '/'
+                                    + cardsToNotation(room.board.talon) + '/';
             //Povenost rotation is handled by the board reset function
             SERVER.log('Povenost is ' + room['board'].povenost,room.name);
             room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
@@ -2511,7 +2529,7 @@ function actionCallback(action, room, pn) {
                 }
             }
 
-            room.informPlayers(room.board.notation, MESSAGE_TYPE.NOTATION);
+            room.informPlayers(room.board.notation + room.settingsNotation, MESSAGE_TYPE.NOTATION);
 
             actionTaken = true;
             action.action = 'resetBoard';
@@ -2861,6 +2879,7 @@ io.sockets.on('connection', function (socket) {
                 case 'difficulty':
                     if (DIFFICULTY_TABLE[rule]) {
                         rooms[players[socketId].room].settings.difficulty = rule;
+                        setSettingNotation(rooms[players[socketId].room]);
                         SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[rule],players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
                     }
@@ -2875,6 +2894,7 @@ io.sockets.on('connection', function (socket) {
                             rule = 3600000;//One hour max
                         }
                         rooms[players[socketId].room].settings.timeout = rule;
+                        setSettingNotation(rooms[players[socketId].room]);
                         SERVER.debug('Timeout is set to ' + (rule/1000) + 's',players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + (rule/1000) + 's', MESSAGE_TYPE.SETTING);
                     }
@@ -2883,6 +2903,7 @@ io.sockets.on('connection', function (socket) {
                     if (rule) {
                         //Room may be locked but not unlocked
                         rooms[players[socketId].room].settings.locked = true;
+                        setSettingNotation(rooms[players[socketId].room]);
                         SERVER.log('This room has been locked by the host', players[socketId].room);
                         rooms[players[socketId].room].informPlayers('The room has been locked. No more players may join', MESSAGE_TYPE.SETTING);
                     }
@@ -3085,8 +3106,8 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('createSavePoint', function() {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room].board.notation.length > 0 && players[socketId].savePoints[players[socketId].savePoints.length - 1] != rooms[players[socketId].room].board.notation) {
-            players[socketId].savePoints.push(rooms[players[socketId].room].board.notation);
+        if (rooms[players[socketId].room] && rooms[players[socketId].room].board.notation.length > 0 && players[socketId].savePoints[players[socketId].savePoints.length - 1] != rooms[players[socketId].room].board.notation + rooms[players[socketId].room].settingsNotation) {
+            players[socketId].savePoints.push(rooms[players[socketId].room].board.notation + room.settingsNotation);
         }
     });
 });
