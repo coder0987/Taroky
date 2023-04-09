@@ -136,7 +136,7 @@ Then tricks are denoted by cards and separated by slashes. The winner is placed 
 
 After the 12 tricks, different settings are shown
 
-.../trick12/settings;
+.../trick12/settings
 
 Settings are in the form FLAG=VALUE;FLAG=VALUE; etc.
 
@@ -146,7 +146,7 @@ ACEWINS=true;
 
 TIMEOUT=30;
 
-DIFFICULTY=AI;
+DIFFICULTY=AI
 
 ### All Together
 
@@ -155,3 +155,9 @@ chips/hands/talon/pass/discard/moneycards/partner/valat/contra/iote/tricks/setti
 Or for prever
 
 chips/hands/talon/prever/discard/moneycards/valat/contra/iote/tricks/settings
+
+### Examples
+
+Default game directly after cards were dealt:
+
+100/100/100/100/H1H2H3H4HJHRHQHKS1S2S3S4/SJSRSQSKD1D2D3D4DJDRDQDK/C1C2C3C4CJCRCQCKT01T02T03T04/T05T06T07T08T09T10T11T12T13T14T15T16/T17T18T19T20T21T22/;

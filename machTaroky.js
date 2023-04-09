@@ -461,6 +461,7 @@ function onLoad() {
                 createRoomCard('rooms',availableRooms[i],i);
                 drawnRooms.push(availableRooms[i]);
             }
+            createCustomRoomCard();
         }
         if (connectingToRoom) {
             addMessage('loading...');//ADD LOADING ANIMATION
@@ -911,6 +912,20 @@ function buttonClick() {
     } else {addError('Already connecting to a room!');}
 }
 
+function customRoomClick() {
+    if (!connectingToRoom) {
+        let notation = prompt('Room Notation');
+        if (notation.length < 10) {
+            return;
+        }
+        let thePN = prompt('Player number (0 for povenost, up to 3)');
+        if (+thePN > 3 || +thePN < 0) {return;}
+        connectingToRoom=true;
+        socket.emit('customRoom',notation, +thePN);
+        addMessage('Creating custom room...');
+    } else {addError('Already connecting to a room!');}
+}
+
 function createRoomCard(elementId, simplifiedRoom, roomId) {
     const bDiv = document.createElement('div');
     bDiv.classList.add('roomcard');
@@ -938,6 +953,30 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     //Make it clickable
     bDiv.roomID = roomId;
     bDiv.addEventListener('click', buttonClick);
+    document.getElementById('rooms').appendChild(bDiv);
+}
+
+function createCustomRoomCard() {
+    const bDiv = document.createElement('div');
+    bDiv.classList.add('roomcard');
+    bDiv.classList.add('col-md-3');
+    bDiv.classList.add('col-xs-6');
+    bDiv.classList.add('white');
+    bDiv.id = 'roomCardCustom';
+    const numberDiv = document.createElement('div');
+    numberDiv.classList.add('roomnum');
+    numberDiv.classList.add('d-flex');
+    numberDiv.classList.add('justify-content-center');
+    numberDiv.innerHTML = 'Custom';
+    numberDiv.id = 'roomNumCustom';
+    bDiv.appendChild(numberDiv);
+    const playerCountSpan = document.createElement('span');
+    for (let i=0; i<4; i++) {
+        playerCountSpan.innerHTML += '&#x25CB; ';
+    }
+    bDiv.appendChild(playerCountSpan);
+    //Make it clickable
+    bDiv.addEventListener('click', customRoomClick);
     document.getElementById('rooms').appendChild(bDiv);
 }
 

@@ -190,17 +190,21 @@ function notate(room, notation) {
     if (notation) {
         try {
             if (typeof notation !== "string") {
+                SERVER.debug('Notation: not a string');
                 return false;
             }
             room = room || new Room('temporary',false);
+            room.board.povenost = 0;
             //Return the room
             let values = notation.split('/');
             if (values.length > 20 || values.length < 10) {
+                SERVER.debug('Notation: Illegal number of values');
                 return false;
             }
             let players = room.players;
             for (let i=0; i<4; i++) {
                 if (isNaN(+values[i])) {
+                    SERVER.debug('Notation: chips count is NaN');
                     return false;
                 }
                 players[i].chips = +values[i];
@@ -210,6 +214,7 @@ function notate(room, notation) {
                 if (theHand) {
                     players[i].hand = theHand;
                 } else {
+                    SERVER.debug('Notation: hand is illegal');
                     return false;
                 }
             }
@@ -217,8 +222,10 @@ function notate(room, notation) {
             if (theTalon) {
                 room.board.talon = theTalon;
             } else {
+                SERVER.debug('Notation: talon is illegal');
                 return false;
             }
+
 
             //This is the first point at which the game may reasonably be played from
             //So, encode the settings if they exist. Then, if no more is present, return the room
@@ -259,15 +266,18 @@ function notate(room, notation) {
                 }
             }
             if (values.length === 10) {
+                room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
                 return room;
             }
-            //TODO: finish notation decoding. Next is discarding. See TarokyNotation.md
+            //TODO: finish notation decoding. Next is prever. See TarokyNotation.md
+            room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
             return room;
         } catch (err) {
             SERVER.debug(err);
             return false;
         }
     }
+    SERVER.debug('Notation: No notation provided');
     return false;
 }
 
@@ -283,20 +293,31 @@ function notationToCards(notatedCards) {
         let cards = [];
         const SUIT_NOTATION = {S:SUIT[0],C:SUIT[1],H:SUIT[2],D:SUIT[3],T:SUIT[4]};
         const VALUE_NOTATION = {'1':0,'2':1,'3':2,'4':3,'J':4,'R':5,'Q':6,'K':7};
-        //Trump values: +value+1
+
         while (notatedCards.length >= 2) {
-            let suit = SUIT_NOTATION[notatedCards.slice(0,1)];
+            console.log(notatedCards);//TODO remove
+            let suit = SUIT_NOTATION[notatedCards.substring(0,1)];
+            notatedCards = notatedCards.substring(1);
             if (u(suit)) {
+                console.log('Suit is undefined. ' + cards);//TODO remove
                 return false;
             }
             if (suit === SUIT[4]) {
-                let value = TRUMP_VALUE[+notatedCards.slice(0,2)+1];
-                if (u(value)) {return false;}
+                let value = TRUMP_VALUE[+notatedCards.substring(0,2)-1];
+                notatedCards = notatedCards.substring(2);
+                if (u(value)) {
+                    console.log('Trump value is undefined. ' + JSON.stringify(cards));//TODO remove
+                    return false;
+                }
                 cards.push({'value':value, 'suit': SUIT[4]});
             } else {
-                let value = VALUE_NOTATION[notatedCards.slice(0,1)];
-                value = (suit === SUIT[0] || suit === SUIT[1]) ? RED_VALUE[value] : BLACK_VALUE[value];
-                if (u(value)) {return false;}
+                let value = VALUE_NOTATION[notatedCards.substring(0,1)];
+                notatedCards = notatedCards.substring(1);
+                value = (suit === SUIT[0] || suit === SUIT[1]) ? BLACK_VALUE[value] : RED_VALUE[value];
+                if (u(value)) {
+                    console.log('Card value is undefined ' + cards);//TODO remove
+                    return false;
+                }
                 cards.push({ 'value': value, 'suit': suit });
             }
         }
@@ -308,7 +329,7 @@ function notationToCards(notatedCards) {
 }
 function cardsToNotation(cards) {
     let theNotation = '';
-    const SUIT_TO_NOTATION = {SUIT[0]: 'S', SUIT[1]: 'C', SUIT[2]: 'H', SUIT[3]: 'D', SUIT[4]: 'T'};
+    const SUIT_TO_NOTATION = {'Spade': 'S', 'Club': 'C', 'Heart': 'H', 'Diamond': 'D', 'Trump': 'T'};
 
     for (let i in cards) {
         theNotation += SUIT_TO_NOTATION[cards[i].suit];
@@ -2773,7 +2794,6 @@ io.sockets.on('connection', function (socket) {
             let tempRoom = new Room('temporary');
             //Decode TarokyNotation into the room
             if (notate(tempRoom,tarokyNotation)) {
-                return;//TODO: finish this
                 let i = 1;
                 for (; rooms['Custom ' + i]; i++) { }
                 let roomID = 'Custom ' + i;
@@ -2790,6 +2810,8 @@ io.sockets.on('connection', function (socket) {
                 rooms[roomID]['host'] = socketId;
                 autoReconnect(socketId);
                 socket.emit('timeSync', Date.now());
+            } else {
+                SERVER.debug('Notation error');
             }
         } else {
             SERVER.warn('Invalid attempt to connect to room',roomID);
@@ -2807,7 +2829,7 @@ io.sockets.on('connection', function (socket) {
                 SERVER.debug('Player ' + socketId + ' does not exist',roomID);
             }
         }
-        if (!connected) socket.emit('roomNotConnected', roomID);
+        if (!connected) socket.emit('roomNotConnected', 'Custom');
     });
     socket.on('requestTimeSync', function() {
         socket.emit('timeSync', Date.now());
