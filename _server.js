@@ -3127,13 +3127,13 @@ function tick() {
             }
         }
         if (Object.keys(rooms).length == 0) {
-            rooms['Debug'] = new Room('Debug',true);
+            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true);}
             rooms['Main'] = new Room('Main');
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) { }
             rooms[i] = new Room(i);
-        } else if (!rooms['Debug']) {
+        } else if (DEBUG_MODE && !rooms['Debug']) {
             rooms['Debug'] = new Room('Debug',true);
         }
         simplifiedRooms = {};
