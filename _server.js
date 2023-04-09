@@ -211,7 +211,7 @@ function notate(room, notation) {
             }
             for (let i=0; i<4; i++) {
                 let theHand = notationToCards(values[i+4]);
-                if (theHand) {
+                if (theHand && theHand.length == 12) {
                     players[i].hand = theHand;
                 } else {
                     SERVER.debug('Notation: hand is illegal');
@@ -219,13 +219,27 @@ function notate(room, notation) {
                 }
             }
             let theTalon = notationToCards(values[8]);
-            if (theTalon) {
+            if (theTalon && theTalon.length == 6) {
                 room.board.talon = theTalon;
             } else {
                 SERVER.debug('Notation: talon is illegal');
                 return false;
             }
-
+            let toCheck = theTalon.concat(players[0].hand).concat(players[1].hand).concat(players[2].hand).concat(players[3].hand);
+            for (let i in baseDeck) {
+                let found = false;
+                for (let j in combinedPointPile) {
+                    if (baseDeck[i].suit == toCheck[j].suit &&
+                        baseDeck[i].value == toCheck[j].value) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    SERVER.debug('Notation: Missing card');
+                    return false;
+                }
+            }
 
             //This is the first point at which the game may reasonably be played from
             //So, encode the settings if they exist. Then, if no more is present, return the room
@@ -295,11 +309,9 @@ function notationToCards(notatedCards) {
         const VALUE_NOTATION = {'1':0,'2':1,'3':2,'4':3,'J':4,'R':5,'Q':6,'K':7};
 
         while (notatedCards.length >= 2) {
-            console.log(notatedCards);//TODO remove
             let suit = SUIT_NOTATION[notatedCards.substring(0,1)];
             notatedCards = notatedCards.substring(1);
             if (u(suit)) {
-                console.log('Suit is undefined. ' + cards);//TODO remove
                 return false;
             }
             if (suit === SUIT[4]) {
@@ -315,7 +327,6 @@ function notationToCards(notatedCards) {
                 notatedCards = notatedCards.substring(1);
                 value = (suit === SUIT[0] || suit === SUIT[1]) ? BLACK_VALUE[value] : RED_VALUE[value];
                 if (u(value)) {
-                    console.log('Card value is undefined ' + cards);//TODO remove
                     return false;
                 }
                 cards.push({ 'value': value, 'suit': suit });
