@@ -172,6 +172,7 @@ img {
     padding:1rem;
     font-family: Georgia, 'Times New Roman', Times, serif;
     display:inline-block;
+    margin: 10px;
 
     /*Disable text selection*/
     -webkit-user-select: none;

@@ -38,12 +38,12 @@ When starting the server, use\
 
 This will activate debug mode and set log level to 5\
 These are the log levels:
- * 0: Server crashes only
- * 1: Recoverable Errors
- * 2: Warnings
- * 3: Informational (default)
- * 4: Debug
- * 5: Trace
+0.  Server crashes only 
+1. Recoverable Errors 
+2. Warnings 
+3. Informational (default)
+4. Debug 
+5. Trace
 
 This will also switch the service port to 8448, which allows for a development version and a production version to be run simultaneously
 
