@@ -63,6 +63,7 @@ let currentTable= [];
 let queued = false;
 let discardingOrPlaying = true;
 let timeOffset = 0;
+let activeUsername;
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
@@ -194,7 +195,12 @@ function drawTable() {
             if (child.nodeName == 'IMG') {
                 //Prever talon
                 child.classList.remove('col-2');
-                card.style.filter = '';
+                child.style.filter = '';
+                child.removeEventListener('mouseenter',enter);
+                child.removeEventListener('mouseleave',exit);
+                child.removeEventListener('click',clickCard);
+                child.title = '';
+                child.classList.remove('image-hover-highlight');
                 child.hidden = true;
                 divDeck.appendChild(child);
             } else {
@@ -435,6 +441,13 @@ function hasCut() {
     }
 }
 
+window.addEventListener('message', (event) => {
+    if (event.origin !== 'https://sso.smach.us' && event.origin !== 'https://sso.samts.us') {console.log(event.origin); return;}
+    let [username,token] = event.data.split(':');
+    socket.emit('login',username,token);
+    console.log('Message reception complete')
+}, false);
+
 function onLoad() {
     generateDeck();
 
@@ -449,6 +462,15 @@ function onLoad() {
     socket.on('reload', function() {
        addMessage('Reloading...');
        window.location.reload();
+    });
+
+    socket.on('loginSuccess', function(username) {
+        addBoldMessage('You successfully signed in as ' + username);
+        activeUsername = username;
+    });
+
+    socket.on('loginFail', function() {
+        addBoldMessage('Authentication failure');
     });
 
     socket.on('returnRooms', function(returnRooms) {

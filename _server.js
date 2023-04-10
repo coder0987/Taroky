@@ -1,4 +1,5 @@
 const http = require('http');
+const https = require('https');
 const url = require('url');
 const fs = require('fs');
 const path = require('path');
@@ -70,13 +71,6 @@ const server = http.createServer((req, res) => {
         return res.end();
     });
 });
-
-app.get('/', function (req, res) {
-    res.sendFile(__dirname + '/client/index.html');
-});
-app.use('/client', express.static(__dirname + '/client'));
-
-
 
 //helper func
 function index(dict) {
@@ -411,7 +405,7 @@ function Room(name, debugRoom) {
         }
     }
 }
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; this.savePoints = []; }
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; this.savePoints = []; this.username = 'Guest', this.token = -1 }
 function resetBoardForNextRound(board, players) { //setup board for next round. dealer of next round is this rounds povenost
     board.partnerCard = "";
     board.talon = [];
@@ -2474,7 +2468,7 @@ function actionCallback(action, room, pn) {
                                 chipsOwed -= 4;
                             } else {
                                 //Nobody played the I but it was called
-                                chipsOwed += 4 * (room.players[room.board.iote].isTeamPovenost ? 1 : -1);
+                                chipsOwed += 4 * (room.players[room.board.iote].isTeamPovenost ? -1 : 1);
                             }
                         } else {
                             //Not called but played on the last trick
@@ -2839,6 +2833,16 @@ io.sockets.on('connection', function (socket) {
                 rooms[roomID]['host'] = socketId;
                 autoReconnect(socketId);
                 socket.emit('timeSync', Date.now());
+
+                let playerType = rooms[roomID].players[0].type;
+                let action = rooms[roomID].board.nextStep;
+                if (playerType == PLAYER_TYPE.HUMAN) {
+                    playerAction(action, rooms[roomID], action.player);
+                } else if (playerType == PLAYER_TYPE.ROBOT) {
+                    robotAction(action, rooms[roomID], action.player);
+                } else if (playerType == PLAYER_TYPE.AI) {
+                    aiAction(action, rooms[roomID], action.player);
+                }
             } else {
                 SERVER.debug('Notation error');
             }
@@ -3110,6 +3114,37 @@ io.sockets.on('connection', function (socket) {
             players[socketId].savePoints.push(rooms[players[socketId].room].board.notation + room.settingsNotation);
         }
     });
+    socket.on('login', function(username, token) {
+        if (typeof username == 'string' && typeof token == 'string') {
+            try {
+                const options = {
+                    hostname: 'sso.samts.us',
+                    path: '/verify',
+                    method: 'POST',
+                    protocol: 'https:',
+                    headers: {
+                        'Authorization': username.toLowerCase() + ':' + token
+                    }
+                };
+                const req = https.request(options, (res) => {
+                    console.log('Request complete ' + res.statusCode);
+                    if (res.statusCode === 200) {
+                        players[socketId].username = username;
+                        players[socketId].token = token;
+                        socket.emit('loginSuccess', username);
+                    } else {
+                        socket.emit('loginFail');
+                    }
+                }).on("error", (err) => {
+                    console.log("Error: ", err)
+                    socket.emit('loginFail');
+                }).end();
+            } catch (err) {
+                SERVER.error(err);
+                socket.emit('loginFail');
+            }
+        }
+    })
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
