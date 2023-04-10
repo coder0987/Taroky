@@ -401,8 +401,8 @@ function Room(name, debugRoom) {
                         //Handled by youMessage
                         players[this.players[i].socket].socket.emit('gameMessage','You ' + message,messageType,extraInfo);
                     } else {
-                        if (this.players[i].socket != -1 && players[this.players[i].socket].username != 'Guest') {
-                            players[this.players[i].socket].socket.emit('gameMessage', players[this.players[i].socket].username + ' ' + message,messageType,extraInfo);
+                        if (this.players[pn].socket != -1 && players[this.players[pn].socket].username != 'Guest') {
+                            players[this.players[i].socket].socket.emit('gameMessage', players[this.players[pn].socket].username + ' ' + message,messageType,extraInfo);
                         } else {
                             players[this.players[i].socket].socket.emit('gameMessage','Player ' + (pn+1) + ' ' + message,messageType,extraInfo);
                         }
@@ -419,7 +419,7 @@ function Room(name, debugRoom) {
         }
     }
 }
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; this.savePoints = []; }
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; this.savePoints = []; this.consecutiveAutos = 0; }
 function resetBoardForNextRound(board, players) { //setup board for next round. dealer of next round is this rounds povenost
     board.partnerCard = "";
     board.talon = [];
@@ -1018,8 +1018,16 @@ function autoAction(action, room, pn) {
 
     if (room.players[pn] && room.players[pn].type == PLAYER_TYPE.HUMAN) {
         //Let the player know that the action was completed automatically
-        SERVER.log('AutoAction: informed player ' + pn, room.name);
-        SOCKET_LIST[room.players[pn].socket].emit('autoAction', action);
+        room.players[pn].consecutiveAutos++;
+        if (room.players[pn].consecutiveAutos > 10) {
+            //Player has disconnected or left
+            SOCKET_LIST[room.players[pn].socket].disconnect();
+            return;
+        } else {
+            SERVER.debug('AutoAction: informed player ' + pn, room.name);
+            SOCKET_LIST[room.players[pn].socket].emit('autoAction', action);
+            action.info.auto = true;
+        }
     } else {
         SERVER.log('AutoAction: player ' + pn + ' may have disconnected', room.name);
     }
@@ -1439,6 +1447,9 @@ function actionCallback(action, room, pn) {
     }
     if (!action.info) {
         action.info = {};
+    }
+    if (!action.info.auto) {
+        room.players[pn].consecutiveAutos = 0;
     }
     let currentHand = room['players'][pn].hand;//linked, not copied
     let playerType = room['players'][pn].type;
@@ -2585,7 +2596,9 @@ function actionCallback(action, room, pn) {
         playerType = room['players'][action.player].type;
 
         //Prepare for auto-action if no response is given
-        if (autoActionTimeout) {clearTimeout(autoActionTimeout);}
+        if (autoActionTimeout) {
+            clearTimeout(autoActionTimeout);
+        }
         if (room.settings.timeout > 0) {
             autoActionTimeout = setTimeout(autoAction, room.settings.timeout, action, room, action.player);
             room.autoAction = autoActionTimeout;
@@ -3201,6 +3214,41 @@ function tick() {
     }
 }
 
+function checkAllUsers() {
+    for (let i in players) {
+        if (players[i].username) {
+            try {
+                const options = {
+                    hostname: 'sso.samts.us',
+                    path: '/verify',
+                    method: 'POST',
+                    protocol: 'https:',
+                    headers: {
+                        'Authorization': players[i].username.toLowerCase() + ':' + players[i].token
+                    }
+                };
+                const req = https.request(options, (res) => {
+                    if (res.statusCode !== 200) {
+                        socket.emit('loginExpired');
+                        players[i].username = 'Guest';
+                        players[i].token = -1;
+                    }
+                }).on("error", (err) => {
+                    console.log("Error: ", err)
+                    socket.emit('loginExpired');
+                    players[i].username = 'Guest';
+                    players[i].token = -1;
+                }).end();
+            } catch (err) {
+                SERVER.error(err);
+                socket.emit('loginExpired');
+                players[i].username = 'Guest';
+                players[i].token = -1;
+            }
+        }
+    }
+}
+
 //AI
 
 /*
@@ -3642,6 +3690,7 @@ function startAITraining() {
 }
 
 let interval = setInterval(tick, 1000 / 60.0);//60 FPS
+let verifyUsers = setInterval(checkAllUsers, 5*60*1000);
 
 //Begin listening
 if (DEBUG_MODE) {

@@ -473,6 +473,11 @@ function onLoad() {
         addBoldMessage('Authentication failure');
     });
 
+    socket.on('loginExpired', function() {
+        addBoldMessage('Your login session has expired. Please sign in again.');
+        activeUsername = '';
+    });
+
     socket.on('returnRooms', function(returnRooms) {
         availableRooms = returnRooms;
         refreshing = false;
@@ -886,7 +891,8 @@ function onLoad() {
             if (action.action == 'lead' || action.action == 'follow' || action.action == 'winTrick') {
                 return;//No need. Handled by room.informPlayers
             }
-            addMessage('Player ' + (action.player + 1) + ' is performing the action ' + action.action);
+            //TODO translate important messages. For now it should all be handled by room info and informPlayers
+            //addMessage('Player ' + (action.player + 1) + ' is performing the action ' + action.action);
         }
     });
     socket.on('failedDiscard',function(toDiscard) {
