@@ -195,18 +195,18 @@ function notate(room, notation) {
                 SERVER.debug('Notation: Illegal number of values');
                 return false;
             }
-            let players = room.players;
+            let thePlayers = room.players;
             for (let i=0; i<4; i++) {
                 if (isNaN(+values[i])) {
                     SERVER.debug('Notation: chips count is NaN');
                     return false;
                 }
-                players[i].chips = +values[i];
+                thePlayers[i].chips = +values[i];
             }
             for (let i=0; i<4; i++) {
                 let theHand = notationToCards(values[i+4]);
                 if (theHand && theHand.length == 12) {
-                    players[i].hand = theHand;
+                    thePlayers[i].hand = theHand;
                 } else {
                     SERVER.debug('Notation: hand is illegal');
                     return false;
@@ -392,10 +392,24 @@ function Room(name, debugRoom) {
     this.deck = [...baseDeck].sort(() => Math.random() - 0.5);
     this.players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
     this.autoAction = 0;
-    this.informPlayers = function(message, messageType, extraInfo) {
+    this.informPlayers = function(message, messageType, extraInfo, pn) {
         for (let i in this.players) {
             if (this.players[i].type == PLAYER_TYPE.HUMAN) {
-                players[this.players[i].socket].socket.emit('gameMessage',message,messageType,extraInfo);
+                if (pn) {
+                    pn = +pn;
+                    if (pn == i) {
+                        //Handled by youMessage
+                        players[this.players[i].socket].socket.emit('gameMessage','You ' + message,messageType,extraInfo);
+                    } else {
+                        if (this.players[i].socket != -1 && players[this.players[i].socket].username != 'Guest') {
+                            players[this.players[i].socket].socket.emit('gameMessage', players[this.players[i].socket].username + ' ' + message,messageType,extraInfo);
+                        } else {
+                            players[this.players[i].socket].socket.emit('gameMessage','Player ' + (pn+1) + ' ' + message,messageType,extraInfo);
+                        }
+                    }
+                } else {
+                    players[this.players[i].socket].socket.emit('gameMessage',message,messageType,extraInfo);
+                }
             }
         }
     }
@@ -405,7 +419,7 @@ function Room(name, debugRoom) {
         }
     }
 }
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; this.savePoints = []; this.username = 'Guest', this.token = -1 }
+function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovenost = false; this.savePoints = []; }
 function resetBoardForNextRound(board, players) { //setup board for next round. dealer of next round is this rounds povenost
     board.partnerCard = "";
     board.talon = [];
@@ -1538,7 +1552,7 @@ function actionCallback(action, room, pn) {
                                     + cardsToNotation(room.board.talon) + '/';
             //Povenost rotation is handled by the board reset function
             SERVER.log('Povenost is ' + room['board'].povenost,room.name);
-            room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
+            room.informPlayers('is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost},room['board'].povenost);
             action.action = 'prever';
             action.player = room['board'].povenost;
             actionTaken = true;
@@ -1563,7 +1577,7 @@ function actionCallback(action, room, pn) {
                 room.board.importantInfo.povenost = (room.board.povenost+1);
                 //Povenost rotation is handled by the board reset function
                 SERVER.log('Povenost is ' + room['board'].povenost,room.name);
-                room.informPlayers('Player ' + (room['board'].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost});
+                room.informPlayers('is povenost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povenost},room['board'].povenost);
                 action.action = 'prever';
                 action.player = room['board'].povenost;
                 actionTaken = true;
@@ -1645,7 +1659,7 @@ function actionCallback(action, room, pn) {
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
-                    room.informPlayers('Prever has kept the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':pn,'step':3,'youMessage':'You have kept the first set of cards'});
+                    room.informPlayers('kept the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':pn,'step':3},pn);
                     actionTaken = true;
                     action.action = 'discard';
                 } else {
@@ -1659,7 +1673,7 @@ function actionCallback(action, room, pn) {
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
-                    room.informPlayers('Prever has rejected the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':1,'youMessage':'You have rejected the first set of cards'});
+                    room.informPlayers('rejected the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':1},pn);
 
                     //Show prever the second set of cards from the talon
                     room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1691,7 +1705,7 @@ function actionCallback(action, room, pn) {
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
-                    room.informPlayers('Prever has kept the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':pn,'step':3,'youMessage':'You have kept the second set of cards'});
+                    room.informPlayers('kept the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':pn,'step':3},pn);
                     action.action = 'discard';
                     actionTaken = true;
                 } else {
@@ -1703,7 +1717,7 @@ function actionCallback(action, room, pn) {
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
-                    room.informPlayers('Prever has rejected the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':2,'youMessage':'You have rejected the second set of cards'});
+                    room.informPlayers('rejected the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':2},pn);
 
                     //Give prever the cards from the talon
                     room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1738,7 +1752,7 @@ function actionCallback(action, room, pn) {
                 actionTaken = true;
                 //Announce discard Trump cards
                 if (card.suit == 'Trump') {
-                    room.informPlayers('Player ' + pn +' discarded the ' + card.value, MESSAGE_TYPE.TRUMP_DISCARD, {youMessage: 'You discarded the ' + card.value, pn: pn, card: card});
+                    room.informPlayers('discarded the ' + card.value, MESSAGE_TYPE.TRUMP_DISCARD, {pn: pn, card: card}, pn);
                 }
                 if (room['players'][action.player].hand.length == 12) {
                     action.player = (action.player + 1) % 4;
@@ -1826,7 +1840,7 @@ function actionCallback(action, room, pn) {
             }
 
             //Inform all players of current moneyCards
-            let theMessage = 'Player ' + (pn + 1) + ' is calling ';
+            let theMessage = 'is calling ';
             let yourMoneyCards = 'You are calling ';
             let numCalled = 0;
             for (let i in room['board'].moneyCards[pn]) {
@@ -1838,7 +1852,7 @@ function actionCallback(action, room, pn) {
                 theMessage += 'nothing';
                 yourMoneyCards += 'nothing';
             }
-            room.informPlayers(theMessage, MESSAGE_TYPE.MONEY_CARDS, {youMessage: yourMoneyCards, pn: pn});
+            room.informPlayers(theMessage, MESSAGE_TYPE.MONEY_CARDS, {youMessage: yourMoneyCards, pn: pn}, pn);
             for (let i in room['players']) {
                 if (i == pn) {
                     room['players'][i].chips += 3 * owedChips;
@@ -1890,7 +1904,7 @@ function actionCallback(action, room, pn) {
             }
 
             //Inform players what Povenost called
-            room.informPlayers('Povenost (Player ' + (pn+1) + ') is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn});
+            room.informPlayers('(Povenost) is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn},pn);
             room.board.importantInfo.partnerCard = room.board.partnerCard;
             actionTaken = true;
             break;
@@ -1898,7 +1912,7 @@ function actionCallback(action, room, pn) {
             if (action.info.valat) {
                 //Player called valat
                 room['board'].valat = pn;
-                room.informPlayers('Player ' + (pn+1) + ' called valat', MESSAGE_TYPE.VALAT, {youMessage: 'You called valat', pn: pn});
+                room.informPlayers('called valat', MESSAGE_TYPE.VALAT, {pn: pn},pn);
                 room.board.importantInfo.valat = pn+1;
                 if (room.board.playingPrever) {
                     action.action = 'preverValatContra';
@@ -1936,7 +1950,7 @@ function actionCallback(action, room, pn) {
         case 'iote':
             room.board.hasTheI = pn;
             if (action.info.iote) {
-                room.informPlayers('Player ' + (pn+1) + ' called the I on the end', MESSAGE_TYPE.IOTE, {youMessage: 'You called the I on the end', pn: pn});
+                room.informPlayers('called the I on the end', MESSAGE_TYPE.IOTE, {pn: pn},pn);
                 room.board.iote = pn;
                 room.board.importantInfo.iote = pn+1;
             }
@@ -1994,7 +2008,7 @@ function actionCallback(action, room, pn) {
                         room.board.leadPlayer = room['board'].povenost;
                     }
                 }
-                room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
+                room.informPlayers('called contra', MESSAGE_TYPE.CONTRA, {pn: pn}, pn);
             } else {
                 if (room.players[pn].isTeamPovenost == preverIsPovenost) {
                     //Chance to call rhea-contra
@@ -2066,7 +2080,7 @@ function actionCallback(action, room, pn) {
                         room.board.leadPlayer = room['board'].povenost;
                     }
                 }
-                room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
+                room.informPlayers('called contra', MESSAGE_TYPE.CONTRA, {pn: pn},pn);
             } else {
                 if (room.players[pn].isTeamPovenost == povenostIsValat) {
                     //Chance to call rhea-contra
@@ -2130,7 +2144,7 @@ function actionCallback(action, room, pn) {
                         room.board.leadPlayer = room['board'].povenost;
                     }
                 }
-                room.informPlayers('Player ' + (pn+1) + ' called contra', MESSAGE_TYPE.CONTRA, {youMessage: 'You called contra', pn: pn});
+                room.informPlayers('called contra', MESSAGE_TYPE.CONTRA, {pn: pn},pn);
             } else {
                 if (room.players[pn].isTeamPovenost) {
                     //Chance to call rhea-contra
@@ -2181,7 +2195,7 @@ function actionCallback(action, room, pn) {
                 action.player = (action.player + 1) % 4;
                 room['board'].table.push({'card':lead,'pn':pn,'lead':true});
                 room['board'].leadCard = lead;
-                room.informPlayers('Player ' + (pn+1) + ' lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {youMessage: 'You lead the ' + lead.value + ' of ' + lead.suit, pn: pn, card: lead});
+                room.informPlayers('lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {pn: pn, card: lead},pn);
             } else {
                 if (room['players'][pn].type == PLAYER_TYPE.HUMAN) {
                     SOCKET_LIST[room['players'][pn].socket].emit('failedLeadCard', cardToLead);
@@ -2209,7 +2223,7 @@ function actionCallback(action, room, pn) {
                 shouldReturnTable = true;
                 room['board'].table.push({'card':played,'pn':pn,'lead':false});
                 action.player = (action.player + 1) % 4;
-                room.informPlayers('Player ' + (pn+1) + ' played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {youMessage: 'You played the ' + played.value + ' of ' + played.suit, pn: pn, card: played});
+                room.informPlayers('played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {pn: pn, card: played}, pn);
                 //If all players have played a card, determine who won the trick
                 if (action.player == room.board.leadPlayer) {
                     action.action = 'winTrick';
@@ -2219,7 +2233,7 @@ function actionCallback(action, room, pn) {
                     }
                     let trickWinner = whoWon(trickCards, room.board.leadPlayer);
                     action.player = trickWinner;
-                    room.informPlayers('Player ' + (trickWinner+1) + ' won the trick', MESSAGE_TYPE.WINNER, {youMessage: 'You won the trick', pn: trickWinner});
+                    room.informPlayers( 'won the trick', MESSAGE_TYPE.WINNER, {pn: trickWinner},pn);
                 }
             } else {
                 if (players[pn].type != PLAYER_TYPE.HUMAN) {
@@ -2628,7 +2642,7 @@ function disconnectPlayerTimeout(socketId) {
                 SERVER.log('Game Ended. Closing the room.',players[socketId].room);
                 delete rooms[players[socketId].room];
             } else {
-                rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' disconnected',MESSAGE_TYPE.DISCONNECT);
+                rooms[players[socketId].room].informPlayers('disconnected',MESSAGE_TYPE.DISCONNECT,{},players[socketId].pn);
                 if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
                     //Player was supposed to take an action
                     autoAction(rooms[players[socketId].room].board.nextStep, rooms[players[socketId].room], players[socketId].pn)
@@ -2688,7 +2702,7 @@ io.sockets.on('connection', function (socket) {
     }
     if (!SOCKET_LIST[socketId]) {
         SOCKET_LIST[socketId] = socket;
-        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false };
+        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1 };
         SERVER.log('Player joined with socketID ' + socketId);
         SERVER.debug('Join time: ' + Date.now());
         numOnlinePlayers++;
@@ -2736,7 +2750,7 @@ io.sockets.on('connection', function (socket) {
                     delete rooms[players[socketId].room];
                     SERVER.log('Stopped empty game',players[socketId].room);
                 } else {
-                    rooms[players[socketId].room].informPlayers('Player ' + (players[socketId].pn+1) + ' left the room',MESSAGE_TYPE.DISCONNECT);
+                    rooms[players[socketId].room].informPlayers('left the room',MESSAGE_TYPE.DISCONNECT,{},players[socketId].pn);
                     if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
                         //Player was supposed to take an action
                         autoAction(rooms[players[socketId].room].board.nextStep, rooms[players[socketId].room], players[socketId].pn)
@@ -2761,7 +2775,7 @@ io.sockets.on('connection', function (socket) {
         if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && !rooms[roomID].settings.locked && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
-                    rooms[roomID].informPlayers('A new player connected: player ' + (i+1), MESSAGE_TYPE.CONNECT);
+                    rooms[roomID].informPlayers('joined the game', MESSAGE_TYPE.CONNECT, {}, players[socketId].pn);
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
                     rooms[roomID]['players'][i].socket = socketId;
                     rooms[roomID]['players'][i].pid = players[socketId].pid;
