@@ -395,15 +395,15 @@ function Room(name, debugRoom) {
     this.informPlayers = function(message, messageType, extraInfo, pn) {
         for (let i in this.players) {
             if (this.players[i].type == PLAYER_TYPE.HUMAN) {
-                if (pn) {
-                    pn = +pn;
+                if (typeof pn != 'undefined') {
                     if (pn == i) {
                         //Handled by youMessage
                         players[this.players[i].socket].socket.emit('gameMessage','You ' + message,messageType,extraInfo);
                     } else {
-                        if (this.players[pn].socket != -1 && players[this.players[pn].socket].username != 'Guest') {
+                        if (pn != -1 && this.players[pn].socket != -1 && players[this.players[pn].socket].username != 'Guest') {
                             players[this.players[i].socket].socket.emit('gameMessage', players[this.players[pn].socket].username + ' ' + message,messageType,extraInfo);
                         } else {
+                            pn = +pn;
                             players[this.players[i].socket].socket.emit('gameMessage','Player ' + (pn+1) + ' ' + message,messageType,extraInfo);
                         }
                     }
@@ -2610,6 +2610,12 @@ function actionCallback(action, room, pn) {
                 SOCKET_LIST[room['players'][i].socket].emit('returnHand', sortCards(room['players'][i].hand), false);
                 //Return important info
                 room.board.importantInfo.pn = (+i+1);
+                room.board.importantInfo.usernames = {'0':null, '1':null, '2':null, '3':null};
+                for (let i in room.players) {
+                    if (room.players[i].socket != -1 && players[room.players[i].socket].username != 'Guest') {
+                        room.board.importantInfo.usernames[i] = players[room.players[i].socket].username;
+                    }
+                }
                 SOCKET_LIST[room['players'][i].socket].emit('returnRoundInfo',room.board.importantInfo);
                 room.board.importantInfo.pn = null;
             }
@@ -2690,10 +2696,6 @@ function autoReconnect(socketId) {
             unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
             SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
         }
-
-        if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
-            SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
-        }
         rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);
         SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
         rooms[players[socketId].room]['board'].importantInfo.pn = null;
@@ -2703,6 +2705,9 @@ function autoReconnect(socketId) {
         }
         if (!isNaN(rooms[players[socketId].room].povenost)) {
             rooms[players[socketId].room].informPlayer(players[socketId].pn, 'Player ' + (rooms[players[socketId].room].povenost+1) + ' is povenost', MESSAGE_TYPE.POVENOST,{'pn':rooms[players[socketId].room].povenost});
+        }
+        if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
+            SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         }
     }
 }
@@ -2788,7 +2793,6 @@ io.sockets.on('connection', function (socket) {
         if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && !rooms[roomID].settings.locked && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
-                    rooms[roomID].informPlayers('joined the game', MESSAGE_TYPE.CONNECT, {}, players[socketId].pn);
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
                     rooms[roomID]['players'][i].socket = socketId;
                     rooms[roomID]['players'][i].pid = players[socketId].pid;
@@ -2797,6 +2801,7 @@ io.sockets.on('connection', function (socket) {
                     connected = true;
                     players[socketId]['room'] = roomID;
                     players[socketId]['pn'] = i;
+                    rooms[roomID].informPlayers('joined the game', MESSAGE_TYPE.CONNECT, {}, players[socketId].pn);
                     if (rooms[roomID]['playerCount'] == 1) {
                         rooms[roomID]['host'] = socketId;
                         socket.emit('roomHost');
@@ -3216,7 +3221,7 @@ function tick() {
 
 function checkAllUsers() {
     for (let i in players) {
-        if (players[i].username) {
+        if (players[i].username != 'Guest' && players[i].type == PLAYER_TYPE.HUMAN) {
             try {
                 const options = {
                     hostname: 'sso.samts.us',
@@ -3229,19 +3234,21 @@ function checkAllUsers() {
                 };
                 const req = https.request(options, (res) => {
                     if (res.statusCode !== 200) {
-                        socket.emit('loginExpired');
                         players[i].username = 'Guest';
                         players[i].token = -1;
+                        SOCKET_LIST[players[i].socket].emit('loginExpired');
                     }
                 }).on("error", (err) => {
                     console.log("Error: ", err)
-                    socket.emit('loginExpired');
                     players[i].username = 'Guest';
                     players[i].token = -1;
+                    SOCKET_LIST[players[i].socket].emit('loginExpired');
                 }).end();
             } catch (err) {
                 SERVER.error(err);
-                socket.emit('loginExpired');
+                if (players[i].socket != -1) {
+                    SOCKET_LIST[players[i].socket].emit('loginExpired');
+                }
                 players[i].username = 'Guest';
                 players[i].token = -1;
             }

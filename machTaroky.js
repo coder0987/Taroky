@@ -64,6 +64,7 @@ let queued = false;
 let discardingOrPlaying = true;
 let timeOffset = 0;
 let activeUsername;
+let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
@@ -532,12 +533,33 @@ function onLoad() {
         //null if not existent yet
         let roundInfoElement = document.getElementById('roundInfo');
         roundInfoElement.textContent = '';
-        const possibleInfo = {'pn':'You are player ', 'povenost':'Povenost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povenost is Playing With the '};
+        const possibleInfo = {'pn':'You are player ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povenost is Playing With the '};
+        const possiblePlayerNumbers = {'povenost':'Povenost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: '};
         //MoneyCards are handled separately
+        if (theRoundInfo.usernames) {
+            for (let i in theRoundInfo.usernames) {
+                activeUsernames[i] = theRoundInfo.usernames[i];//null values are set as well
+                if (theRoundInfo.usernames[i]) {
+                    let theInfo = document.createElement('p');
+                    theInfo.innerHTML = 'Player ' + (+i+1) + ' is ' + theRoundInfo.usernames[i];
+                    theInfo.classList.add('col');
+                    roundInfoElement.appendChild(theInfo);
+                }
+            }
+        }
         for (let i in possibleInfo) {
             if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
                 let theInfo = document.createElement('p');
                 theInfo.innerHTML = possibleInfo[i] + (isNaN(+theRoundInfo[i]) ? theRoundInfo[i] : +theRoundInfo[i]);
+                theInfo.classList.add('col');
+                roundInfoElement.appendChild(theInfo);
+            }
+        }
+        for (let i in possiblePlayerNumbers) {
+            if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
+                let theInfo = document.createElement('p');
+                let playerName = activeUsernames[theRoundInfo[i] - 1] ? activeUsernames[theRoundInfo[i] - 1] : +theRoundInfo[i];
+                theInfo.innerHTML = possiblePlayerNumbers[i] + playerName;
                 theInfo.classList.add('col');
                 roundInfoElement.appendChild(theInfo);
             }
@@ -887,7 +909,8 @@ function onLoad() {
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }
         } else {
-            document.getElementById('currentPlayer').innerHTML = 'Player ' + (action.player+1);
+            let playerName = activeUsernames[action.player] ? activeUsernames[action.player] : 'Player ' + (action.player+1);
+            document.getElementById('currentPlayer').innerHTML = playerName;
             if (action.action == 'lead' || action.action == 'follow' || action.action == 'winTrick') {
                 return;//No need. Handled by room.informPlayers
             }
