@@ -450,6 +450,7 @@ window.addEventListener('message', (event) => {
     if (event.origin !== 'https://sso.smach.us' && event.origin !== 'https://sso.samts.us') {console.log(event.origin); return;}
     if (event.data != 'signOut') {
         let [username,token] = event.data.split(':');
+        addMessage('Attempting to sign in as ' + username +'...');
         socket.emit('login',username,token);
     } else {
         addMessage('Signing out...');

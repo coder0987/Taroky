@@ -3158,7 +3158,7 @@ io.sockets.on('connection', function (socket) {
         if (typeof username == 'string' && typeof token == 'string' && players[socketId]) {
             try {
                 const options = {
-                    hostname: 'sso.samts.us',
+                    hostname: 'sso.smach.us',
                     path: '/verify',
                     method: 'POST',
                     protocol: 'https:',
@@ -3167,16 +3167,18 @@ io.sockets.on('connection', function (socket) {
                     }
                 };
                 const req = https.request(options, (res) => {
+                    SERVER.log('Player ' + socketId + ' sign in status: ' + res.statusCode);
                     if (res.statusCode === 200) {
                         players[socketId].username = username;
                         players[socketId].token = token;
                         socket.emit('loginSuccess', username);
                         SERVER.log('Player ' + socketId + ' has signed in as ' + username);
                     } else {
+                        SERVER.log('Player ' + socketId + ' send an invalid token or username');
                         socket.emit('loginFail');
                     }
                 }).on("error", (err) => {
-                    console.log("Error: ", err)
+                    SERVER.error(err);
                     socket.emit('loginFail');
                 }).end();
             } catch (err) {
