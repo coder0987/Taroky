@@ -233,6 +233,8 @@ function drawTable() {
                 let card = document.getElementById(table[i].card.value + table[i].card.suit);
                 card.style.filter = '';
                 document.getElementById('p' + (+table[i].pn+1)).appendChild(card);
+                let playerName = activeUsernames[+table[i].pn] ? activeUsernames[+table[i].pn] : 'Player ' + (+table[i].pn+1);
+                document.getElementById('p' + (+table[i].pn+1)).firstChild.innerHTML = playerName;
                 document.getElementById('p' + (+table[i].pn+1)).firstChild.removeAttribute('hidden');
                 if (table[i].lead) {
                     document.getElementById('p' + (+table[i].pn+1)).appendChild(document.getElementById('leader'));

@@ -46,14 +46,14 @@ function clearChat() {
 function clearLastXMessages(x) {
     //For when we have an actual chatbox
     let messagesToClear = document.getElementById('chatbox').children;
-    for (let i = messagesToClear.length - 1; i >= 0 && i>= messagesToClear.length -11; i--) {
+    for (let i = messagesToClear.length - 1; i >= 0 && i>= messagesToClear.length - x - 1; i--) {
         document.getElementById('chatbox').removeChild(document.getElementById('chatbox').children[i]);
     }
 }
 
 function clearAllButXMessages(x) {
     let messagesToClear = document.getElementById('chatbox').children;
-    for (let i = messagesToClear.length - 1; i >= 10; i--) {
+    for (let i = messagesToClear.length - 1; i >= x; i--) {
         document.getElementById('chatbox').removeChild(document.getElementById('chatbox').children[i]);
     }
 }

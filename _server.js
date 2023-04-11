@@ -1022,6 +1022,7 @@ function autoAction(action, room, pn) {
         if (room.players[pn].consecutiveAutos > 10) {
             //Player has disconnected or left
             SOCKET_LIST[room.players[pn].socket].disconnect();
+            disconnectPlayerTimeout(room.players[pn].socket);
             return;
         } else {
             SERVER.debug('AutoAction: informed player ' + pn, room.name);
@@ -2459,7 +2460,7 @@ function actionCallback(action, room, pn) {
                         pointCountMessageTable.push({'name':'Triple It', 'value':Math.abs(chipsOwed)});
                         if (room.players[room.board.prever].isTeamPovenost == (chipsOwed < 0)) {
                             //Prever lost
-                            chipsOwed *= Math.pow(2,preverTalonStep-1);//*2 for swapping down, *4 for going back up
+                            chipsOwed *= Math.pow(2,room.board.preverTalonStep-1);//*2 for swapping down, *4 for going back up
                             pointCountMessageTable.push({'name':'Double It For Each Prever-Talon Swap', 'value':Math.abs(chipsOwed)});
                         }
                     } else {
@@ -2977,7 +2978,7 @@ io.sockets.on('connection', function (socket) {
             rooms[players[socketId].room]['board']['nextStep'].info = { type: type, again: again };
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         } else {
-            SERVER.warn('Illegal shuffle attempt by player ' + socketId,players[socketId].room);
+            SERVER.debug('Illegal shuffle attempt by player ' + socketId,players[socketId].room);
         }
     });
     socket.on('cut', function (style, location) {
