@@ -472,15 +472,18 @@ function onLoad() {
     socket.on('loginSuccess', function(username) {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
+        displaySignOut();
     });
 
     socket.on('loginFail', function() {
         addBoldMessage('Authentication failure');
+        displaySignIn();
     });
 
     socket.on('loginExpired', function() {
         addBoldMessage('Your login session has expired. Please sign in again.');
         activeUsername = '';
+        displaySignIn();
     });
 
     socket.on('returnRooms', function(returnRooms) {
@@ -1229,4 +1232,16 @@ function exitCurrentRoom(value) {
         clearChat();
         document.getElementById('roundInfo').textContent = '';
     }
+}
+
+function displaySignIn() {
+    let accHandler = document.getElementById('accountHandler');
+    accHandler.innerHTML = 'Sign In';
+    accHandler.href = 'https://sso.smach.us/?redirect=https://machtarok.com/';
+}
+
+function displaySignOut() {
+    let accHandler = document.getElementById('accountHandler');
+    accHandler.innerHTML = 'Sign Out';
+    accHandler.href = 'https://sso.smach.us/?signOut=true';
 }
