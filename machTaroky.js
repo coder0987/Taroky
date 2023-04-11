@@ -24,7 +24,7 @@ const ACTION_TABLE = {
     'drawPreverTalon': 'Choose to Keep or Pass the Prever Talon',
     'drawTalon': 'Draw Cards from the Talon',
     'discard': 'Discard Down to 12 Cards',
-    'povenostBidaUniChoice': 'Decide Whether to Call Bida/Uni as Povenost',
+    'povinnostBidaUniChoice': 'Decide Whether to Call Bida/Uni as Povinnost',
     'moneyCards': 'Call Money Cards',
     'partner': 'Choose a Partner Card',
     'valat': 'Call or Pass Valat',
@@ -547,12 +547,12 @@ function onLoad() {
     });
     socket.on('returnRoundInfo', function(theRoundInfo) {
         if (!theRoundInfo) {return;}
-        //{pn,povenost,prever,preverMultiplier,valat,contra,iote,moneyCards,partnerCard}
+        //{pn,povinnost,prever,preverMultiplier,valat,contra,iote,moneyCards,partnerCard}
         //null if not existent yet
         let roundInfoElement = document.getElementById('roundInfo');
         roundInfoElement.textContent = '';
-        const possibleInfo = {'pn':'You are player ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povenost is Playing With the '};
-        const possiblePlayerNumbers = {'povenost':'Povenost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: '};
+        const possibleInfo = {'pn':'You are player ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povinnost is Playing With the '};
+        const possiblePlayerNumbers = {'povinnost':'Povinnost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: '};
         //MoneyCards are handled separately
         if (theRoundInfo.usernames) {
             for (let i in theRoundInfo.usernames) {
@@ -640,7 +640,7 @@ function onLoad() {
         switch (theMessageType) {
             case MESSAGE_TYPE.POVENOST:
                 if (extraInfo && extraInfo.pn == playerNumber) {
-                    addBoldMessage('You are povenost');
+                    addBoldMessage('You are povinnost');
                 } else {
                     addBoldMessage(theMessage);
                 }
@@ -872,7 +872,7 @@ function onLoad() {
                     addMessage('You are discarding. Choose a card to discard.');
                     drawHand(true);
                     break;
-                case 'povenostBidaUniChoice':
+                case 'povinnostBidaUniChoice':
                     addBoldMessage('Would you like to call Bida/Uni?');
                     createChoiceButtons(BUTTON_TYPE.BUC);
                     break;
@@ -987,7 +987,7 @@ function customRoomClick() {
         if (notation.length < 10) {
             return;
         }
-        let thePN = prompt('Player number (0 for povenost, up to 3)');
+        let thePN = prompt('Player number (0 for povinnost, up to 3)');
         if (+thePN > 3 || +thePN < 0) {return;}
         connectingToRoom=true;
         socket.emit('customRoom',notation, +thePN);
