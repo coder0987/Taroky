@@ -2710,6 +2710,9 @@ function autoReconnect(socketId) {
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         }
+        if (players[socketId].username != 'Guest') {
+            SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
+        }
     }
 }
 
