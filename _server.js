@@ -2791,7 +2791,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('roomConnect', function (roomID) {
         let connected = false;
-        if (rooms[roomID] && rooms[roomID]['playerCount'] < 4 && !rooms[roomID].settings.locked && players[socketId] && players[socketId].room == -1) {
+        if (players[socketId] && rooms[roomID] && rooms[roomID]['playerCount'] < 4 && !rooms[roomID].settings.locked && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
@@ -2898,7 +2898,9 @@ io.sockets.on('connection', function (socket) {
         if (!connected) socket.emit('roomNotConnected', 'Custom');
     });
     socket.on('requestTimeSync', function() {
-        socket.emit('timeSync', Date.now());
+        if (socket) {
+            socket.emit('timeSync', Date.now());
+        }
     });
     socket.on('currentAction', function () {
         if (players[socketId] && rooms[players[socketId].room]) {
@@ -2907,10 +2909,12 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('getRooms', function () {
-        socket.emit('returnRooms', simplifiedRooms);
+        if (socket) {
+            socket.emit('returnRooms', simplifiedRooms);
+        }
     });
     socket.on('settings', function (setting, rule) {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['host'] == socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['host'] == socketId && rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
             //Update the game rules
             switch (setting) {
                 case 'difficulty':
@@ -2965,7 +2969,7 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('play', function () {
-        if (!rooms[players[socketId].room]) { return; }
+        if (!players[socketId] || !rooms[players[socketId].room]) { return; }
         if (rooms[players[socketId].room]['board']['nextStep'].action === 'play' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         } else {
@@ -2973,7 +2977,7 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('shuffle', function (type, again) {
-        if (!rooms[players[socketId].room]) { return; }
+        if (!players[socketId] || !rooms[players[socketId].room]) { return; }
         if (rooms[players[socketId].room]['board']['nextStep'].action === 'shuffle' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info = { type: type, again: again };
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
@@ -2982,7 +2986,7 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('cut', function (style, location) {
-        if (!rooms[players[socketId].room]) { return; }
+        if (!players[socketId] || !rooms[players[socketId].room]) { return; }
         if (rooms[players[socketId].room]['board']['nextStep'].action == 'cut' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.style = style;
             if (location && !isNaN(location) && location > 7 && location < 47) {
@@ -2992,12 +2996,12 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('deal', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'deal' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'deal' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('chooseHand', function(theChoice) {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == '12choice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == '12choice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             if (isNaN(theChoice) || !rooms[players[socketId].room]['board'].hands[theChoice]) {
                 return;
             }
@@ -3006,24 +3010,24 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('goPrever', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'prever' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'prever' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].action = 'callPrever';
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('noPrever', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'prever' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'prever' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].action = 'passPrever';
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('drawTalon', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('discard', function (toDiscard) {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'discard' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'discard' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             let discarded = false;
             for (let i in rooms[players[socketId].room]['players'][players[socketId]['pn']].hand) {
                 if (!rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].grayed && rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].suit == toDiscard.suit && rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].value == toDiscard.value) {
@@ -3038,78 +3042,78 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('goBida or Uni', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'povenostBidaUniChoice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'povenostBidaUniChoice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.choice = true;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('noBida or Uni', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'povenostBidaUniChoice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'povenostBidaUniChoice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.choice = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('moneyCards', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'moneyCards' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'moneyCards' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('choosePartner', function (partner) {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'partner' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'partner' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board'].partnerCard = partner;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('goPrever Talon', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawPreverTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawPreverTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.accept = true;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('noPrever Talon', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawPreverTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawPreverTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.accept = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('goValat', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'valat' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'valat' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.valat = true;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('noValat', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'valat' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'valat' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.valat = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('goContra', function () {
-        if (rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'contra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'valatContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverValatContra') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'contra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'valatContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverValatContra') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.contra = true;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('noContra', function () {
-        if (rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'contra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'valatContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverValatContra') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'contra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'valatContra' || rooms[players[socketId].room]['board']['nextStep'].action == 'preverValatContra') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.contra = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('goIOTE', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'iote' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'iote' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.iote = true;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('noIOTE', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'iote' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'iote' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             rooms[players[socketId].room]['board']['nextStep'].info.iote = false;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('lead', function (toPlay) {
-        if (rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'lead' || rooms[players[socketId].room]['board']['nextStep'].action == 'follow') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'lead' || rooms[players[socketId].room]['board']['nextStep'].action == 'follow') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             let played = false;
             for (let i in rooms[players[socketId].room]['players'][players[socketId]['pn']].hand) {
                 if (!rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].grayed && rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].suit == toPlay.suit && rooms[players[socketId].room]['players'][players[socketId]['pn']].hand[i].value == toPlay.value) {
@@ -3128,27 +3132,27 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('winTrick', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'winTrick' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'winTrick' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('countPoints', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'countPoints' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'countPoints' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('resetBoard', function () {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'resetBoard' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'resetBoard' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
     socket.on('createSavePoint', function() {
-        if (rooms[players[socketId].room] && rooms[players[socketId].room].board.notation.length > 0 && players[socketId].savePoints[players[socketId].savePoints.length - 1] != rooms[players[socketId].room].board.notation + rooms[players[socketId].room].settingsNotation) {
+        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room].board.notation.length > 0 && players[socketId].savePoints[players[socketId].savePoints.length - 1] != rooms[players[socketId].room].board.notation + rooms[players[socketId].room].settingsNotation) {
             players[socketId].savePoints.push(rooms[players[socketId].room].board.notation + room.settingsNotation);
         }
     });
     socket.on('login', function(username, token) {
-        if (typeof username == 'string' && typeof token == 'string') {
+        if (typeof username == 'string' && typeof token == 'string' && players[socketId]) {
             try {
                 const options = {
                     hostname: 'sso.samts.us',
@@ -3179,10 +3183,12 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('logout', function() {
-        players[socketId].username = 'Guest';
-        players[socketId].token = -1;
-        socket.emit('logout');
-        SERVER.log('Player ' + socketId + ' has signed out');
+        if (players[socketId]) {
+            players[socketId].username = 'Guest';
+            players[socketId].token = -1;
+            socket.emit('logout');
+            SERVER.log('Player ' + socketId + ' has signed out');
+        }
     });
 });
 
