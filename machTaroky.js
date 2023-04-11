@@ -448,9 +448,13 @@ function hasCut() {
 
 window.addEventListener('message', (event) => {
     if (event.origin !== 'https://sso.smach.us' && event.origin !== 'https://sso.samts.us') {console.log(event.origin); return;}
-    let [username,token] = event.data.split(':');
-    socket.emit('login',username,token);
-    console.log('Message reception complete')
+    if (event.data != 'signOut') {
+        let [username,token] = event.data.split(':');
+        socket.emit('login',username,token);
+    } else {
+        addMessage('Signing out...');
+        socket.emit('logout');
+    }
 }, false);
 
 function onLoad() {
@@ -482,6 +486,12 @@ function onLoad() {
 
     socket.on('loginExpired', function() {
         addBoldMessage('Your login session has expired. Please sign in again.');
+        activeUsername = '';
+        displaySignIn();
+    });
+
+    socket.on('logout', function() {
+        addBoldMessage('Successfully logged out');
         activeUsername = '';
         displaySignIn();
     });
@@ -1243,5 +1253,5 @@ function displaySignIn() {
 function displaySignOut() {
     let accHandler = document.getElementById('accountHandler');
     accHandler.innerHTML = 'Sign Out';
-    accHandler.href = 'https://sso.smach.us/?signOut=true';
+    accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
 }

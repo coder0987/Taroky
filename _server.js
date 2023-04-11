@@ -3160,11 +3160,11 @@ io.sockets.on('connection', function (socket) {
                     }
                 };
                 const req = https.request(options, (res) => {
-                    console.log('Request complete ' + res.statusCode);
                     if (res.statusCode === 200) {
                         players[socketId].username = username;
                         players[socketId].token = token;
                         socket.emit('loginSuccess', username);
+                        SERVER.log('Player ' + socketId + ' has signed in as ' + username);
                     } else {
                         socket.emit('loginFail');
                     }
@@ -3177,7 +3177,13 @@ io.sockets.on('connection', function (socket) {
                 socket.emit('loginFail');
             }
         }
-    })
+    });
+    socket.on('logout', function() {
+        players[socketId].username = 'Guest';
+        players[socketId].token = -1;
+        socket.emit('logout');
+        SERVER.log('Player ' + socketId + ' has signed out');
+    });
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
