@@ -42,8 +42,6 @@
     <div class="container-fluid">
         <img src="/assets/logo/logo-full-white.png" alt="MachTarok" class="navbar-brand">
         <a class="navbar-brand" target="_blank" rel="opener" href="https://sso.smach.us/?redirect=https://machtarok.com/">Sign In</a>
-        <a class="navbar-brand" target="_blank" rel="noopener noreferrer" href="https://github.com/coder0987/Taroky">GitHub</a>
-        <!--TODO: FIX GitHub navbar style -->
     </div>
 </div>
 
@@ -57,15 +55,12 @@
         </div>
     -->
     <div class="row">
-        <div class="col">
-            <p><span id="online">1</span> Players Online</p>
-        </div>
-        <div class="col-5">
+        <div class="col-6">
             <div class="d-flex justify-content-center">
                 <button class="button btn red sticky-bottom" id="refresh" onclick="refresh()">&#10227; Refresh Rooms</button>
             </div>
         </div>
-        <div class="col-5">
+        <div class="col-6">
             <div class="d-flex justify-content-center">
                 <button class="button btn red sticky-bottom" id="ping" onclick="ping()">&#10227; Ping Server</button>
             </div>
@@ -107,6 +102,16 @@
     <div id="chatbox"><p></p></div>
     <div id="deck">
         <img hidden="hidden" src="/assets/mach-deck-thumb/card-back-t.png" id="cardBack" onload="cardBackLoaded=true">
+    </div>
+    <br><br>
+    <div class="row centered footer">
+        <div class="col-xs-12 col-md-2">
+            <p style="margin: 0;"><span id="online">1</span> Players Online</p>
+        </div>
+        <div class="col-xs-12 col-md-8 footer-content">
+            <p class="footer-content">Open Source Code available on <a target="_blank" rel="noopener noreferrer" class="small-link" href="https://github.com/coder0987/Taroky">GitHub</a></p>
+        </div>
+        <div class="col-xs-12 col-md-2"></div>
     </div>
 </div>
 

@@ -187,3 +187,40 @@ img {
 .roomcard:hover {
     background-color: var(--whiteHover);
 }
+
+.navbar-brand {
+    color: var(--red);
+    font-weight: bold;
+}
+
+.footer {
+    -webkit-transition: .5s ease-in-out;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--navy);
+    margin: 0;
+    padding: 0;
+    color: white;
+}
+
+.footer-content {
+    display: inline;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+}
+
+.small-link {
+    margin: 0;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--red);
+    text-decoration: none;
+}
+
+.centered {
+    text-align: center;
+}

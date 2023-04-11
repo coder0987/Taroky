@@ -140,12 +140,14 @@ function drawHand(withGray) {
     let returnToDeck = divHand.children;
     for (let i=returnToDeck.length-1; i>=0; i--) {
         let child = returnToDeck[i];
-        if (!isInHand(child)) {child.hidden = true;divDeck.appendChild(child);}
+        if (!isInHand(child)) {child.classList.remove('col-md-1');child.classList.remove('col-xs-3');child.hidden = true;divDeck.appendChild(child);}
     }
     for (let i in hand) {
         let card = document.getElementById(hand[i].value + hand[i].suit);
         card.suit = hand[i].suit;
         card.value = hand[i].value;
+        card.classList.add('col-md-1');
+        card.classList.add('col-xs-3');
         card.classList.remove('col-2');//If claimed from prever-talon
         if (withGray) {
             if (hand[i].grayed) {
