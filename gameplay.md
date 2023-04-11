@@ -13,11 +13,11 @@ The server will continue counter-clockwise through each player and ask if poveno
 
 The game splits here.
 
-Povenost (2 teams) play:
+Povinnost (2 teams) play:
 
-    Povenost then draws 4 cards from the Talon. The 2 players immediately counter-clockwise from and across from povenost may either draw or pass their cards from the talon.
+    Povinnost then draws 4 cards from the Talon. The 2 players immediately counter-clockwise from and across from povenost may either draw or pass their cards from the talon.
     The final player may refuse or accept a passed card.
-    Povenost and each other player who drew cards must then discard down to twelve cards.
+    Povinnost and each other player who drew cards must then discard down to twelve cards.
 Prever (1v3) play:
 
     Prever (the player who declared s/he would like to play by him/herself) draws 3 cards from the talon
@@ -26,26 +26,28 @@ Prever (1v3) play:
     Whichever cards were not kept are then discarded in the opposing team's discard pile.
     Prever must then discard down to twelve cards
 
-Povenost then declares teammates (starting with the XIX in a standard game, no lower than XV allowed. In Prever, all players know their teammates from the beginning)
-All player then may declare point cards: (DEFINITELY MISSPELLED - LOOK UP PROPER SPELLING LATER)
+Povinnost then declares teammates (starting with the XIX in a standard game, no lower than XV allowed. In Prever, all players know their teammates from the beginning)
+All player then may declare point cards:
 
     4: Big ones (10+ taroks)
     2: Little ones (8-9 taroks)
-    2: Beda (1-2 taroks)
+    2: Bida (1-2 taroks)
     4: Uni (0 taroks)
     2: Honery (pronounced pawn-e or ponnie, 4+ 5-point cards)
     4: Rosa-Honery (all 4 kings)
     6: Rosa-Honery+ (all 4 kings plus another 5-point card)  
     2: Trul (Skyz, XXI/Mund, I/Pagat)
 
-Some players now have the opportunity to call Contra (fleck) and/or Pagat (I) on the end
+If any player believes that his team will win every trick, he may call Valat (which translates to "roll")
+
+Some players now have the opportunity to call Contra (fleck / flek) and/or Pagat (I) on the end
 Any player with the I may call I on the end
 
-Povenost play:
+Povinnost play:
 
-    Any player who does not have the card Povenost called (typically the XIX; not on Povenost's team) may call Contra/fleck and double the payout at the end of the round
-    Any player on Povenost's team (Either Povenost or a player with the card Povenost called) may then call Rhea-Contra (misspelled) and re-double (now quadruple) the payout at the end of the round
-    Any player who does not have the card Povenost called may call Supra-Contra and again double the payout (now 8x the original)
+    Any player who does not have the card Povinnost called (typically the XIX; not on Povinnost's team) may call Contra/fleck and double the payout at the end of the round
+    Any player on Povinnost's team (Either Povinnost or a player with the card Povinnost called) may then call Rhea-Contra (misspelled) and re-double (now quadruple) the payout at the end of the round
+    Any player who does not have the card Povinnost called may call Supra-Contra and again double the payout (now 8x the original)
     No one may double it more than this.
 Prever play:
 
@@ -54,7 +56,7 @@ Prever play:
     Any player besides prever may call Supra-contra
 
 The game begins:\
-Povenost (regardless if a player is playing Prever) begins the game by playing any card\
+Povinnost (regardless if a player is playing Prever) begins the game by playing any card\
 Gameplay continues clockwise
 
 Following players may play:
@@ -104,6 +106,6 @@ Alternatively, counting points is very straight-forward if a player called Valat
     1 wins: Each losing team player pays that amount, winning team player earns triple
     1 loses: Each winning team player earns that amount, losing team loses triple
 
-Povenost then becomes the dealer\
-The player directly counter-clockwise of Povenost becomes Povenost\
+Povinnost then becomes the dealer\
+The player directly counter-clockwise of Povinnost becomes Povinnost\
 The deck is reshuffled and player starts again
