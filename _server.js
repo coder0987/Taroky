@@ -263,11 +263,15 @@ function notate(room, notation) {
                             }
                             break;
                         case 'lock':
+                        case 'locked':
                             rule = !(!rule);
                             if (rule) {
                                 //Room may be locked but not unlocked
-                                rooms[players[socketId].room].settings.locked = true;
+                                room.settings.locked = true;
                             }
+                            break;
+                        case 'pn':
+                            //Handled later
                             break;
                         default:
                             SERVER.warn('Unknown setting: ' + setting + '=' + rule);
@@ -758,6 +762,14 @@ function firstSelectableCard(hand) {
     SERVER.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
     return hand[0];
 }
+function firstSelectableCardExceptPagat(hand) {
+    for (let i in hand) {
+        if (!hand[i].grayed && hand[i].value != 'I') {
+            return hand[i];
+        }
+    }
+    return {suit: 'Trump', value: 'I'};
+}
 function robotChooseHand(theChoices) {
     for (let i in theChoices) {
         if (typeof theChoices[i] !== 'undefined') {
@@ -954,7 +966,7 @@ function robotPovinnostBidaUniChoice(hand, difficulty) {
             return false;
     }
 }
-function robotLead(hand, difficulty) {
+function robotLead(hand, difficulty, room) {
     switch (difficulty) {
         case DIFFICULTY.AI:
             SERVER.warn('AI not implemented yet. Defaulting to robot moves');
@@ -971,7 +983,7 @@ function robotLead(hand, difficulty) {
             }
         case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
-            return firstSelectableCard(hand);
+            return firstSelectableCardExceptPagat(hand);
         default:
             SERVER.warn('Unknown difficulty: ' + difficulty);
             //select first playable
@@ -979,7 +991,7 @@ function robotLead(hand, difficulty) {
 
     }
 }
-function robotPlay(hand, difficulty) {
+function robotPlay(hand, difficulty, room) {
     //TODO: add context. Robots need to know: the table, if partners have been revealed, money cards, povinnost, valat, contra, IOTE, etc
     switch (difficulty) {
         case DIFFICULTY.AI:
@@ -994,7 +1006,7 @@ function robotPlay(hand, difficulty) {
             //If last in line, play the lowest winning card
         case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
-            return firstSelectableCard(hand);
+            return firstSelectableCardExceptPagat(hand);
         default:
             SERVER.warn('Unknown difficulty: ' + difficulty);
             //select first playable
@@ -1088,11 +1100,11 @@ function autoAction(action, room, pn) {
             return;
         case 'lead':
             unGrayCards(hand);
-            action.info.card = robotLead(hand, DIFFICULTY.EASY);
+            action.info.card = robotLead(hand, DIFFICULTY.EASY, room);
             break;
         case 'follow':
             grayUnplayables(hand, room.board.leadCard);
-            action.info.card = robotPlay(hand, DIFFICULTY.EASY);
+            action.info.card = robotPlay(hand, DIFFICULTY.EASY, room);
             break;
         case 'winTrick':
             break;
@@ -1173,11 +1185,11 @@ function robotAction(action, room, pn) {
                 return;
             case 'lead':
                 unGrayCards(hand);
-                action.info.card = robotLead(hand, room.settings.difficulty);
+                action.info.card = robotLead(hand, room.settings.difficulty,room);
                 break;
             case 'follow':
                 grayUnplayables(hand, room.board.leadCard);
-                action.info.card = robotPlay(hand, room.settings.difficulty);
+                action.info.card = robotPlay(hand, room.settings.difficulty,room);
                 break;
             case 'winTrick':
                 break;
@@ -1406,12 +1418,12 @@ function aiAction(action, room, pn) {
                 case 'lead':
                     //Rank each card TODO
                     unGrayCards(hand);
-                    action.info.card = robotLead(hand, room.settings.difficulty);
+                    action.info.card = robotLead(hand, room.settings.difficulty,room);
                     break;
                 case 'follow':
                     //Rank each card TODO
                     grayUnplayables(hand, room.board.leadCard);
-                    action.info.card = robotPlay(hand, room.settings.difficulty);
+                    action.info.card = robotPlay(hand, room.settings.difficulty, room);
                     break;
                 case 'winTrick':
                     break;
@@ -2245,7 +2257,7 @@ function actionCallback(action, room, pn) {
                     }
                     let trickWinner = whoWon(trickCards, room.board.leadPlayer);
                     action.player = trickWinner;
-                    room.informPlayers( 'won the trick', MESSAGE_TYPE.WINNER, {pn: trickWinner},pn);
+                    room.informPlayers( 'won the trick', MESSAGE_TYPE.WINNER, {pn: trickWinner},trickWinner);
                 }
             } else {
                 if (players[pn].type != PLAYER_TYPE.HUMAN) {
@@ -2549,7 +2561,7 @@ function actionCallback(action, room, pn) {
                 }
             }
 
-            room.informPlayers(room.board.notation + room.settingsNotation, MESSAGE_TYPE.NOTATION);
+            room.informPlayers(room.board.notation + room.settingsNotation, MESSAGE_TYPE.NOTATION, {povinnost: room.board.povinnost});
 
             actionTaken = true;
             action.action = 'resetBoard';
@@ -2559,7 +2571,7 @@ function actionCallback(action, room, pn) {
             //Also, iterate povinnost by 1
             if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
                 if (SOCKET_LIST[room.players[pn].socket] && room.players[pn].savePoints > 0) {
-                    SOCKET_LIST[room.players[pn].socket].emit('returnSavePoints',room.players[pn].savePoints);
+                    SOCKET_LIST[room.players[pn].socket].emit('returnSavePoints',room.players[pn].savePoints,playerPerspective(room.board.povinnost,pn));
                     room.players[pn].savePoints = [];
                 }
             }
@@ -2844,60 +2856,66 @@ io.sockets.on('connection', function (socket) {
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
     });
-    socket.on('customRoom', function (tarokyNotation, pn) {
+    socket.on('customRoom', function (tarokyNotation) {
         let connected = false;
-        if (isNaN(pn) || pn < 0 || pn > 4) {
-            return;
-        }
-        if (players[socketId] && players[socketId].room == -1) {
-            let tempRoom = new Room('temporary');
-            //Decode TarokyNotation into the room
-            if (notate(tempRoom,tarokyNotation)) {
-                let i = 1;
-                for (; rooms['Custom ' + i]; i++) { }
-                let roomID = 'Custom ' + i;
-                tempRoom.name = roomID;
-                rooms[roomID] = tempRoom;
-                rooms[roomID]['players'][pn].type = PLAYER_TYPE.HUMAN;
-                rooms[roomID]['players'][pn].socket = socketId;
-                rooms[roomID]['players'][pn].pid = players[socketId].pid;
-                rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
-                socket.emit('roomConnected', roomID);
-                connected = true;
-                players[socketId]['room'] = roomID;
-                players[socketId]['pn'] = pn;
-                rooms[roomID]['host'] = socketId;
-                autoReconnect(socketId);
-                socket.emit('timeSync', Date.now());
+        try {
+            if (players[socketId] && players[socketId].room == -1) {
+                let tempRoom = new Room('temporary');
+                //Decode TarokyNotation into the room
+                if (notate(tempRoom,tarokyNotation)) {
+                    let values = tarokyNotation.split('/');
+                    let theSettings = values[values.length - 1].split(';');
+                    let [setting,pn] = theSettings[theSettings.length - 1].split('=');
+                    if (u(setting) || u(pn) || setting != 'pn' || isNaN(pn) || pn < 0 || pn > 4) {
+                        SERVER.debug('Player number not declared')
+                        pn = 0;
+                    }
+                    let i = 1;
+                    for (; rooms['Custom ' + i]; i++) { }
+                    let roomID = 'Custom ' + i;
+                    tempRoom.name = roomID;
+                    rooms[roomID] = tempRoom;
+                    rooms[roomID]['players'][pn].type = PLAYER_TYPE.HUMAN;
+                    rooms[roomID]['players'][pn].socket = socketId;
+                    rooms[roomID]['players'][pn].pid = players[socketId].pid;
+                    rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
+                    socket.emit('roomConnected', roomID);
+                    connected = true;
+                    players[socketId]['room'] = roomID;
+                    players[socketId]['pn'] = pn;
+                    rooms[roomID]['host'] = socketId;
+                    autoReconnect(socketId);
+                    socket.emit('timeSync', Date.now());
 
-                let playerType = rooms[roomID].players[0].type;
-                let action = rooms[roomID].board.nextStep;
-                if (playerType == PLAYER_TYPE.HUMAN) {
-                    playerAction(action, rooms[roomID], action.player);
-                } else if (playerType == PLAYER_TYPE.ROBOT) {
-                    robotAction(action, rooms[roomID], action.player);
-                } else if (playerType == PLAYER_TYPE.AI) {
-                    aiAction(action, rooms[roomID], action.player);
+                    let playerType = rooms[roomID].players[0].type;
+                    let action = rooms[roomID].board.nextStep;
+                    if (playerType == PLAYER_TYPE.HUMAN) {
+                        playerAction(action, rooms[roomID], action.player);
+                    } else if (playerType == PLAYER_TYPE.ROBOT) {
+                        robotAction(action, rooms[roomID], action.player);
+                    } else if (playerType == PLAYER_TYPE.AI) {
+                        aiAction(action, rooms[roomID], action.player);
+                    }
+                } else {
+                    SERVER.debug('Notation error');
                 }
             } else {
-                SERVER.debug('Notation error');
-            }
-        } else {
-            SERVER.warn('Invalid attempt to connect to room',roomID);
-            if (rooms[roomID]) {
-                SERVER.debug('Room contains ' + rooms[roomID]['playerCount'] + ' players',roomID);
-                if (rooms[roomID].locked) {
-                    SERVER.debug('Room is locked',roomID);
+                SERVER.warn('Invalid attempt to connect to room',roomID);
+                if (rooms[roomID]) {
+                    SERVER.debug('Room contains ' + rooms[roomID]['playerCount'] + ' players',roomID);
+                    if (rooms[roomID].locked) {
+                        SERVER.debug('Room is locked',roomID);
+                    }
+                } else {
+                    SERVER.debug('This room does not exist',roomID);
                 }
-            } else {
-                SERVER.debug('This room does not exist',roomID);
+                if (players[socketId]) {
+                    SERVER.debug('Player is in room ' + players[socketId].room,roomID);
+                } else {
+                    SERVER.debug('Player ' + socketId + ' does not exist',roomID);
+                }
             }
-            if (players[socketId]) {
-                SERVER.debug('Player is in room ' + players[socketId].room,roomID);
-            } else {
-                SERVER.debug('Player ' + socketId + ' does not exist',roomID);
-            }
-        }
+        } catch (err) {SERVER.debug('Notation error: ' + err);}
         if (!connected) socket.emit('roomNotConnected', 'Custom');
     });
     socket.on('requestTimeSync', function() {

@@ -12,7 +12,7 @@ For the first game, it will look like this:
 
 Where the hands are each 12 cards like this:
 
-Hand 1 belongs to povenost, then it proceeds counter-clockwise around the table
+Hand 1 belongs to Povinnost, then it proceeds counter-clockwise around the table
 
 S1 Ace of spades\
 HK King of hearts\
@@ -57,7 +57,7 @@ The P# flag is used to signal prever
 
 .../talon/P1
 
-Where 1 is povenost, etc. to 4
+Where 1 is Povinnost, etc. to 4
 
 Without prever, the cards are assumed to be drawn from the first part of the talon and around
 
@@ -77,7 +77,7 @@ Then comes discarding
 
 .../talon/HAH2H3S4C3S2/
 
-Povenost discards 4 cards, then the others follow
+Povinnost discards 4 cards, then the others follow
 
 For prever,
 
@@ -98,7 +98,7 @@ Then moneycards are called
 
 ...discard/U1B2T3R4/
 
-If povenost does not call bida or uni, it won't be listed in the moneycards
+If Povinnost does not call bida or uni, it won't be listed in the moneycards
 
 The partner card is listed
 
@@ -148,6 +148,10 @@ TIMEOUT=30;
 
 DIFFICULTY=AI
 
+The last setting in the list denotes who the player was in relation to Povinnost
+
+...settings;pn=1
+
 ### All Together
 
 chips/hands/talon/pass/discard/moneycards/partner/valat/contra/iote/tricks/settings
@@ -160,4 +164,4 @@ chips/hands/talon/prever/discard/moneycards/valat/contra/iote/tricks/settings
 
 Default game directly after cards were dealt:
 
-100/100/100/100/H1H2H3H4HJHRHQHKS1S2S3S4/SJSRSQSKD1D2D3D4DJDRDQDK/C1C2C3C4CJCRCQCKT01T02T03T04/T05T06T07T08T09T10T11T12T13T14T15T16/T17T18T19T20T21T22/;
+100/100/100/100/H1H2H3H4HJHRHQHKS1S2S3S4/SJSRSQSKD1D2D3D4DJDRDQDK/C1C2C3C4CJCRCQCKT01T02T03T04/T05T06T07T08T09T10T11T12T13T14T15T16/T17T18T19T20T21T22/;pn=0

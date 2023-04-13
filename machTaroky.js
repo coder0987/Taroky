@@ -91,6 +91,12 @@ function loadButton() {
     element.classList.add("fixed-top");
 };
 
+function playerPerspective(originalPlace, viewpoint) {
+    //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
+    addMessage('You are ' + originalPlace + ', Povinnost is ' + viewpoint);
+    return ((+originalPlace - +viewpoint) + 4)%4;
+}
+
 function generateDeck() {
     for (let i in baseDeck) {
         let card = document.createElement('img');
@@ -513,6 +519,7 @@ function onLoad() {
             addMessage('loading...');//ADD LOADING ANIMATION
         }
     });
+    //TODO save points and return save points
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
     });
@@ -762,7 +769,7 @@ function onLoad() {
                 addBoldMessage(theMessage);
                 break;
             case MESSAGE_TYPE.NOTATION:
-                addMessage('Game save code: ' + theMessage);
+                addMessage('Game save code: ' + theMessage + ';pn=' + playerPerspective(playerNumber, extraInfo.povinnost));
                 break;
             default:
                 addMessage('Game message of unknown type: ' + theMessageType);
@@ -987,10 +994,8 @@ function customRoomClick() {
         if (notation.length < 10) {
             return;
         }
-        let thePN = prompt('Player number (0 for povinnost, up to 3)');
-        if (+thePN > 3 || +thePN < 0) {return;}
         connectingToRoom=true;
-        socket.emit('customRoom',notation, +thePN);
+        socket.emit('customRoom',notation);
         addMessage('Creating custom room...');
     } else {addError('Already connecting to a room!');}
 }
