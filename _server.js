@@ -246,7 +246,7 @@ function notate(room, notation) {
                     switch (setting) {
                         case 'difficulty':
                             if (DIFFICULTY_TABLE[rule]) {
-                                room.settings.difficulty = DIFFICULTY_TABLE[rule];
+                                room.settings.difficulty = +rule;
                             }
                             break;
                         case 'timeout':
@@ -819,7 +819,7 @@ function basicHandRanking(hand) {
     for (let i in hand) {
         if (hand[i].suit == 'Trump') {
             handRankingPoints++;
-            if (VALUE_REVERSE(hand[i].value) >= 14) {
+            if (VALUE_REVERSE[hand[i].value] >= 14) {
                 handRankingPoints++;
             }
         }
@@ -907,7 +907,7 @@ function robotCall(hand, difficulty) {
             //TODO: more difficulty algos
             return false;
         default:
-            SERVER.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
             return false;
     }
 }
@@ -926,7 +926,7 @@ function robotIOTE(hand, difficulty) {
             //TODO: more difficulty algos
             return false;
         default:
-            SERVER.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
             return false;
     }
 }
@@ -945,7 +945,7 @@ function robotContra(hand, difficulty) {
             //TODO: more difficulty algos
             return false;
         default:
-            SERVER.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
             return false;
     }
 }
@@ -962,7 +962,7 @@ function robotPovinnostBidaUniChoice(hand, difficulty) {
             //TODO: more difficulty algos
             return true;
         default:
-            SERVER.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
             return false;
     }
 }
@@ -985,7 +985,7 @@ function robotLead(hand, difficulty, room) {
             //TODO: more difficulty algos
             return firstSelectableCardExceptPagat(hand);
         default:
-            SERVER.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
             //select first playable
             return firstSelectableCard(hand);
 
@@ -1008,7 +1008,7 @@ function robotPlay(hand, difficulty, room) {
             //TODO: more difficulty algos
             return firstSelectableCardExceptPagat(hand);
         default:
-            SERVER.warn('Unknown difficulty: ' + difficulty);
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
             //select first playable
             return firstSelectableCard(hand);
     }
@@ -2952,10 +2952,10 @@ io.sockets.on('connection', function (socket) {
             switch (setting) {
                 case 'difficulty':
                     if (DIFFICULTY_TABLE[rule]) {
-                        rooms[players[socketId].room].settings.difficulty = DIFFICULTY_TABLE[rule];
+                        rooms[players[socketId].room].settings.difficulty = +rule;
                         setSettingNotation(rooms[players[socketId].room]);
                         SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[rule],players[socketId].room);
-                        rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
+                        rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + DIFFICULTY_TABLE[rule], MESSAGE_TYPE.SETTING);
                     }
                     break;
                 case 'timeout':
