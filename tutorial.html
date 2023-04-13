@@ -53,6 +53,75 @@
                 <p>1 Point: Everything else (other Trumps and colors)</p>
             </div>
         </div>
+        <h2>Using the Interface</h2>
+        <div class="row">
+            <div class="col-12">
+                <h3>Joining a Room</h3>
+                <p>
+                    The initial page is a list of rooms. Each room has 4 dots inside it. Hollow dots indicate Robot players, filled dots indicate Human players.
+                    To join a room, click on one which has an empty slot. The Custom room is used when, after a game, you copied the save code. You can paste the save code into the custom room in order to replay that game.
+                </p>
+                <h3>Room Settings</h3>
+                <p>
+                    If you join a room which previously had no players, you become the room host. This means you can edit the various settings before starting the game.
+                    Difficulty adjusts the bots play style (they aren't very good yet, since most difficulties have yet to be implemented)
+                    Timeout adjusts the amount of time each player is given before their turn is taken automatically (use 0 or -1 to disable it. It has a minimum of 20 seconds otherwise)
+                    Lock Room can be used to prevent players from joining your game. Rooms cannot be unlocked.
+                </p>
+                <h3>Starting the Game</h3>
+                <p>
+                    As the host, press "Start Game" to start the game
+                    If the back of a card appears on your screen, hover your mouse over it (tap on mobile) then move your mouse around to shuffle the deck. Once you're done shuffling, move your mouse off of the card.
+                    If you are prompted to cut the deck, click on the button which matches your choice
+                </p>
+                <h3>Important Info and Current Action</h3>
+                <p>
+                    Above your hand and the table, a few bits of text let you know what the current action is.
+                    First, the player number or account name of whoever turn it is. Then, what action they are currently preforming.
+                    If the timeout is enabled, it will also show a count-down in seconds until the action is automatically completed
+                </p>
+                <p>
+                    Below your hand is the round information, including who Povinnost is, who Prever is, what money cards have been called, who is signed in to accounts, and who Povinnost is playing with.
+                    This information is placed here for your convenience.
+                </p>
+                <h3>Ping Server, Refresh Rooms, and Leave Room</h3>
+                <p>
+                    If, for whatever reason, your game gets stuck on an action, you are missing vital information which you should have, or you otherwise aren't caught up with the game, clicking "Ping Server" should fix the issue
+                    The server will automatically update you with all the latest information.
+                    Additionally, in the room select screen, you can click Refresh Rooms to see what rooms have changed. However, this is entirely unnecessary as the rooms are updated automatically.
+                    Once you join a room, you can leave the room by double-tapping on "Leave Room"
+                    You will then be sent to the Join Room screen
+                </p>
+                <h3>Selecting Cards</h3>
+                <p>
+                    Whenever the game prompts you to either discard a card or play a card, many of your cards may turn gray.
+                    This is simply because you are not allowed to play or discard those cards. If it seems like all of your cards are gray, try hovering over the clubs and spades to see if you can play any of them.
+                    Once you make a choice, simply click (tap, on mobile) on your choice and that card will be played or discarded
+                </p>
+                <h3>Table Animations</h3>
+                <p>
+                    BE SURE TO WAIT A SECOND before playing a card. The first card should come up fairly quickly.
+                    Cards which are "on the table" are animated in one every 5 seconds. This can lead to a laggy animation if players play faster than that. For example, the bots play instantly and so will cause your turn to arrive before the cards have loaded.
+                    In this case, just wait a few seconds for the cards to load in. This is why the minimum timeout is 20 seconds. Once all the cards appear, make your choice.
+                    Similarly, if you leave the room while cards are on the table, they should disappear within a few seconds.
+                    This is one of those things which is under constant improvement. Expect a new table system, but maybe not soon.
+                </p>
+                <h3>Sign In, Sign Out, and Accounts</h3>
+                <p>
+                    The accounts system is handled separately by Mach SSO. The login, sign up, and verification processes are all through sso.smach.us
+                    The Sign In link should work fluidly. It should automatically open in a new tab, and, when the login is complete, close that tab.
+                    Error messages are displayed on Mach Tarok, should an error occur. If Mach SSO is ever unavailable, but Mach Tarok is available, simply skip logging in, as Guest accounts work fine.
+                </p>
+                <p>
+                    Also, every single standard set by OWASP is followed in the accounts' system, so, if your 12+ character password is secure, you can rest assured your Taroky account won't be stolen.
+                </p>
+                <h3>Players Online, the Footer, and GitHub</h3>
+                <p>
+                    An up-to-date status of the number of players online is displayed on the footer of the main page. (If you're the only one online, it will inform you that 1 Players is online, but that should be the only issue)
+                    To access the source code, open an issue, or otherwise leave a comment about the game, open the GitHub link and leave your comment there
+                </p>
+            </div>
+        </div>
         <h2>The Game</h2>
         <div class="row">
             <div class="col-12">

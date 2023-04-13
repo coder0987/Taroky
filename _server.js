@@ -219,7 +219,7 @@ function notate(room, notation) {
                 SERVER.debug('Notation: talon is illegal');
                 return false;
             }
-            let toCheck = theTalon.concat(players[0].hand).concat(players[1].hand).concat(players[2].hand).concat(players[3].hand);
+            let toCheck = theTalon.concat(thePlayers[0].hand).concat(thePlayers[1].hand).concat(thePlayers[2].hand).concat(thePlayers[3].hand);
             for (let i in baseDeck) {
                 let found = false;
                 for (let j in toCheck) {
@@ -282,7 +282,7 @@ function notate(room, notation) {
             room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
             return room;
         } catch (err) {
-            SERVER.debug(err);
+            SERVER.debug('Error in notate() ' + err);
             return false;
         }
     }
