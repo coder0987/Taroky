@@ -558,17 +558,34 @@ function onLoad() {
         //null if not existent yet
         let roundInfoElement = document.getElementById('roundInfo');
         roundInfoElement.textContent = '';
-        const possibleInfo = {'pn':'You are player ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povinnost is Playing With the '};
-        const possiblePlayerNumbers = {'povinnost':'Povinnost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: '};
-        //MoneyCards are handled separately
+        const possibleInfo = {'contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: '};
+        const possiblePlayerNumbers = {'povinnost':'Povinnost','prever':'Prever','valat':'Called Valat','iote':'Called I on the End'};
+        let playerDivs = [];
+        for (let i=0; i<4; i++) {
+            playerDivs[i] = document.createElement('div');
+            playerDivs[i].classList.add('col');
+            roundInfoElement.appendChild(playerDivs[i]);
+            let theInfo = document.createElement('p');
+            theInfo.innerHTML = 'Player ' + (+i + 1);
+            if (theRoundInfo.pn - 1 == i) {theInfo.innerHTML += ' (You)';}
+            playerDivs[i].appendChild(theInfo);
+        }
+        if (theRoundInfo.chips) {
+            for (let i in theRoundInfo.chips) {
+                if (theRoundInfo.chips[i]) {
+                    let theInfo = document.createElement('p');
+                    theInfo.innerHTML = theRoundInfo.chips[i];
+                    playerDivs[i].appendChild(theInfo);
+                }
+            }
+        }
         if (theRoundInfo.usernames) {
             for (let i in theRoundInfo.usernames) {
                 activeUsernames[i] = theRoundInfo.usernames[i];//null values are set as well
                 if (theRoundInfo.usernames[i]) {
                     let theInfo = document.createElement('p');
-                    theInfo.innerHTML = 'Player ' + (+i+1) + ' is ' + theRoundInfo.usernames[i];
-                    theInfo.classList.add('col');
-                    roundInfoElement.appendChild(theInfo);
+                    theInfo.innerHTML = theRoundInfo.usernames[i];
+                    playerDivs[i].appendChild(theInfo);
                 }
             }
         }
@@ -583,22 +600,24 @@ function onLoad() {
         for (let i in possiblePlayerNumbers) {
             if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
                 let theInfo = document.createElement('p');
-                let playerName = activeUsernames[theRoundInfo[i] - 1] ? activeUsernames[theRoundInfo[i] - 1] : +theRoundInfo[i];
-                theInfo.innerHTML = possiblePlayerNumbers[i] + playerName;
-                theInfo.classList.add('col');
-                roundInfoElement.appendChild(theInfo);
+                theInfo.innerHTML = possiblePlayerNumbers[i];
+                playerDivs[theRoundInfo[i] - 1].appendChild(theInfo);
+            }
+            if (i == 'povinnost' && theRoundInfo['partnerCard']) {
+                let theInfo = document.createElement('p');
+                theInfo.innerHTML = 'Playing with the ' + theRoundInfo['partnerCard'];
+                playerDivs[theRoundInfo[i] - 1].appendChild(theInfo);
             }
         }
         if (theRoundInfo.moneyCards) {
             for (let i in theRoundInfo.moneyCards) {
                 if (theRoundInfo.moneyCards[i].length > 0) {
                     let theInfo = document.createElement('p');
-                    theInfo.innerHTML = 'Player ' + (+i+1) + ' called ';
                     for (let j in theRoundInfo.moneyCards[i]) {
                         theInfo.innerHTML += theRoundInfo.moneyCards[i][j] + ' ';
                     }
                     theInfo.classList.add('col');
-                    roundInfoElement.appendChild(theInfo);
+                    playerDivs[i].appendChild(theInfo);
                 }
             }
         }

@@ -246,7 +246,7 @@ function notate(room, notation) {
                     switch (setting) {
                         case 'difficulty':
                             if (DIFFICULTY_TABLE[rule]) {
-                                room.settings.difficulty = rule;
+                                room.settings.difficulty = DIFFICULTY_TABLE[rule];
                             }
                             break;
                         case 'timeout':
@@ -1484,6 +1484,12 @@ function actionCallback(action, room, pn) {
                     players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber, room.settings);//Inform the players of game beginning.
                 }
             }
+            room.board.importantInfo.chips = {
+                '0': room.players[0].chips,
+                '1': room.players[1].chips,
+                '2': room.players[2].chips,
+                '3': room.players[3].chips
+            }
             actionTaken = true;
             break;
         case 'play':
@@ -1883,8 +1889,11 @@ function actionCallback(action, room, pn) {
                 } else {
                     room['players'][i].chips -= owedChips;
                 }
-                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-                    SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
+                room.board.importantInfo.chips = {
+                    '0': room.players[0].chips,
+                    '1': room.players[1].chips,
+                    '2': room.players[2].chips,
+                    '3': room.players[3].chips
                 }
             }
             room.board.importantInfo.moneyCards = room.board.moneyCards;
@@ -2556,8 +2565,11 @@ function actionCallback(action, room, pn) {
                 room.informPlayers('Povinnost\'s team received ' + chipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
             }
             for (let i in room['players']) {
-                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-                    SOCKET_LIST[room['players'][i].socket].emit('returnChips', room['players'][i].chips);
+                room.board.importantInfo.chips = {
+                    '0': room.players[0].chips,
+                    '1': room.players[1].chips,
+                    '2': room.players[2].chips,
+                    '3': room.players[3].chips
                 }
             }
 
@@ -2940,7 +2952,7 @@ io.sockets.on('connection', function (socket) {
             switch (setting) {
                 case 'difficulty':
                     if (DIFFICULTY_TABLE[rule]) {
-                        rooms[players[socketId].room].settings.difficulty = rule;
+                        rooms[players[socketId].room].settings.difficulty = DIFFICULTY_TABLE[rule];
                         setSettingNotation(rooms[players[socketId].room]);
                         SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[rule],players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + rule, MESSAGE_TYPE.SETTING);
