@@ -66,6 +66,9 @@ const server = http.createServer((req, res) => {
             res.writeHead(404, { 'Content-Type': 'text/html' });
             return res.end("404 Not Found");
         }
+        if (MIME_TYPE[ext] == 'image/png') {
+            res.setHeader('Cache-Control', 'max-age=2592000, public');
+        }
         res.writeHead(200, { 'Content-Type': MIME_TYPE[ext] || 'text/plain' });
         res.write(data);
         return res.end();
@@ -317,7 +320,6 @@ function notationToCards(notatedCards) {
                 let value = TRUMP_VALUE[+notatedCards.substring(0,2)-1];
                 notatedCards = notatedCards.substring(2);
                 if (u(value)) {
-                    console.log('Trump value is undefined. ' + JSON.stringify(cards));//TODO remove
                     return false;
                 }
                 cards.push({'value':value, 'suit': SUIT[4]});
