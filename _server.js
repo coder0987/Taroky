@@ -1907,6 +1907,7 @@ function actionCallback(action, room, pn) {
             action.player = (pn + 1) % 4;
             if (action.player == room['board'].povinnost) {
                 action.action = 'valat';
+                room.board.hasTheI = findTheI(room.players);
             }
             break;
         case 'partner':
@@ -1941,7 +1942,6 @@ function actionCallback(action, room, pn) {
                 action.action = 'moneyCards';
             }
 
-            room.board.hasTheI = findTheI(room.players);
 
             //Inform players what Povinnost called
             room.informPlayers('(Povinnost) is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn},pn);
