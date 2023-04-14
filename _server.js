@@ -1,6 +1,7 @@
 //imports
 const Player = require('./player.js');
 const Room = require('./room.js');
+const Deck = require('./deck.js');
 const { SUIT,
     SUIT_REVERSE,
     RED_VALUE,
@@ -29,9 +30,10 @@ const app = express();
 const START_TIME = Date.now();
 
 async function importH5wasm() {
-    if (!DEBUG_MODE) {
+    //TODO: uncomment. For some reason H5 really likes to spam the console when the server crashes
+    //if (!DEBUG_MODE) {
         return;
-    }
+    //}
     h5wasm = await import("h5wasm");
     await h5wasm.ready;
     aiFromFile('latest.h5');
@@ -101,21 +103,7 @@ const rooms = {};
 //TODO: MOVE TO ENUMS
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
-
-
-const VALUE_REVERSE = {
-    Ace: 0, Two: 1, Three: 2, Four: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
-    Seven: 0, Eight: 1, Nine: 2, Ten: 3,
-    I: 0, II: 1, III: 2, IIII: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10, XII: 11, XIII: 12,
-    XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
-};
-
-const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};
-const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15};
 const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
-
-const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 
 const SERVER = {
     /*
@@ -193,7 +181,7 @@ function notate(room, notation) {
                 SERVER.debug('Notation: not a string');
                 return false;
             }
-            room = room || new Room('temporary',false);
+            room = room || new Room('temporary',false,players);
             room.board.povinnost = 0;
             room.board.importantInfo.povinnost = (room.board.povinnost+1);
             //Return the room
@@ -347,38 +335,41 @@ function notationToCards(notatedCards) {
 function cardsToNotation(cards) {
     let theNotation = '';
     const SUIT_TO_NOTATION = {'Spade': 'S', 'Club': 'C', 'Heart': 'H', 'Diamond': 'D', 'Trump': 'T'};
-
-    for (let i in cards) {
-        theNotation += SUIT_TO_NOTATION[cards[i].suit];
-        if (cards[i].suit == SUIT[4]) {
-            //Trump
-            let temp = +VALUE_REVERSE[cards[i].value] + 1;
-            if (temp < 10) {
-                temp = '0' + temp;
-            }
-            theNotation += temp;
-        } else {
-            switch (cards[i].value) {
-                case 'Ace':
-                case 'Seven':
-                    theNotation += '1';
-                    break;
-                case 'Two':
-                case 'Eight':
-                    theNotation += '2';
-                    break;
-                case 'Three':
-                case 'Nine':
-                    theNotation += '3';
-                    break;
-                case 'Four':
-                case 'Ten':
-                    theNotation += '4';
-                    break;
-                default:
-                    theNotation += cards[i].value.substring(0,1);
+    try {
+        for (let i in cards) {
+            theNotation += SUIT_TO_NOTATION[cards[i].suit];
+            if (cards[i].suit == SUIT[4]) {
+                //Trump
+                let temp = +VALUE_REVERSE[cards[i].value] + 1;
+                if (temp < 10) {
+                    temp = '0' + temp;
+                }
+                theNotation += temp;
+            } else {
+                switch (cards[i].value) {
+                    case 'Ace':
+                    case 'Seven':
+                        theNotation += '1';
+                        break;
+                    case 'Two':
+                    case 'Eight':
+                        theNotation += '2';
+                        break;
+                    case 'Three':
+                    case 'Nine':
+                        theNotation += '3';
+                        break;
+                    case 'Four':
+                    case 'Ten':
+                        theNotation += '4';
+                        break;
+                    default:
+                        theNotation += cards[i].value.substring(0,1);
+                }
             }
         }
+    } catch (err) {
+        SERVER.error('Cards could not be notated: ' + JSON.stringify(cards) + '\n' + err);
     }
     return theNotation;
 }
@@ -391,156 +382,8 @@ function setSettingNotation(room) {
     room.settingsNotation = settingNotation.substring(0,settingNotation.length - 2);
 }
 
-function Room(name, debugRoom) {
-    this.debug = debugRoom; //Either undefined or true
-    this.settings = {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'locked':false};
-    this.settingsNotation = 'difficulty=2;timeout=30000;locked=false';
-    this.name = name;
-    this.host = -1;
-    this.board = new Board();
-    this.playerCount = 0;
-    this.logLevel = LOG_LEVEL;//0: none, 1: errors, 2: warn, 3: info, 4: debug logs, 5: trace
-    this.deck = [...baseDeck].sort(() => Math.random() - 0.5);
-    this.players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
-    this.autoAction = 0;
-    this.informPlayers = function(message, messageType, extraInfo, pn) {
-        for (let i in this.players) {
-            if (this.players[i].type == PLAYER_TYPE.HUMAN) {
-                if (typeof pn != 'undefined') {
-                    if (pn == i) {
-                        //Handled by youMessage
-                        players[this.players[i].socket].socket.emit('gameMessage','You ' + message,messageType,extraInfo);
-                    } else {
-                        if (pn != -1 && this.players[pn].socket != -1 && players[this.players[pn].socket].username != 'Guest') {
-                            players[this.players[i].socket].socket.emit('gameMessage', players[this.players[pn].socket].username + ' ' + message,messageType,extraInfo);
-                        } else {
-                            pn = +pn;
-                            players[this.players[i].socket].socket.emit('gameMessage','Player ' + (pn+1) + ' ' + message,messageType,extraInfo);
-                        }
-                    }
-                } else {
-                    players[this.players[i].socket].socket.emit('gameMessage',message,messageType,extraInfo);
-                }
-            }
-        }
-    }
-    this.informPlayer = function(pn, message, messageType, extraInfo) {
-        if (this.players[pn].type == PLAYER_TYPE.HUMAN) {
-            players[this.players[pn].socket].socket.emit('gameMessage',message,messageType,extraInfo);
-        }
-    }
-}
-function Player(type) { this.type = type; this.socket = -1; this.pid = -1; this.chips = 100; this.discard = []; this.hand = []; this.tempHand = []; this.isTeamPovinnost = false; this.savePoints = []; this.consecutiveAutos = 0; }
-function resetBoardForNextRound(board, players) { //setup board for next round. dealer of next round is this rounds povinnost
-    board.partnerCard = "";
-    board.talon = [];
-    board.table = [];
-    board.preverTalon = [];
-    board.preverTalonStep = 0;
-    board.prever = -1;
-    board.playingPrever = false;
-    board.povinnost = (board.povinnost+1)%4;
-    board.buc = false;
-    board.leadPlayer = -1;
-    board.leadCard = null;
-    board.valat = -1;
-    board.trickWinCount = [0,0];
-    board.hasTheI = -1;
-    board.iote = -1;
-    board.ioteWin = 0;
-    board.cutStyle = '';
-    board.moneyCards = [[], [], [], []];
-    board.contra = [-1,-1];
-    board.calledContra = -1;
-    board.rheaContra = -1;
-    board.supraContra = -1;
-    board.firstContraPlayer = -1;
-    board.importantInfo = {};
-    board.notation = '';
-    for (let i in players) {
-        players[i].hand = [];
-        players[i].discard = [];
-        players[i].tempHand = [];
-        players[i].isTeamPovinnost = false;
-    }
-}
-let baseDeck = createDeck();
-function Board() {
-    this.partnerCard = "";
-    this.talon = [];
-    this.table = [];
-    this.preverTalon = [];
-    this.preverTalonStep = 0;
-    this.prever = -1;
-    this.playingPrever = false;
-    this.povinnost = -1;
-    this.buc = false;
-    this.leadPlayer = -1;
-    this.leadCard = null;
-    this.nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
-    this.cutStyle = '';
-    this.moneyCards = [[], [], [], []];
-    this.valat = -1;
-    this.trickWinCount = [0,0];
-    this.hasTheI = -1;
-    this.iote = -1;
-    this.ioteWin = 0;
-    this.contra = [-1,-1];
-    this.calledContra = -1;
-    this.rheaContra = -1;
-    this.supraContra = -1;
-    this.firstContraPlayer = -1;
-    this.gameNumber = 0;
-    this.importantInfo = {};
-    this.notation = '';
-}
-function createDeck() {
-    let theDeck = [];
-    for (let s = 0; s < 4; s++)
-        for (let v = 0; v < 8; v++)
-            theDeck.push({ 'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v], 'suit': SUIT[s] });
-    for (let v = 0; v < 22; v++)
-        theDeck.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
-    return theDeck;
-}
-function shuffleDeck(deck, shuffleType, cutLocation) {
-    let tempDeck = [...deck];
-    cutLocation = cutLocation || tempDeck.length / 2;
-    switch (shuffleType) {
-        case 1: /*cut*/     return cutShuffle(tempDeck, cutLocation);
-        case 2: /*riffle*/  return riffleShuffle(tempDeck, true);
-        case 3: /*randomize*/return tempDeck.sort(() => Math.random() - 0.5);
-        default: return [...tempDeck];
-    }
-}
-function cutShuffle(deck, cutPosition) {
-    if (deck.length >= cutPosition) { return deck }
-    let leftSide = deck.slice(0, cutPosition);
-    let rightSide = deck.slice(cutPosition + 1);
-    return [...rightSide, ...leftSide];
-}
-function riffleShuffle(deck, isRandom) {
-    let middle = deck.length / 2;
-    let leftSide = deck.slice(0, middle);
-    let rightSide = deck.slice(middle);
-    let result = [];
-    let leftSideFirst = 1;
-    for (var i = 0; i < leftSide.length; i++) {
-        if (isRandom) { leftSideFirst = Math.floor(Math.random() * 2); }
-        if (leftSideFirst == 1) {
-            result.push(leftSide[i]);
-            result.push(rightSide[i]);
-        }
-        else {
-            result.push(rightSide[i]);
-            result.push(leftSide[i]);
-        }
-    }
-    return result;
-}
-function sortCards(deck) {
-    return deck.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
-}
+let baseDeck = Deck.createDeck();
+
 function handContainsCard(handToCheck, cardName) {
     for (let i in handToCheck) {
         if (handToCheck[i].value == cardName) {
@@ -705,7 +548,7 @@ function handWithoutGray(hand) {
 function highestPointValue(hand) {
     let pv = hand[0];
     for (let i in hand) {
-        if (pointValue(hand[i]) > pointValue(pv)) {
+        if (Deck.pointValue(hand[i]) > Deck.pointValue(pv)) {
             pv = hand[i];
         }
     }
@@ -811,7 +654,7 @@ function basicHandRanking(hand) {
                 handRankingPoints++;
             }
         }
-        if (pointValue(hand[i]) == 5) {
+        if (Deck.pointValue(hand[i]) == 5) {
             handRankingPoints++;
         }
     }
@@ -1492,7 +1335,7 @@ function actionCallback(action, room, pn) {
             const again = action.info.again;
             if (type > 0 && type < 4) {
                 //1: cut, 2: riffle, 3: randomize
-                room['deck'] = shuffleDeck(room['deck'], type);
+                room['deck'].shuffleDeck(type);
             }
             if (!again) {
                 action.action = 'cut';
@@ -1502,7 +1345,7 @@ function actionCallback(action, room, pn) {
             break;
         case 'cut':
             style = action.info.style;
-            if (style == 'Cut') room['deck'] = shuffleDeck(room['deck'], 1, action.info.location);
+            if (style == 'Cut') room['deck'].shuffleDeck(1, action.info.location);
             action.action = 'deal';
             action.player = (pn + 1) % 4;//The player after the cutter must deal
             room['board']['cutStyle'] = style;//For the dealer
@@ -1514,20 +1357,20 @@ function actionCallback(action, room, pn) {
             for (let i = 0; i < 6; i++) room['board'].talon[i] = room['deck'].splice(0, 1)[0];
             switch (style) {
                 case '1':
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '2':
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 2; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 2; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '3':
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 3; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 3; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '4':
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 4; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 4; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '12':
                     room.board.hands = {1:[], 2:[], 3:[], 4:[]};
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) {
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) {
                         for (let c = 0; c < 12; c++) {
                             room.board.hands[i+1].push(room['deck'].splice(0, 1)[0]);
                         }
@@ -1537,7 +1380,7 @@ function actionCallback(action, room, pn) {
                     actionTaken = true;
                     break;
                 case '12 Straight':
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
                     break;
                 case '345':
                     for (let t = 3; t < 6; t++) {
@@ -1548,7 +1391,7 @@ function actionCallback(action, room, pn) {
                     break;
                 default:
                     //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
-                    for (let i = 0; room['deck'][0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
             }
             if (actionTaken) {
                 //12 choice
@@ -2407,10 +2250,10 @@ function actionCallback(action, room, pn) {
                     let povinnostTeamPoints = 0;
                     let opposingTeamPoints = 0;
                     for (let i in povinnostTeamDiscard) {
-                        povinnostTeamPoints += pointValue(povinnostTeamDiscard[i]);
+                        povinnostTeamPoints += Deck.pointValue(povinnostTeamDiscard[i]);
                     }
                     for (let i in opposingTeamDiscard) {
-                        opposingTeamPoints += pointValue(opposingTeamDiscard[i]);
+                        opposingTeamPoints += Deck.pointValue(opposingTeamDiscard[i]);
                     }
                     pointCountMessageTable.push({'name':'Povinnost Team Points', 'value':povinnostTeamPoints});
                     pointCountMessageTable.push({'name':'Opposing Team Points', 'value':opposingTeamPoints});
@@ -2462,7 +2305,7 @@ function actionCallback(action, room, pn) {
                             }
                             if (!found) {
                                 SERVER.debug('Card ' + baseDeck[i].value + ' of ' + baseDeck[i].suit + ' was not found',room.name);
-                                SERVER.debug('Point value: ' + pointValue(baseDeck[i]),room.name);
+                                SERVER.debug('Point value: ' + Deck.pointValue(baseDeck[i]),room.name);
                             }
                         }
                         SERVER.debug('-------------------------',room.name)
@@ -2590,7 +2433,7 @@ function actionCallback(action, room, pn) {
             }
             action.player = (action.player+1)%4;
             if (action.player == room.board.povinnost) {
-                room['board'].resetForNextRound()
+                room.resetForNextRound()
                 action.player = room['board'].povinnost;//already iterated
                 action.action = 'play';
             }
@@ -2822,6 +2665,7 @@ io.sockets.on('connection', function (socket) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
                     rooms[roomID]['players'][i].socket = socketId;
+                    rooms[roomID]['players'][i].messenger = socket;
                     rooms[roomID]['players'][i].pid = players[socketId].pid;
                     rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                     socket.emit('roomConnected', roomID);
@@ -2871,7 +2715,7 @@ io.sockets.on('connection', function (socket) {
         let connected = false;
         try {
             if (players[socketId] && players[socketId].room == -1) {
-                let tempRoom = new Room('temporary');
+                let tempRoom = new Room('temporary', false, players);
                 //Decode TarokyNotation into the room
                 if (notate(tempRoom,tarokyNotation)) {
                     let values = tarokyNotation.split('/');
@@ -3241,14 +3085,14 @@ function tick() {
             }
         }
         if (Object.keys(rooms).length == 0) {
-            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true);}
-            rooms[1] = new Room(1);
+            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true,players);}
+            rooms[1] = new Room(1,false,players);
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) { }
-            rooms[i] = new Room(i);
+            rooms[i] = new Room(i,false,players);
         } else if (DEBUG_MODE && !rooms['Debug']) {
-            rooms['Debug'] = new Room('Debug',true);
+            rooms['Debug'] = new Room('Debug',true,players);
         }
         simplifiedRooms = {};
         for (let i in rooms) {

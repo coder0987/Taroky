@@ -4,12 +4,15 @@ class Player {
     constructor(type) {
         this._type = type;
         this._socket = -1;
+        this._messenger = null;
         this._pid = -1;
         this._chips = 100;
         this._discard = [];
         this._hand = [];
         this._tempHand = [];
         this._isTeamPovenost = false;
+        this._savePoints = [];
+        this._consecutiveAutos = 0;
     }
 
     resetForNextRound() {

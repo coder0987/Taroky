@@ -7,38 +7,54 @@ class Board {
         this._preverTalonStep = 0;
         this._prever = -1;
         this._playingPrever = false;
-        this._povenost = -1;
+        this._povinnost = -1;
         this._buc = false;
         this._leadPlayer = -1;
+        this._leadCard = null;
         this._nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
         this._cutStyle = '';
         this._moneyCards = [[], [], [], []];
+        this._trickWinCount = [0,0];
         this._valat = -1;
         this._iote = -1;
+        this._ioteWin = 0;
+        this._hasTheI = -1;
         this._contra = [-1, -1];
+        this._calledContra = -1;
+        this._rheaContra = -1;
+        this._supraContra = -1;
         this._firstContraPlayer = -1;
         this._gameNumber = 0;
         this._importantInfo = {};
+        this._notation = '';
     }
 
     resetForNextRound() {
-        this.partnerCard = "";
-        this.talon = [];
-        this.table = [];
-        this.preverTalon = [];
-        this.preverTalonStep = 0;
-        this.prever = -1;
-        this.playingPrever = false;
-        this.povenost = (this.povenost + 1) % 4;
-        this.buc = false;
-        this.leadPlayer = -1;
-        this.valat = -1;
-        this.iote = -1;
-        this.cutStyle = '';
-        this.moneyCards = [[], [], [], []];
-        this.contra = [-1, -1];
-        this.firstContraPlayer = -1;
-        this.importantInfo = {};
+        this._partnerCard = "";
+        this._talon = [];
+        this._table = [];
+        this._preverTalon = [];
+        this._preverTalonStep = 0;
+        this._prever = -1;
+        this._playingPrever = false;
+        this._povinnost = (this.povinnost + 1) % 4;
+        this._buc = false;
+        this._leadPlayer = -1;
+        this._leadCard = null;
+        this._valat = -1;
+        this._iote = -1;
+        this._ioteWin = 0;
+        this._hasTheI = -1;
+        this._cutStyle = '';
+        this._moneyCards = [[], [], [], []];
+        this._trickWinCount = [0,0];
+        this._contra = [-1, -1];
+        this._calledContra = -1;
+        this._rheaContra = -1;
+        this._supraContra = -1;
+        this._firstContraPlayer = -1;
+        this._importantInfo = {};
+        this._notation = '';
     }
 
     //Setters
@@ -70,8 +86,8 @@ class Board {
         this._playingPrever = playingPrever;
     }
 
-    set povenost(povenost) {
-        this._povenost = povenost;
+    set povinnost(povinnost) {
+        this._povinnost = povinnost;
     }
 
     set buc(buc) {
@@ -102,6 +118,14 @@ class Board {
         this._iote = iote;
     }
 
+    set ioteWin(win) {
+        this._ioteWin = win;
+    }
+
+    set hasTheI(who) {
+        this._hasTheI = who;
+    }
+
     set contra(contra) {
         this._contra = contra;
     }
@@ -116,6 +140,10 @@ class Board {
 
     set importantInfo(importantInfo) {
         this._importantInfo = importantInfo;
+    }
+
+    set trickWinCount(winCount) {
+        this._trickWinCount = winCount;
     }
 
     //Getters
@@ -147,8 +175,8 @@ class Board {
         return this._playingPrever;
     }
 
-    get povenost() {
-        return this._povenost;
+    get povinnost() {
+        return this._povinnost;
     }
 
     get buc() {
@@ -193,6 +221,18 @@ class Board {
 
     get importantInfo() {
         return this._importantInfo;
+    }
+
+    get trickWinCount() {
+        return this._trickWinCount;
+    }
+
+    get ioteWin() {
+        return this._ioteWin;
+    }
+
+    get hasTheI() {
+        return this._hasTheI;
     }
 }
 

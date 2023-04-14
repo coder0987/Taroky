@@ -7,11 +7,12 @@ const { SUIT,
 
 class Deck {
     constructor() {
-        this._baseDeck = this.createDeck();
-        this._deck = this.shuffleDeck(3);
+        this._baseDeck = Deck.createDeck();
+        this._deck = Deck.createDeck();
+        this.shuffleDeck(3);
     }
 
-    createDeck() {
+    static createDeck() {
         let theDeck = [];
         for (let s = 0; s < 4; s++)
             for (let v = 0; v < 8; v++)
@@ -22,11 +23,11 @@ class Deck {
     }
 
     shuffleDeck(shuffleType, cutLocation) {
-        let tempDeck = [...this._baseDeck];
+        let tempDeck = [...this._deck];
         cutLocation = cutLocation || tempDeck.length / 2;
         switch (shuffleType) {
-            case 1: /*cut*/     this._deck = cutShuffle(tempDeck, cutLocation);
-            case 2: /*riffle*/  this._deck = riffleShuffle(tempDeck, true);
+            case 1: /*cut*/     this.cutShuffle(cutLocation);
+            case 2: /*riffle*/  this.riffleShuffle(true);
             case 3: /*randomize*/this._deck = tempDeck.sort(() => Math.random() - 0.5);
             default: this._deck = [...tempDeck];
         }
@@ -34,8 +35,8 @@ class Deck {
 
     cutShuffle(cutPosition) {
         if (this._deck.length >= cutPosition) { return }
-        let leftSide = deck.slice(0, cutPosition);
-        let rightSide = deck.slice(cutPosition + 1);
+        let leftSide = this._deck.slice(0, cutPosition);
+        let rightSide = this._deck.slice(cutPosition + 1);
         this._deck = [...rightSide, ...leftSide];
     }
 
@@ -59,8 +60,41 @@ class Deck {
         this._deck = result;
     }
 
-    static sortCards(deck) {
-        return deck.sort((a, b) => (SUIT[a.suit] > SUIT[b.suit]) ? 1 : (a.suit === b.suit) ? ((Number(SUIT[a.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[a.value] : RED_VALUE[a.value]) : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (SUIT[a.suit] > 3 ? TRUMP_VALUE[b.value] : RED_VALUE[b.value]) : BLACK_VALUE[b.value])) ? 1 : -1) : -1);
+    splice(start, end) {
+        return this._deck.splice(start, end);
+    }
+
+    static sortCards(toSort) {
+        toSort = toSort.sort((a, b) => {
+             if (SUIT_REVERSE[a.suit] > SUIT_REVERSE[b.suit]) {
+                return 1;
+             } else if (SUIT_REVERSE[a.suit] < SUIT_REVERSE[b.suit]) {
+                return -1;
+             }
+
+             if (VALUE_REVERSE[a.value] > VALUE_REVERSE[b.value]) {
+                return 1;
+             } else if (VALUE_REVERSE[a.value] < VALUE_REVERSE[b.value]) {
+                return -1;
+             }
+             console.log('Cards are the same: ' + JSON.stringify(a) + ' ' + JSON.stringify(b));
+             return 0;//Cards are the same
+
+             //James' sort function (which used to work but for some reason just reverses the order of the cards now?
+             /*return (SUIT[a.suit] > SUIT[b.suit]) ? 1 :
+            (a.suit === b.suit) ? (
+                (Number(SUIT[a.suit] > 1 ? (
+                    SUIT[a.suit] > 3 ?
+                        TRUMP_VALUE[a.value]
+                        : RED_VALUE[a.value])
+                    : BLACK_VALUE[a.value]) > Number(SUIT[b.suit] > 1 ? (
+                        SUIT[a.suit] > 3 ?
+                            TRUMP_VALUE[b.value] :
+                        RED_VALUE[b.value]) :
+                    BLACK_VALUE[b.value])) ? 1 : -1) : -1;*/
+        });
+        //console.log(JSON.stringify(toSort));
+        return toSort;
     }
 
     static pointValue(card) {
