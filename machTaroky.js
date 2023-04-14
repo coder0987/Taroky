@@ -93,7 +93,6 @@ function loadButton() {
 
 function playerPerspective(originalPlace, viewpoint) {
     //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
-    addMessage('You are ' + originalPlace + ', Povinnost is ' + viewpoint);
     return ((+originalPlace - +viewpoint) + 4)%4;
 }
 
