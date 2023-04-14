@@ -23,3 +23,9 @@ Design features to add
         1. create deck automatically on page load, using prestored constants as image names
         2. unhide images on server reveal using client-side coordinates
         3. use generic card back for unkown cards such as opponents' hands
+    
+    Username/Nickname
+	1. when joining game or visiting website request nickname.
+	2. cache nickname via cookie or something
+	3. display the users nickname on the page somewhere
+	4. ability to update the cached nickname
