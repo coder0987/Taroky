@@ -1494,6 +1494,12 @@ function actionCallback(action, room, pn) {
             SERVER.log('Game ' + room['board'].gameNumber + ' is starting',room.name);
             action.action = 'shuffle';
             action.player = (room['board'].povinnost+3)%4;
+            room.board.importantInfo.chips = {
+                '0': room.players[0].chips,
+                '1': room.players[1].chips,
+                '2': room.players[2].chips,
+                '3': room.players[3].chips
+            }
             actionTaken = true;
             break;
         case 'shuffle':
