@@ -104,7 +104,7 @@ const VALUE_REVERSE = {
 
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15};
+const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15};
 const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
@@ -192,6 +192,7 @@ function notate(room, notation) {
             }
             room = room || new Room('temporary',false);
             room.board.povinnost = 0;
+            room.board.importantInfo.povinnost = (room.board.povinnost+1);
             //Return the room
             let values = notation.split('/');
             if (values.length > 20 || values.length < 10) {
@@ -1051,6 +1052,7 @@ function autoAction(action, room, pn) {
     let fakeMoneyCards = false;
 
     switch (action.action) {
+        case 'start':
         case 'play':
         case 'shuffle':
             break;
@@ -1252,8 +1254,6 @@ function playerAction(action, room, pn) {
             returnHandState = 1;
             break;
         case 'povinnostBidaUniChoice':
-            fakeMoneyCards = true;
-            action.action = 'moneyCards';
         case 'moneyCards':
             break;
         case 'partner':
@@ -1299,11 +1299,6 @@ function playerAction(action, room, pn) {
 
     for (let i = 0; i < 4; i++) {
         if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-            if (fakeMoneyCards && pn == i) {
-                action.action = 'povinnostBidaUniChoice';
-                players[room['players'][i].socket].socket.emit('nextAction', action);
-                action.action = 'moneyCards';
-            }
             if (!SENSITIVE_ACTIONS[action.action] || pn == i) {
                 players[room['players'][i].socket].socket.emit('nextAction', action);
             }
@@ -1584,7 +1579,7 @@ function actionCallback(action, room, pn) {
                                     + cardsToNotation(room.board.talon) + '/';
             //Povinnost rotation is handled by the board reset function
             SERVER.log('Povinnost is ' + room['board'].povinnost,room.name);
-            room.informPlayers('is povinnost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povinnost},room['board'].povinnost);
+            room.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':room['board'].povinnost},room['board'].povinnost);
             action.action = 'prever';
             action.player = room['board'].povinnost;
             actionTaken = true;
@@ -1609,7 +1604,7 @@ function actionCallback(action, room, pn) {
                 room.board.importantInfo.povinnost = (room.board.povinnost+1);
                 //Povinnost rotation is handled by the board reset function
                 SERVER.log('Povinnost is ' + room['board'].povinnost,room.name);
-                room.informPlayers('is povinnost', MESSAGE_TYPE.POVENOST,{'pn':room['board'].povinnost},room['board'].povinnost);
+                room.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':room['board'].povinnost},room['board'].povinnost);
                 action.action = 'prever';
                 action.player = room['board'].povinnost;
                 actionTaken = true;
@@ -2731,7 +2726,7 @@ function autoReconnect(socketId) {
             SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
         }
         if (!isNaN(rooms[players[socketId].room].povinnost)) {
-            rooms[players[socketId].room].informPlayer(players[socketId].pn, 'Player ' + (rooms[players[socketId].room].povinnost+1) + ' is povinnost', MESSAGE_TYPE.POVENOST,{'pn':rooms[players[socketId].room].povinnost});
+            rooms[players[socketId].room].informPlayer(players[socketId].pn, 'Player ' + (rooms[players[socketId].room].povinnost+1) + ' is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':rooms[players[socketId].room].povinnost});
         }
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
@@ -3256,7 +3251,13 @@ function tick() {
         simplifiedRooms = {};
         for (let i in rooms) {
             if (rooms[i] && !rooms[i].settings.locked) {
-                simplifiedRooms[i] = { 'count': rooms[i].playerCount };
+                let theUsernames = [];
+                for (let p in rooms[i].players) {
+                    if (rooms[i].players[p].type == PLAYER_TYPE.HUMAN) {
+                        theUsernames.push(players[rooms[i].players[p].socket].username);
+                    }
+                }
+                simplifiedRooms[i] = { 'count': rooms[i].playerCount, 'usernames': theUsernames };
             }
         }
         for (let i in players) {
@@ -3657,10 +3658,10 @@ function AI(seed, mutate) {
 
 function aiFromFile(file) {
     //Note: file is a location, not an actual file
-
+    let f;
     try {
         const seed = [];
-        let f = new h5wasm.File(file, "r");
+        f = new h5wasm.File(file, "r");
         seed[0] = math.matrix(f.get('/ai/inputWeights', 'r').to_array());
         seed[1] = math.matrix(f.get('/ai/layersWeights', 'r').to_array());
         seed[2] = math.matrix(f.get('/ai/layersBias', 'r').to_array());
@@ -3669,17 +3670,19 @@ function aiFromFile(file) {
         latestAI = new AI(seed, 0);
         SERVER.log('AI loaded successfully');
         startAITraining();
-        f.close();
     } catch (err) {
         SERVER.error('Error reading file from disk: ' + err);
         latestAI = new AI(false, 0);
         aiToFile(latestAI, 'latest.5');
+    } finally {
+        if (f) {f.close();}
     }
 }
 
 function aiToFile(ai, fileName) {
+    let saveFile;
     try {
-        let saveFile = new h5wasm.File(fileName,'w');
+        saveFile = new h5wasm.File(fileName,'w');
         saveFile.create_group('ai');
 
         let tempInputWeights = [];
@@ -3717,10 +3720,11 @@ function aiToFile(ai, fileName) {
         });
         saveFile.get('ai').create_dataset('outputBias', tempOutputBias, outputBiasShape, '<f');
 
-        saveFile.close();
         SERVER.log('Saved the latest ai ' + Date.now());
     } catch (err) {
         SERVER.error('Error writing file: ' + err);
+    } finally {
+        if (saveFile) {saveFile.close();}
     }
 }
 
