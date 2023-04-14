@@ -3247,7 +3247,7 @@ function tick() {
         }
         if (Object.keys(rooms).length == 0) {
             if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true);}
-            rooms['Main'] = new Room('Main');
+            rooms[1] = new Room(1);
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) { }
