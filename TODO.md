@@ -11,10 +11,8 @@ This file contains a list of things we have yet TODO in no particular order
 
 ### Back End
 
-* Add an accounts system
 * Add intelligent robot interactions
 * Add Artificial Intelligence interactions
-* Finish the base game
 * Add TODOs to this list
 * Add command-line argument outline
-* Add persistent debug logs and implement log levels
+* Add persistent debug logs
