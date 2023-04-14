@@ -554,7 +554,6 @@ function onLoad() {
     });
     socket.on('returnRoundInfo', function(theRoundInfo) {
         if (!theRoundInfo) {return;}
-        console.log(theRoundInfo);
         //{pn,povinnost,prever,preverMultiplier,valat,contra,iote,moneyCards,partnerCard}
         //null if not existent yet
         let roundInfoElement = document.getElementById('roundInfo');
@@ -676,8 +675,8 @@ function onLoad() {
                 addBoldMessage(theMessage);
                 break;
             case MESSAGE_TYPE.TRUMP_DISCARD:
-                returnTableQueue.push(extraInfo.card);
-                if (extraInfo && extraInfo.pn == playerNumber) {
+                returnTableQueue.push([extraInfo.card]);
+                if (extraInfo && extraInfo.pn == playerNumber && extraInfo.youMessage) {
                     addBoldMessage(extraInfo.youMessage);
                 } else {
                     addBoldMessage(theMessage);
