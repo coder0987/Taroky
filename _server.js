@@ -282,6 +282,7 @@ function notate(room, notation) {
                     }
                 }
             }
+            room.board.hasTheI = findTheI(room.players);
             if (values.length === 10) {
                 room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
                 return room;
@@ -2569,9 +2570,9 @@ function actionCallback(action, room, pn) {
             if (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips != 400) {
                 SERVER.error('Incorrect chip count! Total count: ' + (room.players[0].chips + room.players[1].chips + room.players[2].chips + room.players[3].chips),room.name)
                 SERVER.debug( 'Player 1: ' + room.players[0].chips,room.name)
-                SERVER.debug( 'Player 2: ' + room.players[2].chips,room.name)
-                SERVER.debug( 'Player 3: ' + room.players[3].chips,room.name)
-                SERVER.debug( 'Player 4: ' + room.players[4].chips,room.name)
+                SERVER.debug( 'Player 2: ' + room.players[1].chips,room.name)
+                SERVER.debug( 'Player 3: ' + room.players[2].chips,room.name)
+                SERVER.debug( 'Player 4: ' + room.players[3].chips,room.name)
             }
             if (chipsOwed < 0) {
                 /* TODO: make informing the players a bit better
