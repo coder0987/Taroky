@@ -1940,6 +1940,8 @@ function actionCallback(action, room, pn) {
                 action.action = 'moneyCards';
             }
 
+            room.board.hasTheI = findTheI(room.players);
+
             //Inform players what Povinnost called
             room.informPlayers('(Povinnost) is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn},pn);
             room.board.importantInfo.partnerCard = room.board.partnerCard;
@@ -1985,7 +1987,6 @@ function actionCallback(action, room, pn) {
             //Possible variations: IOTE may still be allowed in a valat game, contra may be disallowed
             break;
         case 'iote':
-            room.board.hasTheI = pn;
             if (action.info.iote) {
                 room.informPlayers('called the I on the end', MESSAGE_TYPE.IOTE, {pn: pn},pn);
                 room.board.iote = pn;
