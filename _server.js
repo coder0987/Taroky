@@ -1,3 +1,20 @@
+//imports
+const Player = require('./player.js');
+const Room = require('./room.js');
+const { SUIT,
+    SUIT_REVERSE,
+    RED_VALUE,
+    BLACK_VALUE,
+    TRUMP_VALUE,
+    VALUE_REVERSE,
+    DIFFICULTY,
+    DIFFICULTY_TABLE,
+    MESSAGE_TYPE,
+    PLAYER_TYPE } = require('./enums.js');
+
+
+
+
 const http = require('http');
 const https = require('https');
 const url = require('url');
@@ -75,25 +92,16 @@ const server = http.createServer((req, res) => {
     });
 });
 
-//helper func
-function index(dict) {
-    for (let key in dict) {
-        dict[dict[key]] = key;
-    }
-}
-
-
 //SOCKETS
 const io = require('socket.io')(server);
 const SOCKET_LIST = {};
 const players = {};
 const rooms = {};
-const PLAYER_TYPE = { HUMAN: 0, ROBOT: 1, AI: 2, H: 0, R: 1 };
 
-const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump' };
-const RED_VALUE = { 0: 'Ace', 1: 'Two', 2: 'Three', 3: 'Four', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
-const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
-const TRUMP_VALUE = { 0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz' };
+//TODO: MOVE TO ENUMS
+
+const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
+
 
 const VALUE_REVERSE = {
     Ace: 0, Two: 1, Three: 2, Four: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
@@ -169,16 +177,11 @@ const SERVER = {
     }
 };
 
-index(SUIT);
-index(RED_VALUE);
-index(BLACK_VALUE);
-index(TRUMP_VALUE);
-
 let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
-
+//TODO: Move to class files
 let latestAI = null;
 let trainees = [];
 let trainingRooms = [];
@@ -571,31 +574,7 @@ function isCardPlayable(hand, card, leadCard) {
         return true;
     }
 }
-function pointValue(card) {
-    if (card.suit == 'Trump') {
-        if (card.value == 'I' || card.value == 'XXI' || card.value == 'Skyz') {
-            return 5;
-        }
-        return 1;
-    }
-    switch (VALUE_REVERSE[card.value]) {
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-            return 1;
-        case 4:
-            return 2;
-        case 5:
-            return 3;
-        case 6:
-            return 4;
-        case 7:
-            return 5;
-    }
-    SERVER.trace('Illegal card. No point value for ' + card);
-    return 0;
-}
+
 function findPovinnost(players) {
     let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povinnost is found
     while (true) { //loop until we find povinnost
@@ -616,6 +595,8 @@ function findTheI(players) {
    SERVER.trace('ERROR: No one has the I');
    return -1;
 }
+
+//TODO: MOVE TO CLASS FILES
 function possiblePartners(hand) {
     let partners = [];
     //can always partner with XIX
@@ -757,7 +738,7 @@ function whoWon(table, leadPlayer) {
     return (leadPlayer+currentWinner)%4;
 }
 
-//Robot Functions
+//Robot Functions TODO: MOVE TO CLASS FILE
 function firstSelectableCard(hand) {
     for (let i in hand) {
         if (!hand[i].grayed) {
@@ -767,6 +748,7 @@ function firstSelectableCard(hand) {
     SERVER.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
     return hand[0];
 }
+
 function firstSelectableCardExceptPagat(hand) {
     for (let i in hand) {
         if (!hand[i].grayed && hand[i].value != 'I') {
@@ -810,6 +792,7 @@ function unbrokenTrumpChain(hand) {
     }
     return guarantees;
 }
+
 function basicHandRanking(hand) {
     /*Returns a point-value estimate of how good a hand is
     Points are given for:
@@ -1294,9 +1277,9 @@ function playerAction(action, room, pn) {
             SERVER.trace();
     }
     if (returnHandState == 0) {
-        players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), false);
+        players[room['players'][pn].socket].socket.emit('returnHand', Deck.sortCards(hand), false);
     } else if (returnHandState == 1) {
-        players[room['players'][pn].socket].socket.emit('returnHand', sortCards(hand), true);
+        players[room['players'][pn].socket].socket.emit('returnHand', Deck.sortCards(hand), true);
     }
 
     for (let i = 0; i < 4; i++) {
@@ -1674,7 +1657,7 @@ function actionCallback(action, room, pn) {
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
-                sortCards(room['players'][action.player].tempHand);
+                Deck.sortCards(room['players'][action.player].tempHand);
 
                 //Inform player of cards
                 if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
@@ -2607,8 +2590,7 @@ function actionCallback(action, room, pn) {
             }
             action.player = (action.player+1)%4;
             if (action.player == room.board.povinnost) {
-                resetBoardForNextRound(room['board'],room.players);
-                room.deck = [...baseDeck].sort(() => Math.random() - 0.5);
+                room['board'].resetForNextRound()
                 action.player = room['board'].povinnost;//already iterated
                 action.action = 'play';
             }
@@ -2650,7 +2632,7 @@ function actionCallback(action, room, pn) {
         for (let i in room.players) {
             if (room['players'][i].type == PLAYER_TYPE.HUMAN && SOCKET_LIST[room['players'][i].socket]) {
                 //Return hands
-                SOCKET_LIST[room['players'][i].socket].emit('returnHand', sortCards(room['players'][i].hand), false);
+                SOCKET_LIST[room['players'][i].socket].emit('returnHand', Deck.sortCards(room['players'][i].hand), false);
                 //Return important info
                 room.board.importantInfo.pn = (+i+1);
                 room.board.importantInfo.usernames = {'0':null, '1':null, '2':null, '3':null};
@@ -2728,16 +2710,15 @@ function autoReconnect(socketId) {
     if (rooms[players[socketId].room]) {
         SOCKET_LIST[socketId].emit('roomConnected',players[socketId].room);
         SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
-
         if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard') {
             grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
-            SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
+            SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
         } else if (rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
             grayUnplayables(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].board.leadCard);
-            SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
+            SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
         } else {
             unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
-            SOCKET_LIST[socketId].emit('returnHand', sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
+            SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
         }
         rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);
         SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
