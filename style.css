@@ -26,6 +26,11 @@ body {
 .button {
     transition-duration: 0.4s;
     opacity: 0.8;
+    /*Disable text selection*/
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .button:hover{
@@ -54,10 +59,6 @@ img {
     transition: all 0.50s;
 }
 
-.roomCard {
-    border-style: solid;
-    padding-left: 10px;
-}
 /*COLOR*/
 .green {
     background-color: var(--green);
@@ -171,6 +172,13 @@ img {
     padding:1rem;
     font-family: Georgia, 'Times New Roman', Times, serif;
     display:inline-block;
+    margin: 10px;
+
+    /*Disable text selection*/
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .roomnum {
     font-family: Georgia, 'Times New Roman', Times, serif;
@@ -178,4 +186,41 @@ img {
 }
 .roomcard:hover {
     background-color: var(--whiteHover);
+}
+
+.navbar-brand {
+    color: var(--red);
+    font-weight: bold;
+}
+
+.footer {
+    -webkit-transition: .5s ease-in-out;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--navy);
+    margin: 0;
+    padding: 0;
+    color: white;
+}
+
+.footer-content {
+    display: inline;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+}
+
+.small-link {
+    margin: 0;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--red);
+    text-decoration: none;
+}
+
+.centered {
+    text-align: center;
 }

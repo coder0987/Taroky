@@ -29,6 +29,25 @@ On Linux, run the run.sh file\
 
 In both cases, the server will automatically restart on crash. The server will bind to port 8442 by default. Edit the server.listen(8442) statement at the end of _server.js to change this
 
+### Debugging and Development
+
+Notice a bug and want to help fix it? MachTarok has built-in development tools for just that
+
+When starting the server, use\
+`node _server.js debug 5`
+
+This will activate debug mode and set log level to 5\
+These are the log levels:
+
+0.  Server crashes only 
+1. Recoverable Errors 
+2. Warnings 
+3. Informational (default)
+4. Debug 
+5. Trace
+
+This will also switch the service port to 8448, which allows for a development version and a production version to be run simultaneously
+
 ### Credits
 
 Created by Samuel, Lauren, and James Mach
