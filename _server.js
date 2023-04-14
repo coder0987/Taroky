@@ -96,9 +96,11 @@ const server = http.createServer((req, res) => {
 
 //SOCKETS
 const io = require('socket.io')(server);
-const SOCKET_LIST = {};
-const players = {};
-const rooms = {};
+
+//TODO: check if global variables are working correctly. Supposedly global variables shouldn't be used
+SOCKET_LIST = {};
+players = {};
+rooms = {};
 
 //TODO: MOVE TO ENUMS
 

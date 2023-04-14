@@ -35,8 +35,8 @@ class Room {
                         //Handled by youMessage
                         this._players[i].messenger.emit('gameMessage','You ' + message,messageType,extraInfo);
                     } else {
-                        if (pn != -1 && this._players[pn].socket != -1 && this._playerList[this._players[pn].socket].username != 'Guest') {
-                            this._players[i].messenger.emit('gameMessage', this._playerList[this._players[pn].socket].username + ' ' + message,messageType,extraInfo);
+                        if (pn != -1 && this._players[pn].socket != -1 && players[this._players[pn].socket].username != 'Guest') {
+                            this._players[i].messenger.emit('gameMessage', players[this._players[pn].socket].username + ' ' + message,messageType,extraInfo);
                         } else {
                             pn = +pn;
                             this._players[i].messenger.emit('gameMessage','Player ' + (pn+1) + ' ' + message,messageType,extraInfo);
