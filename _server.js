@@ -2362,7 +2362,10 @@ function actionCallback(action, room, pn) {
                         pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
                     } else {
                         chipsOwed = 40;
-                        pointCountMessageTable.push({'name':'Won a Called Valat', 'value':40});
+                        if (room.board.prever != -1) {
+                            chipsOwed = 60;//TODO: I'm not sure if this applies to a lost call of valat during prever games
+                        }
+                        pointCountMessageTable.push({'name':'Won a Called Valat', 'value':chipsOwed});
                     }
                 } else {
                     //Opposing team called valat
@@ -2372,7 +2375,10 @@ function actionCallback(action, room, pn) {
                         pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
                     } else {
                         chipsOwed = -40;
-                        pointCountMessageTable.push({'name':'Won a Called Valat', 'value':40});
+                        if (room.board.prever != -1) {
+                            chipsOwed = -60;
+                        }
+                        pointCountMessageTable.push({'name':'Won a Called Valat', 'value':Math.abs(chipsOwed)});
                     }
                 }
 
@@ -2399,11 +2405,17 @@ function actionCallback(action, room, pn) {
                     if (room.board.trickWinCount[1] == 0) {
                         //Povinnost's team valat'd
                         chipsOwed = 20;
-                        pointCountMessageTable.push({'name':'Valat', 'value':20});
+                        if (room.board.prever != -1) {
+                            chipsOwed = 30;
+                        }
+                        pointCountMessageTable.push({'name':'Valat', 'value':chipsOwed});
                     } else {
                         //Opposing team valat'd
                         chipsOwed = -20;
-                        pointCountMessageTable.push({'name':'Valat', 'value':20});
+                        if (room.board.prever != -1) {
+                            chipsOwed = -30;
+                        }
+                        pointCountMessageTable.push({'name':'Valat', 'value':Math.abs(chipsOwed)});
                     }
 
                 } else {
