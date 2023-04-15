@@ -639,6 +639,20 @@ function onLoad() {
         refresh();
         //toggleAvailability(true);
     });
+    socket.on('audienceConnected', function(audienceConnected) {
+        inGame = true;
+        document.getElementById('rooms').innerHTML = '';
+        connectingToRoom = false;
+        addMessage('Joined audience in room ' + (audienceConnected));
+        let exitRoom = document.getElementById('refresh');
+        exitRoom.innerHTML = 'Leave the Room';
+        exitRoom.setAttribute('onclick','exitCurrentRoom()');
+    });
+    socket.on('audienceNotConnected', function(audienceNotConnected){
+        addMessage('Failed to join audience in room ' + (audienceNotConnected));
+        connectingToRoom = false;
+        refresh();
+    });
     socket.on('debugRoomJoin', function() {
         addBoldMessage('WARNING: You have joined a debug room. This room is not meant for regular players.\nIf you did not mean to join a debug room, click "Leave the Room" then "Are You Sure?"');
         debugTools();
@@ -970,7 +984,10 @@ function onLoad() {
     socket.on('disconnect', function() {
         addError('Socket Disconnected! Attempting auto-reconnect...');
         window.location.reload();
-    })
+    });
+    socket.on('gameEnded', function() {
+        exitCurrentRoom(true);
+    });
     refresh();
     setInterval(tick, 200);
 }
@@ -997,6 +1014,14 @@ function romanize(num) {
     while (i--)
         roman = (key[+digits.pop() + (i * 10)] || "") + roman;
     return Array(+digits.join("") + 1).join("M") + roman;
+}
+
+function joinAudience(event) {
+    event.preventDefault();//Stop the right-click menu from appearing
+    if (!connectingToRoom) {
+        this.firstChild.innerHTML = '⟳';
+        connectingToRoom=true;socket.emit('joinAudience',this.roomID);addMessage('Joining audience in room ' + (this.roomID) + '...');
+    } else {addError('Already connecting to a room!');}
 }
 
 function buttonClick() {
@@ -1029,6 +1054,9 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     for (let i in simplifiedRoom.usernames) {
         theTitle += simplifiedRoom.usernames[i] + '\n';
     }
+    if (simplifiedRoom.audienceCount > 0) {
+        theTitle += simplifiedRoom.audienceCount + ' Audience member' + (simplifiedRoom.audienceCount == 1 ? 's': '');
+    }
     bDiv.title = theTitle;
     const numberDiv = document.createElement('div');
     numberDiv.classList.add('roomnum');
@@ -1049,6 +1077,9 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     bDiv.appendChild(playerCountSpan);
     //Make it clickable
     bDiv.roomID = roomId;
+    if (simplifiedRoom.count > 0) {
+        bDiv.addEventListener('contextmenu',joinAudience);
+    }
     bDiv.addEventListener('click', buttonClick);
     document.getElementById('rooms').appendChild(bDiv);
 }

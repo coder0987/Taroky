@@ -17,6 +17,8 @@ class Room {
         this._settingsNotation = 'difficulty=2;timeout=30000;locked=false';
         this._logLevel = logLevel || 3;//0: none, 1: errors, 2: warn, 3: info, 4: debug logs, 5: trace
         this._playerList = playerList;
+        this._audience = {};
+        this._audienceCount = 0;
     }
 
     resetForNextRound() {
@@ -47,11 +49,29 @@ class Room {
                 }
             }
         }
+        for (let i in this._audience) {
+            if (typeof pn != 'undefined') {
+                if (pn != -1 && this._players[pn].socket != -1 && players[this._players[pn].socket].username != 'Guest') {
+                    this._audience[i].messenger.emit('gameMessage', players[this._players[pn].socket].username + ' ' + message,messageType,extraInfo);
+                } else {
+                    pn = +pn;
+                    this._audience[i].messenger.emit('gameMessage','Player ' + (pn+1) + ' ' + message,messageType,extraInfo);
+                }
+            } else {
+                this._audience[i].messenger.emit('gameMessage',message,messageType,extraInfo);
+            }
+        }
     }
 
     informPlayer(pn, message, messageType, extraInfo) {
         if (this._players[pn].type == PLAYER_TYPE.HUMAN) {
             this._players[pn].messenger.emit('gameMessage', message, messageType, extraInfo);
+        }
+    }
+
+    ejectAudience() {
+        for (let i in this._audience) {
+            this._audience[i].messenger.emit('gameEnded');
         }
     }
 
@@ -100,6 +120,14 @@ class Room {
         return this._logLevel;
     }
 
+    get audience() {
+        return this._audience;
+    }
+
+    get audienceCount() {
+        return this._audienceCount;
+    }
+
     // Setters
     set settings(settings) {
         this._settings = settings;
@@ -143,6 +171,14 @@ class Room {
 
     set logLevel(ll) {
         this._logLevel = ll;
+    }
+
+    set audience(audience) {
+        this._audience = audience;
+    }
+
+    set audienceCount(audienceCount) {
+        this._audienceCount = audienceCount;
     }
 }
 
