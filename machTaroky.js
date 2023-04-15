@@ -1055,8 +1055,9 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
         theTitle += simplifiedRoom.usernames[i] + '\n';
     }
     if (simplifiedRoom.audienceCount > 0) {
-        theTitle += simplifiedRoom.audienceCount + ' Audience member' + (simplifiedRoom.audienceCount == 1 ? 's': '');
+        theTitle += simplifiedRoom.audienceCount + ' Audience member' + (simplifiedRoom.audienceCount == 1 ? 's\n': '\n');
     }
+    theTitle += 'Click to play\nRight click to join audience';
     bDiv.title = theTitle;
     const numberDiv = document.createElement('div');
     numberDiv.classList.add('roomnum');
