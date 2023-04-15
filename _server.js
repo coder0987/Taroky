@@ -942,7 +942,7 @@ function autoAction(action, room, pn) {
         }
     }
     for (let i in room.audience) {
-        room.audience.messenger.emit('nextAction', action);
+        room.audience[i].messenger.emit('nextAction', action);
     }
     if (fakeMoneyCards) {
         action.action = 'povinnostBidaUniChoice';
@@ -1030,7 +1030,7 @@ function robotAction(action, room, pn) {
             }
         }
         for (let i in room.audience) {
-            room.audience.messenger.emit('nextAction', action);
+            room.audience[i].messenger.emit('nextAction', action);
         }
         if (fakeMoneyCards) {
             action.action = 'povinnostBidaUniChoice';
@@ -1129,7 +1129,7 @@ function playerAction(action, room, pn) {
     }
     for (let i in room.audience) {
         if (!SENSITIVE_ACTIONS[action.action]) {
-            room.audience.messenger.emit('nextAction', action);
+            room.audience[i].messenger.emit('nextAction', action);
         }
     }
     SERVER.functionCall('playerAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
@@ -1267,7 +1267,7 @@ function aiAction(action, room, pn) {
         }
     }
     for (let i in room.audience) {
-        room.audience.messenger.emit('nextAction', action);
+        room.audience[i].messenger.emit('nextAction', action);
     }
     if (fakeMoneyCards) {
         action.action = 'povinnostBidaUniChoice';
@@ -2454,6 +2454,11 @@ function actionCallback(action, room, pn) {
                 SOCKET_LIST[room['players'][i].socket].emit('returnTable', room.board.table);
             }
         }
+        for (let i in room.audience) {
+            if (room.audience[i].messenger) {
+                room.audience[i].messenger.emit('returnTable', room.board.table);
+            }
+        }
     }
 
     if (actionTaken) {
@@ -2494,7 +2499,9 @@ function actionCallback(action, room, pn) {
             }
         }
         for (let i in room.audience) {
-            room.audience.messenger.emit('returnRoundInfo',room.board.importantInfo);
+            if (room.audience[i].messenger) {
+                room.audience[i].messenger.emit('returnRoundInfo',room.board.importantInfo);
+            }
         }
 
         //Prompt the next action
@@ -2519,7 +2526,7 @@ function disconnectPlayerTimeout(socketId) {
         if (!players[socketId]) { return; }
         SERVER.log('Player ' + socketId + ' disconnected');
         if (~players[socketId].room) {
-            if (rooms[players[socketId.room]].audience[socketId]) {
+            if (rooms[players[socketId].room].audience[socketId]) {
                 delete rooms[players[socketId].room].audience[socketId];
                 rooms[players[socketId].room].audienceCount--;
             } else {
@@ -2640,7 +2647,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('exitRoom', function() {
         if (players[socketId]) {
             if (~players[socketId].room) {
-                if (rooms[players[socketId.room]].audience[socketId]) {
+                if (rooms[players[socketId].room].audience[socketId]) {
                     delete rooms[players[socketId].room].audience[socketId];
                     rooms[players[socketId].room].audienceCount--;
                 } else {
