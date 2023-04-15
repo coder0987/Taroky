@@ -2572,7 +2572,7 @@ function disconnectPlayerTimeout(socketId) {
 function autoReconnect(socketId) {
     SOCKET_LIST[socketId].emit('returnPlayerCount',numOnlinePlayers);
     if (rooms[players[socketId].room]) {
-        if (rooms[players[socketId.room]].audience[socketId]) {
+        if (rooms[players[socketId].room].audience[socketId]) {
             //Player is in the audience for the room
             SOCKET_LIST[socketId].emit('audienceConnected',players[socketId].room);
             SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
