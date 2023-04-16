@@ -15,16 +15,29 @@ Design features to add
             1. add slider
             2. toggle black/white or tan, green/navy, red remains
             3. find way to remember user preference? or add toggle to start screen
+                a. Can add the user preference to account information + localStorage
         Choose deck
             1. create or commission deck art
             2. load into deck folder
             3. make deck selection in settings
+                a. Can remember preference in account information
     Hidden deck
         1. create deck automatically on page load, using prestored constants as image names
         2. unhide images on server reveal using client-side coordinates
         3. use generic card back for unkown cards such as opponents' hands
     
     Username/Nickname
-	1. usernames are stored via Mach SSO
-	2. a link is provided to sign in / out
-	3. display the users nickname on the page in place of 'Player #'
+        1. usernames are stored via Mach SSO
+        2. a link is provided to sign in / out
+        3. display the users nickname on the page in place of 'Player #'
+
+	Audience
+        1. Right click on a room to join the audience
+        2. Audience members can see all "public" information
+        3. They can also send any of the preset reactions
+
+	Room Settings
+        1. The host can choose whatever settings before the game begins
+        2. The room settings are added to simplifiedRooms so players can filter by settings when choosing a room to join
+        3. Host can "lock settings" to prevent further changes without actually starting the game
+        4. Players can save the settings to their account
