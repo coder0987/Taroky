@@ -5,6 +5,11 @@ const { SUIT,
     TRUMP_VALUE,
     VALUE_REVERSE } = require('./enums.js')
 
+//To sort Spades, Hearts, Clubs, Diamonds, Trump and prevent similar colors from touching
+const SUIT_SORT_ORDER = {
+    Spade: 0, Club: 2, Heart: 1, Diamond: 3, Trump: 4
+}
+
 class Deck {
     constructor() {
         this._baseDeck = Deck.createDeck();
@@ -66,9 +71,9 @@ class Deck {
 
     static sortCards(toSort) {
         toSort = toSort.sort((a, b) => {
-             if (SUIT_REVERSE[a.suit] > SUIT_REVERSE[b.suit]) {
+             if (SUIT_SORT_ORDER[a.suit] > SUIT_SORT_ORDER[b.suit]) {
                 return 1;
-             } else if (SUIT_REVERSE[a.suit] < SUIT_REVERSE[b.suit]) {
+             } else if (SUIT_SORT_ORDER[a.suit] < SUIT_SORT_ORDER[b.suit]) {
                 return -1;
              }
 
@@ -77,7 +82,7 @@ class Deck {
              } else if (VALUE_REVERSE[a.value] < VALUE_REVERSE[b.value]) {
                 return -1;
              }
-             console.log('Cards are the same: ' + JSON.stringify(a) + ' ' + JSON.stringify(b));
+             SERVER.debug('Cards are the same: ' + JSON.stringify(a) + ' ' + JSON.stringify(b));
              return 0;//Cards are the same
 
              //James' sort function (which used to work but for some reason just reverses the order of the cards now?

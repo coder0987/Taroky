@@ -184,6 +184,8 @@ let tableDrawnTime = Date.now();//ms since START_TIME
 function drawTable() {
     if (!returnTableQueue[0] || Date.now() - tableDrawnTime < 3000) {
         //Wait min 3s before redrawing the table
+        //TODO: prevent user from taking an action while the table is still being drawn
+        //TODO: add time to the timeout when players play quickly so the table can load in
         return;
     }
     tableDrawnTime = Date.now();
