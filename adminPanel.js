@@ -3,7 +3,17 @@ const url = require('url');
 const fs = require('fs');
 const path = require('path');
 
+/*TODO
+    The admin panel is to help facilitate control of the server and should
+    only be accessible by administrators. Currently this is done by not forwarding
+    a domain to this port. However, in the future, I'd like admins to be able to
+    remotely deal with problems by signing in to admin accounts and using the panel from
+    there. When that happens, this won't need to be a separate http server at all.
+    Until then, this is the admin panel.
+    */
+
 class AdminPanel {
+static shouldRestartServer = false;
 static startAdminPanel(port) {
     const panel = http.createServer((req, res) => {
         if (req.method == 'GET') {
@@ -48,7 +58,7 @@ static startAdminPanel(port) {
             switch (q.pathname) {
                 case '/RESTART_WHEN_NEXT_EMPTY':
                     //Next time there are no players, restart the server
-                    //TODO
+                    AdminPanel.shouldRestartServer = true;
                     break;
                 //This is where we can add more functions to the admin panel
             }

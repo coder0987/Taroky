@@ -3162,6 +3162,9 @@ function tick() {
                 players[i].roomsSeen = { ...simplifiedRooms };
             }
         }
+        if (Object.keys(players).length == 0 && AdminPanel.shouldRestartServer) {
+            throw "Restarting the server...";
+        }
         ticking = false;
     }
 }
@@ -3248,5 +3251,5 @@ if (DEBUG_MODE) {
     console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
     server.listen(8442);
 }
-console.log("Log level: " + LOG_LEVEL);
 AdminPanel.startAdminPanel(8400);
+console.log("Log level: " + LOG_LEVEL);
