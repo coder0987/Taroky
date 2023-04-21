@@ -3246,10 +3246,11 @@ if (DEBUG_MODE) {
     console.log("DEBUG MODE ACTIVATED");
     console.log("Listening on port 8448 (Accessible at http://localhost:8448/ )")
     server.listen(8448);
+    AdminPanel.startAdminPanel(8401);
 } else {
     console.log("Server running in production mode. For debug mode, run \nnode _server.js debug")
     console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
     server.listen(8442);
+    AdminPanel.startAdminPanel(8400);
 }
-AdminPanel.startAdminPanel(8400);
 console.log("Log level: " + LOG_LEVEL);
