@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Finishes moneyCards and adds JQuery">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Adds client-side timer and bug fixes">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Taroky.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Taroky.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/machTaroky.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -14,13 +20,15 @@
     <option name="PUSH_AUTO_UPDATE" value="true" />
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GithubDefaultAccount">
-    <option name="defaultAccountId" value="b485fb26-1d44-4d44-b58a-6c0cb51427f3" />
-  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN"
+  }
+}]]></component>
   <component name="GithubPullRequestsUISettings">
     <option name="selectedUrlAndAccountId">
       <UrlAndAccount>
-        <option name="accountId" value="159e3990-b632-430d-a397-ab935f62ec74" />
+        <option name="accountId" value="f24a0e75-0a71-40ed-a499-3eebc6fdf9d3" />
         <option name="url" value="https://github.com/coder0987/Taroky.git" />
       </UrlAndAccount>
     </option>
@@ -60,104 +68,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1657922973299</updated>
-    </task>
-    <task id="LOCAL-00001" summary="Title">
-      <created>1657924609879</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1657924609879</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Server.js file added">
-      <created>1657925207252</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1657925207252</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Adds board initialization and other fundamental structures">
-      <created>1657935236705</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1657935236705</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Adds multiplayer scalability and functionality using sockets">
-      <created>1657998484414</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1657998484414</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Adds multiplayer scalability and functionality using sockets">
-      <created>1658018542137</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1658018542138</updated>
-    </task>
-    <task id="LOCAL-00006" summary="removes canvas in preparation for HTML/CSS-based game rendering">
-      <created>1658025125341</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1658025125341</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Adds room host and card objects">
-      <created>1658095076288</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1658095076288</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Refactors room generation and deletion">
-      <created>1658096155514</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1658096155514</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Adds gameplay summary">
-      <created>1658167363813</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1658167363813</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Adds a chatbox for future simplicity">
-      <created>1658168199252</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1658168199252</updated>
-    </task>
-    <task id="LOCAL-00011" summary="Fixes logo src attribute">
-      <created>1658168330200</created>
-      <option name="number" value="00011" />
-      <option name="presentableId" value="LOCAL-00011" />
-      <option name="project" value="LOCAL" />
-      <updated>1658168330200</updated>
-    </task>
-    <task id="LOCAL-00012" summary="Adds TarokyBack temporary image file">
-      <created>1658698029413</created>
-      <option name="number" value="00012" />
-      <option name="presentableId" value="LOCAL-00012" />
-      <option name="project" value="LOCAL" />
-      <updated>1658698029413</updated>
-    </task>
-    <task id="LOCAL-00013" summary="Adds shuffling and game beginning">
-      <created>1658704293416</created>
-      <option name="number" value="00013" />
-      <option name="presentableId" value="LOCAL-00013" />
-      <option name="project" value="LOCAL" />
-      <updated>1658704293416</updated>
-    </task>
-    <task id="LOCAL-00014" summary="Adds custom images and showAllImages() debug function">
-      <created>1659390704140</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1659390704140</updated>
     </task>
     <task id="LOCAL-00015" summary="Adds readme and refactors Gameplay file">
       <created>1659391146618</created>
@@ -306,7 +216,203 @@
       <option name="project" value="LOCAL" />
       <updated>1670803096387</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="Fixes crash">
+      <created>1672010795897</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1672010795897</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Fixes merge conflicts">
+      <created>1677358886524</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1677358886524</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Fixes partner system hopefully">
+      <created>1677360980553</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1677360980554</updated>
+    </task>
+    <task id="LOCAL-00039" summary="Lays out next steps for valat, point counting, and completing the game">
+      <created>1677364019601</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1677364019601</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Prepares client-side for next steps">
+      <created>1677364169061</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1677364169061</updated>
+    </task>
+    <task id="LOCAL-00041" summary="Adds difficulty enum and prepares robots for finishing">
+      <created>1677365188652</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1677365188652</updated>
+    </task>
+    <task id="LOCAL-00042" summary="Fixes difficulty issue">
+      <created>1677365417659</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1677365417659</updated>
+    </task>
+    <task id="LOCAL-00043" summary="Fixes difficulty issue">
+      <created>1677365513908</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1677365513908</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Fixes callbacks for moneycards and partner card">
+      <created>1677366580864</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1677366580864</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Adds game number and completes the circular flow of play">
+      <created>1677368021613</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1677368021613</updated>
+    </task>
+    <task id="LOCAL-00046" summary="Implements room card design">
+      <created>1678491378143</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1678491378143</updated>
+    </task>
+    <task id="LOCAL-00047" summary="Updates readme to credit James and to reflect the new domain name">
+      <created>1678502539688</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1678502539688</updated>
+    </task>
+    <task id="LOCAL-00048" summary="Fixes room refresh">
+      <created>1678503646604</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1678503646604</updated>
+    </task>
+    <task id="LOCAL-00049" summary="Adds Room class and standardized informPlayers function">
+      <created>1678506350995</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1678506350995</updated>
+    </task>
+    <task id="LOCAL-00050" summary="Prepares valat for the next step">
+      <created>1678506849236</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1678506849237</updated>
+    </task>
+    <task id="LOCAL-00051" summary="Adds link to GitHub in Navbar">
+      <created>1678507121450</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1678507121450</updated>
+    </task>
+    <task id="LOCAL-00052" summary="Bug fixes">
+      <created>1678509569685</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1678509569685</updated>
+    </task>
+    <task id="LOCAL-00053" summary="Adds modular buttons and implements client-side valat, contra and I on the end">
+      <created>1678575236489</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1678575236489</updated>
+    </task>
+    <task id="LOCAL-00054" summary="Adjusts TODOs">
+      <created>1678575318936</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1678575318936</updated>
+    </task>
+    <task id="LOCAL-00055" summary="Implements lead and follow">
+      <created>1678586492218</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1678586492218</updated>
+    </task>
+    <task id="LOCAL-00056" summary="Adds client auto-reload on server restart">
+      <created>1678587379032</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1678587379032</updated>
+    </task>
+    <task id="LOCAL-00057" summary="Adds client auto reconnect">
+      <created>1678594373268</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1678594373268</updated>
+    </task>
+    <task id="LOCAL-00058" summary="Adds auto-play and allows settings">
+      <created>1678629841497</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1678629841497</updated>
+    </task>
+    <task id="LOCAL-00059" summary="Bug fixes">
+      <created>1678645019795</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1678645019795</updated>
+    </task>
+    <task id="LOCAL-00060" summary="Adds settings client-side and removes node_modules from git">
+      <created>1678655375222</created>
+      <option name="number" value="00060" />
+      <option name="presentableId" value="LOCAL-00060" />
+      <option name="project" value="LOCAL" />
+      <updated>1678655375222</updated>
+    </task>
+    <task id="LOCAL-00061" summary="Re-adds bootstrap which was accidentally deleted">
+      <created>1678655560608</created>
+      <option name="number" value="00061" />
+      <option name="presentableId" value="LOCAL-00061" />
+      <option name="project" value="LOCAL" />
+      <updated>1678655560608</updated>
+    </task>
+    <task id="LOCAL-00062" summary="Adjusts readme">
+      <created>1678655848406</created>
+      <option name="number" value="00062" />
+      <option name="presentableId" value="LOCAL-00062" />
+      <option name="project" value="LOCAL" />
+      <updated>1678655848406</updated>
+    </task>
+    <task id="LOCAL-00063" summary="Adds client-side timer and bug fixes">
+      <created>1678657419071</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1678657419071</updated>
+    </task>
+    <option name="localTasksCounter" value="64" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -322,31 +428,35 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Fixes logo src attribute" />
-    <MESSAGE value="Adds TarokyBack temporary image file" />
-    <MESSAGE value="Adds shuffling and game beginning" />
-    <MESSAGE value="Adds custom images and showAllImages() debug function" />
-    <MESSAGE value="Adds readme and refactors Gameplay file" />
-    <MESSAGE value="Adds starting sequence and revamps rooms" />
-    <MESSAGE value="Changes rooms to roomID system and implements deck shuffling" />
-    <MESSAGE value="Renames card art to match systemized names" />
-    <MESSAGE value="Adds a TEMPORARY favicon. Emphasis on temporary." />
-    <MESSAGE value="Adds a TODO file" />
-    <MESSAGE value="Corrects incorrect file names" />
-    <MESSAGE value="Adds deck cut and begins robot action outline" />
-    <MESSAGE value="Adds outline for new action interface" />
-    <MESSAGE value="Adds the generic action callback and notes outlining how actions will be taken" />
-    <MESSAGE value="Transfers start, shuffle, and cut to the generic actionCallback" />
-    <MESSAGE value="Fixes preemptive room replacement issue" />
-    <MESSAGE value="Adds cut, deal, goPrever, noPrever, drawTalon, and discard" />
-    <MESSAGE value="Fixes everything up to discard. Adds hand display." />
-    <MESSAGE value="Adds proper random shuffling and updates README" />
-    <MESSAGE value="Adds discarding" />
-    <MESSAGE value="Updates gameplay" />
-    <MESSAGE value="Fixes game-breaking typo and implements new card designs" />
-    <MESSAGE value="Adds temporary chatbox and starts moneycards" />
-    <MESSAGE value="Adds money cards and begins calls for Valat, I, and Contra" />
-    <MESSAGE value="Finishes moneyCards and adds JQuery" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finishes moneyCards and adds JQuery" />
+    <MESSAGE value="Fixes merge conflicts" />
+    <MESSAGE value="Fixes partner system hopefully" />
+    <MESSAGE value="Lays out next steps for valat, point counting, and completing the game" />
+    <MESSAGE value="Prepares client-side for next steps" />
+    <MESSAGE value="Adds difficulty enum and prepares robots for finishing" />
+    <MESSAGE value="Fixes difficulty issue" />
+    <MESSAGE value="Fixes callbacks for moneycards and partner card" />
+    <MESSAGE value="Adds game number and completes the circular flow of play" />
+    <MESSAGE value="Implements room card design" />
+    <MESSAGE value="Updates readme to credit James and to reflect the new domain name" />
+    <MESSAGE value="Fixes room refresh" />
+    <MESSAGE value="Adds Room class and standardized informPlayers function" />
+    <MESSAGE value="Prepares valat for the next step" />
+    <MESSAGE value="Adds link to GitHub in Navbar" />
+    <MESSAGE value="Adds modular buttons and implements client-side valat, contra and I on the end" />
+    <MESSAGE value="Adjusts TODOs" />
+    <MESSAGE value="Implements lead and follow" />
+    <MESSAGE value="Adds client auto-reload on server restart" />
+    <MESSAGE value="Adds client auto reconnect" />
+    <MESSAGE value="Adds auto-play and allows settings" />
+    <MESSAGE value="Bug fixes" />
+    <MESSAGE value="Adds settings client-side and removes node_modules from git" />
+    <MESSAGE value="Re-adds bootstrap which was accidentally deleted" />
+    <MESSAGE value="Adjusts readme" />
+    <MESSAGE value="Adds client-side timer and bug fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adds client-side timer and bug fixes" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

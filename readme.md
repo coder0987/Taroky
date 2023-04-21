@@ -1,7 +1,7 @@
 ## Mach Taroky
 An online multiplayer Taroky game for 1-4 players.
 
-This project is under active development and the latest beta release is available at https://taroky.samts.us.
+This project is under active development and the latest beta release is available at https://machtarok.com.
 
 For more information on gameplay and rules, see gameplay.md
 
@@ -15,14 +15,22 @@ Prerequisites:
 
 Download and unpack the ZIP file
 
-On Windows, run the run.bat file
+1. Change working directories to the installed folder\
+`cd Taroky`
 
-On Linux, run the run.sh file
+
+2. run `sudo npm install`
+
+
+3. On Windows, run the run.bat file\
+`./run.bat`\
+On Linux, run the run.sh file\
+`sh run.sh`
 
 In both cases, the server will automatically restart on crash. The server will bind to port 8442 by default. Edit the server.listen(8442) statement at the end of _server.js to change this
 
 ### Credits
 
-Created by Samuel & Lauren Mach
+Created by Samuel, Lauren, and James Mach
 
 Art is credited in /assets/default-deck/deck-info.md

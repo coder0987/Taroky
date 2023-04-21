@@ -6,6 +6,7 @@ This file contains a list of things we have yet TODO in no particular order
 
 * Replace the favicon
 * Make it look pretty (CSS)
+* Reduce card image quality to save load time
 * fix nav display issue for sm and xs screens
 * fix invisible nav toggle
 * fix hover text color changes
@@ -13,9 +14,7 @@ This file contains a list of things we have yet TODO in no particular order
 ### Back End
 
 * Add an accounts system
-* Add customization options (settings)
 * Add robot interactions
 * Add Artificial Intelligence interactions
-* Add player timeout
 * Finish the base game
 * Add TODOs to this list
