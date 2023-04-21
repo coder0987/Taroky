@@ -188,6 +188,12 @@ img {
     background-color: var(--whiteHover);
 }
 
+.drew {
+    margin: 0px 10px 0px 10px;
+    border-radius: 10px;
+    border: 4px solid gray;
+}
+
 .navbar-brand {
     color: var(--red);
     font-weight: bold;

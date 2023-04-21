@@ -3,6 +3,7 @@ const Player = require('./player.js');
 const Room = require('./room.js');
 const Deck = require('./deck.js');
 const AI = require('./AI.js');
+const AdminPanel = require('./adminPanel.js');
 const { SUIT,
     SUIT_REVERSE,
     RED_VALUE,
@@ -1460,6 +1461,8 @@ function actionCallback(action, room, pn) {
             break;
         case 'drawTalon':
             if (action.player == room['board'].povinnost) {
+                room.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,4)});
+                //Note that SLICE not SPLICE is used for informPlayer, so the array is not modified yet
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1467,6 +1470,7 @@ function actionCallback(action, room, pn) {
                 action.player = (action.player + 1) % 4;
                 actionTaken = true;
             } else {
+                room.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 if (action.player == (room['board'].povinnost + 2) % 4) {
                     //TODO draw or pass choice
@@ -3245,3 +3249,4 @@ if (DEBUG_MODE) {
     server.listen(8442);
 }
 console.log("Log level: " + LOG_LEVEL);
+AdminPanel.startAdminPanel(8400);
