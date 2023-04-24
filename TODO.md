@@ -6,7 +6,7 @@ This file contains a list of things we have yet TODO in no particular order
 
 * Replace the favicon
 * Make it look pretty (CSS)
-* Reduce card image quality to save load time
+* Reduce card image quality to save load time - DONE
 * fix nav display issue for sm and xs screens
 * fix invisible nav toggle
 * fix hover text color changes
