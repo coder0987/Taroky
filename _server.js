@@ -3240,6 +3240,11 @@ function startAITraining() {
 
 let interval = setInterval(tick, 1000 / 60.0);//60 FPS
 let verifyUsers = setInterval(checkAllUsers, 5*60*1000);
+AdminPanel.reloadClients = () => {
+    for (let i in SOCKET_LIST) {
+        SOCKET_LIST[i].emit('reload');
+    }
+}
 
 //Begin listening
 if (DEBUG_MODE) {

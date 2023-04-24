@@ -14,6 +14,7 @@ const path = require('path');
 
 class AdminPanel {
 static shouldRestartServer = false;
+static reloadClients = () => {};
 static startAdminPanel(port) {
     const panel = http.createServer((req, res) => {
         if (req.method == 'GET') {
@@ -59,6 +60,9 @@ static startAdminPanel(port) {
                 case '/RESTART_WHEN_NEXT_EMPTY':
                     //Next time there are no players, restart the server
                     AdminPanel.shouldRestartServer = true;
+                    break;
+                case '/RELOAD_ALL_CLIENTS':
+                    AdminPanel.reloadClients();
                     break;
                 //This is where we can add more functions to the admin panel
             }
