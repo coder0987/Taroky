@@ -6,7 +6,7 @@ const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: '
 const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
-const MESSAGE_TYPE = {POVENOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13};
+const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16};
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon'};
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
@@ -17,13 +17,14 @@ const ACTION_TABLE = {
     'shuffle': 'Shuffle the Deck',
     'cut': 'Cut the Deck',
     'deal': 'Deal',
+    '12choice': 'Choose a hand',
     'prever': 'Choose to Keep or Pass Prever',
     'passPrever': 'Chose to Pass Prever',
     'callPrever': 'Chose to Call Prever',
     'drawPreverTalon': 'Choose to Keep or Pass the Prever Talon',
     'drawTalon': 'Draw Cards from the Talon',
     'discard': 'Discard Down to 12 Cards',
-    'povenostBidaUniChoice': 'Decide Whether to Call Bida/Uni as Povenost',
+    'povinnostBidaUniChoice': 'Decide Whether to Call Bida/Uni as Povinnost',
     'moneyCards': 'Call Money Cards',
     'partner': 'Choose a Partner Card',
     'valat': 'Call or Pass Valat',
@@ -45,6 +46,7 @@ let players;
 let deck;
 let hand;
 let partners;
+let handChoices;
 let socket;
 let theSettings;
 let availableRooms={};
@@ -57,10 +59,13 @@ let hostNumber = -1;
 let currentAction;
 let baseDeck = [];
 let returnTableQueue = [];
-let currentTable= [];
+let currentTable = [];
+let drawnCards = [];
 let queued = false;
 let discardingOrPlaying = true;
 let timeOffset = 0;
+let activeUsername;
+let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
@@ -116,13 +121,18 @@ function loadButton() {
     element.classList.add("fixed-top");
 };
 
+function playerPerspective(originalPlace, viewpoint) {
+    //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
+    return ((+originalPlace - +viewpoint) + 4)%4;
+}
+
 function generateDeck() {
     for (let i in baseDeck) {
         let card = document.createElement('img');
         card.hidden = true;
         card.id = baseDeck[i].value + baseDeck[i].suit;
         //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
-        card.src = '/assets/default-deck/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '.png';
+        card.src = '/assets/mach-deck-thumb/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '-t.png';
         card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
         document.getElementById('deck').appendChild(card);
     }
@@ -165,13 +175,15 @@ function drawHand(withGray) {
     let returnToDeck = divHand.children;
     for (let i=returnToDeck.length-1; i>=0; i--) {
         let child = returnToDeck[i];
-        if (!isInHand(child)) {child.hidden = true;divDeck.appendChild(child);}
+        if (!isInHand(child)) {child.classList.remove('drew');child.classList.remove('col-md-1');child.classList.remove('col-xs-3');child.hidden = true;divDeck.appendChild(child);}
     }
     for (let i in hand) {
         let card = document.getElementById(hand[i].value + hand[i].suit);
         card.suit = hand[i].suit;
         card.value = hand[i].value;
-        card.classList.remove('col-3');//If claimed from prever-talon
+        card.classList.add('col-md-1');
+        card.classList.add('col-xs-3');
+        card.classList.remove('col-2');//If claimed from prever-talon
         if (withGray) {
             if (hand[i].grayed) {
                 //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
@@ -191,6 +203,16 @@ function drawHand(withGray) {
             card.removeEventListener('mouseleave',exit);
             card.removeEventListener('click',clickCard);
             card.title = '';
+            card.classList.remove('image-hover-highlight');
+        }
+        if (drawnCards.some(
+            (theCard) => {
+                return theCard.suit == hand[i].suit && theCard.value == hand[i].value;
+            }
+        )) {
+            card.classList.add('drew');
+        } else {
+            card.classList.remove('drew');
         }
         divHand.appendChild(card);
         card.hidden = false;
@@ -201,6 +223,8 @@ let tableDrawnTime = Date.now();//ms since START_TIME
 function drawTable() {
     if (!returnTableQueue[0] || Date.now() - tableDrawnTime < 3000) {
         //Wait min 3s before redrawing the table
+        //TODO: prevent user from taking an action while the table is still being drawn
+        //TODO: add time to the timeout when players play quickly so the table can load in
         return;
     }
     tableDrawnTime = Date.now();
@@ -219,7 +243,13 @@ function drawTable() {
             let child = returnToDeck[i];
             if (child.nodeName == 'IMG') {
                 //Prever talon
-                child.classList.remove('col-3');
+                child.classList.remove('col-2');
+                child.style.filter = '';
+                child.removeEventListener('mouseenter',enter);
+                child.removeEventListener('mouseleave',exit);
+                child.removeEventListener('click',clickCard);
+                child.title = '';
+                child.classList.remove('image-hover-highlight');
                 child.hidden = true;
                 divDeck.appendChild(child);
             } else {
@@ -242,13 +272,17 @@ function drawTable() {
             for (let i in table) {
                 let card = document.getElementById(table[i].value + table[i].suit);
                 document.getElementById('table').prepend(card);
-                card.classList.add('col-3');
+                card.classList.add('col-2');
+                card.style.filter = '';
                 card.removeAttribute('hidden');
             }
         } else {
             for (let i in table) {
                 let card = document.getElementById(table[i].card.value + table[i].card.suit);
+                card.style.filter = '';
                 document.getElementById('p' + (+table[i].pn+1)).appendChild(card);
+                let playerName = activeUsernames[+table[i].pn] ? activeUsernames[+table[i].pn] : 'Player ' + (+table[i].pn+1);
+                document.getElementById('p' + (+table[i].pn+1)).firstChild.innerHTML = playerName;
                 document.getElementById('p' + (+table[i].pn+1)).firstChild.removeAttribute('hidden');
                 if (table[i].lead) {
                     document.getElementById('p' + (+table[i].pn+1)).appendChild(document.getElementById('leader'));
@@ -326,6 +360,11 @@ function submitSettings(type) {
         case 'timeout':
             socket.emit('settings',type,document.getElementById('timeoutButton').value*1000);
             break;
+        case 'lock':
+            socket.emit('settings',type,true);
+            document.getElementById('lockButton').setAttribute('hidden','hidden');
+            document.getElementById('lockButtonP').setAttribute('hidden','hidden');
+            break;
         default:
             addError('Unknown setting: ' + type);
     }
@@ -335,6 +374,11 @@ function createSettings(tools) {
     let settings = document.createElement('div');
     settings.id = 'settings';
 
+    let difficultySelectorP = document.createElement('span');
+    difficultySelectorP.innerHTML = 'Select the difficulty:\t';
+    difficultySelectorP.style='display:inline-block; width: 175px';
+    settings.appendChild(difficultySelectorP);
+
     let difficultySelector = document.createElement('select');
     difficultySelector.id ='difficultySelector';
     difficultySelector.name = 'Select Difficulty:';
@@ -343,13 +387,23 @@ function createSettings(tools) {
         difficultySelectOption.selected = false;
         difficultySelectOption.value = i;
         difficultySelectOption.id = DIFFICULTY_TABLE[i];
+        if (i==2) {
+            difficultySelectOption.selected = 'selected';
+        }
         difficultySelectOption.innerHTML = DIFFICULTY_TABLE[i];
         difficultySelector.appendChild(difficultySelectOption);
     }
     difficultySelector.setAttribute('onchange', 'submitSettings("difficulty")');
     settings.appendChild(difficultySelector);
+    settings.appendChild(document.createElement('br'));
 
     //Create numerical input for timeout (in s, must convert to ms)
+
+    let timeoutSelectorP = document.createElement('span');
+    timeoutSelectorP.innerHTML = 'Timeout (in seconds):\t';
+    timeoutSelectorP.style='display:inline-block; width: 175px';
+    settings.appendChild(timeoutSelectorP);
+
     let timeoutButton = document.createElement('input');
     timeoutButton.setAttribute('type', 'number');
     timeoutButton.defaultValue = 30;
@@ -357,14 +411,40 @@ function createSettings(tools) {
     timeoutButton.id = 'timeoutButton';
     timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
     settings.appendChild(timeoutButton);
+    settings.appendChild(document.createElement('br'));
+
+    //Create lock button
+    let lockSelectorP = document.createElement('span');
+    lockSelectorP.innerHTML = 'Prevent Joining:\t';
+    lockSelectorP.style='display:inline-block; width: 175px';
+    lockSelectorP.id = 'lockButtonP';//For hiding when button is clicked
+    settings.appendChild(lockSelectorP);
+
+    let lockButton = document.createElement('button');
+    lockButton.innerHTML = 'Lock Room';
+    lockButton.id = 'lockButton';
+    lockButton.addEventListener('click', function(){
+        submitSettings("lock");
+    });
+    settings.appendChild(lockButton);
+    settings.appendChild(document.createElement('br'));
+    settings.appendChild(document.createElement('br'));
 
     tools.appendChild(settings);
+}
+
+function debugTools() {
+    //TODO: add debug tools
 }
 
 let roomHosted = false;
 function hostRoom() {
     document.getElementById('host').hidden = false;
     if (roomHosted) {
+        document.getElementById('lockButton').removeAttribute('hidden');
+        document.getElementById('lockButtonP').removeAttribute('hidden');
+        document.getElementById('timeoutButton').value = 30;
+        document.getElementById(DIFFICULTY_TABLE[2]).setAttribute('selected','selected');
         return;
     }
     roomHosted = true;
@@ -412,6 +492,18 @@ function hasCut() {
     }
 }
 
+window.addEventListener('message', (event) => {
+    if (event.origin !== 'https://sso.smach.us' && event.origin !== 'https://sso.samts.us') {console.log(event.origin); return;}
+    if (event.data != 'signOut') {
+        let [username,token] = event.data.split(':');
+        addMessage('Attempting to sign in as ' + username +'...');
+        socket.emit('login',username,token);
+    } else {
+        addMessage('Signing out...');
+        socket.emit('logout');
+    }
+}, false);
+
 function onLoad() {
     generateDeck();
 
@@ -428,6 +520,29 @@ function onLoad() {
        window.location.reload();
     });
 
+    socket.on('loginSuccess', function(username) {
+        addBoldMessage('You successfully signed in as ' + username);
+        activeUsername = username;
+        displaySignOut();
+    });
+
+    socket.on('loginFail', function() {
+        addBoldMessage('Authentication failure');
+        displaySignIn();
+    });
+
+    socket.on('loginExpired', function() {
+        addBoldMessage('Your login session has expired. Please sign in again.');
+        activeUsername = '';
+        displaySignIn();
+    });
+
+    socket.on('logout', function() {
+        addBoldMessage('Successfully logged out');
+        activeUsername = '';
+        displaySignIn();
+    });
+
     socket.on('returnRooms', function(returnRooms) {
         availableRooms = returnRooms;
         refreshing = false;
@@ -438,13 +553,18 @@ function onLoad() {
                 createRoomCard('rooms',availableRooms[i],i);
                 drawnRooms.push(availableRooms[i]);
             }
+            createCustomRoomCard();
         }
         if (connectingToRoom) {
             addMessage('loading...');//ADD LOADING ANIMATION
         }
     });
+    //TODO save points and return save points
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
+    });
+    socket.on('returnPlayerCount', function(playerCount) {
+        document.getElementById('online').innerHTML = playerCount;
     });
     socket.on('returnHand', function(returnHand,withGray) {
         hand = returnHand;
@@ -470,16 +590,45 @@ function onLoad() {
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
         playerNumber = returnPN;
-        addMessage('You are player ' + (returnPN+1));
+        addMessage('You are player ' + (+returnPN+1));
     });
     socket.on('returnRoundInfo', function(theRoundInfo) {
         if (!theRoundInfo) {return;}
-        //{pn,povenost,prever,preverMultiplier,valat,contra,iote,moneyCards,partnerCard}
+        //{pn,povinnost,prever,preverMultiplier,valat,contra,iote,moneyCards,partnerCard}
         //null if not existent yet
         let roundInfoElement = document.getElementById('roundInfo');
         roundInfoElement.textContent = '';
-        const possibleInfo = {'pn':'You are player ', 'povenost':'Povenost: ','prever':'Prever: ','valat':'Called Valat: ','iote':'Called I on the End: ','contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: ','partnerCard':'Povenost is Playing With the '};
-        //MoneyCards are handled separately
+        const possibleInfo = {'contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: '};
+        const possiblePlayerNumbers = {'povinnost':'Povinnost','prever':'Prever','valat':'Called Valat','iote':'Called I on the End'};
+        let playerDivs = [];
+        for (let i=0; i<4; i++) {
+            playerDivs[i] = document.createElement('div');
+            playerDivs[i].classList.add('col');
+            roundInfoElement.appendChild(playerDivs[i]);
+            let theInfo = document.createElement('p');
+            theInfo.innerHTML = 'Player ' + (+i + 1);
+            if (theRoundInfo.pn - 1 == i) {theInfo.innerHTML += ' (You)';}
+            playerDivs[i].appendChild(theInfo);
+        }
+        if (theRoundInfo.chips) {
+            for (let i in theRoundInfo.chips) {
+                if (theRoundInfo.chips[i]) {
+                    let theInfo = document.createElement('p');
+                    theInfo.innerHTML = theRoundInfo.chips[i];
+                    playerDivs[i].appendChild(theInfo);
+                }
+            }
+        }
+        if (theRoundInfo.usernames) {
+            for (let i in theRoundInfo.usernames) {
+                activeUsernames[i] = theRoundInfo.usernames[i];//null values are set as well
+                if (theRoundInfo.usernames[i]) {
+                    let theInfo = document.createElement('p');
+                    theInfo.innerHTML = theRoundInfo.usernames[i];
+                    playerDivs[i].appendChild(theInfo);
+                }
+            }
+        }
         for (let i in possibleInfo) {
             if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
                 let theInfo = document.createElement('p');
@@ -488,16 +637,27 @@ function onLoad() {
                 roundInfoElement.appendChild(theInfo);
             }
         }
+        for (let i in possiblePlayerNumbers) {
+            if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
+                let theInfo = document.createElement('p');
+                theInfo.innerHTML = possiblePlayerNumbers[i];
+                playerDivs[theRoundInfo[i] - 1].appendChild(theInfo);
+            }
+            if (i == 'povinnost' && theRoundInfo[i] && theRoundInfo['partnerCard']) {
+                let theInfo = document.createElement('p');
+                theInfo.innerHTML = 'Playing with the ' + theRoundInfo['partnerCard'];
+                playerDivs[theRoundInfo[i] - 1].appendChild(theInfo);
+            }
+        }
         if (theRoundInfo.moneyCards) {
             for (let i in theRoundInfo.moneyCards) {
                 if (theRoundInfo.moneyCards[i].length > 0) {
                     let theInfo = document.createElement('p');
-                    theInfo.innerHTML = 'Player ' + (+i+1) + ' called ';
                     for (let j in theRoundInfo.moneyCards[i]) {
                         theInfo.innerHTML += theRoundInfo.moneyCards[i][j] + ' ';
                     }
                     theInfo.classList.add('col');
-                    roundInfoElement.appendChild(theInfo);
+                    playerDivs[i].appendChild(theInfo);
                 }
             }
         }
@@ -520,11 +680,35 @@ function onLoad() {
         refresh();
         //toggleAvailability(true);
     });
+    socket.on('audienceConnected', function(audienceConnected) {
+        inGame = true;
+        document.getElementById('rooms').innerHTML = '';
+        connectingToRoom = false;
+        addMessage('Joined audience in room ' + (audienceConnected));
+        let exitRoom = document.getElementById('refresh');
+        exitRoom.innerHTML = 'Leave the Room';
+        exitRoom.setAttribute('onclick','exitCurrentRoom()');
+    });
+    socket.on('audienceNotConnected', function(audienceNotConnected){
+        addMessage('Failed to join audience in room ' + (audienceNotConnected));
+        connectingToRoom = false;
+        refresh();
+    });
+    socket.on('debugRoomJoin', function() {
+        addBoldMessage('WARNING: You have joined a debug room. This room is not meant for regular players.\nIf you did not mean to join a debug room, click "Leave the Room" then "Are You Sure?"');
+        debugTools();
+    });
     socket.on('roomHost', function() {
         addMessage('You are the room host');
     });
     socket.on('youStart', function() {
         hostRoom();
+    });
+    socket.on('12choice', function(theChoices) {
+        addBoldMessage('Please choose a hand to keep');
+        clearButtons();
+        createTwelvesChoiceButton(theChoices);
+        handChoices = theChoices;
     });
     socket.on('chatMessage', function(thePlayer,theMessage) {
         playerSentMessage(thePlayer,theMessage);
@@ -534,15 +718,28 @@ function onLoad() {
     });
     socket.on('gameMessage', function(theMessage,theMessageType,extraInfo) {
         switch (theMessageType) {
-            case MESSAGE_TYPE.POVENOST:
+            case MESSAGE_TYPE.POVINNOST:
                 if (extraInfo && extraInfo.pn == playerNumber) {
-                    addBoldMessage('You are povenost');
+                    addBoldMessage('You are povinnost');
                 } else {
                     addBoldMessage(theMessage);
                 }
                 break;
+            case MESSAGE_TYPE.DRAW:
+                //Player drew certain cards. These should be highlighted until after discarding
+                //This message is received before the cards appear, so store the information until they arrive
+                drawnCards = extraInfo.cards;
+                break;
             case MESSAGE_TYPE.PARTNER:
                 addBoldMessage(theMessage);
+                break;
+            case MESSAGE_TYPE.TRUMP_DISCARD:
+                returnTableQueue.push([extraInfo.card]);
+                if (extraInfo && extraInfo.pn == playerNumber && extraInfo.youMessage) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
                 break;
             case MESSAGE_TYPE.MONEY_CARDS:
                 if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
@@ -649,6 +846,9 @@ function onLoad() {
             case MESSAGE_TYPE.SETTING:
                 addBoldMessage(theMessage);
                 break;
+            case MESSAGE_TYPE.NOTATION:
+                addMessage('Game save code: ' + theMessage + ';pn=' + playerPerspective(playerNumber, extraInfo.povinnost));
+                break;
             default:
                 addMessage('Game message of unknown type: ' + theMessageType);
                 addBoldMessage(theMessage);
@@ -670,7 +870,7 @@ function onLoad() {
         playerNumber = pN;
         theSettings = returnSettings;
         addMessage('Game ' + gameNumber + ' Beginning.')
-        addMessage('You are player ' + (pN+1));
+        addMessage('You are player ' + (+pN+1));
         addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's');
     });
     socket.on('nextAction', function(action) {
@@ -731,6 +931,12 @@ function onLoad() {
                     addMessage('You are dealing');
                     socket.emit('deal');
                     break;
+                case '12choice':
+                    addMessage('You are deciding which hand to keep');
+                    if (handChoices) {
+                        createTwelvesChoiceButton(handChoices);
+                    }
+                    break;
                 case 'prever':
                     addBoldMessage('Would you like to go prever?');
                     createChoiceButtons(BUTTON_TYPE.PREVER);
@@ -751,11 +957,12 @@ function onLoad() {
                     addMessage('You are discarding. Choose a card to discard.');
                     drawHand(true);
                     break;
-                case 'povenostBidaUniChoice':
+                case 'povinnostBidaUniChoice':
                     addBoldMessage('Would you like to call Bida/Uni?');
                     createChoiceButtons(BUTTON_TYPE.BUC);
                     break;
                 case 'moneyCards':
+                    drawnCards = [];//Clear the drawn cards to remove the highlight
                     returnTableQueue.push([]);
                     drawTable();//To clear prever talon from the center
                     addMessage('You are calling money cards');
@@ -806,11 +1013,13 @@ function onLoad() {
                     addMessage('Unknown action: ' + JSON.stringify(action));
             }
         } else {
-            document.getElementById('currentPlayer').innerHTML = 'Player ' + (action.player+1);
+            let playerName = activeUsernames[action.player] ? activeUsernames[action.player] : 'Player ' + (action.player+1);
+            document.getElementById('currentPlayer').innerHTML = playerName;
             if (action.action == 'lead' || action.action == 'follow' || action.action == 'winTrick') {
                 return;//No need. Handled by room.informPlayers
             }
-            addMessage('Player ' + (action.player + 1) + ' is performing the action ' + action.action);
+            //TODO translate important messages. For now it should all be handled by room info and informPlayers
+            //addMessage('Player ' + (action.player + 1) + ' is performing the action ' + action.action);
         }
     });
     socket.on('failedDiscard',function(toDiscard) {
@@ -822,7 +1031,10 @@ function onLoad() {
     socket.on('disconnect', function() {
         addError('Socket Disconnected! Attempting auto-reconnect...');
         window.location.reload();
-    })
+    });
+    socket.on('gameEnded', function() {
+        exitCurrentRoom(true);
+    });
     refresh();
     setInterval(tick, 200);
 }
@@ -831,7 +1043,7 @@ function tick() {
     startActionTimer();
     drawTable();
     if (inGame) {
-        alive();//DEBUG todo fix this for real, see GitHub issue
+        alive();
     }
 }
 
@@ -851,10 +1063,30 @@ function romanize(num) {
     return Array(+digits.join("") + 1).join("M") + roman;
 }
 
+function joinAudience(event) {
+    event.preventDefault();//Stop the right-click menu from appearing
+    if (!connectingToRoom) {
+        this.firstChild.innerHTML = '⟳';
+        connectingToRoom=true;socket.emit('joinAudience',this.roomID);addMessage('Joining audience in room ' + (this.roomID) + '...');
+    } else {addError('Already connecting to a room!');}
+}
+
 function buttonClick() {
     if (!connectingToRoom) {
         this.firstChild.innerHTML = '⟳';
         connectingToRoom=true;socket.emit('roomConnect',this.roomID);addMessage('Connecting to room ' + (this.roomID) + '...');
+    } else {addError('Already connecting to a room!');}
+}
+
+function customRoomClick() {
+    if (!connectingToRoom) {
+        let notation = prompt('Room Notation');
+        if (notation.length < 10) {
+            return;
+        }
+        connectingToRoom=true;
+        socket.emit('customRoom',notation);
+        addMessage('Creating custom room...');
     } else {addError('Already connecting to a room!');}
 }
 
@@ -865,6 +1097,15 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     bDiv.classList.add('col-xs-6');
     bDiv.classList.add('white');
     bDiv.id = 'roomCard' + roomId;
+    let theTitle = '';
+    for (let i in simplifiedRoom.usernames) {
+        theTitle += simplifiedRoom.usernames[i] + '\n';
+    }
+    if (simplifiedRoom.audienceCount > 0) {
+        theTitle += simplifiedRoom.audienceCount + ' Audience member' + (simplifiedRoom.audienceCount == 1 ? 's\n': '\n');
+    }
+    theTitle += 'Click to play\nRight click to join audience';
+    bDiv.title = theTitle;
     const numberDiv = document.createElement('div');
     numberDiv.classList.add('roomnum');
     numberDiv.classList.add('d-flex');
@@ -884,13 +1125,61 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     bDiv.appendChild(playerCountSpan);
     //Make it clickable
     bDiv.roomID = roomId;
+    if (simplifiedRoom.count > 0) {
+        bDiv.addEventListener('contextmenu',joinAudience);
+    }
     bDiv.addEventListener('click', buttonClick);
+    document.getElementById('rooms').appendChild(bDiv);
+}
+
+function createCustomRoomCard() {
+    const bDiv = document.createElement('div');
+    bDiv.classList.add('roomcard');
+    bDiv.classList.add('col-md-3');
+    bDiv.classList.add('col-xs-6');
+    bDiv.classList.add('white');
+    bDiv.id = 'roomCardCustom';
+    const numberDiv = document.createElement('div');
+    numberDiv.classList.add('roomnum');
+    numberDiv.classList.add('d-flex');
+    numberDiv.classList.add('justify-content-center');
+    numberDiv.innerHTML = 'Custom';
+    numberDiv.id = 'roomNumCustom';
+    bDiv.appendChild(numberDiv);
+    const playerCountSpan = document.createElement('span');
+    for (let i=0; i<4; i++) {
+        playerCountSpan.innerHTML += '&#x25CB; ';
+    }
+    bDiv.appendChild(playerCountSpan);
+    //Make it clickable
+    bDiv.addEventListener('click', customRoomClick);
     document.getElementById('rooms').appendChild(bDiv);
 }
 
 function ping() {socket.emit('currentAction');}//Debug function
 
 function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (!b[i] || (a[i].count != b[i].count)) {return false;}}return true;}
+
+function createTwelvesChoiceButton(choices) {
+    for (let i in choices) {
+        if (typeof choices[i] !== 'undefined') {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.innerHTML = choices[i];
+            button.id = 'twelvesChoice'+choices[i];
+            button.addEventListener('click', () => {
+                twelvesChoiceButtonsOnClickListenerTasks(choices[i]);
+            });
+            document.getElementById('center').appendChild(button);
+        }
+    }
+}
+
+function twelvesChoiceButtonsOnClickListenerTasks(theChoice) {
+    addMessage('You chose hand number ' + theChoice);
+    socket.emit('chooseHand', theChoice);
+    document.getElementById('center').innerHTML = '';
+}
 
 function createPartnerButtons(possiblePartners) {
     for (let i in possiblePartners) {
@@ -914,7 +1203,7 @@ function partnerButtonsOnClickListenerTasks(cardValue, possiblePartners) {
 }
 
 function partnersReturned(possiblePartners) {
-    partners = possiblePartners
+    partners = possiblePartners;
     if (partners.length > 1) {
         let partnerString = '';
         for (let i in partners) { partnerString += partners[i].value + ', '; }
@@ -1034,6 +1323,7 @@ function exitCurrentRoom(value) {
         theSettings={};
         availableRooms={};
         drawnRooms=[];
+        drawnCards=[];
         connectingToRoom = false;
         inGame = false;
         chipCount = 100;
@@ -1042,8 +1332,17 @@ function exitCurrentRoom(value) {
         currentAction = null;
         discardingOrPlaying = true;
         removeHostTools();
-        document.getElementById('cardBack').setAttribute('hidden','hidden');
-        document.getElementById('deck').appendChild(document.getElementById('cardBack'));
+        if (document.getElementById('cardBack')) {
+            document.getElementById('cardBack').setAttribute('hidden','hidden');
+            document.getElementById('deck').appendChild(document.getElementById('cardBack'));
+        } else {
+            let card = document.createElement('img');
+            card.hidden = true;
+            card.id = 'cardBack';
+            card.src = '/assets/mach-deck-thumb/card-back-t.png';
+            card.alt = 'The back of a card';
+            document.getElementById('deck').appendChild(card);
+        }
         stopActionTimer();
         document.getElementById('center').innerHTML = '';//clears choice buttons
         document.getElementById('currentAction').innerHTML = '';
@@ -1051,4 +1350,16 @@ function exitCurrentRoom(value) {
         clearChat();
         document.getElementById('roundInfo').textContent = '';
     }
+}
+
+function displaySignIn() {
+    let accHandler = document.getElementById('accountHandler');
+    accHandler.innerHTML = 'Sign In';
+    accHandler.href = 'https://sso.smach.us/?redirect=https://machtarok.com/';
+}
+
+function displaySignOut() {
+    let accHandler = document.getElementById('accountHandler');
+    accHandler.innerHTML = 'Sign Out';
+    accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
 }

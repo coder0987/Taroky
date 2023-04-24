@@ -1,7 +1,10 @@
 {
   "dependencies": {
     "bootstrap": "^5.2.3",
-    "express": "^4.18.1",
+    "express": "^4.18.2",
+    "h5wasm": "^0.4.10",
+    "https": "^1.0.0",
+    "mathjs": "^11.8.0",
     "socket.io": "^4.5.2"
   }
 }
