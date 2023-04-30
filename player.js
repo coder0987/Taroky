@@ -1,7 +1,7 @@
 const Deck = require('./deck.js');
 
 class Player {
-    constructor(type) {
+    constructor(type, ai) {
         this._type = type;
         this._socket = -1;
         this._messenger = null;
@@ -14,6 +14,7 @@ class Player {
         this._publicTeam = 0;
         this._savePoints = [];
         this._consecutiveAutos = 0;
+        this._ai = ai;
     }
 
     resetForNextRound() {
@@ -264,6 +265,10 @@ class Player {
         this._publicTeam = publicTeam;
     }
 
+    set ai(ai) {
+        this._ai = ai;
+    }
+
     //Getters
     get type() {
         return this._type;
@@ -299,6 +304,10 @@ class Player {
 
     get publicTeam() {
         return this._publicTeam;
+    }
+
+    get ai() {
+        return this._ai;
     }
 }
 

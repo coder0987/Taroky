@@ -82,7 +82,6 @@ class AI {
         } catch (err) {
             SERVER.error('Error reading file from disk: ' + err);
             latestAI = new AI(false, 0);
-            aiToFile(latestAI, 'latest.h5');
         } finally {
             if (f) {f.close();}
         }
@@ -415,6 +414,8 @@ class AI {
         let actionVector = new Array(25).fill(0);
         actionVector[action] = 1;
         inputs = inputs.concat(actionVector);
+
+        SERVER.debug(inputs.length);
 
         return inputs;
 

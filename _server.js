@@ -3234,20 +3234,56 @@ function startAITraining() {
     if (TRAINING_MODE) {
         /*The system
         All AI are based on "latest", the winner so far
-        New AI, training to beat latest, are stored in trainees (an array)
-
         */
-        /*TODO
-            Create a series of 8 rooms with a no-delete flag (and a no-log flag)
-            After each room plays 100 games, take the winner from each
-            The winner from room 1 is used as the "parent" for the next gen
-            Winners of 1-4 compete in room 1
-            Winners of 5-8 compete in room 2
-            Children compete in rooms 3-8
-            After 10 generations, overwrite the file "latest" with the latest gen
-            After 100 generations, create a file Date.now() as a backup
-            If this save happens too often, it can be expanded later
-            */
+
+        //Create the rooms filled with AI. Training goal defaults to 100
+        const ROOM_NAMES = ['AI-1','AI-2','AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
+        const LEARNING_ROOMS = ['AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
+        const LEARNING_RATE = 0.5;
+        for (let i in ROOM_NAMES) {
+            rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
+            rooms[ROOM_NAMES[i]].players = [
+                        new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE))
+                    ];
+        }
+        rooms[ROOM_NAMES[0]].players[0] = new Player(PLAYER_TYPE.AI, latest);
+
+        //TODO: prompt rooms to start training
+
+        for (let gen=1; gen<1000; gen++) {
+            //Run 1000 generations of training
+            latest = rooms[ROOM_NAMES[0]].winner.ai;
+            if (gen%100 == 0) {
+                AI.aiToFile(latest,'latest.h5');
+                AI.aiToFile(latest,'AI_SAVES/' + Date.now() + '.h5');
+            }
+            rooms[ROOM_NAMES[0]] = new Room(ROOM_NAMES[0], true, 0, players, true);
+            rooms[ROOM_NAMES[0]].players = [
+                new Player(PLAYER_TYPE.AI, new AI(latest)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[1]].winner.ai)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[2]].winner.ai)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[3]].winner.ai))
+            ];
+            rooms[ROOM_NAMES[1]].players = [
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[4]].winner.ai)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[5]].winner.ai)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[6]].winner.ai)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[7]].winner.ai))
+            ];
+            for (let i in LEARNING_ROOMS) {
+                rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
+                rooms[ROOM_NAMES[i]].players = [
+                            new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE))
+                        ];
+            }
+            //TODO: prompt room to start training
+        }
     }
 }
 
