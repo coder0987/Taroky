@@ -1459,13 +1459,17 @@ function actionCallback(action, room, pn) {
             if (room['board'].povinnost == pn) {
                 for (let i=0; i<4; i++) {
                     room['players'][i].isTeamPovinnost = false;
+                    room.players[i].publicTeam = -1;
                 }
                 room['players'][pn].isTeamPovinnost = true;
+                room.players[pn].publicTeam = 1;
             } else {
                 for (let i=0; i<4; i++) {
                     room['players'][i].isTeamPovinnost = true;
+                    room.players[i].publicTeam = 1;
                 }
                 room['players'][pn].isTeamPovinnost = false;
+                room.players[pn].publicTeam = -1;
             }
             //Fallthrough to inform the player
         case 'drawPreverTalon':
@@ -1509,6 +1513,9 @@ function actionCallback(action, room, pn) {
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
                     room.informPlayers('rejected the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':1},pn);
+                    room.board.publicPreverTalon[0] = {suit:temp[0].suit, value:temp[0].value};
+                    room.board.publicPreverTalon[1] = {suit:temp[1].suit, value:temp[1].value};
+                    room.board.publicPreverTalon[2] = {suit:temp[2].suit, value:temp[2].value};
 
                     //Show prever the second set of cards from the talon
                     room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1553,6 +1560,9 @@ function actionCallback(action, room, pn) {
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
                     room.informPlayers('rejected the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':2},pn);
+                    room.board.publicPreverTalon[3] = {suit:temp[0].suit, value:temp[0].value};
+                    room.board.publicPreverTalon[4] = {suit:temp[1].suit, value:temp[1].value};
+                    room.board.publicPreverTalon[5] = {suit:temp[2].suit, value:temp[2].value};
 
                     //Give prever the cards from the talon
                     room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1588,6 +1598,11 @@ function actionCallback(action, room, pn) {
                 //Announce discard Trump cards
                 if (card.suit == 'Trump') {
                     room.informPlayers('discarded the ' + card.value, MESSAGE_TYPE.TRUMP_DISCARD, {pn: pn, card: card}, pn);
+                    if (room.board.prever != -1) {
+                        room.board.trumpDiscarded[0].push({suit:card.suit, value:card.value});
+                    } else {
+                        room.board.trumpDiscarded[((+room.board.povinnost - +pn) + 4)%4].push({suit:card.suit, value:card.value});
+                    }
                 }
                 if (room['players'][action.player].hand.length == 12) {
                     action.player = (action.player + 1) % 4;
@@ -1731,6 +1746,7 @@ function actionCallback(action, room, pn) {
                 room['players'][i].isTeamPovinnost = Deck.handContainsCard(room['players'][i].hand, room['board'].partnerCard);
             }
             room['players'][room['board'].povinnost].isTeamPovinnost = true;
+            room['players'][room['board'].povinnost].publicTeam = 1;
 
             let numTrumpsInHand = 0;
             for (let i in currentHand) {
@@ -1741,7 +1757,6 @@ function actionCallback(action, room, pn) {
             } else {
                 action.action = 'moneyCards';
             }
-
 
             //Inform players what Povinnost called
             room.informPlayers('(Povinnost) is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn},pn);
@@ -1891,6 +1906,7 @@ function actionCallback(action, room, pn) {
                     //Povinnost's team called rhea-contra
                     room['board'].contra[1] = 1;
                     room.board.rheaContra = pn;
+                    room.players[pn].publicTeam = 1;
 
                     //Swap play to opposing team
                     do {
@@ -1903,6 +1919,7 @@ function actionCallback(action, room, pn) {
                         //Regular contra
                         room.board.contra[0] = 1;
                         room.board.calledContra = pn;
+                        room.players[pn].publicTeam = -1;
 
                         //Swap play to opposing team
                         do {
@@ -1913,6 +1930,7 @@ function actionCallback(action, room, pn) {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
                         room.board.supraContra = pn;
+                        room.players[pn].publicTeam = -1;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povinnost;
@@ -1955,6 +1973,7 @@ function actionCallback(action, room, pn) {
                     //Povinnost's team called rhea-contra
                     room['board'].contra[1] = 1;
                     room.board.rheaContra = pn;
+                    room.players[pn].publicTeam = 1;
 
                     //Swap play to opposing team
                     do {
@@ -1967,6 +1986,7 @@ function actionCallback(action, room, pn) {
                         //Regular contra
                         room.board.contra[0] = 1;
                         room.board.calledContra = pn;
+                        room.players[pn].publicTeam = -1;
 
                         //Swap play to opposing team
                         do {
@@ -1977,6 +1997,7 @@ function actionCallback(action, room, pn) {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
                         room.board.supraContra = pn;
+                        room.players[pn].publicTeam = -1;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povinnost;
@@ -2035,6 +2056,9 @@ function actionCallback(action, room, pn) {
                 room['board'].table.push({'card':lead,'pn':pn,'lead':true});
                 room['board'].leadCard = lead;
                 room.informPlayers('lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {pn: pn, card: lead},pn);
+                if (lead.suit == room.board.partnerCard.suit && lead.value == room.board.partnerCard.value) {
+                    room.players[pn].publicTeam = 1;
+                }
             } else {
                 if (room['players'][pn].type == PLAYER_TYPE.HUMAN) {
                     SOCKET_LIST[room['players'][pn].socket].emit('failedLeadCard', cardToLead);
@@ -2063,6 +2087,9 @@ function actionCallback(action, room, pn) {
                 room['board'].table.push({'card':played,'pn':pn,'lead':false});
                 action.player = (action.player + 1) % 4;
                 room.informPlayers('played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {pn: pn, card: played}, pn);
+                if (played.suit == room.board.partnerCard.suit && played.value == room.board.partnerCard.value) {
+                    room.players[pn].publicTeam = 1;
+                }
                 //If all players have played a card, determine who won the trick
                 if (action.player == room.board.leadPlayer) {
                     action.action = 'winTrick';
@@ -2127,6 +2154,19 @@ function actionCallback(action, room, pn) {
                 }
             }
 
+            room.board.trickHistory.push(
+                {
+                    leadPlayer: room.board.leadPlayer,
+                    winner: pn,
+                    cards: [
+                        {suit:room.board.table[0].suit, value:room.board.table[0].value},
+                        {suit:room.board.table[1].suit, value:room.board.table[1].value},
+                        {suit:room.board.table[2].suit, value:room.board.table[2].value},
+                        {suit:room.board.table[3].suit, value:room.board.table[3].value}
+                    ]
+                }
+            );
+
             //Transfer the table to the winner's discard
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
@@ -2160,11 +2200,14 @@ function actionCallback(action, room, pn) {
                     if (room.board.trickWinCount[1] > 0) {
                         //Opposing team won a trick
                         chipsOwed = -40;
-                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
+                        if (room.board.prever != -1) {
+                            chipsOwed = -60;
+                        }
+                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':Math.abs(chipsOwed)});
                     } else {
                         chipsOwed = 40;
                         if (room.board.prever != -1) {
-                            chipsOwed = 60;//TODO: I'm not sure if this applies to a lost call of valat during prever games
+                            chipsOwed = 60;
                         }
                         pointCountMessageTable.push({'name':'Won a Called Valat', 'value':chipsOwed});
                     }
@@ -2173,7 +2216,10 @@ function actionCallback(action, room, pn) {
                     if (room.board.trickWinCount[0] > 0) {
                         //Povinnost team won a trick
                         chipsOwed = 40;
-                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
+                        if (room.board.prever != -1) {
+                            chipsOwed = 60;
+                        }
+                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':chipsOwed});
                     } else {
                         chipsOwed = -40;
                         if (room.board.prever != -1) {

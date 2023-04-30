@@ -256,27 +256,6 @@ class AI {
 */
 
     static generateInputs(room, pn, action, cardPrompt) {
-        /*TODO: most of this is finished, but much of it references non-existent board state variables. We need to implement the following variables:
-            board.trickHistory -
-                Array, max length 12 -
-                    Object with properties:
-                    leadPlayer, int, 0-3
-                    winner, int, 0-3
-                    cards, Array, length 4
-                        Object, properties suit and value
-            board.publicPreverTalon -
-                Array, max length 6 -
-                    Cards which were shown "face up" when prever rejected part of the talon
-            room.players[i].publicTeam -
-                int, 0, -1, or 1 -
-                    0: team is not publicly known
-                    1: player is known to be on Povinnost's team
-                    -1: player is known to be against Povinnost's team
-            board.trumpDiscarded -
-                Array, length 3 -
-                    Arrays, length 4, 1, 1 -
-                        Contains any trump discarded by Povinnost/prever, then the players to Povinnost's right. Contains nulls otherwise
-            */
         const thePlayers = room.players;
         const theBoard = room.board;
         let inputs = [];
