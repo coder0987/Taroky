@@ -148,13 +148,14 @@ function isInHand(element) {
 }
 
 function enter() {if (this.style.filter == '') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
-function exit() {this.classList.remove('image-hover-highlight');}
+function exit() {this.classList.remove('image-hover-highlight');this.title='';}
 function clickCard() {
     if (this.style.filter == '') {
         discardThis(this.suit,this.value);
         this.removeEventListener('mouseenter',enter);
         this.removeEventListener('mouseleave',exit);
         this.removeEventListener('click',clickCard);
+        this.title='';
         this.classList.remove('image-hover-highlight');
         this.hidden=true;
     }

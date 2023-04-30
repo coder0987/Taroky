@@ -150,7 +150,7 @@ class AI {
     Every single value is between 0 and 1. S is for sigmoid
     INPUTS  (2k x 1)            HIDDEN LAYERS  (1k x 20)        OUTPUTS (14 x 1)
     0-3   S(chips/100)          Inputs is already the           Discard this
-    4-7   isPovinnost            absolutely ludicrous            Play this
+    4-7   isPovinnost           absolutely ludicrous            Play this
     8-11  isPrever              2k parameters. How many         Keep talon
     12    preverTalon           Hidden layers do we need?       Keep talon bottom
     13-44 8 types of            Honestly 20 should be           Keep talon top

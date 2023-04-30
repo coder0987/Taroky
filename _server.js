@@ -363,7 +363,6 @@ function cardsToNotation(cards) {
     }
     return theNotation;
 }
-
 function setSettingNotation(room) {
     let settingNotation = '';
     for (let i in room.settings) {
@@ -374,45 +373,13 @@ function setSettingNotation(room) {
 
 let baseDeck = Deck.createDeck();
 
-function handContainsCard(handToCheck, cardName) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].value == cardName) {
-            return true;
-        }
-    }
-    return false;
-}
-function handHasSuit(handToCheck, suitToCheck) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].suit == suitToCheck) {
-            return true;
-        }
-    }
-    return false;
-}
-function handContains(handToCheck, valueToCheck, suitToCheck) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
-            return true;
-        }
-    }
-    return false;
-}
-function isCardPlayable(hand, card, leadCard) {
-    if (handHasSuit(hand, leadCard.suit)) {
-        return card.suit == leadCard.suit;
-    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
-        return card.suit == 'Trump';
-    } else {
-        return true;
-    }
-}
+
 
 function findPovinnost(players) {
     let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povinnost is found
     while (true) { //loop until we find povinnost
         for (let i = 0; i < 4; i++) {
-            if (handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
+            if (Deck.handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
                 return i; //found povinnost
             }
         }
@@ -421,7 +388,7 @@ function findPovinnost(players) {
 }
 function findTheI(players) {
    for (let i = 0; i < 4; i++) {
-       if (handContainsCard(players[i].hand, TRUMP_VALUE[0])) {
+       if (Deck.handContainsCard(players[i].hand, TRUMP_VALUE[0])) {
            return i; //found the I
        }
    }
@@ -435,10 +402,10 @@ function possiblePartners(hand) {
     //can always partner with XIX
     partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
     //if we hold XIX we can partner with the next lowest trump we don't hold, down to the XV
-    if (handContainsCard(hand, 'XIX')) {
+    if (Deck.handContainsCard(hand, 'XIX')) {
         for (let v = 17; v >= 15; v--) {
             //18 is XIX and 14 is XV
-            if (!handContainsCard(hand, TRUMP_VALUE[v])) {
+            if (!Deck.handContainsCard(hand, TRUMP_VALUE[v])) {
                 partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
                 break;
             }
@@ -479,7 +446,7 @@ function grayUndiscardables(hand) {
     return true;
 }
 function grayUnplayables(hand, leadCard) {
-    if (handHasSuit(hand, leadCard.suit)) {
+    if (Deck.handHasSuit(hand, leadCard.suit)) {
         for (let i in hand) {
             if (hand[i].suit != leadCard.suit) {
                 hand[i].grayed = true;
@@ -487,7 +454,7 @@ function grayUnplayables(hand, leadCard) {
                 hand[i].grayed = false;
             }
         }
-    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+    } else if (leadCard.suit != 'Trump' && Deck.handHasSuit(hand, 'Trump')) {
         for (let i in hand) {
             if (hand[i].suit != 'Trump') {
                 hand[i].grayed = true;
@@ -602,7 +569,7 @@ function trumpChain(hand) {
     let guarantees = 0;
     let misses = 0;
     for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (handContainsCard(TRUMP_VALUE[i])) {
+        if (Deck.handContainsCard(TRUMP_VALUE[i])) {
             if (misses > 0) {
                 misses--;
             } else {
@@ -617,7 +584,7 @@ function trumpChain(hand) {
 function unbrokenTrumpChain(hand) {
     let guarantees = 0;
     for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (handContainsCard(TRUMP_VALUE[i])) {
+        if (Deck.handContainsCard(hand,TRUMP_VALUE[i])) {
             guarantees++;
         } else {
             return guarantees;
@@ -797,7 +764,7 @@ function robotLead(hand, difficulty, room) {
         case DIFFICULTY.NORMAL:
             //Possible strategies: run trump until out, then play kings
         case DIFFICULTY.EASY:
-            if (handContainsCard(hand,'XIX')) {
+            if (Deck.handContainsCard(hand,'XIX')) {
                 //My parents were very upset that the robots would not play the XIX
                 //This is the temporary fix
                 return {'suit':SUIT[4],'value':'XIX'};
@@ -1685,12 +1652,12 @@ function actionCallback(action, room, pn) {
             }
             if (fiverCount >= 3) {
                 //Check for trul
-                if (handContainsCard(currentHand, "I") && handContainsCard(currentHand, "XXI") && handContainsCard(currentHand, "Skyz")) {
+                if (Deck.handContainsCard(currentHand, "I") && Deck.handContainsCard(currentHand, "XXI") && Deck.handContainsCard(currentHand, "Skyz")) {
                     //Trul
                     owedChips += 2;
                     room['board'].moneyCards[pn].push("Trul");
                 }
-                if (handContains(currentHand, "King", "Spade") && handContains(currentHand, "King", "Club") && handContains(currentHand, "King", "Heart") && handContains(currentHand, "King", "Diamond")) {
+                if (Deck.handContains(currentHand, "King", "Spade") && Deck.handContains(currentHand, "King", "Club") && Deck.handContains(currentHand, "King", "Heart") && Deck.handContains(currentHand, "King", "Diamond")) {
                     if (fiverCount > 4) {
                         //Rosa-Honery+
                         owedChips += 6;
@@ -1745,15 +1712,15 @@ function actionCallback(action, room, pn) {
             break;
         case 'partner':
             let povinnostChoice = room['board'].partnerCard;
-            if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && povinnostChoice == 'XIX')) {
+            if (!Deck.handContainsCard(currentHand, "XIX") || (Deck.handContainsCard(currentHand, "XIX") && povinnostChoice == 'XIX')) {
                 room['board'].partnerCard = "XIX";
-            } else if (!handContainsCard(currentHand, "XVIII")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVIII")) {
                 room['board'].partnerCard = "XVIII";
-            } else if (!handContainsCard(currentHand, "XVII")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVII")) {
                 room['board'].partnerCard = "XVII";
-            } else if (!handContainsCard(currentHand, "XVI")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVI")) {
                 room['board'].partnerCard = "XVI";
-            } else if (!handContainsCard(currentHand, "XV")) {
+            } else if (!Deck.handContainsCard(currentHand, "XV")) {
                 room['board'].partnerCard = "XV";
             } else {
                 room['board'].partnerCard = "XIX";
@@ -1761,7 +1728,7 @@ function actionCallback(action, room, pn) {
 
 
             for (let i=0; i<4; i++) {
-                room['players'][i].isTeamPovinnost = handContainsCard(room['players'][i].hand, room['board'].partnerCard);
+                room['players'][i].isTeamPovinnost = Deck.handContainsCard(room['players'][i].hand, room['board'].partnerCard);
             }
             room['players'][room['board'].povinnost].isTeamPovinnost = true;
 
