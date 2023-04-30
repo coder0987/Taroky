@@ -1104,8 +1104,6 @@ function playerAction(action, room, pn) {
 }
 function aiAction(action, room, pn) {
     //Uses the AI to take an action IF and only IF the AI is supposed to
-    SERVER.error('AI not implemented yet!!');
-    SERVER.errorTrace();
 
     //Generate possible choices
     //If only one choice, choose it
@@ -1137,7 +1135,7 @@ function aiAction(action, room, pn) {
     if (action.player == pn) {
         let ranking = 0;
         let currentAI = room.players[pn].ai;
-        let think = (outputNumber, specialInfo) => {return currentAI.evaluate(AI.generateInputs(room,pn),outputNumber,specialInfo);}
+        let think = (outputNumber, specialInfo, actionNumber) => {return currentAI.evaluate(AI.generateInputs(room,pn,actionNumber),outputNumber,specialInfo);}
         switch (action.action) {
                 case 'play':
                 case 'shuffle':
@@ -1152,7 +1150,7 @@ function aiAction(action, room, pn) {
                     break;
                 case 'prever':
                     action.action = 'passPrever';
-                    ranking = think(8,false);
+                    ranking = think(8,false,5);
                     if (ranking > 0.5) {
                         action.action = 'callPrever';
                     }
@@ -1161,15 +1159,24 @@ function aiAction(action, room, pn) {
                 case 'drawTalon':
                     break;
                 case 'discard':
+                    {
                     grayUndiscardables(hand);
-                    //Rank each card TODO
-
-                    action.info.card = robotDiscard(hand, room.settings.difficulty);
+                    let choices = handWithoutGray(hand);
+                    let rankings = new Array(choices.length);
+                    let highestRanking = 0;
+                    for (let i in choices) {
+                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,8,choices[i]),0,false);
+                        if (rankings[i] > rankings[highestRanking]) {
+                            highestRanking = i;
+                        }
+                    }
+                    action.info.card = choices[highestRanking];
+                    }
                     break;
                 case 'povinnostBidaUniChoice':
                     fakeMoneyCards = true;
                     action.action = 'moneyCards';
-                    ranking = think(11,false);
+                    ranking = think(11,false,9);
                     room.board.buc = false;
                     if (ranking > 0.5) {
                         room.board.buc = true;
@@ -1178,20 +1185,26 @@ function aiAction(action, room, pn) {
                     break;
                 case 'partner':
                     //if povinnost choose partner
-                    //Rank each choice TODO
                     if (room['board'].povinnost == pn) {
-                        action.info.partner = robotPartner(hand, room.settings.difficulty);
+                        let goAloneRanking = think(12,false,11);
+                        let goPartnerRanking = think(13,false,11);
+                        if (goAloneRanking > goPartnerRanking) {
+                            action.info.partner = {suit:'Trump',value:'XIX'};
+                        }  else {
+                            //Rudimentary always plays with a partner
+                            action.info.partner = robotPartner(hand, DIFFICULTY.RUDIMENTARY);
+                        }
                     }
                     break;
                 case 'valat':
-                    ranking = think(9,false);
+                    ranking = think(9,false,12);
                     action.info.valat = false;
                     if (ranking > 0.5) {
                         action.info.valat = true;
                     }
                     break;
                 case 'iote':
-                    ranking = think(10,false);
+                    ranking = think(10,false,13);
                     action.info.iote = false;
                     if (ranking > 0.5) {
                         action.info.iote = true;
@@ -1203,20 +1216,49 @@ function aiAction(action, room, pn) {
                 case 'preverContra':
                 case 'preverValatContra':
                 case 'valatContra':
-                    action.info.contra = robotContra(hand, room.settings.difficulty);
-                    //TODO. Remember that contra, rhea-contra, and supra-contra are different outputs
+                    if (room.board.contra == -1) {
+                        //Regular contra
+                        action.info.contra = think(5,false,17) > 0.5;
+                    } else if (room.board.rheaContra == -1) {
+                        action.info.contra = think(6,false,17) > 0.5;
+                    } else {
+                        action.info.contra = think(7,false,17) > 0.5;
+                    }
+
                     SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
                     actionCallback(action, room, pn);
                     return;
                 case 'lead':
-                    //Rank each card TODO
+                    {
                     unGrayCards(hand);
-                    action.info.card = robotLead(hand, room.settings.difficulty,room);
+                    //Rank each card
+                    let choices = handWithoutGray(hand);
+                    let rankings = new Array(choices.length);
+                    let highestRanking = 0;
+                    for (let i in choices) {
+                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,18,choices[i]),1,false);
+                        if (rankings[i] > rankings[highestRanking]) {
+                            highestRanking = i;
+                        }
+                    }
+                    action.info.card = choices[highestRanking];
+                    }
                     break;
                 case 'follow':
-                    //Rank each card TODO
+                    {
+                    //Rank each card
                     grayUnplayables(hand, room.board.leadCard);
-                    action.info.card = robotPlay(hand, room.settings.difficulty, room);
+                    let choices = handWithoutGray(hand);
+                    let rankings = new Array(choices.length);
+                    let highestRanking = 0;
+                    for (let i in choices) {
+                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,19,choices[i]),1,false);
+                        if (rankings[i] > rankings[highestRanking]) {
+                            highestRanking = i;
+                        }
+                    }
+                    action.info.card = choices[highestRanking];
+                    }
                     break;
                 case 'winTrick':
                     break;
