@@ -255,8 +255,28 @@ class AI {
     }
 */
 
-    static generateInputs(room, pn) {
-        //TODO
+    static generateInputs(room, pn, action, cardPrompt) {
+        /*TODO: most of this is finished, but much of it references non-existent board state variables. We need to implement the following variables:
+            board.trickHistory -
+                Array, max length 12 -
+                    Object with properties:
+                    leadPlayer, int, 0-3
+                    winner, int, 0-3
+                    cards, Array, length 4
+                        Object, properties suit and value
+            board.publicPreverTalon -
+                Array, max length 6 -
+                    Cards which were shown "face up" when prever rejected part of the talon
+            board.players[i].publicTeam -
+                int, 0, -1, or 1 -
+                    0: team is not publicly known
+                    1: player is known to be on Povinnost's team
+                    -1: player is known to be against Povinnost's team
+            board.trumpDiscarded -
+                Array, length 3 -
+                    Arrays, length 4, 1, 1 -
+                        Contains any trump discarded by Povinnost/prever, then the players to Povinnost's right. Contains nulls otherwise
+            */
         const thePlayers = room.players;
         const theBoard = room.board;
         let inputs = [];
@@ -336,40 +356,88 @@ class AI {
         inputs.push(theBoard.partnerCard == 'XVII' ? 1 : 0);
         inputs.push(theBoard.partnerCard == 'XVI' ? 1 : 0);
         inputs.push(theBoard.partnerCard == 'XV' ? 1 : 0);
-        inputs.push(0);//TODO handContains(partnerCard)
+        inputs.push(Deck.handContains(thePlayers[pn].hand,theBoard.partnerCard) ? 1 : 0);
 
         //CURRENT TRICK INFORMATION
-        //69-72 TrickLeader
-        //73-76 myPositionInTrick
-        //+28   firstCard
-        //+28   secondCard
-        //+28   thirdCard
+        let leaderVector = new Array(4).fill(0);
+        if (theBoard.leadPlayer != -1) {
+            leaderVector[theBoard.leadPlayer] = 1;
+        }
+        inputs = inputs.concat(leaderVector);
+        let myPositionInTrickVector = new Array(4).fill(0);
+        if (theBoard.leadPlayer != -1) {
+            myPositionInTrickVector[playerPerspective(theBoard.leadPlayer,pn)] = 1;
+        }
+        inputs = inputs.concat(myPositionInTrickVector);
+        inputs = inputs.concat(cardToVector(theBoard.table[0]));
+        inputs = inputs.concat(cardToVector(theBoard.table[1]));
+        inputs = inputs.concat(cardToVector(theBoard.table[2]));
 
         //TRICK HISTORY
-        //+1    hasBeenPlayed
-        //+4    whoLead
-        //+4    myPosition
-        //+4    whoWon
-        //+28   firstCard
-        //+28   secondCard
-        //+28   thirdCard
-        //+28   fourthCard
-        //x11   tricks
+        for (let i = 0; i<12; i++) {
+            if (theBoard.trickHistory[i]) {
+                inputs.push(1);
+                let trickLeaderVector = new Array(4).fill(0);
+                trickLeaderVector[theBoard.trickHistory[i].leadPlayer] = 1;
+                inputs = inputs.concat(trickLeaderVector);
+
+                let myPositionInHistoryTrickVector = new Array(4).fill(0);
+                myPositionInHistoryTrickVector[playerPerspective(theBoard.trickHistory[i].leadPlayer,pn)] = 1;
+                inputs = inputs.concat(myPositionInHistoryTrickVector);
+
+                let trickWinnerVector = new Array(4).fill(0);
+                trickWinnerVector[theBoard.trickHistory[i].winner] = 1;
+                inputs = inputs.concat(trickWinnerVector);
+
+                inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[0]));
+                inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[1]));
+                inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[2]));
+                inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[3]));
+            } else {
+                inputs = inputs.concat(new Array(129).fill(0));
+            }
+        }
+
         //MY HAND
-        //+28   card
-        //x16   Max num cards in ha
+        for (let i=0; i<16; i++) {
+            inputs = inputs.concat(cardToVector(thePlayers[pn].hand[i]));
+        }
+
         //PREVER TALON
-        //+28   Card
-        //x3    num cards in talon
+        for (let i=0; i<6; i++) {
+            inputs = inputs.concat(cardToVector(theBoard.publicPreverTalon[i]));
+        }
+        inputs.push(theBoard.preverTalonStep > 0 ? 0 : 1);
+        inputs.push(theBoard.preverTalonStep > 1 ? 0 : 1);
+        inputs.push(theBoard.preverTalonStep > 2 ? 0 : 1);
+
         //PARTNER INFORMATION
-        //-Only information the AI
-        //+3    isMyPartner
+        //-Only information the AI should know-
+        inputs.push(
+            (thePlayers[playerOffset(pn,1)].publicTeam != -1) ? thePlayers[playerOffset(pn,1)].publicTeam == thePlayers[pn].publicTeam ? 1 : 0 : 0.5
+        );
+        inputs.push(
+            (thePlayers[playerOffset(pn,2)].publicTeam != -1) ? thePlayers[playerOffset(pn,1)].publicTeam == thePlayers[pn].publicTeam ? 1 : 0 : 0.5
+        );
+        inputs.push(
+            (thePlayers[playerOffset(pn,3)].publicTeam != -1) ? thePlayers[playerOffset(pn,1)].publicTeam == thePlayers[pn].publicTeam ? 1 : 0 : 0.5
+        );
+
         //TRUMP DISCARD
-        //+28   card
-        //x4    max
+        for (let i=0; i<4; i++) {
+            //Povinnost or Prever
+            inputs = inputs.concat(cardToVector(theBoard.trumpDiscarded[0][i]));
+        }
+        inputs = inputs.concat(cardToVector(theBoard.trumpDiscarded[1][0]));
+        inputs = inputs.concat(cardToVector(theBoard.trumpDiscarded[2][0]));
+
         //CURRENT CARD/ACTION
-        //+28   card
-        //+25   number of actions
+        inputs = inputs.concat(cardToVector(cardPrompt));
+        let actionVector = new Array(25).fill(0);
+        actionVector[action] = 1;
+        inputs = inputs.concat(actionVector);
+
+        return inputs;
 
         /*Room
         room['board'] = {the board}
@@ -432,8 +500,10 @@ function playerPerspective(originalPlace, viewpoint) {
 function cardToVector(card) {
     //Should return a 1x27 vector. First 5 elements are suit, next 22 are value. 0 or 1
     let cardVector = new Array(27).fill(0);
-    cardVector[SUIT[card.suit]] = 1;
-    cardVector[VALUE_REVERSE[card.value]+5] = 1;
+    if (card) {
+        cardVector[SUIT[card.suit]] = 1;
+        cardVector[VALUE_REVERSE[card.value]+5] = 1;
+    }
     return cardVector;
 }
 

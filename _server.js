@@ -1137,7 +1137,7 @@ function aiAction(action, room, pn) {
     if (action.player == pn) {
         let ranking = 0;
         let currentAI = room.players[pn].ai;
-        let think = (outputNumber, specialInfo) => {return currentAI.evaluate(generateInputs(room,pn),outputNumber,specialInfo);}
+        let think = (outputNumber, specialInfo) => {return currentAI.evaluate(AI.generateInputs(room,pn),outputNumber,specialInfo);}
         switch (action.action) {
                 case 'play':
                 case 'shuffle':
