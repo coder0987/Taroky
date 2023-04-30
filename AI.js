@@ -267,7 +267,7 @@ class AI {
             board.publicPreverTalon -
                 Array, max length 6 -
                     Cards which were shown "face up" when prever rejected part of the talon
-            board.players[i].publicTeam -
+            room.players[i].publicTeam -
                 int, 0, -1, or 1 -
                     0: team is not publicly known
                     1: player is known to be on Povinnost's team

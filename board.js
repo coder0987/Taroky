@@ -27,6 +27,10 @@ class Board {
         this._gameNumber = 0;
         this._importantInfo = {};
         this._notation = '';
+
+        this._trickHistory = [];
+        this._publicPreverTalon = [];
+        this._trumpDiscarded = [[],[],[]];
     }
 
     resetForNextRound() {
@@ -55,6 +59,10 @@ class Board {
         this._firstContraPlayer = -1;
         this._importantInfo = {};
         this._notation = '';
+
+        this._trickHistory = [];
+        this._publicPreverTalon = [];
+        this._trumpDiscarded = [[],[],[]];
     }
 
     //Setters
@@ -146,6 +154,18 @@ class Board {
         this._trickWinCount = winCount;
     }
 
+    set trickHistory(trickHistory) {
+        this._trickHistory = trickHistory;
+    }
+
+    set publicPreverTalon(publicPreverTalon) {
+        this._publicPreverTalon = publicPreverTalon;
+    }
+
+    set trumpDiscarded(trumpDiscarded) {
+        this._trumpDiscarded = trumpDiscarded;
+    }
+
     //Getters
     get partnerCard() {
         return this._partnerCard;
@@ -233,6 +253,18 @@ class Board {
 
     get hasTheI() {
         return this._hasTheI;
+    }
+
+    get trickHistory() {
+        return this._trickHistory;
+    }
+
+    get publicPreverTalon() {
+        return this._publicPreverTalon;
+    }
+
+    get trumpDiscarded() {
+        return this._trumpDiscarded;
     }
 }
 

@@ -11,6 +11,7 @@ class Player {
         this._hand = [];
         this._tempHand = [];
         this._isTeamPovenost = false;
+        this._publicTeam = 0;
         this._savePoints = [];
         this._consecutiveAutos = 0;
     }
@@ -20,6 +21,7 @@ class Player {
         this.discard = [];
         this.tempHand = [];
         this.isTeamPovenost = false;
+        this._publicTeam = 0;
     }
 
     handContainsCard(cardName) {
@@ -258,6 +260,10 @@ class Player {
         this._isTeamPovenost = isTeamPovenost;
     }
 
+    set publicTeam(publicTeam) {
+        this._publicTeam = publicTeam;
+    }
+
     //Getters
     get type() {
         return this._type;
@@ -289,6 +295,10 @@ class Player {
 
     get isTeamPovenost() {
         return this._isTeamPovenost;
+    }
+
+    get publicTeam() {
+        return this._publicTeam;
     }
 }
 
