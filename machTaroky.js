@@ -10,7 +10,7 @@ const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon'};
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
+const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
 const ACTION_TABLE = {
     'start': 'Start the Game',
     'play': 'Start the Next Round',

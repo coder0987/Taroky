@@ -1,4 +1,15 @@
 const math = require('mathjs');
+const Deck = require('./deck.js');
+const { SUIT,
+    SUIT_REVERSE,
+    RED_VALUE,
+    BLACK_VALUE,
+    TRUMP_VALUE,
+    VALUE_REVERSE,
+    DIFFICULTY,
+    DIFFICULTY_TABLE,
+    MESSAGE_TYPE,
+    PLAYER_TYPE } = require('./enums.js');
 let h5wasm = null;
 async function importH5wasm() {
     //TODO: uncomment. For some reason H5 really likes to spam the console when the server crashes
@@ -21,24 +32,24 @@ class AI {
             this.outputWeights = seed[3]; // 14 x 1k
             this.outputBias = seed[4]; // 14 x 1
         } else {
-            this.inputWeightsSize = [2000,1000];
-            this.layersWeights = [20,1000,1000];
-            this.layersBias = [20,1000];
-            this.outputWeights = [14,1000];
-            this.outputBias = [14];
+            this.inputWeightsSize = [2523,1000];
+            this.layersWeightsSize = [20,1000,1000];
+            this.layersBiasSize = [21,1000];
+            this.outputWeightsSize = [1000,14];
+            this.outputBiasSize = [14];
 
             this.inputWeights   = math.random(math.matrix([this.inputWeightsSize[0], this.inputWeightsSize[1]])); // 2k x 1k
-            this.layersWeights  = math.random(math.matrix([this.layersWeights[0], this.layersWeights[1], this.layersWeights[2]])); // 20 x 1k x 1k
-            this.layersBias     = math.random(math.matrix([this.layersBias[0], this.layersBias[1]])); // 20 x 1k x 1
-            this.outputWeights  = math.random(math.matrix([this.outputWeights[1], this.outputWeights[0]])); // 14 x 1k
-            this.outputBias     = math.random(math.matrix([this.outputBias[0]])); // 14 x 1
+            this.layersWeights  = math.random(math.matrix([this.layersWeightsSize[0], this.layersWeightsSize[1], this.layersWeightsSize[2]])); // 20 x 1k x 1k
+            this.layersBias     = math.random(math.matrix([this.layersBiasSize[0], this.layersBiasSize[1]])); // 20 x 1k x 1
+            this.outputWeights  = math.random(math.matrix([this.outputWeightsSize[1], this.outputWeightsSize[0]])); // 14 x 1k
+            this.outputBias     = math.random(math.matrix([this.outputBiasSize[0]])); // 14 x 1
 
             mutate = 0;
         }
         if (mutate) {
             //Iterate over each and every weight and bias and add mutate * Math.random() to each
-            this.inputWeights  = math.add(this.inputWeights,  math.random([2000, 1000],     -mutate, mutate));
-            this.layersWeights = math.add(this.layersWeights, math.random([20, 1000, 2000], -mutate, mutate));
+            this.inputWeights  = math.add(this.inputWeights,  math.random([2523, 1000],     -mutate, mutate));
+            this.layersWeights = math.add(this.layersWeights, math.random([20, 1000, 2523], -mutate, mutate));
             this.layersBias    = math.add(this.layersBias,    math.random([21, 1000],       -mutate, mutate));
             this.outputWeights = math.add(this.outputWeights, math.random([14, 1000],       -mutate, mutate));
             this.outputBias    = math.add(this.outputBias,    math.random([14],             -mutate, mutate));
@@ -46,11 +57,44 @@ class AI {
     }
 
     evaluate(inputs, output) {
-        let currentRow = math.add(math.multiply(inputs, this.inputWeights), this.layersBias[0]);
+        let result = 0;
+
+        let currentRow = math.add(math.multiply(inputs, this.inputWeights), this.layersBias.subset(math.index(math.range(0,1),math.range(0,1000))));
         for (let i=0; i<20; i++) {
-            currentRow = AI.sigmoidMatrix(math.add(math.multiply(currentRow, math.subset(this.layersWeights, math.index(i)), math.subset(this.layersBias, math.index(i+1)))));
+            currentRow = AI.sigmoidMatrix(
+                math.add(
+                    math.multiply(
+                        currentRow,
+                        math.squeeze(
+                            math.subset(
+                                this.layersWeights, math.index(
+                                    i,math.range(0,1000),math.range(0,1000)
+                                )
+                        ))),
+                    math.squeeze(
+                        math.subset(this.layersBias, math.index(
+                            i+1,math.range(0,1000)
+                    )))
+                )
+            );
         }
-        return AI.sigmoid(math.add(math.multiply(currentRow, math.subset(outputWeights, math.index(output))), math.subset(outputBias, math.index(output))));
+        result = AI.sigmoid(
+            math.add(
+                math.multiply(
+                    currentRow,
+                    math.squeeze(
+                        math.subset(
+                            this.outputWeights,
+                            math.index(output, math.range(0,1000))
+                    ))
+                ),
+                math.subset(
+                    this.outputBias,
+                    math.index(output)
+                )
+            )
+        );
+        return result;
     }
 
 
@@ -62,7 +106,7 @@ class AI {
 
     static sigmoidMatrix(m) {
         //Assumes input to be an N x 1 matrix
-        return math.divide(1, math.add(1, math.map(math.exp, math.subtract(0,m))));
+        return math.map(math.add(1, math.map(math.subtract(0,m), math.exp)), math.inv);
     }
 
     static aiFromFile(file) {
@@ -260,10 +304,10 @@ class AI {
         let inputs = [];
 
         //Chips
-        inputs.push(sigmoid(thePlayers[playerOffset(pn, 0)].chips/100));
-        inputs.push(sigmoid(thePlayers[playerOffset(pn, 1)].chips/100));
-        inputs.push(sigmoid(thePlayers[playerOffset(pn, 2)].chips/100));
-        inputs.push(sigmoid(thePlayers[playerOffset(pn, 3)].chips/100));
+        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 0)].chips/100));
+        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 1)].chips/100));
+        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 2)].chips/100));
+        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 3)].chips/100));
 
         //Povinnost
         let povinnostVector = new Array(4).fill(0);
@@ -415,7 +459,9 @@ class AI {
         actionVector[action] = 1;
         inputs = inputs.concat(actionVector);
 
-        SERVER.debug(inputs.length);
+        if (inputs.length != 2523) {
+            SERVER.error('Inputs is incorrect length: ' + inputs.length);
+        }
 
         return inputs;
 
@@ -464,6 +510,16 @@ class AI {
        this.tempHand = []
        this.isTeamPovinnost = bool
        */
+    }
+
+    get seed() {
+        let theSeed = [];
+        theSeed.push(this.inputWeights);
+        theSeed.push(this.layersWeights);
+        theSeed.push(this.layersBias);
+        theSeed.push(this.outputWeights);
+        theSeed.push(this.outputBias);
+        return theSeed;
     }
 }
 

@@ -159,10 +159,8 @@ let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
-//TODO: Move to class files
-let latestAI = null;
-let trainees = [];
-let trainingRooms = [];
+
+let latest = AI.aiFromFile('latest.h5');
 
 function notate(room, notation) {
     if (notation) {
@@ -2903,6 +2901,23 @@ io.sockets.on('connection', function (socket) {
                         setSettingNotation(rooms[players[socketId].room]);
                         SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[rule],players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + DIFFICULTY_TABLE[rule], MESSAGE_TYPE.SETTING);
+
+                        if (rule == DIFFICULTY.AI) {
+                            //Replace bots with AI
+                            for (let i in rooms[players[socketId].room].players) {
+                                if (rooms[players[socketId].room].players[i].type == PLAYER_TYPE.ROBOT) {
+                                    rooms[players[socketId].room].players[i] = new Player(PLAYER_TYPE.AI, latest);
+                                }
+                            }
+                        } else {
+                            //Replace AI with bots
+                            for (let i in rooms[players[socketId].room].players) {
+                                if (rooms[players[socketId].room].players[i].type == PLAYER_TYPE.AI) {
+                                    rooms[players[socketId].room].players[i] = new Player(PLAYER_TYPE.ROBOT);
+                                }
+                            }
+                        }
+
                     }
                     break;
                 case 'timeout':
@@ -3285,10 +3300,10 @@ function startAITraining() {
         for (let i in ROOM_NAMES) {
             rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
             rooms[ROOM_NAMES[i]].players = [
-                        new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE))
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
                     ];
         }
         rooms[ROOM_NAMES[0]].players[0] = new Player(PLAYER_TYPE.AI, latest);
@@ -3305,23 +3320,23 @@ function startAITraining() {
             rooms[ROOM_NAMES[0]] = new Room(ROOM_NAMES[0], true, 0, players, true);
             rooms[ROOM_NAMES[0]].players = [
                 new Player(PLAYER_TYPE.AI, new AI(latest)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[1]].winner.ai)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[2]].winner.ai)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[3]].winner.ai))
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[1]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[2]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[3]].winner.ai.seed))
             ];
             rooms[ROOM_NAMES[1]].players = [
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[4]].winner.ai)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[5]].winner.ai)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[6]].winner.ai)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[7]].winner.ai))
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[4]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[5]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[6]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[7]].winner.ai.seed))
             ];
             for (let i in LEARNING_ROOMS) {
                 rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
                 rooms[ROOM_NAMES[i]].players = [
-                            new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest,LEARNING_RATE))
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
                         ];
             }
             //TODO: prompt room to start training
