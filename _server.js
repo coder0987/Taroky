@@ -3149,7 +3149,7 @@ function tick() {
             if (rooms[i] && !rooms[i].settings.locked) {
                 let theUsernames = [];
                 for (let p in rooms[i].players) {
-                    if (rooms[i].players[p].type == PLAYER_TYPE.HUMAN) {
+                    if (rooms[i].players[p].type == PLAYER_TYPE.HUMAN && players[rooms[i].players[p].socket]) {
                         theUsernames.push(players[rooms[i].players[p].socket].username);
                     }
                 }
