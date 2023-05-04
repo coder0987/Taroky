@@ -159,10 +159,8 @@ let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
-//TODO: Move to class files
-let latestAI = null;
-let trainees = [];
-let trainingRooms = [];
+
+let latest = AI.aiFromFile('latest.h5');
 
 function notate(room, notation) {
     if (notation) {
@@ -363,7 +361,6 @@ function cardsToNotation(cards) {
     }
     return theNotation;
 }
-
 function setSettingNotation(room) {
     let settingNotation = '';
     for (let i in room.settings) {
@@ -374,45 +371,13 @@ function setSettingNotation(room) {
 
 let baseDeck = Deck.createDeck();
 
-function handContainsCard(handToCheck, cardName) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].value == cardName) {
-            return true;
-        }
-    }
-    return false;
-}
-function handHasSuit(handToCheck, suitToCheck) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].suit == suitToCheck) {
-            return true;
-        }
-    }
-    return false;
-}
-function handContains(handToCheck, valueToCheck, suitToCheck) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
-            return true;
-        }
-    }
-    return false;
-}
-function isCardPlayable(hand, card, leadCard) {
-    if (handHasSuit(hand, leadCard.suit)) {
-        return card.suit == leadCard.suit;
-    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
-        return card.suit == 'Trump';
-    } else {
-        return true;
-    }
-}
+
 
 function findPovinnost(players) {
     let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povinnost is found
     while (true) { //loop until we find povinnost
         for (let i = 0; i < 4; i++) {
-            if (handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
+            if (Deck.handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
                 return i; //found povinnost
             }
         }
@@ -421,7 +386,7 @@ function findPovinnost(players) {
 }
 function findTheI(players) {
    for (let i = 0; i < 4; i++) {
-       if (handContainsCard(players[i].hand, TRUMP_VALUE[0])) {
+       if (Deck.handContainsCard(players[i].hand, TRUMP_VALUE[0])) {
            return i; //found the I
        }
    }
@@ -435,10 +400,10 @@ function possiblePartners(hand) {
     //can always partner with XIX
     partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
     //if we hold XIX we can partner with the next lowest trump we don't hold, down to the XV
-    if (handContainsCard(hand, 'XIX')) {
+    if (Deck.handContainsCard(hand, 'XIX')) {
         for (let v = 17; v >= 15; v--) {
             //18 is XIX and 14 is XV
-            if (!handContainsCard(hand, TRUMP_VALUE[v])) {
+            if (!Deck.handContainsCard(hand, TRUMP_VALUE[v])) {
                 partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
                 break;
             }
@@ -479,7 +444,7 @@ function grayUndiscardables(hand) {
     return true;
 }
 function grayUnplayables(hand, leadCard) {
-    if (handHasSuit(hand, leadCard.suit)) {
+    if (Deck.handHasSuit(hand, leadCard.suit)) {
         for (let i in hand) {
             if (hand[i].suit != leadCard.suit) {
                 hand[i].grayed = true;
@@ -487,7 +452,7 @@ function grayUnplayables(hand, leadCard) {
                 hand[i].grayed = false;
             }
         }
-    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+    } else if (leadCard.suit != 'Trump' && Deck.handHasSuit(hand, 'Trump')) {
         for (let i in hand) {
             if (hand[i].suit != 'Trump') {
                 hand[i].grayed = true;
@@ -602,7 +567,7 @@ function trumpChain(hand) {
     let guarantees = 0;
     let misses = 0;
     for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (handContainsCard(TRUMP_VALUE[i])) {
+        if (Deck.handContainsCard(TRUMP_VALUE[i])) {
             if (misses > 0) {
                 misses--;
             } else {
@@ -617,7 +582,7 @@ function trumpChain(hand) {
 function unbrokenTrumpChain(hand) {
     let guarantees = 0;
     for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (handContainsCard(TRUMP_VALUE[i])) {
+        if (Deck.handContainsCard(hand,TRUMP_VALUE[i])) {
             guarantees++;
         } else {
             return guarantees;
@@ -797,7 +762,7 @@ function robotLead(hand, difficulty, room) {
         case DIFFICULTY.NORMAL:
             //Possible strategies: run trump until out, then play kings
         case DIFFICULTY.EASY:
-            if (handContainsCard(hand,'XIX')) {
+            if (Deck.handContainsCard(hand,'XIX')) {
                 //My parents were very upset that the robots would not play the XIX
                 //This is the temporary fix
                 return {'suit':SUIT[4],'value':'XIX'};
@@ -1137,8 +1102,6 @@ function playerAction(action, room, pn) {
 }
 function aiAction(action, room, pn) {
     //Uses the AI to take an action IF and only IF the AI is supposed to
-    SERVER.error('AI not implemented yet!!');
-    SERVER.errorTrace();
 
     //Generate possible choices
     //If only one choice, choose it
@@ -1170,7 +1133,7 @@ function aiAction(action, room, pn) {
     if (action.player == pn) {
         let ranking = 0;
         let currentAI = room.players[pn].ai;
-        let think = (outputNumber, specialInfo) => {return currentAI.evaluate(generateInputs(room,pn),outputNumber,specialInfo);}
+        let think = (outputNumber, specialInfo, actionNumber) => {return currentAI.evaluate(AI.generateInputs(room,pn,actionNumber),outputNumber,specialInfo);}
         switch (action.action) {
                 case 'play':
                 case 'shuffle':
@@ -1185,7 +1148,7 @@ function aiAction(action, room, pn) {
                     break;
                 case 'prever':
                     action.action = 'passPrever';
-                    ranking = think(8,false);
+                    ranking = think(8,false,5);
                     if (ranking > 0.5) {
                         action.action = 'callPrever';
                     }
@@ -1194,15 +1157,24 @@ function aiAction(action, room, pn) {
                 case 'drawTalon':
                     break;
                 case 'discard':
+                    {
                     grayUndiscardables(hand);
-                    //Rank each card TODO
-
-                    action.info.card = robotDiscard(hand, room.settings.difficulty);
+                    let choices = handWithoutGray(hand);
+                    let rankings = new Array(choices.length);
+                    let highestRanking = 0;
+                    for (let i in choices) {
+                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,8,choices[i]),0,false);
+                        if (rankings[i] > rankings[highestRanking]) {
+                            highestRanking = i;
+                        }
+                    }
+                    action.info.card = choices[highestRanking];
+                    }
                     break;
                 case 'povinnostBidaUniChoice':
                     fakeMoneyCards = true;
                     action.action = 'moneyCards';
-                    ranking = think(11,false);
+                    ranking = think(11,false,9);
                     room.board.buc = false;
                     if (ranking > 0.5) {
                         room.board.buc = true;
@@ -1211,20 +1183,26 @@ function aiAction(action, room, pn) {
                     break;
                 case 'partner':
                     //if povinnost choose partner
-                    //Rank each choice TODO
                     if (room['board'].povinnost == pn) {
-                        action.info.partner = robotPartner(hand, room.settings.difficulty);
+                        let goAloneRanking = think(12,false,11);
+                        let goPartnerRanking = think(13,false,11);
+                        if (goAloneRanking > goPartnerRanking) {
+                            action.info.partner = {suit:'Trump',value:'XIX'};
+                        }  else {
+                            //Rudimentary always plays with a partner
+                            action.info.partner = robotPartner(hand, DIFFICULTY.RUDIMENTARY);
+                        }
                     }
                     break;
                 case 'valat':
-                    ranking = think(9,false);
+                    ranking = think(9,false,12);
                     action.info.valat = false;
                     if (ranking > 0.5) {
                         action.info.valat = true;
                     }
                     break;
                 case 'iote':
-                    ranking = think(10,false);
+                    ranking = think(10,false,13);
                     action.info.iote = false;
                     if (ranking > 0.5) {
                         action.info.iote = true;
@@ -1236,20 +1214,49 @@ function aiAction(action, room, pn) {
                 case 'preverContra':
                 case 'preverValatContra':
                 case 'valatContra':
-                    action.info.contra = robotContra(hand, room.settings.difficulty);
-                    //TODO. Remember that contra, rhea-contra, and supra-contra are different outputs
+                    if (room.board.contra == -1) {
+                        //Regular contra
+                        action.info.contra = think(5,false,17) > 0.5;
+                    } else if (room.board.rheaContra == -1) {
+                        action.info.contra = think(6,false,17) > 0.5;
+                    } else {
+                        action.info.contra = think(7,false,17) > 0.5;
+                    }
+
                     SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
                     actionCallback(action, room, pn);
                     return;
                 case 'lead':
-                    //Rank each card TODO
+                    {
                     unGrayCards(hand);
-                    action.info.card = robotLead(hand, room.settings.difficulty,room);
+                    //Rank each card
+                    let choices = handWithoutGray(hand);
+                    let rankings = new Array(choices.length);
+                    let highestRanking = 0;
+                    for (let i in choices) {
+                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,18,choices[i]),1,false);
+                        if (rankings[i] > rankings[highestRanking]) {
+                            highestRanking = i;
+                        }
+                    }
+                    action.info.card = choices[highestRanking];
+                    }
                     break;
                 case 'follow':
-                    //Rank each card TODO
+                    {
+                    //Rank each card
                     grayUnplayables(hand, room.board.leadCard);
-                    action.info.card = robotPlay(hand, room.settings.difficulty, room);
+                    let choices = handWithoutGray(hand);
+                    let rankings = new Array(choices.length);
+                    let highestRanking = 0;
+                    for (let i in choices) {
+                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,19,choices[i]),1,false);
+                        if (rankings[i] > rankings[highestRanking]) {
+                            highestRanking = i;
+                        }
+                    }
+                    action.info.card = choices[highestRanking];
+                    }
                     break;
                 case 'winTrick':
                     break;
@@ -1492,13 +1499,17 @@ function actionCallback(action, room, pn) {
             if (room['board'].povinnost == pn) {
                 for (let i=0; i<4; i++) {
                     room['players'][i].isTeamPovinnost = false;
+                    room.players[i].publicTeam = -1;
                 }
                 room['players'][pn].isTeamPovinnost = true;
+                room.players[pn].publicTeam = 1;
             } else {
                 for (let i=0; i<4; i++) {
                     room['players'][i].isTeamPovinnost = true;
+                    room.players[i].publicTeam = 1;
                 }
                 room['players'][pn].isTeamPovinnost = false;
+                room.players[pn].publicTeam = -1;
             }
             //Fallthrough to inform the player
         case 'drawPreverTalon':
@@ -1542,6 +1553,9 @@ function actionCallback(action, room, pn) {
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
                     room.informPlayers('rejected the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':1},pn);
+                    room.board.publicPreverTalon[0] = {suit:temp[0].suit, value:temp[0].value};
+                    room.board.publicPreverTalon[1] = {suit:temp[1].suit, value:temp[1].value};
+                    room.board.publicPreverTalon[2] = {suit:temp[2].suit, value:temp[2].value};
 
                     //Show prever the second set of cards from the talon
                     room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1586,6 +1600,9 @@ function actionCallback(action, room, pn) {
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
                     room.informPlayers('rejected the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':2},pn);
+                    room.board.publicPreverTalon[3] = {suit:temp[0].suit, value:temp[0].value};
+                    room.board.publicPreverTalon[4] = {suit:temp[1].suit, value:temp[1].value};
+                    room.board.publicPreverTalon[5] = {suit:temp[2].suit, value:temp[2].value};
 
                     //Give prever the cards from the talon
                     room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1621,6 +1638,11 @@ function actionCallback(action, room, pn) {
                 //Announce discard Trump cards
                 if (card.suit == 'Trump') {
                     room.informPlayers('discarded the ' + card.value, MESSAGE_TYPE.TRUMP_DISCARD, {pn: pn, card: card}, pn);
+                    if (room.board.prever != -1) {
+                        room.board.trumpDiscarded[0].push({suit:card.suit, value:card.value});
+                    } else {
+                        room.board.trumpDiscarded[((+room.board.povinnost - +pn) + 4)%4].push({suit:card.suit, value:card.value});
+                    }
                 }
                 if (room['players'][action.player].hand.length == 12) {
                     action.player = (action.player + 1) % 4;
@@ -1685,12 +1707,12 @@ function actionCallback(action, room, pn) {
             }
             if (fiverCount >= 3) {
                 //Check for trul
-                if (handContainsCard(currentHand, "I") && handContainsCard(currentHand, "XXI") && handContainsCard(currentHand, "Skyz")) {
+                if (Deck.handContainsCard(currentHand, "I") && Deck.handContainsCard(currentHand, "XXI") && Deck.handContainsCard(currentHand, "Skyz")) {
                     //Trul
                     owedChips += 2;
                     room['board'].moneyCards[pn].push("Trul");
                 }
-                if (handContains(currentHand, "King", "Spade") && handContains(currentHand, "King", "Club") && handContains(currentHand, "King", "Heart") && handContains(currentHand, "King", "Diamond")) {
+                if (Deck.handContains(currentHand, "King", "Spade") && Deck.handContains(currentHand, "King", "Club") && Deck.handContains(currentHand, "King", "Heart") && Deck.handContains(currentHand, "King", "Diamond")) {
                     if (fiverCount > 4) {
                         //Rosa-Honery+
                         owedChips += 6;
@@ -1745,15 +1767,15 @@ function actionCallback(action, room, pn) {
             break;
         case 'partner':
             let povinnostChoice = room['board'].partnerCard;
-            if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && povinnostChoice == 'XIX')) {
+            if (!Deck.handContainsCard(currentHand, "XIX") || (Deck.handContainsCard(currentHand, "XIX") && povinnostChoice == 'XIX')) {
                 room['board'].partnerCard = "XIX";
-            } else if (!handContainsCard(currentHand, "XVIII")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVIII")) {
                 room['board'].partnerCard = "XVIII";
-            } else if (!handContainsCard(currentHand, "XVII")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVII")) {
                 room['board'].partnerCard = "XVII";
-            } else if (!handContainsCard(currentHand, "XVI")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVI")) {
                 room['board'].partnerCard = "XVI";
-            } else if (!handContainsCard(currentHand, "XV")) {
+            } else if (!Deck.handContainsCard(currentHand, "XV")) {
                 room['board'].partnerCard = "XV";
             } else {
                 room['board'].partnerCard = "XIX";
@@ -1761,9 +1783,10 @@ function actionCallback(action, room, pn) {
 
 
             for (let i=0; i<4; i++) {
-                room['players'][i].isTeamPovinnost = handContainsCard(room['players'][i].hand, room['board'].partnerCard);
+                room['players'][i].isTeamPovinnost = Deck.handContainsCard(room['players'][i].hand, room['board'].partnerCard);
             }
             room['players'][room['board'].povinnost].isTeamPovinnost = true;
+            room['players'][room['board'].povinnost].publicTeam = 1;
 
             let numTrumpsInHand = 0;
             for (let i in currentHand) {
@@ -1774,7 +1797,6 @@ function actionCallback(action, room, pn) {
             } else {
                 action.action = 'moneyCards';
             }
-
 
             //Inform players what Povinnost called
             room.informPlayers('(Povinnost) is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn},pn);
@@ -1924,6 +1946,7 @@ function actionCallback(action, room, pn) {
                     //Povinnost's team called rhea-contra
                     room['board'].contra[1] = 1;
                     room.board.rheaContra = pn;
+                    room.players[pn].publicTeam = 1;
 
                     //Swap play to opposing team
                     do {
@@ -1936,6 +1959,7 @@ function actionCallback(action, room, pn) {
                         //Regular contra
                         room.board.contra[0] = 1;
                         room.board.calledContra = pn;
+                        room.players[pn].publicTeam = -1;
 
                         //Swap play to opposing team
                         do {
@@ -1946,6 +1970,7 @@ function actionCallback(action, room, pn) {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
                         room.board.supraContra = pn;
+                        room.players[pn].publicTeam = -1;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povinnost;
@@ -1988,6 +2013,7 @@ function actionCallback(action, room, pn) {
                     //Povinnost's team called rhea-contra
                     room['board'].contra[1] = 1;
                     room.board.rheaContra = pn;
+                    room.players[pn].publicTeam = 1;
 
                     //Swap play to opposing team
                     do {
@@ -2000,6 +2026,7 @@ function actionCallback(action, room, pn) {
                         //Regular contra
                         room.board.contra[0] = 1;
                         room.board.calledContra = pn;
+                        room.players[pn].publicTeam = -1;
 
                         //Swap play to opposing team
                         do {
@@ -2010,6 +2037,7 @@ function actionCallback(action, room, pn) {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
                         room.board.supraContra = pn;
+                        room.players[pn].publicTeam = -1;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povinnost;
@@ -2068,6 +2096,9 @@ function actionCallback(action, room, pn) {
                 room['board'].table.push({'card':lead,'pn':pn,'lead':true});
                 room['board'].leadCard = lead;
                 room.informPlayers('lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {pn: pn, card: lead},pn);
+                if (lead.suit == room.board.partnerCard.suit && lead.value == room.board.partnerCard.value) {
+                    room.players[pn].publicTeam = 1;
+                }
             } else {
                 if (room['players'][pn].type == PLAYER_TYPE.HUMAN) {
                     SOCKET_LIST[room['players'][pn].socket].emit('failedLeadCard', cardToLead);
@@ -2096,6 +2127,9 @@ function actionCallback(action, room, pn) {
                 room['board'].table.push({'card':played,'pn':pn,'lead':false});
                 action.player = (action.player + 1) % 4;
                 room.informPlayers('played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {pn: pn, card: played}, pn);
+                if (played.suit == room.board.partnerCard.suit && played.value == room.board.partnerCard.value) {
+                    room.players[pn].publicTeam = 1;
+                }
                 //If all players have played a card, determine who won the trick
                 if (action.player == room.board.leadPlayer) {
                     action.action = 'winTrick';
@@ -2160,6 +2194,19 @@ function actionCallback(action, room, pn) {
                 }
             }
 
+            room.board.trickHistory.push(
+                {
+                    leadPlayer: room.board.leadPlayer,
+                    winner: pn,
+                    cards: [
+                        {suit:room.board.table[0].suit, value:room.board.table[0].value},
+                        {suit:room.board.table[1].suit, value:room.board.table[1].value},
+                        {suit:room.board.table[2].suit, value:room.board.table[2].value},
+                        {suit:room.board.table[3].suit, value:room.board.table[3].value}
+                    ]
+                }
+            );
+
             //Transfer the table to the winner's discard
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
@@ -2193,11 +2240,14 @@ function actionCallback(action, room, pn) {
                     if (room.board.trickWinCount[1] > 0) {
                         //Opposing team won a trick
                         chipsOwed = -40;
-                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
+                        if (room.board.prever != -1) {
+                            chipsOwed = -60;
+                        }
+                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':Math.abs(chipsOwed)});
                     } else {
                         chipsOwed = 40;
                         if (room.board.prever != -1) {
-                            chipsOwed = 60;//TODO: I'm not sure if this applies to a lost call of valat during prever games
+                            chipsOwed = 60;
                         }
                         pointCountMessageTable.push({'name':'Won a Called Valat', 'value':chipsOwed});
                     }
@@ -2206,7 +2256,10 @@ function actionCallback(action, room, pn) {
                     if (room.board.trickWinCount[0] > 0) {
                         //Povinnost team won a trick
                         chipsOwed = 40;
-                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
+                        if (room.board.prever != -1) {
+                            chipsOwed = 60;
+                        }
+                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':chipsOwed});
                     } else {
                         chipsOwed = -40;
                         if (room.board.prever != -1) {
@@ -2848,6 +2901,23 @@ io.sockets.on('connection', function (socket) {
                         setSettingNotation(rooms[players[socketId].room]);
                         SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[rule],players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + DIFFICULTY_TABLE[rule], MESSAGE_TYPE.SETTING);
+
+                        if (rule == DIFFICULTY.AI) {
+                            //Replace bots with AI
+                            for (let i in rooms[players[socketId].room].players) {
+                                if (rooms[players[socketId].room].players[i].type == PLAYER_TYPE.ROBOT) {
+                                    rooms[players[socketId].room].players[i] = new Player(PLAYER_TYPE.AI, latest);
+                                }
+                            }
+                        } else {
+                            //Replace AI with bots
+                            for (let i in rooms[players[socketId].room].players) {
+                                if (rooms[players[socketId].room].players[i].type == PLAYER_TYPE.AI) {
+                                    rooms[players[socketId].room].players[i] = new Player(PLAYER_TYPE.ROBOT);
+                                }
+                            }
+                        }
+
                     }
                     break;
                 case 'timeout':
@@ -3221,20 +3291,56 @@ function startAITraining() {
     if (TRAINING_MODE) {
         /*The system
         All AI are based on "latest", the winner so far
-        New AI, training to beat latest, are stored in trainees (an array)
-
         */
-        /*TODO
-            Create a series of 8 rooms with a no-delete flag (and a no-log flag)
-            After each room plays 100 games, take the winner from each
-            The winner from room 1 is used as the "parent" for the next gen
-            Winners of 1-4 compete in room 1
-            Winners of 5-8 compete in room 2
-            Children compete in rooms 3-8
-            After 10 generations, overwrite the file "latest" with the latest gen
-            After 100 generations, create a file Date.now() as a backup
-            If this save happens too often, it can be expanded later
-            */
+
+        //Create the rooms filled with AI. Training goal defaults to 100
+        const ROOM_NAMES = ['AI-1','AI-2','AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
+        const LEARNING_ROOMS = ['AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
+        const LEARNING_RATE = 0.5;
+        for (let i in ROOM_NAMES) {
+            rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
+            rooms[ROOM_NAMES[i]].players = [
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
+                    ];
+        }
+        rooms[ROOM_NAMES[0]].players[0] = new Player(PLAYER_TYPE.AI, latest);
+
+        //TODO: prompt rooms to start training
+
+        for (let gen=1; gen<1000; gen++) {
+            //Run 1000 generations of training
+            latest = rooms[ROOM_NAMES[0]].winner.ai;
+            if (gen%100 == 0) {
+                AI.aiToFile(latest,'latest.h5');
+                AI.aiToFile(latest,'AI_SAVES/' + Date.now() + '.h5');
+            }
+            rooms[ROOM_NAMES[0]] = new Room(ROOM_NAMES[0], true, 0, players, true);
+            rooms[ROOM_NAMES[0]].players = [
+                new Player(PLAYER_TYPE.AI, new AI(latest)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[1]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[2]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[3]].winner.ai.seed))
+            ];
+            rooms[ROOM_NAMES[1]].players = [
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[4]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[5]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[6]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[7]].winner.ai.seed))
+            ];
+            for (let i in LEARNING_ROOMS) {
+                rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
+                rooms[ROOM_NAMES[i]].players = [
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
+                        ];
+            }
+            //TODO: prompt room to start training
+        }
     }
 }
 

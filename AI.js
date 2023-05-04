@@ -1,4 +1,15 @@
 const math = require('mathjs');
+const Deck = require('./deck.js');
+const { SUIT,
+    SUIT_REVERSE,
+    RED_VALUE,
+    BLACK_VALUE,
+    TRUMP_VALUE,
+    VALUE_REVERSE,
+    DIFFICULTY,
+    DIFFICULTY_TABLE,
+    MESSAGE_TYPE,
+    PLAYER_TYPE } = require('./enums.js');
 let h5wasm = null;
 async function importH5wasm() {
     //TODO: uncomment. For some reason H5 really likes to spam the console when the server crashes
@@ -21,24 +32,24 @@ class AI {
             this.outputWeights = seed[3]; // 14 x 1k
             this.outputBias = seed[4]; // 14 x 1
         } else {
-            this.inputWeightsSize = [2000,1000];
-            this.layersWeights = [20,1000,1000];
-            this.layersBias = [20,1000];
-            this.outputWeights = [14,1000];
-            this.outputBias = [14];
+            this.inputWeightsSize = [2523,1000];
+            this.layersWeightsSize = [20,1000,1000];
+            this.layersBiasSize = [21,1000];
+            this.outputWeightsSize = [1000,14];
+            this.outputBiasSize = [14];
 
             this.inputWeights   = math.random(math.matrix([this.inputWeightsSize[0], this.inputWeightsSize[1]])); // 2k x 1k
-            this.layersWeights  = math.random(math.matrix([this.layersWeights[0], this.layersWeights[1], this.layersWeights[2]])); // 20 x 1k x 1k
-            this.layersBias     = math.random(math.matrix([this.layersBias[0], this.layersBias[1]])); // 20 x 1k x 1
-            this.outputWeights  = math.random(math.matrix([this.outputWeights[1], this.outputWeights[0]])); // 14 x 1k
-            this.outputBias     = math.random(math.matrix([this.outputBias[0]])); // 14 x 1
+            this.layersWeights  = math.random(math.matrix([this.layersWeightsSize[0], this.layersWeightsSize[1], this.layersWeightsSize[2]])); // 20 x 1k x 1k
+            this.layersBias     = math.random(math.matrix([this.layersBiasSize[0], this.layersBiasSize[1]])); // 20 x 1k x 1
+            this.outputWeights  = math.random(math.matrix([this.outputWeightsSize[1], this.outputWeightsSize[0]])); // 14 x 1k
+            this.outputBias     = math.random(math.matrix([this.outputBiasSize[0]])); // 14 x 1
 
             mutate = 0;
         }
         if (mutate) {
             //Iterate over each and every weight and bias and add mutate * Math.random() to each
-            this.inputWeights  = math.add(this.inputWeights,  math.random([2000, 1000],     -mutate, mutate));
-            this.layersWeights = math.add(this.layersWeights, math.random([20, 1000, 2000], -mutate, mutate));
+            this.inputWeights  = math.add(this.inputWeights,  math.random([2523, 1000],     -mutate, mutate));
+            this.layersWeights = math.add(this.layersWeights, math.random([20, 1000, 2523], -mutate, mutate));
             this.layersBias    = math.add(this.layersBias,    math.random([21, 1000],       -mutate, mutate));
             this.outputWeights = math.add(this.outputWeights, math.random([14, 1000],       -mutate, mutate));
             this.outputBias    = math.add(this.outputBias,    math.random([14],             -mutate, mutate));
@@ -46,11 +57,44 @@ class AI {
     }
 
     evaluate(inputs, output) {
-        let currentRow = math.add(math.multiply(inputs, this.inputWeights), this.layersBias[0]);
+        let result = 0;
+
+        let currentRow = math.add(math.multiply(inputs, this.inputWeights), this.layersBias.subset(math.index(math.range(0,1),math.range(0,1000))));
         for (let i=0; i<20; i++) {
-            currentRow = AI.sigmoidMatrix(math.add(math.multiply(currentRow, math.subset(this.layersWeights, math.index(i)), math.subset(this.layersBias, math.index(i+1)))));
+            currentRow = AI.sigmoidMatrix(
+                math.add(
+                    math.multiply(
+                        currentRow,
+                        math.squeeze(
+                            math.subset(
+                                this.layersWeights, math.index(
+                                    i,math.range(0,1000),math.range(0,1000)
+                                )
+                        ))),
+                    math.squeeze(
+                        math.subset(this.layersBias, math.index(
+                            i+1,math.range(0,1000)
+                    )))
+                )
+            );
         }
-        return AI.sigmoid(math.add(math.multiply(currentRow, math.subset(outputWeights, math.index(output))), math.subset(outputBias, math.index(output))));
+        result = AI.sigmoid(
+            math.add(
+                math.multiply(
+                    currentRow,
+                    math.squeeze(
+                        math.subset(
+                            this.outputWeights,
+                            math.index(output, math.range(0,1000))
+                    ))
+                ),
+                math.subset(
+                    this.outputBias,
+                    math.index(output)
+                )
+            )
+        );
+        return result;
     }
 
 
@@ -62,7 +106,7 @@ class AI {
 
     static sigmoidMatrix(m) {
         //Assumes input to be an N x 1 matrix
-        return math.divide(1, math.add(1, math.map(math.exp, math.subtract(0,m))));
+        return math.map(math.add(1, math.map(math.subtract(0,m), math.exp)), math.inv);
     }
 
     static aiFromFile(file) {
@@ -82,7 +126,6 @@ class AI {
         } catch (err) {
             SERVER.error('Error reading file from disk: ' + err);
             latestAI = new AI(false, 0);
-            aiToFile(latestAI, 'latest.h5');
         } finally {
             if (f) {f.close();}
         }
@@ -150,7 +193,7 @@ class AI {
     Every single value is between 0 and 1. S is for sigmoid
     INPUTS  (2k x 1)            HIDDEN LAYERS  (1k x 20)        OUTPUTS (14 x 1)
     0-3   S(chips/100)          Inputs is already the           Discard this
-    4-7   isPovinnost            absolutely ludicrous            Play this
+    4-7   isPovinnost           absolutely ludicrous            Play this
     8-11  isPrever              2k parameters. How many         Keep talon
     12    preverTalon           Hidden layers do we need?       Keep talon bottom
     13-44 8 types of            Honestly 20 should be           Keep talon top
@@ -255,17 +298,16 @@ class AI {
     }
 */
 
-    static generateInputs(room, pn) {
-        //TODO
+    static generateInputs(room, pn, action, cardPrompt) {
         const thePlayers = room.players;
         const theBoard = room.board;
         let inputs = [];
 
         //Chips
-        inputs.push(sigmoid(thePlayers[playerOffset(pn, 0)].chips/100));
-        inputs.push(sigmoid(thePlayers[playerOffset(pn, 1)].chips/100));
-        inputs.push(sigmoid(thePlayers[playerOffset(pn, 2)].chips/100));
-        inputs.push(sigmoid(thePlayers[playerOffset(pn, 3)].chips/100));
+        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 0)].chips/100));
+        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 1)].chips/100));
+        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 2)].chips/100));
+        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 3)].chips/100));
 
         //Povinnost
         let povinnostVector = new Array(4).fill(0);
@@ -336,40 +378,92 @@ class AI {
         inputs.push(theBoard.partnerCard == 'XVII' ? 1 : 0);
         inputs.push(theBoard.partnerCard == 'XVI' ? 1 : 0);
         inputs.push(theBoard.partnerCard == 'XV' ? 1 : 0);
-        inputs.push(0);//TODO handContains(partnerCard)
+        inputs.push(Deck.handContains(thePlayers[pn].hand,theBoard.partnerCard) ? 1 : 0);
 
         //CURRENT TRICK INFORMATION
-        //69-72 TrickLeader
-        //73-76 myPositionInTrick
-        //+28   firstCard
-        //+28   secondCard
-        //+28   thirdCard
+        let leaderVector = new Array(4).fill(0);
+        if (theBoard.leadPlayer != -1) {
+            leaderVector[theBoard.leadPlayer] = 1;
+        }
+        inputs = inputs.concat(leaderVector);
+        let myPositionInTrickVector = new Array(4).fill(0);
+        if (theBoard.leadPlayer != -1) {
+            myPositionInTrickVector[playerPerspective(theBoard.leadPlayer,pn)] = 1;
+        }
+        inputs = inputs.concat(myPositionInTrickVector);
+        inputs = inputs.concat(cardToVector(theBoard.table[0]));
+        inputs = inputs.concat(cardToVector(theBoard.table[1]));
+        inputs = inputs.concat(cardToVector(theBoard.table[2]));
 
         //TRICK HISTORY
-        //+1    hasBeenPlayed
-        //+4    whoLead
-        //+4    myPosition
-        //+4    whoWon
-        //+28   firstCard
-        //+28   secondCard
-        //+28   thirdCard
-        //+28   fourthCard
-        //x11   tricks
+        for (let i = 0; i<12; i++) {
+            if (theBoard.trickHistory[i]) {
+                inputs.push(1);
+                let trickLeaderVector = new Array(4).fill(0);
+                trickLeaderVector[theBoard.trickHistory[i].leadPlayer] = 1;
+                inputs = inputs.concat(trickLeaderVector);
+
+                let myPositionInHistoryTrickVector = new Array(4).fill(0);
+                myPositionInHistoryTrickVector[playerPerspective(theBoard.trickHistory[i].leadPlayer,pn)] = 1;
+                inputs = inputs.concat(myPositionInHistoryTrickVector);
+
+                let trickWinnerVector = new Array(4).fill(0);
+                trickWinnerVector[theBoard.trickHistory[i].winner] = 1;
+                inputs = inputs.concat(trickWinnerVector);
+
+                inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[0]));
+                inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[1]));
+                inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[2]));
+                inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[3]));
+            } else {
+                inputs = inputs.concat(new Array(129).fill(0));
+            }
+        }
+
         //MY HAND
-        //+28   card
-        //x16   Max num cards in ha
+        for (let i=0; i<16; i++) {
+            inputs = inputs.concat(cardToVector(thePlayers[pn].hand[i]));
+        }
+
         //PREVER TALON
-        //+28   Card
-        //x3    num cards in talon
+        for (let i=0; i<6; i++) {
+            inputs = inputs.concat(cardToVector(theBoard.publicPreverTalon[i]));
+        }
+        inputs.push(theBoard.preverTalonStep > 0 ? 0 : 1);
+        inputs.push(theBoard.preverTalonStep > 1 ? 0 : 1);
+        inputs.push(theBoard.preverTalonStep > 2 ? 0 : 1);
+
         //PARTNER INFORMATION
-        //-Only information the AI
-        //+3    isMyPartner
+        //-Only information the AI should know-
+        inputs.push(
+            (thePlayers[playerOffset(pn,1)].publicTeam != -1) ? thePlayers[playerOffset(pn,1)].publicTeam == thePlayers[pn].publicTeam ? 1 : 0 : 0.5
+        );
+        inputs.push(
+            (thePlayers[playerOffset(pn,2)].publicTeam != -1) ? thePlayers[playerOffset(pn,1)].publicTeam == thePlayers[pn].publicTeam ? 1 : 0 : 0.5
+        );
+        inputs.push(
+            (thePlayers[playerOffset(pn,3)].publicTeam != -1) ? thePlayers[playerOffset(pn,1)].publicTeam == thePlayers[pn].publicTeam ? 1 : 0 : 0.5
+        );
+
         //TRUMP DISCARD
-        //+28   card
-        //x4    max
+        for (let i=0; i<4; i++) {
+            //Povinnost or Prever
+            inputs = inputs.concat(cardToVector(theBoard.trumpDiscarded[0][i]));
+        }
+        inputs = inputs.concat(cardToVector(theBoard.trumpDiscarded[1][0]));
+        inputs = inputs.concat(cardToVector(theBoard.trumpDiscarded[2][0]));
+
         //CURRENT CARD/ACTION
-        //+28   card
-        //+25   number of actions
+        inputs = inputs.concat(cardToVector(cardPrompt));
+        let actionVector = new Array(25).fill(0);
+        actionVector[action] = 1;
+        inputs = inputs.concat(actionVector);
+
+        if (inputs.length != 2523) {
+            SERVER.error('Inputs is incorrect length: ' + inputs.length);
+        }
+
+        return inputs;
 
         /*Room
         room['board'] = {the board}
@@ -417,6 +511,16 @@ class AI {
        this.isTeamPovinnost = bool
        */
     }
+
+    get seed() {
+        let theSeed = [];
+        theSeed.push(this.inputWeights);
+        theSeed.push(this.layersWeights);
+        theSeed.push(this.layersBias);
+        theSeed.push(this.outputWeights);
+        theSeed.push(this.outputBias);
+        return theSeed;
+    }
 }
 
 //Helper functions
@@ -432,8 +536,10 @@ function playerPerspective(originalPlace, viewpoint) {
 function cardToVector(card) {
     //Should return a 1x27 vector. First 5 elements are suit, next 22 are value. 0 or 1
     let cardVector = new Array(27).fill(0);
-    cardVector[SUIT[card.suit]] = 1;
-    cardVector[VALUE_REVERSE[card.value]+5] = 1;
+    if (card) {
+        cardVector[SUIT[card.suit]] = 1;
+        cardVector[VALUE_REVERSE[card.value]+5] = 1;
+    }
     return cardVector;
 }
 
