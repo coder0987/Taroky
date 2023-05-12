@@ -9,8 +9,8 @@ const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16};
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon'};
-const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
+const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4/*, AI: 5*/};
+const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'/*, 5: 'AI'*/};
 const ACTION_TABLE = {
     'start': 'Start the Game',
     'play': 'Start the Next Round',
@@ -499,6 +499,8 @@ window.addEventListener('message', (event) => {
         let [username,token] = event.data.split(':');
         addMessage('Attempting to sign in as ' + username +'...');
         socket.emit('login',username,token);
+        document.cookie = 'username=' + username;
+        document.cookie = 'token=' + token;
     } else {
         addMessage('Signing out...');
         socket.emit('logout');
@@ -516,6 +518,15 @@ function onLoad() {
 
     socket = io({auth: {token: localStorage.getItem('tarokyInstance')}});
 
+    {
+        //Auto sign-in using cookies
+        let theUsername = getCookie('username');
+        let theToken = getCookie('token');
+        if (theUsername && theToken) {
+            socket.emit('login',theUsername,theToken);
+        }
+    }
+
     socket.on('reload', function() {
        addMessage('Reloading...');
        window.location.reload();
@@ -530,6 +541,8 @@ function onLoad() {
     socket.on('loginFail', function() {
         addBoldMessage('Authentication failure');
         displaySignIn();
+        document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     });
 
     socket.on('loginExpired', function() {
@@ -909,6 +922,29 @@ function onLoad() {
                         });
                     }
 
+                    let shuffleButton;
+                    try {
+                        shuffleButton = document.getElementById('shuffleButton');
+                    } catch (ignore) {}
+                    if (!shuffleButton) {
+                        shuffleButton = document.createElement('button');
+                        shuffleButton.id = 'shuffleButton';
+                        shuffleButton.innerHTML = 'Shuffle';
+                        shuffleButton.addEventListener('click',function() {
+                            this.hidden = true;
+                            let deck = document.getElementById('deck');
+                            document.getElementById('cardBack').hidden = true;
+                            deck.appendChild(document.getElementById('cardBack'));
+                            addMessage('Shuffled!');
+                            socket.emit('shuffle',0,false);
+                        });
+                        document.getElementById('center').appendChild(document.createElement('br'));
+                        document.getElementById('center').appendChild(shuffleButton);
+                    } else {
+                        shuffleButton.removeAttribute('hidden');
+                    }
+
+
                     document.getElementById('cardBack').addEventListener('mouseenter',function() {
                         addMessage('Shuffling...');
                     });
@@ -917,6 +953,7 @@ function onLoad() {
                         socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
                     });
                     document.getElementById('cardBack').addEventListener('mouseleave',function() {
+                        document.getElementById('shuffleButton').hidden = true;
                         this.hidden = true;
                         let deck = document.getElementById('deck');
                         deck.appendChild(this);
@@ -1363,4 +1400,21 @@ function displaySignOut() {
     let accHandler = document.getElementById('accountHandler');
     accHandler.innerHTML = 'Sign Out';
     accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
+}
+
+//thanks w3 schools
+function getCookie(cname) {
+  let name = cname + "=";
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for(let i = 0; i <ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
 }

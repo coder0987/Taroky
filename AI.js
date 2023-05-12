@@ -125,7 +125,7 @@ class AI {
             SERVER.log('AI loaded successfully');
         } catch (err) {
             SERVER.error('Error reading file from disk: ' + err);
-            latestAI = new AI(false, 0);
+            //latestAI = new AI(false, 0);
         } finally {
             if (f) {f.close();}
         }

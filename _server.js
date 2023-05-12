@@ -2584,6 +2584,7 @@ function disconnectPlayerTimeout(socketId) {
         SERVER.log('Player ' + socketId + ' disconnected');
         if (~players[socketId].room) {
             if (rooms[players[socketId].room].audience[socketId]) {
+                rooms[players[socketId].room].audience[socketId] = null;
                 delete rooms[players[socketId].room].audience[socketId];
                 rooms[players[socketId].room].audienceCount--;
             } else {
@@ -2705,6 +2706,7 @@ io.sockets.on('connection', function (socket) {
         if (players[socketId]) {
             if (~players[socketId].room) {
                 if (rooms[players[socketId].room].audience[socketId]) {
+                    rooms[players[socketId].room].audience[socketId] = null;
                     delete rooms[players[socketId].room].audience[socketId];
                     rooms[players[socketId].room].audienceCount--;
                 } else {
