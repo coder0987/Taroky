@@ -499,8 +499,8 @@ window.addEventListener('message', (event) => {
         let [username,token] = event.data.split(':');
         addMessage('Attempting to sign in as ' + username +'...');
         socket.emit('login',username,token);
-        document.cookie = 'username=' + username;
-        document.cookie = 'token=' + token;
+        document.cookie = 'username=' + username + ';secure';
+        document.cookie = 'token=' + token + ';secure';
     } else {
         addMessage('Signing out...');
         socket.emit('logout');
