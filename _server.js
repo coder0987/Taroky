@@ -2834,10 +2834,9 @@ function actionCallback(action, room, pn) {
 
     if (actionTaken) {
 
-        //Sanity Check 
-        if (action.player > 3 || action.player < 0) {SERVER.error('Illegal player number: ' + action.player + ' during action ' + action.action,room.name); action.player %= 4; }
-        if (!room['players'][action.player]) { SERVER.error('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players']),room.name); }
-
+        //Sanity Check
+        if (!room['players'][action.player]) { SERVER.error('There is no player. PN: ' + action.player,room.name); }
+        if (action.player > 3 || action.player < 0) {SERVER.error('Illegal player number: ' + action.player + ' during action ' + action.action,room.name); action.player+=4;action.player %= 4; }
 
         action.time = Date.now();
         playerType = room['players'][action.player].type;
