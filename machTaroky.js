@@ -222,10 +222,26 @@ function drawHand(withGray) {
 
 let tableDrawnTime = Date.now();//ms since START_TIME
 function drawTable() {
-    if (!returnTableQueue[0] || Date.now() - tableDrawnTime < 3000) {
+    if (!returnTableQueue[0]) {
         //Wait min 3s before redrawing the table
         //TODO: prevent user from taking an action while the table is still being drawn
         //TODO: add time to the timeout when players play quickly so the table can load in
+        return;
+    }
+    let currentNumberOfCardsOnTable = 0;
+    {
+        let divTable = document.getElementById('table');
+        let returnToDeck = divTable.children;
+        for (let i=returnToDeck.length-1; i>=0; i--) {
+            for (let j in returnToDeck[i].children) {
+                if (returnToDeck[i].children[j] && returnToDeck[i].children[j].nodeName == 'IMG') {
+                    currentNumberOfCardsOnTable++;
+                }
+            }
+        }
+    }
+    if (Date.now() - tableDrawnTime < 5000 && currentNumberOfCardsOnTable >= 4) {
+        //Timeout only matters if the table is at full capacity
         return;
     }
     tableDrawnTime = Date.now();
