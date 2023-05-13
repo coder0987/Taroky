@@ -535,7 +535,7 @@ function onLoad() {
     socket.on('loginSuccess', function(username) {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
-        displaySignOut();
+        displaySignOut(username);
     });
 
     socket.on('loginFail', function() {
@@ -1396,9 +1396,13 @@ function displaySignIn() {
     accHandler.href = 'https://sso.smach.us/?redirect=https://machtarok.com/';
 }
 
-function displaySignOut() {
+function displaySignOut(withName) {
     let accHandler = document.getElementById('accountHandler');
-    accHandler.innerHTML = 'Sign Out';
+    if (!withName) {
+        accHandler.innerHTML = 'Sign Out';
+    } else {
+        accHandler.innerHTML = 'Sign Out (' + withName + ')';
+    }
     accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
 }
 

@@ -883,10 +883,31 @@ function robotLead(hand, difficulty, room) {
         }
     }
     let colorCards = [];
+    let trumpCards = [];
     for (let i in playableCards) {
         if (playableCards[i].suit != 'Trump') {
             colorCards.push(playableCards[i]);
+        } else {
+            trumpCards.push(playableCards[i]);
         }
+    }
+
+    let calledTaroky = false;
+    for (let i in room.board.moneyCards) {
+        for (let j in room.board.moneyCards[i]) {
+            if (room.board.moneyCards[i][j] == 'Taroky' || room.board.moneyCards[i][j] == 'Tarocky') {
+                calledTaroky = true;
+            }
+        }
+    }
+    let partnerCard = room.board.partnerCard;//String
+    if (hand.length == 12 && calledTaroky && room.board.prever == -1 && !Deck.handContainsCard(hand, partnerCard)) {
+        //First trick. Not Prever. Povinnost called someone else. Someone has 8+ tarocks
+
+        //TODO: Skyz may be played first in order to allow partner to come back with XXI and try for a valat
+
+        //I is not in here
+        return lowestTrump(trumpCards);
     }
 
     switch (difficulty) {
@@ -996,6 +1017,14 @@ function robotPlay(hand, difficulty, room) {
     let biggestTrumpTheyHave = highestUnplayedTrump(tempArray);
 
     let skyzIsOut = biggestTrumpTheyHave.value == 'Skyz';
+
+    if (hand.length == 12 && room.board.prever == -1 && Deck.handContainsCard(hand, partnerCard)) {
+        //First trick, no prever, have partner card
+        if (trumpLead && VALUE_REVERSE[winningCard.value] < VALUE_REVERSE[partnerCard]) {
+            //Playing trump; partner card is winning
+            return {suit:'Trump', value: partnerCard};
+        }
+    }
 
     switch (difficulty) {
         case DIFFICULTY.AI:
