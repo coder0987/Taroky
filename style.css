@@ -253,3 +253,8 @@ h4 {
 .centered {
     text-align: center;
 }
+
+.dark-background {
+    background-color: var(--navy);
+    color: var(--white);
+}
