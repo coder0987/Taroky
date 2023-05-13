@@ -401,7 +401,7 @@ function possiblePartners(hand) {
     partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
     //if we hold XIX we can partner with the next lowest trump we don't hold, down to the XV
     if (Deck.handContainsCard(hand, 'XIX')) {
-        for (let v = 17; v >= 15; v--) {
+        for (let v = 17; v >= 14; v--) {
             //18 is XIX and 14 is XV
             if (!Deck.handContainsCard(hand, TRUMP_VALUE[v])) {
                 partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
@@ -467,6 +467,22 @@ function grayUnplayables(hand, leadCard) {
         }
     }
 }
+function grayTheI(hand) {
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump' && hand[i].value == 'I') {
+            hand[i].grayed = true;
+        }
+    }
+    return hand;//should be linked as well
+}
+function grayTheXXI(hand) {
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump' && hand[i].value == 'XXI') {
+            hand[i].grayed = true;
+        }
+    }
+    return hand;//should be linked as well
+}
 function unGrayCards(hand) {
     //Used to un-gray cards before a player leads
     for (let i in hand) {
@@ -509,6 +525,50 @@ function highestPointValue(hand) {
     }
     return pv;
 }
+function lowestPointValue(hand) {
+    let pv = hand[0];
+    for (let i in hand) {
+        if (Deck.pointValue(hand[i]) < Deck.pointValue(pv)) {
+            pv = hand[i];
+        }
+    }
+    return pv;
+}
+function lowestTrump(hand) {
+    //Assuming the inserted hand is all trump
+    let lowest = hand[0];
+    for (let i in hand) {
+        if (VALUE_REVERSE[lowest.value] > VALUE_REVERSE[hand[i].value]) {
+            lowest = hand[i];
+        }
+    }
+    return lowest;
+}
+function highestTrump(hand) {
+    //Assuming the inserted hand is all trump
+    let highest = hand[0];
+    for (let i in hand) {
+        if (VALUE_REVERSE[highest.value] < VALUE_REVERSE[hand[i].value]) {
+            highest = hand[i];
+        }
+    }
+    return highest;
+}
+function lowestTrumpThatBeats(hand, card) {
+    //Assuming the inserted hand is all trump
+    let lowest = highestTrump(hand);
+    if (VALUE_REVERSE[card.value] > VALUE_REVERSE[lowest.value]) {
+        //No cards can win
+        return lowestTrump(hand);
+    }
+    for (let i in hand) {
+        if (VALUE_REVERSE[lowest.value] > VALUE_REVERSE[hand[i].value] &&
+            VALUE_REVERSE[card.value] < VALUE_REVERSE[hand[i].value]) {
+            lowest = hand[i];
+        }
+    }
+    return lowest;
+}
 function whoWon(table, leadPlayer) {
     //First card in the table belongs to the leadPlayer
     let trickLeadCard = table[0];
@@ -534,6 +594,30 @@ function whoWon(table, leadPlayer) {
     }
     //No trumps means that the winner is whoever played the card of the lead suit with the highest value
     return (leadPlayer+currentWinner)%4;
+}
+function whoIsWinning(table) {
+    let trickLeadCard = table[0];
+    let trickLeadSuit = trickLeadCard.suit;
+    let highestTrump = -1;
+    let currentWinner = 0;//LeadPlayer is assumed to be winning
+    for (let i=0; i<table.length; i++) {
+        if (table[i].suit == 'Trump' && VALUE_REVERSE[table[i].value] > highestTrump) {
+            highestTrump = VALUE_REVERSE[table[i].value];
+            currentWinner = i;
+        }
+    }
+    if (highestTrump != -1) {
+        //If a trump was played, then the highest trump wins
+        return table[currentWinner];
+    }
+    let highestOfLeadSuit = VALUE_REVERSE[trickLeadCard.value];
+    for (let i=1; i<table.length; i++) {
+        if (table[i].suit == trickLeadSuit && VALUE_REVERSE[table[i].value] > highestOfLeadSuit) {
+            highestOfLeadSuit = VALUE_REVERSE[table[i].value];
+            currentWinner = i;
+        }
+    }
+    return table[currentWinner];
 }
 
 //Robot Functions TODO: MOVE TO CLASS FILE
@@ -753,6 +837,46 @@ function robotPovinnostBidaUniChoice(hand, difficulty) {
     }
 }
 function robotLead(hand, difficulty, room) {
+    let playableCards = handWithoutGray(hand);
+    if (playableCards.length == 1) {
+        return playableCards[0];
+    }
+    grayTheI(playableCards);
+    playableCards = handWithoutGray(playableCards);
+    if (playableCards.length == 1) {
+        return playableCards[0];
+    }
+    //TODO check if the skyz has been played
+    grayTheXXI(playableCards);
+    playableCards = handWithoutGray(playableCards);
+    if (playableCards.length == 1) {
+        return playableCards[0];
+    }
+
+    let pn = room.board.nextStep.player;
+    let trumpCount = 0;
+    let colorCount = 0;
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump') {
+            trumpCount++;
+        } else {
+            colorCount++;
+        }
+    }
+    let hasAKing = false;
+    for (let i in hand) {
+        if (hand[i].value == 'King') {
+            hasAKing = true;
+            break;
+        }
+    }
+    let colorCards = [];
+    for (let i in playableCards) {
+        if (playableCards[i].suit != 'Trump') {
+            colorCards.push(playableCards[i]);
+        }
+    }
+
     switch (difficulty) {
         case DIFFICULTY.AI:
             SERVER.warn('AI not implemented yet. Defaulting to robot moves');
@@ -761,14 +885,36 @@ function robotLead(hand, difficulty, room) {
             //Possible strategies: run trump until almost out, play kings, reclaim control with trump
         case DIFFICULTY.NORMAL:
             //Possible strategies: run trump until out, then play kings
-        case DIFFICULTY.EASY:
-            if (Deck.handContainsCard(hand,'XIX')) {
-                //My parents were very upset that the robots would not play the XIX
-                //This is the temporary fix
-                return {'suit':SUIT[4],'value':'XIX'};
+            if (trumpCount > colorCount && (colorCount < 5)) {
+                let biggest = highestTrump(playableCards);
+                if (VALUE_REVERSE[biggest.value] < 14) {
+                    return lowestTrump(playableCards);
+                }
+                return biggest;
             }
+            if (hasAKing) {
+                //Play the king
+                for (let i in playableCards) {
+                    if (playableCards[i].value == 'King') {
+                        return playableCards[i];
+                    }
+                }
+            }
+            return lowestPointValue(colorCards);
+        case DIFFICULTY.EASY:
+            if (hasAKing) {
+                //Play the king
+                for (let i in playableCards) {
+                    if (playableCards[i].value == 'King') {
+                        return playableCards[i];
+                    }
+                }
+            }
+            if (colorCards.length > 0) {
+                return lowestPointValue(colorCards);
+            }
+            return lowestTrump(playableCards);
         case DIFFICULTY.RUDIMENTARY:
-            //TODO: more difficulty algos
             return firstSelectableCardExceptPagat(hand);
         default:
             SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
@@ -778,7 +924,54 @@ function robotLead(hand, difficulty, room) {
     }
 }
 function robotPlay(hand, difficulty, room) {
-    //TODO: add context. Robots need to know: the table, if partners have been revealed, money cards, povinnost, valat, contra, IOTE, etc
+    //TODO: add context. Robots need to know: money cards, povinnost, highest unplayed trump
+    let playableCards = handWithoutGray(hand);
+
+    if (playableCards.length == 1) {
+        return playableCards[0];
+    }
+
+    let pn = room.board.nextStep.player;
+    let table = room.board.table;
+    //{'card':card,'pn':pn,'lead':true}
+    let orderedTable = [];
+    for (let i in table) {
+        orderedTable[orderedTable.length] = table[i].card;
+    }
+    let winningCard = whoIsWinning(orderedTable);
+    let winningPlayer = 0;
+    for (let i in table) {
+        if (table[i].card == winningCard) {
+            winningPlayer = table[i].pn;
+            break;
+        }
+    }
+    let myTeam = room.players[pn].isTeamPovinnost;//I always know my team. boolean
+    let winningTeam = room.players[winningPlayer].publicTeam;//-1, 0, or 1
+    let myTeamWinning = false;
+    if (winningTeam && ((!myTeam && winningTeam == -1) || (myTeam && winningTeam == 1))) {
+        myTeamWinning = true;
+    }
+    let ioteCalled = room.board.iote != -1;
+    let valatCalled = room.board.valat != -1;
+    let lastPlayer = orderedTable.length == 3;
+
+    let playingTrump = playableCards[0].suit == 'Trump';
+    let trumped = winningCard.suit == 'Trump';
+    let trumpLead = table[0].card.suit == 'Trump';
+
+    let partnerCard = room.board.partnerCard;
+
+    let partnerFollowsLater = false;
+    let numPlayerRemaining = 3 - orderedTable.length;
+    for (let i in numPlayerRemaining) {
+        let thisPlayersTeam = room.players[(pn+i)%4].publicTeam
+        if (thisPlayersTeam && ((!myTeam && thisPlayersTeam == -1) || (myTeam && thisPlayersTeam == 1))) {
+            partnerFollowsLater = true;
+            break;
+        }
+    }
+
     switch (difficulty) {
         case DIFFICULTY.AI:
             SERVER.warn('AI not implemented yet. Defaulting to robot moves');
@@ -786,12 +979,133 @@ function robotPlay(hand, difficulty, room) {
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
             //If last in line and no trumps have been played, play the I unless IOTE was called
-            //If last in line and low on trump, play the XXI
+            if (playingTrump) {
+                if (ioteCalled) {
+                    grayTheI(playableCards);
+                    //There will always be a card to play because if the I was forced it would have already returned at the top of the function
+                    playableCards = handWithoutGray(playableCards);
+                    if (playableCards.length == 1) {
+                        return playableCards[0];
+                    }
+                }
+                if (trumped) {
+                    if (lastPlayer && myTeamWinning) {
+                        return lowestTrump(playableCards);
+                    }
+                    if (lastPlayer && !myTeamWinning) {
+                        if (Deck.handContainsCard(playableCards, 'XXI') && winningCard.value != 'Skyz') {
+                            //Get the XXI home
+                            return {suit:'Trump',value:'XXI'};
+                        }
+                        grayTheI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
+                        return lowestTrumpThatBeats(playableCards, winningCard);
+                    }
+                    if (myTeamWinning && VALUE_REVERSE[winningCard.value] < 12) {
+                        //Partner played low
+                        grayTheXXI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
+                        return highestTrump(playableCards);
+                    } else {
+                        //Partner played high
+                        return lowestTrump(playableCards);
+                    }
+                    //My team is losing
+                    grayTheXXI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    return lowestTrumpThatBeats(playableCards,winningCard);
+                } else {
+                    if (lastPlayer || partnerFollowsLater) {
+                        return lowestTrump(playableCards);
+                    }
+                    if (winningCard.value == 'King') {
+                        //Points on the line
+                        grayTheXXI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
+                        return highestTrump(playableCards);
+                    }
+                    //todo if povenost follows then trumping is more likely so play higher
+                    return lowestTrump(playableCards);
+                }
+            } else {
+                //No trump. Playing color
+                if (trumped) {
+                    //Ducking
+                    if (myTeamWinning && lastPlayer) {
+                        //Throw most points
+                        return highestPointValue(playableCards);
+                    }
+                    return lowestPointValue(playableCards);
+                } else {
+                    //Could win
+                    let check = highestPointValue(playableCards);
+                    if (check.value == 'King') {
+                        return check;
+                    }
+                    if (myTeamWinning && winningCard.value == 'King') {
+                        return check;
+                    }
+                    if (!myTeamWinning && winningCard.value == 'King') {
+                        return lowestPointValue(playableCards);
+                    } else if (!myTeamWinning && partnerFollowsLater) {
+                        return check;//Throw points to my partner
+                    }
+                    return lowestPointValue(playableCards);
+                }
+            }
         case DIFFICULTY.EASY:
             //Over-under. If it can beat the current highest card, play the highest one available. Otherwise, play the lowest non-I trump available
             //If last in line, play the lowest winning card
+            if (playingTrump) {
+                if (ioteCalled) {
+                    grayTheI(playableCards);
+                    //There will always be a card to play because if the I was forced it would have already returned at the top of the function
+                    playableCards = handWithoutGray(playableCards);
+                    if (playableCards.length == 1) {
+                        return playableCards[0];
+                    }
+                }
+                if (myTeamWinning && lastPlayer) {
+                    //play the one
+                    if (Deck.handContainsCard(playableCards, 'I')) {
+                        //Get the XXI home
+                        return {suit:'Trump',value:'I'};
+                    }
+                }
+                if (myTeamWinning && VALUE_REVERSE[winningCard.value] < 12) {
+                    //Partner played low
+                    grayTheXXI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    if (playableCards.length == 1) {
+                        return playableCards[0];
+                    }
+                    grayTheI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    return highestTrump(playableCards);
+                } else {
+                    //Partner played high
+                    if (VALUE_REVERSE[winningCard.value] > 18) {
+                        return lowestTrump(playableCards);
+                    }
+                    grayTheI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    return lowestTrump(playableCards);
+                }
+                if (!partnerFollowsLater && !lastPlayer) {
+                    grayTheXXI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    return highestTrump(playableCards);
+                }
+
+                return lowestTrumpThatBeats(playableCards, winningCard);
+            } else {
+                if (trumped) {
+                    return lowestPointValue(playableCards);
+                } else {
+                    return highestPointValue(playableCards);
+                }
+            }
         case DIFFICULTY.RUDIMENTARY:
-            //TODO: more difficulty algos
             return firstSelectableCardExceptPagat(hand);
         default:
             SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
