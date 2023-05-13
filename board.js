@@ -29,6 +29,7 @@ class Board {
         this._notation = '';
 
         this._trickHistory = [];
+        this._cardsPlayed = new Array(54).fill(false);//Spade, Club, Heart, Diamond, Trump -> Low to high
         this._publicPreverTalon = [];
         this._trumpDiscarded = [[],[],[]];
     }
@@ -61,6 +62,7 @@ class Board {
         this._notation = '';
 
         this._trickHistory = [];
+        this._cardsPlayed = new Array(54).fill(false);
         this._publicPreverTalon = [];
         this._trumpDiscarded = [[],[],[]];
     }
@@ -156,6 +158,10 @@ class Board {
 
     set trickHistory(trickHistory) {
         this._trickHistory = trickHistory;
+    }
+
+    set cardsPlayed(cardsPlayed) {
+        this._cardsPlayed = cardsPlayed;
     }
 
     set publicPreverTalon(publicPreverTalon) {
@@ -257,6 +263,10 @@ class Board {
 
     get trickHistory() {
         return this._trickHistory;
+    }
+
+    get cardsPlayed() {
+        return this._cardsPlayed;
     }
 
     get publicPreverTalon() {

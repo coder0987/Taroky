@@ -162,6 +162,10 @@ class Deck {
         }
     }
 
+    static cardId(card) {
+        return VALUE_REVERSE[card.value] + SUIT_REVERSE[card.suit] * 8;
+    }
+
     //Getters
 
     get deck() {

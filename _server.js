@@ -620,6 +620,16 @@ function whoIsWinning(table) {
     return table[currentWinner];
 }
 
+function highestUnplayedTrump(booleanArray) {
+    for (let i=53; i>=32; i--) {
+        if (!booleanArray[i]) {
+            //This trump has not been played
+            return {suit:'Trump', value:TRUMP_VALUE[i - 32]};
+        }
+    }
+    return {suit:'Trump', value:'I'};
+}
+
 //Robot Functions TODO: MOVE TO CLASS FILE
 function firstSelectableCard(hand) {
     for (let i in hand) {
@@ -846,11 +856,13 @@ function robotLead(hand, difficulty, room) {
     if (playableCards.length == 1) {
         return playableCards[0];
     }
-    //TODO check if the skyz has been played
-    grayTheXXI(playableCards);
-    playableCards = handWithoutGray(playableCards);
-    if (playableCards.length == 1) {
-        return playableCards[0];
+    if (!Deck.handContainsCard(hand, 'Skyz') && highestUnplayedTrump(room.board.cardsPlayed).value == 'Skyz') {
+        //Someone else has Skyz and has not played it
+        grayTheXXI(playableCards);
+        playableCards = handWithoutGray(playableCards);
+        if (playableCards.length == 1) {
+            return playableCards[0];
+        }
     }
 
     let pn = room.board.nextStep.player;
@@ -924,7 +936,7 @@ function robotLead(hand, difficulty, room) {
     }
 }
 function robotPlay(hand, difficulty, room) {
-    //TODO: add context. Robots need to know: money cards, povinnost, highest unplayed trump
+    //TODO: add context. Robots need to know: money cards, povinnost
     let playableCards = handWithoutGray(hand);
 
     if (playableCards.length == 1) {
@@ -963,14 +975,27 @@ function robotPlay(hand, difficulty, room) {
     let partnerCard = room.board.partnerCard;
 
     let partnerFollowsLater = false;
+    let notPartnerFollowsLater = false;
     let numPlayerRemaining = 3 - orderedTable.length;
     for (let i in numPlayerRemaining) {
         let thisPlayersTeam = room.players[(pn+i)%4].publicTeam
         if (thisPlayersTeam && ((!myTeam && thisPlayersTeam == -1) || (myTeam && thisPlayersTeam == 1))) {
             partnerFollowsLater = true;
-            break;
+        } else {
+            notPartnerFollowsLater = true;
         }
     }
+
+    let lastPlayerOrOnlyPartnersFollow = lastPlayer || !notPartnerFollowsLater;
+
+    let biggestTrump = highestUnplayedTrump(room.board.cardsPlayed);
+    let tempArray = [...room.board.cardsPlayed];
+    for (let i in hand) {
+        tempArray[Deck.cardId(hand[i])] = true;
+    }
+    let biggestTrumpTheyHave = highestUnplayedTrump(tempArray);
+
+    let skyzIsOut = biggestTrumpTheyHave.value == 'Skyz';
 
     switch (difficulty) {
         case DIFFICULTY.AI:
@@ -989,11 +1014,11 @@ function robotPlay(hand, difficulty, room) {
                     }
                 }
                 if (trumped) {
-                    if (lastPlayer && myTeamWinning) {
+                    if (lastPlayerOrOnlyPartnersFollow && myTeamWinning) {
                         return lowestTrump(playableCards);
                     }
-                    if (lastPlayer && !myTeamWinning) {
-                        if (Deck.handContainsCard(playableCards, 'XXI') && winningCard.value != 'Skyz') {
+                    if (lastPlayerOrOnlyPartnersFollow && !myTeamWinning) {
+                        if (skyzIsOut && Deck.handContainsCard(playableCards, 'XXI') && winningCard.value != 'Skyz') {
                             //Get the XXI home
                             return {suit:'Trump',value:'XXI'};
                         }
@@ -1008,20 +1033,35 @@ function robotPlay(hand, difficulty, room) {
                         return highestTrump(playableCards);
                     } else {
                         //Partner played high
+                        if (VALUE_REVERSE[winningCard.value] >= VALUE_REVERSE[biggestTrumpTheyHave.value]) {
+                            //I is safe
+                            return lowestTrump(playableCards);
+                        }
+                        grayTheI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
                         return lowestTrump(playableCards);
                     }
                     //My team is losing
-                    grayTheXXI(playableCards);
+                    grayTheI(playableCards);
                     playableCards = handWithoutGray(playableCards);
+                    if (playableCards.length == 1) {
+                        return playableCards[0];
+                    }
+                    if (skyzIsOut) {
+                        grayTheXXI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
+                    }
                     return lowestTrumpThatBeats(playableCards,winningCard);
                 } else {
-                    if (lastPlayer || partnerFollowsLater) {
+                    if (lastPlayerOrOnlyPartnersFollow) {
                         return lowestTrump(playableCards);
                     }
                     if (winningCard.value == 'King') {
                         //Points on the line
-                        grayTheXXI(playableCards);
-                        playableCards = handWithoutGray(playableCards);
+                        if (skyzIsOut) {
+                            grayTheXXI(playableCards);
+                            playableCards = handWithoutGray(playableCards);
+                        }
                         return highestTrump(playableCards);
                     }
                     //todo if povenost follows then trumping is more likely so play higher
@@ -1068,7 +1108,6 @@ function robotPlay(hand, difficulty, room) {
                 if (myTeamWinning && lastPlayer) {
                     //play the one
                     if (Deck.handContainsCard(playableCards, 'I')) {
-                        //Get the XXI home
                         return {suit:'Trump',value:'I'};
                     }
                 }
@@ -1898,9 +1937,13 @@ function actionCallback(action, room, pn) {
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
 
                     //Opposing team claims the first set of cards
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[0])] = true;
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[1])] = true;
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[2])] = true;
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+
                     room.informPlayers('kept the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':pn,'step':3},pn);
                     action.action = 'discard';
                     actionTaken = true;
@@ -1924,6 +1967,9 @@ function actionCallback(action, room, pn) {
                     room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
 
                     //Give second set of cards to opposing team's discard
+                    room.board.cardsPlayed[Deck.cardId(temp[0])] = true;
+                    room.board.cardsPlayed[Deck.cardId(temp[1])] = true;
+                    room.board.cardsPlayed[Deck.cardId(temp[2])] = true;
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
@@ -1957,6 +2003,7 @@ function actionCallback(action, room, pn) {
                     } else {
                         room.board.trumpDiscarded[((+room.board.povinnost - +pn) + 4)%4].push({suit:card.suit, value:card.value});
                     }
+                    room.board.cardsPlayed[Deck.cardId(card)] = true;
                 }
                 if (room['players'][action.player].hand.length == 12) {
                     action.player = (action.player + 1) % 4;
@@ -2409,6 +2456,7 @@ function actionCallback(action, room, pn) {
                 action.player = (action.player + 1) % 4;
                 room['board'].table.push({'card':lead,'pn':pn,'lead':true});
                 room['board'].leadCard = lead;
+                room.board.cardsPlayed[Deck.cardId(lead)] = true;
                 room.informPlayers('lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {pn: pn, card: lead},pn);
                 if (lead.suit == room.board.partnerCard.suit && lead.value == room.board.partnerCard.value) {
                     room.players[pn].publicTeam = 1;
@@ -2440,6 +2488,7 @@ function actionCallback(action, room, pn) {
                 shouldReturnTable = true;
                 room['board'].table.push({'card':played,'pn':pn,'lead':false});
                 action.player = (action.player + 1) % 4;
+                room.board.cardsPlayed[Deck.cardId(played)] = true;
                 room.informPlayers('played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {pn: pn, card: played}, pn);
                 if (played.suit == room.board.partnerCard.suit && played.value == room.board.partnerCard.value) {
                     room.players[pn].publicTeam = 1;
