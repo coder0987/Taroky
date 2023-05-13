@@ -771,6 +771,26 @@ function robotPartner(hand, difficulty) {
             return { 'value': 'XIX', 'suit': SUIT[4] };
     }
 }
+function robotPrever(hand, difficulty, room) {
+    switch (difficulty) {
+        case DIFFICULTY.AI:
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            if (numOfSuit(hand, SUIT[4]) >= 8 && unbrokenTrumpChain(hand) >= 2 && basicHandRanking(hand) >= 15 && Deck.handContainsCard(hand, 'King')) {
+                //Must have Skyz and XXI and a King
+                return 'goPrever';
+            }
+        case DIFFICULTY.EASY:
+        case DIFFICULTY.RUDIMENTARY:
+            return 'passPrever';
+        default:
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
+            return 'passPrever';
+    }
+
+}
 function robotCall(hand, difficulty) {
     //Valat
     switch (difficulty) {
@@ -1318,7 +1338,7 @@ function robotAction(action, room, pn) {
                 action.info.choice = robotChooseHand(room.board.hands);
                 break;
             case 'prever':
-                action.action = 'passPrever';
+                action.action = robotPrever(hand, room.settings.difficulty, room);
                 break;
             case 'drawPreverTalon':
             case 'drawTalon':
