@@ -871,14 +871,14 @@ function robotLead(hand, difficulty, room) {
     if (playableCards.length == 1) {
         return playableCards[0];
     }
-    grayTheI(playableCards);
+    playableCards = grayTheI(playableCards);
     playableCards = handWithoutGray(playableCards);
     if (playableCards.length == 1) {
         return playableCards[0];
     }
     if (!Deck.handContainsCard(hand, 'Skyz') && highestUnplayedTrump(room.board.cardsPlayed).value == 'Skyz') {
         //Someone else has Skyz and has not played it
-        grayTheXXI(playableCards);
+        playableCards = grayTheXXI(playableCards);
         playableCards = handWithoutGray(playableCards);
         if (playableCards.length == 1) {
             return playableCards[0];
@@ -938,10 +938,32 @@ function robotLead(hand, difficulty, room) {
             //Possible strategies: run trump until almost out, play kings, reclaim control with trump
         case DIFFICULTY.NORMAL:
             //Possible strategies: run trump until out, then play kings
+            if (room.board.iote == pn) {
+                //I called IOTE
+                //2 scenarios: 1, I can bulldoze. 2, I have a lot of trump
+                if (VALUE_REVERSE[highestTrump(trumpCards).value] >= VALUE_REVERSE[highestUnplayedTrump[room.board.playedCards]]) {
+                    //I have the biggest trump
+                    return highestTrump(trumpCards);
+                }
+                if (colorCount == 0 || (trumpCount > colorCount)) {
+                    //Pull trump
+                    return lowestTrump(trumpCards);
+                }
+                //Play color to save I for later
+                if (hasAKing) {
+                    //Play the king
+                    for (let i in playableCards) {
+                        if (playableCards[i].value == 'King') {
+                            return playableCards[i];
+                        }
+                    }
+                }
+                return lowestPointValue(colorCards);
+            }
             if (trumpCount > colorCount && (colorCount < 5)) {
-                let biggest = highestTrump(playableCards);
+                let biggest = highestTrump(trumpCards);
                 if (VALUE_REVERSE[biggest.value] < 14) {
-                    return lowestTrump(playableCards);
+                    return lowestTrump(trumpCards);
                 }
                 return biggest;
             }
@@ -1055,7 +1077,7 @@ function robotPlay(hand, difficulty, room) {
             //If last in line and no trumps have been played, play the I unless IOTE was called
             if (playingTrump) {
                 if (ioteCalled) {
-                    grayTheI(playableCards);
+                    playableCards = grayTheI(playableCards);
                     //There will always be a card to play because if the I was forced it would have already returned at the top of the function
                     playableCards = handWithoutGray(playableCards);
                     if (playableCards.length == 1) {
@@ -1071,13 +1093,13 @@ function robotPlay(hand, difficulty, room) {
                             //Get the XXI home
                             return {suit:'Trump',value:'XXI'};
                         }
-                        grayTheI(playableCards);
+                        playableCards = grayTheI(playableCards);
                         playableCards = handWithoutGray(playableCards);
                         return lowestTrumpThatBeats(playableCards, winningCard);
                     }
                     if (myTeamWinning && VALUE_REVERSE[winningCard.value] < 12) {
                         //Partner played low
-                        grayTheXXI(playableCards);
+                        playableCards = grayTheXXI(playableCards);
                         playableCards = handWithoutGray(playableCards);
                         return highestTrump(playableCards);
                     } else {
@@ -1086,19 +1108,22 @@ function robotPlay(hand, difficulty, room) {
                             //I is safe
                             return lowestTrump(playableCards);
                         }
-                        grayTheI(playableCards);
+                        playableCards = grayTheI(playableCards);
                         playableCards = handWithoutGray(playableCards);
                         return lowestTrump(playableCards);
                     }
                     //My team is losing
-                    grayTheI(playableCards);
+                    playableCards = grayTheI(playableCards);
                     playableCards = handWithoutGray(playableCards);
                     if (playableCards.length == 1) {
                         return playableCards[0];
                     }
                     if (skyzIsOut) {
-                        grayTheXXI(playableCards);
+                        playableCards = grayTheXXI(playableCards);
                         playableCards = handWithoutGray(playableCards);
+                    }
+                    if (notPartnerFollowsLater) {
+                        return highestTrump(playableCards);
                     }
                     return lowestTrumpThatBeats(playableCards,winningCard);
                 } else {
@@ -1108,7 +1133,7 @@ function robotPlay(hand, difficulty, room) {
                     if (winningCard.value == 'King') {
                         //Points on the line
                         if (skyzIsOut) {
-                            grayTheXXI(playableCards);
+                            playableCards = grayTheXXI(playableCards);
                             playableCards = handWithoutGray(playableCards);
                         }
                         return highestTrump(playableCards);
@@ -1120,15 +1145,19 @@ function robotPlay(hand, difficulty, room) {
                 //No trump. Playing color
                 if (trumped) {
                     //Ducking
-                    if (myTeamWinning && lastPlayer) {
+                    if (myTeamWinning && lastPlayerOrOnlyPartnersFollow) {
                         //Throw most points
+                        return highestPointValue(playableCards);
+                    }
+                    if (myTeamWinning && VALUE_REVERSE[winningCard.value] >= VALUE_REVERSE[biggestTrump.value]) {
+                        //They can't trump my partner
                         return highestPointValue(playableCards);
                     }
                     return lowestPointValue(playableCards);
                 } else {
                     //Could win
                     let check = highestPointValue(playableCards);
-                    if (check.value == 'King') {
+                    if (check.value == 'King' && check.suit == orderedTable[0].suit) {
                         return check;
                     }
                     if (myTeamWinning && winningCard.value == 'King') {
@@ -1147,7 +1176,7 @@ function robotPlay(hand, difficulty, room) {
             //If last in line, play the lowest winning card
             if (playingTrump) {
                 if (ioteCalled) {
-                    grayTheI(playableCards);
+                    playableCards = grayTheI(playableCards);
                     //There will always be a card to play because if the I was forced it would have already returned at the top of the function
                     playableCards = handWithoutGray(playableCards);
                     if (playableCards.length == 1) {
@@ -1162,12 +1191,12 @@ function robotPlay(hand, difficulty, room) {
                 }
                 if (myTeamWinning && VALUE_REVERSE[winningCard.value] < 12) {
                     //Partner played low
-                    grayTheXXI(playableCards);
+                    playableCards = grayTheXXI(playableCards);
                     playableCards = handWithoutGray(playableCards);
                     if (playableCards.length == 1) {
                         return playableCards[0];
                     }
-                    grayTheI(playableCards);
+                    playableCards = grayTheI(playableCards);
                     playableCards = handWithoutGray(playableCards);
                     return highestTrump(playableCards);
                 } else {
@@ -1175,12 +1204,12 @@ function robotPlay(hand, difficulty, room) {
                     if (VALUE_REVERSE[winningCard.value] > 18) {
                         return lowestTrump(playableCards);
                     }
-                    grayTheI(playableCards);
+                    playableCards = grayTheI(playableCards);
                     playableCards = handWithoutGray(playableCards);
                     return lowestTrump(playableCards);
                 }
                 if (!partnerFollowsLater && !lastPlayer) {
-                    grayTheXXI(playableCards);
+                    playableCards = grayTheXXI(playableCards);
                     playableCards = handWithoutGray(playableCards);
                     return highestTrump(playableCards);
                 }
@@ -2507,8 +2536,13 @@ function actionCallback(action, room, pn) {
                 room['board'].leadCard = lead;
                 room.board.cardsPlayed[Deck.cardId(lead)] = true;
                 room.informPlayers('lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {pn: pn, card: lead},pn);
-                if (lead.suit == room.board.partnerCard.suit && lead.value == room.board.partnerCard.value) {
+                if (lead.value == room.board.partnerCard) {
                     room.players[pn].publicTeam = 1;
+                    for (let i in room.players) {
+                        if (room.players[i].publicTeam == 0) {
+                            room.players[i].publicTeam = -1;
+                        }
+                    }
                 }
             } else {
                 if (room['players'][pn].type == PLAYER_TYPE.HUMAN) {
@@ -2539,8 +2573,13 @@ function actionCallback(action, room, pn) {
                 action.player = (action.player + 1) % 4;
                 room.board.cardsPlayed[Deck.cardId(played)] = true;
                 room.informPlayers('played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {pn: pn, card: played}, pn);
-                if (played.suit == room.board.partnerCard.suit && played.value == room.board.partnerCard.value) {
+                if (played.value == room.board.partnerCard) {
                     room.players[pn].publicTeam = 1;
+                    for (let i in room.players) {
+                        if (room.players[i].publicTeam == 0) {
+                            room.players[i].publicTeam = -1;
+                        }
+                    }
                 }
                 //If all players have played a card, determine who won the trick
                 if (action.player == room.board.leadPlayer) {

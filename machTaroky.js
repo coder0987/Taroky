@@ -229,7 +229,7 @@ function drawTable() {
         return;
     }
     let currentNumberOfCardsOnTable = 0;
-    {
+    if (!document.getElementById('table').hidden) {
         let divTable = document.getElementById('table');
         let returnToDeck = divTable.children;
         for (let i=returnToDeck.length-1; i>=0; i--) {
@@ -240,8 +240,12 @@ function drawTable() {
             }
         }
     }
-    if (Date.now() - tableDrawnTime < 5000 && currentNumberOfCardsOnTable >= 4) {
+    if (Date.now() - tableDrawnTime < 3000 && currentNumberOfCardsOnTable >= 4) {
         //Timeout only matters if the table is at full capacity
+        console.log('full');
+        return;
+    } else if (Date.now() - tableDrawnTime < 1000) {
+        console.log('partial');
         return;
     }
     tableDrawnTime = Date.now();
