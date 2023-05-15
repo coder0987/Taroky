@@ -778,11 +778,15 @@ function robotPrever(hand, difficulty, room) {
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
-            if (numOfSuit(hand, SUIT[4]) >= 8 && unbrokenTrumpChain(hand) >= 2 && basicHandRanking(hand) >= 15 && Deck.handContainsCard(hand, 'King')) {
-                //Must have Skyz and XXI and a King
+            if (numOfSuit(hand, SUIT[4]) >= 8 && trumpChain(hand) >= 2 && basicHandRanking(hand) >= 10 && Deck.handContainsCard(hand, 'King')) {
+                //Must have 2 guaranteed tricks, tarocky, and a King
                 return 'goPrever';
             }
         case DIFFICULTY.EASY:
+            if (numOfSuit(hand, SUIT[4]) >= 8 && unbrokenTrumpChain(hand) >= 3 && basicHandRanking(hand) >= 15 && Deck.handContainsCard(hand, 'King')) {
+                //Must have Skyz, XXI, XX, tarocky, and a King
+                return 'goPrever';
+            }
         case DIFFICULTY.RUDIMENTARY:
             return 'passPrever';
         default:
@@ -790,6 +794,63 @@ function robotPrever(hand, difficulty, room) {
             return 'passPrever';
     }
 
+}
+function robotPreverTalon(hand, difficulty, talon, room) {
+    let step = room.board.preverTalonStep;
+    let top = step == 1;
+    let numTrump = 0;
+    let highTrump = 0;
+    let kings = 0;
+    for (let i in talon) {
+        if (talon[i].suit == 'Trump') {
+            numTrump++;
+            if (VALUE_REVERSE[talon[i].value] > 16) {
+                highTrump++;
+            }
+        } else if (talon[i].value == 'King') {
+            kings++;
+        }
+    }
+    let otherSide = 0;
+    if (step == 2) {
+        //Allowed to see the other set of cards
+        for (let i in room.board.talon) {
+            if (room.board.talon[i].suit == 'Trump') {
+                otherSide++;
+                if (VALUE_REVERSE[room.board.talon[i].value] > 16) {
+                    otherSide++;
+                }
+            } else if (room.board.talon[i].value == 'King') {
+                otherSide++;
+            }
+        }
+    }
+    switch (difficulty) {
+        case DIFFICULTY.AI:
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            if (top) {
+                if (kings || highTrump || numTrump == 3) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                if (otherSide > (kings + highTrump + numTrump)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        case DIFFICULTY.EASY:
+        case DIFFICULTY.RUDIMENTARY:
+            return true;
+        default:
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
+            return true;
+    }
 }
 function robotCall(hand, difficulty) {
     //Valat
@@ -1370,6 +1431,8 @@ function robotAction(action, room, pn) {
                 action.action = robotPrever(hand, room.settings.difficulty, room);
                 break;
             case 'drawPreverTalon':
+                action.info.accept = robotPreverTalon(hand, room.settings.difficulty, room.players[pn].tempHand, room);
+                break;
             case 'drawTalon':
                 break;
             case 'discard':
