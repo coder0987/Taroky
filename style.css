@@ -17,6 +17,13 @@ body {
     background-color: var(--green);
     padding: 4rem;
 }
+body:fullscreen {
+   padding: 1rem;
+}
+
+:fullscreen, ::backdrop {
+    background-color: var(--green);
+}
 
 .canvas {
     width: 100%;
@@ -257,4 +264,8 @@ h4 {
 .dark-background {
     background-color: var(--navy);
     color: var(--white);
+}
+
+.hidden {
+    display: none;
 }

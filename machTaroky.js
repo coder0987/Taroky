@@ -101,6 +101,76 @@ function includeHTML() {
     }
   }
 
+let fullscreenMode = false;
+function fullscreen() {
+    //Todo add a way to leave fullscreen on mobile besides refreshing the page
+    fullscreenMode = !fullscreenMode;
+    try {
+        if (!fullscreenMode) {
+            //disable fullscreen
+            if (document.fullscreenElement) {
+                closeFullscreen();
+            }
+            document.getElementById('navbar').classList.remove('hidden');
+            document.getElementById('footer').classList.remove('hidden');
+        } else {
+            //enable fullscreen
+            if (!document.fullscreenElement) {
+                openFullscreen();
+            }
+            document.getElementById('navbar').classList.add('hidden');
+            document.getElementById('footer').classList.add('hidden');
+        }
+    } catch (footerMightNotExist) {}
+}
+
+//Interface with officially supported functions
+function openFullscreen() {
+  if (document.body.requestFullscreen) {
+    document.body.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    document.body.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    document.body.msRequestFullscreen();
+  }
+}
+
+/* Close fullscreen */
+function closeFullscreen() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) { /* Safari */
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) { /* IE11 */
+    document.msExitFullscreen();
+  }
+}
+
+function keyListener(e) {
+    //TODO add hotkeys
+    switch (e.code) {
+        case 'Escape':
+            if (fullscreenMode) {
+                fullscreen();
+            }
+            break;
+    }
+}
+
+function fullscreenChangeEvent(e) {
+    if (fullscreenMode) {
+        //should be in fullscreen
+        if (!document.fullscreenElement) {
+            fullscreen();
+        }
+    } else {
+        //shouldn't be in fullscreen
+        if (document.fullscreenElement) {
+            fullscreen();
+        }
+    }
+}
+
     /**loader */
 $(document).ready(function() {
 
@@ -529,6 +599,11 @@ window.addEventListener('message', (event) => {
 
 function onLoad() {
     generateDeck();
+    document.addEventListener('keydown', keyListener);
+    document.addEventListener("fullscreenchange", fullscreenChangeEvent);
+    document.addEventListener("mozfullscreenchange", fullscreenChangeEvent);
+    document.addEventListener("webkitfullscreenchange", fullscreenChangeEvent);
+    document.addEventListener("msfullscreenchange", fullscreenChangeEvent);
 
     if (!localStorage.getItem('tarokyInstance')) {
         do {
