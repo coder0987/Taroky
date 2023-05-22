@@ -7,8 +7,8 @@ const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16};
-const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5};
-const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon'};
+const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5, DRAW_TALON: 6};
+const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon',6:'Talon'};
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4/*, AI: 5*/};
 const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'/*, 5: 'AI'*/};
 const ACTION_TABLE = {
@@ -55,6 +55,7 @@ let connectingToRoom = false;
 let inGame = false;
 let chipCount = 100;
 let playerNumber = -1;
+let povinnostNumber = -1;
 let hostNumber = -1;
 let currentAction;
 let baseDeck = [];
@@ -833,6 +834,7 @@ function onLoad() {
                 } else {
                     addBoldMessage(theMessage);
                 }
+                povinnostNumber = extraInfo.pn;
                 break;
             case MESSAGE_TYPE.DRAW:
                 //Player drew certain cards. These should be highlighted until after discarding
@@ -1079,11 +1081,16 @@ function onLoad() {
                     break;//For auto-reconnect
                 case 'drawPreverTalon':
                     addMessage('You are drawing cards from the talon.');
-                    createChoiceButtons(BUTTON_TYPE.PREVER_TALON);
+                    if (povinnostNumber != playerNumber) {
+                        createChoiceButtons(BUTTON_TYPE.PREVER_TALON);
+                    } else {
+                        socket.emit('goTalon');
+                    }
                     break;
                 case 'drawTalon':
+                case 'passTalon':
                     addMessage('You are drawing cards from the talon.');
-                    socket.emit('drawTalon');
+                    createChoiceButtons(BUTTON_TYPE.DRAW_TALON);
                     break;
                 case 'discard':
                     discardingOrPlaying = true;
@@ -1383,6 +1390,10 @@ function createChoiceButtons(buttonType) {
             firstButton.innerHTML = 'Keep';
             secondButton.innerHTML = 'Pass';
             break;
+        case BUTTON_TYPE.DRAW_TALON:
+            firstButton.innerHTML = 'Draw';
+            secondButton.innerHTML = 'Pass';
+            break;
         default:
             addError('Unknown button type: ' + buttonType);
     }
@@ -1461,6 +1472,7 @@ function exitCurrentRoom(value) {
         inGame = false;
         chipCount = 100;
         playerNumber = -1;
+        povinnostNumber = -1;
         hostNumber = -1;
         currentAction = null;
         discardingOrPlaying = true;

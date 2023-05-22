@@ -42,7 +42,7 @@ class Board {
         this._preverTalonStep = 0;
         this._prever = -1;
         this._playingPrever = false;
-        this._povinnost = (this.povinnost + 1) % 4;
+        this._povinnost = (this._povinnost + 1) % 4;
         this._buc = false;
         this._leadPlayer = -1;
         this._leadCard = null;

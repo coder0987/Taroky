@@ -1002,7 +1002,7 @@ function robotLead(hand, difficulty, room) {
             if (room.board.iote == pn) {
                 //I called IOTE
                 //2 scenarios: 1, I can bulldoze. 2, I have a lot of trump
-                if (VALUE_REVERSE[highestTrump(trumpCards).value] >= VALUE_REVERSE[highestUnplayedTrump[room.board.playedCards]]) {
+                if (trumpCount > 0 && VALUE_REVERSE[highestTrump(trumpCards).value] >= VALUE_REVERSE[highestUnplayedTrump[room.board.playedCards]]) {
                     //I have the biggest trump
                     return highestTrump(trumpCards);
                 }
@@ -1969,19 +1969,53 @@ function actionCallback(action, room, pn) {
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 action.player = (action.player + 1) % 4;
-                actionTaken = true;
             } else {
                 room.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 if (action.player == (room['board'].povinnost + 2) % 4) {
-                    //TODO draw or pass choice
+                    //Player +2 pov. has drawn the final card in the talon
                     action.player = room['board'].povinnost;
                     action.action = 'discard';
-                    actionTaken = true;
+                } else if (action.player == (room['board'].povinnost + 3) % 4) {
+                    //Player +3 pov. has drawn a rejected card from the talon
+                    room.informPlayer((room['board'].povinnost + 3) % 4, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
+                    room['players'][(room['board'].povinnost + 3) % 4].hand.push(room['board'].talon.splice(0, 1)[0]);
+                    if (room['board'].talon.length == 0) {
+                        //Player +2 pov. rejected the card
+                        action.player = room['board'].povinnost;
+                        action.action = 'discard';
+                        //TODO: can both +1 and +2 reject the cards and +3 draw them both? I've never encountered this in a real game before
+                    } else {
+                        action.player = (room['board'].povinnost + 2) % 4;
+                    }
+
                 } else {
                     action.player = (action.player + 1) % 4;
-                    actionTaken = true;
                 }
+            }
+            actionTaken = true;
+            break;
+        case 'passTalon':
+            //2 cases
+            if (action.player == (room['board'].povinnost + 3) % 4) {
+                //Player 1 or 2 from pov. has passed the card and it has been rejected again
+                if (room['board'].talon.length == 2) {
+                    //Player +1 pov. passed the card
+                    room.informPlayer((room['board'].povinnost + 1) % 4, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
+                    room['players'][(room['board'].povinnost + 1) % 4].hand.push(room['board'].talon.splice(0, 1)[0]);
+                }
+                //Player +2 pov. gets the remaining card in every case
+                room.informPlayer((room['board'].povinnost + 2) % 4, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
+                room['players'][(room['board'].povinnost + 2) % 4].hand.push(room['board'].talon.splice(0, 1)[0]);
+
+                action.player = room['board'].povinnost;
+                action.action = 'discard';
+                actionTaken = true;
+            } else {
+                //Player 1 or 2 from pov. would like to pass a card
+                action.player = (room['board'].povinnost + 3) % 4;
+                action.action = 'drawTalon';
+                actionTaken = true;
             }
             break;
         case 'callPrever':
@@ -2149,15 +2183,21 @@ function actionCallback(action, room, pn) {
                 if (room['players'][action.player].hand.length == 12) {
                     action.player = (action.player + 1) % 4;
                     if (room['players'][action.player].hand.length == 12) {
-                        action.player = room['board'].povinnost;
-                        if (room['board'].playingPrever) {
-                            //A player is going prever. No partner cards
-                            action.action = 'moneyCards';
-                            //Note that prever is calling Bida or Uni no matter what
-                            //If prever has bida or uni, he calls bida or uni. No choice.
-                        } else {
-                            //No player going prever. Povinnost will call a partner
-                            action.action = 'partner';
+                        action.player = (action.player + 1) % 4;
+                        if (room['players'][action.player].hand.length == 12) {
+                            action.player = (action.player + 1) % 4;
+                            if (room['players'][action.player].hand.length == 12) {
+                                action.player = room['board'].povinnost;
+                                if (room['board'].playingPrever) {
+                                    //A player is going prever. No partner cards
+                                    action.action = 'moneyCards';
+                                    //Note that prever is calling Bida or Uni no matter what
+                                    //If prever has bida or uni, he calls bida or uni. No choice.
+                                } else {
+                                    //No player going prever. Povinnost will call a partner
+                                    action.action = 'partner';
+                                }
+                            }
                         }
                     }
                 }
@@ -2216,18 +2256,18 @@ function actionCallback(action, room, pn) {
                 }
                 if (Deck.handContains(currentHand, "King", "Spade") && Deck.handContains(currentHand, "King", "Club") && Deck.handContains(currentHand, "King", "Heart") && Deck.handContains(currentHand, "King", "Diamond")) {
                     if (fiverCount > 4) {
-                        //Rosa-Honery+
+                        //Rosa-Pane+
                         owedChips += 6;
-                        room['board'].moneyCards[pn].push("Rosa-Honery+");
+                        room['board'].moneyCards[pn].push("Rosa-Pane+");
                     } else {
-                        //Rosa-Honery
+                        //Rosa-Pane
                         owedChips += 4;
-                        room['board'].moneyCards[pn].push("Rosa-Honery");
+                        room['board'].moneyCards[pn].push("Rosa-Pane");
                     }
                 } else if (fiverCount >= 4) {
-                    //Honery
+                    //Pane
                     owedChips += 2;
-                    room['board'].moneyCards[pn].push("Honery");
+                    room['board'].moneyCards[pn].push("Pane");
                 }
             }
 
@@ -3531,8 +3571,19 @@ io.sockets.on('connection', function (socket) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
-    socket.on('drawTalon', function () {
-        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+    socket.on('goTalon', function () {
+        if (players[socketId] && rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' || rooms[players[socketId].room]['board']['nextStep'].action == 'passTalon') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].action = 'drawTalon';
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('noTalon', function () {
+        if (players[socketId] && rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' || rooms[players[socketId].room]['board']['nextStep'].action == 'passTalon') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].action = 'passTalon';
+            if (players[socketId]['pn'] == rooms[players[socketId].room].board.povinnost) {
+                //Povinnost cannot pass the talon
+                rooms[players[socketId].room]['board']['nextStep'].action = 'drawTalon';
+            }
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
@@ -3748,7 +3799,7 @@ function tick() {
             }
         }
         if (Object.keys(players).length == 0 && AdminPanel.shouldRestartServer) {
-            throw "Restarting the server...";
+            shutDown();
         }
         ticking = false;
     }
@@ -3880,3 +3931,20 @@ if (DEBUG_MODE) {
     AdminPanel.startAdminPanel(8400);
 }
 console.log("Log level: " + LOG_LEVEL);
+
+function shutDown() {
+    //First, save any information
+    /*
+        - Error logs
+        - Debug info
+        - Player stats
+    */
+    //Then, close all open things
+    /*
+        - H5 files
+        - Database connections
+    */
+    //Finally, shut down the server
+    throw 'Shutting down...';
+}
+
