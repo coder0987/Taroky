@@ -104,7 +104,6 @@ function includeHTML() {
 
 let fullscreenMode = false;
 function fullscreen() {
-    //Todo add a way to leave fullscreen on mobile besides refreshing the page
     fullscreenMode = !fullscreenMode;
     try {
         if (!fullscreenMode) {
@@ -296,7 +295,6 @@ function drawTable() {
     if (!returnTableQueue[0]) {
         //Wait min 3s before redrawing the table
         //TODO: prevent user from taking an action while the table is still being drawn
-        //TODO: add time to the timeout when players play quickly so the table can load in
         return;
     }
     let currentNumberOfCardsOnTable = 0;
@@ -1158,7 +1156,6 @@ function onLoad() {
             if (action.action == 'lead' || action.action == 'follow' || action.action == 'winTrick') {
                 return;//No need. Handled by room.informPlayers
             }
-            //TODO translate important messages. For now it should all be handled by room info and informPlayers
             //addMessage('Player ' + (action.player + 1) + ' is performing the action ' + action.action);
         }
     });
