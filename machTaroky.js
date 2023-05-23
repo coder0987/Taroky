@@ -391,6 +391,13 @@ function emptyHand() {
     let returnToDeck = divHand.children;
     for (let i=returnToDeck.length-1; i>=0; i--) {
         let child = returnToDeck[i];
+        child.classList.remove('col-2');
+        child.style.filter = '';
+        child.removeEventListener('mouseenter',enter);
+        child.removeEventListener('mouseleave',exit);
+        child.removeEventListener('click',clickCard);
+        child.title = '';
+        child.classList.remove('image-hover-highlight');
         child.hidden = true;
         divDeck.appendChild(child);
     }
@@ -1079,16 +1086,16 @@ function onLoad() {
                     break;//For auto-reconnect
                 case 'drawPreverTalon':
                     addMessage('You are drawing cards from the talon.');
-                    if (povinnostNumber != playerNumber) {
-                        createChoiceButtons(BUTTON_TYPE.PREVER_TALON);
-                    } else {
-                        socket.emit('goTalon');
-                    }
+                    createChoiceButtons(BUTTON_TYPE.PREVER_TALON);
                     break;
                 case 'drawTalon':
                 case 'passTalon':
                     addMessage('You are drawing cards from the talon.');
-                    createChoiceButtons(BUTTON_TYPE.DRAW_TALON);
+                    if (povinnostNumber != playerNumber) {
+                        createChoiceButtons(BUTTON_TYPE.DRAW_TALON);
+                    } else {
+                        socket.emit('goTalon');
+                    }
                     break;
                 case 'discard':
                     discardingOrPlaying = true;

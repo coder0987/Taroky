@@ -1978,8 +1978,6 @@ function actionCallback(action, room, pn) {
                     action.action = 'discard';
                 } else if (action.player == (room['board'].povinnost + 3) % 4) {
                     //Player +3 pov. has drawn a rejected card from the talon
-                    room.informPlayer((room['board'].povinnost + 3) % 4, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
-                    room['players'][(room['board'].povinnost + 3) % 4].hand.push(room['board'].talon.splice(0, 1)[0]);
                     if (room['board'].talon.length == 0) {
                         //Player +2 pov. rejected the card
                         action.player = room['board'].povinnost;
@@ -2019,6 +2017,7 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'callPrever':
+            //TODO: an unusual technicality in the rules allows for players after the first to call prever and override the current prever. This means that every single player should be prompted, and prever is not decided until the last person passes
             room['board'].playingPrever = true;
             room['board'].prever = pn;
             room['board'].preverTalonStep = 0;
