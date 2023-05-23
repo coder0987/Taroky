@@ -160,8 +160,6 @@ let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
 
-let latest = AI.aiFromFile('latest.h5');
-
 function notate(room, notation) {
     if (notation) {
         try {
@@ -1627,7 +1625,9 @@ function aiAction(action, room, pn) {
     if (action.player == pn) {
         let ranking = 0;
         let currentAI = room.players[pn].ai;
-        let think = (outputNumber, specialInfo, actionNumber) => {return currentAI.evaluate(AI.generateInputs(room,pn,actionNumber),outputNumber,specialInfo);}
+        let think = (outputNumber, specialInfo, actionNumber) => {
+            return currentAI.evaluate(AI.generateInputs(room,pn,actionNumber),outputNumber,specialInfo);
+        }
         switch (action.action) {
                 case 'play':
                 case 'shuffle':
