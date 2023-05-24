@@ -678,6 +678,9 @@ function onLoad() {
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
     });
+    socket.on('returnPovinnost', function(returnPovinnost) {
+        povinnostNumber = returnPovinnost;
+    });
     socket.on('returnPlayerCount', function(playerCount) {
         document.getElementById('online').innerHTML = playerCount;
     });
@@ -1515,6 +1518,13 @@ function displaySignOut(withName) {
         accHandler.innerHTML = 'Sign Out (' + withName + ')';
     }
     accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
+    accHandler.addEventListener('click',signOut);
+}
+
+function signOut() {
+   document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+   document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+   accHandler.removeEventListener('click',signOut);
 }
 
 //thanks w3 schools

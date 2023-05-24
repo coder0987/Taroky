@@ -947,27 +947,19 @@ function robotLead(hand, difficulty, room) {
     let pn = room.board.nextStep.player;
     let trumpCount = 0;
     let colorCount = 0;
-    for (let i in hand) {
-        if (hand[i].suit == 'Trump') {
-            trumpCount++;
-        } else {
-            colorCount++;
-        }
-    }
     let hasAKing = false;
-    for (let i in hand) {
-        if (hand[i].value == 'King') {
-            hasAKing = true;
-            break;
-        }
-    }
     let colorCards = [];
     let trumpCards = [];
     for (let i in playableCards) {
         if (playableCards[i].suit != 'Trump') {
             colorCards.push(playableCards[i]);
+            colorCount++;
+            if (playableCards[i].value == 'King') {
+                hasAKing = true;
+            }
         } else {
             trumpCards.push(playableCards[i]);
+            trumpCount++;
         }
     }
 
@@ -1917,6 +1909,7 @@ function actionCallback(action, room, pn) {
                                     + cardsToNotation(room.players[playerOffset(room['board'].povinnost,3)].hand) + '/'
                                     + cardsToNotation(room.board.talon) + '/';
             //Povinnost rotation is handled by the board reset function
+            SERVER.log(room.board.notation);//For debug when the server crashes
             SERVER.debug('Povinnost is ' + room['board'].povinnost,room.name, room.name);
             room.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':room['board'].povinnost},room['board'].povinnost);
             action.action = 'prever';
@@ -3217,6 +3210,7 @@ function autoReconnect(socketId) {
         if (players[socketId].username != 'Guest') {
             SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
         }
+        SOCKET_LIST[socketId].emit('returnPovinnost', rooms[players[socketId].room].board.povinnost);
     }
 }
 
