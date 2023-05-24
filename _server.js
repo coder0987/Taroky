@@ -1944,15 +1944,6 @@ function actionCallback(action, room, pn) {
             break;
         case 'prever':
             break;//ignore this, the callback is for the players
-        case 'passPrever':
-            action.player = (action.player + 1) % 4;
-            if (action.player == room['board'].povinnost) {
-                action.action = 'drawTalon';
-            } else {
-                action.action = 'prever';
-            }
-            actionTaken = true;
-            break;
         case 'drawTalon':
             if (action.player == room['board'].povinnost) {
                 room.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,4)});
@@ -2009,27 +2000,52 @@ function actionCallback(action, room, pn) {
                 actionTaken = true;
             }
             break;
-        case 'callPrever':
-            //TODO: an unusual technicality in the rules allows for players after the first to call prever and override the current prever. This means that every single player should be prompted, and prever is not decided until the last person passes
-            room['board'].playingPrever = true;
-            room['board'].prever = pn;
-            room['board'].preverTalonStep = 0;
-            room.board.importantInfo.prever = (room.board.prever+1);
-            action.action = 'drawPreverTalon';
-            if (room['board'].povinnost == pn) {
-                for (let i=0; i<4; i++) {
-                    room['players'][i].isTeamPovinnost = false;
-                    room.players[i].publicTeam = -1;
+        case 'passPrever':
+            action.player = (action.player + 1) % 4;
+            if (action.player == room['board'].povinnost) {
+                if (room.board.prever != -1) {
+                    action.action = 'drawPreverTalon';
+                    action.player = room.board.prever;
+                } else {
+                    action.action = 'drawTalon';
+                    actionTaken = true;
+                    break;
                 }
-                room['players'][pn].isTeamPovinnost = true;
-                room.players[pn].publicTeam = 1;
             } else {
-                for (let i=0; i<4; i++) {
-                    room['players'][i].isTeamPovinnost = true;
-                    room.players[i].publicTeam = 1;
+                action.action = 'prever';
+                actionTaken = true;
+                break;
+            }
+        case 'callPrever':
+            if (action.action == 'callPrever') {
+                room['board'].playingPrever = true;
+                room['board'].prever = pn;
+                room['board'].preverTalonStep = 0;
+                room.board.importantInfo.prever = (room.board.prever+1);
+                action.action = 'prever';
+            }
+            if (room.board.povinnost == (pn+1)%4 || action.action == 'drawPreverTalon') {
+            //Last player called prever.
+                action.action = 'drawPreverTalon';
+                if (room['board'].povinnost == action.player) {
+                    for (let i=0; i<4; i++) {
+                        room['players'][i].isTeamPovinnost = false;
+                        room.players[i].publicTeam = -1;
+                    }
+                    room['players'][action.player].isTeamPovinnost = true;
+                    room.players[action.player].publicTeam = 1;
+                } else {
+                    for (let i=0; i<4; i++) {
+                        room['players'][i].isTeamPovinnost = true;
+                        room.players[i].publicTeam = 1;
+                    }
+                    room['players'][action.player].isTeamPovinnost = false;
+                    room.players[action.player].publicTeam = -1;
                 }
-                room['players'][pn].isTeamPovinnost = false;
-                room.players[pn].publicTeam = -1;
+            } else {
+                action.player = (action.player + 1) % 4;
+                actionTaken = true;
+                break;
             }
             //Fallthrough to inform the player
         case 'drawPreverTalon':
@@ -2041,8 +2057,8 @@ function actionCallback(action, room, pn) {
                 Deck.sortCards(room['players'][action.player].tempHand);
 
                 //Inform player of cards
-                if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
-                    room.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards':room['players'][action.player].tempHand,'step':0});
+                if (room.players[action.player].type == PLAYER_TYPE.HUMAN) {
+                    room.informPlayer(action.player, '', MESSAGE_TYPE.PREVER_TALON,{'cards':room['players'][action.player].tempHand,'step':0});
                 }
 
                 actionTaken = true;
