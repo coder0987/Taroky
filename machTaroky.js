@@ -217,6 +217,16 @@ function isInHand(element) {
     return false;
 }
 
+function numTrumpInHand() {
+    let num = 0;
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump') {
+            num++;
+        }
+    }
+    return num;
+}
+
 function enter() {if (this.style.filter == '') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
 function exit() {this.classList.remove('image-hover-highlight');this.title='';}
 function clickCard() {
@@ -1094,7 +1104,7 @@ function onLoad() {
                 case 'drawTalon':
                 case 'passTalon':
                     addMessage('You are drawing cards from the talon.');
-                    if (povinnostNumber != playerNumber) {
+                    if (povinnostNumber != playerNumber && numTrumpInHand() <= 2) {
                         createChoiceButtons(BUTTON_TYPE.DRAW_TALON);
                     } else {
                         socket.emit('goTalon');
