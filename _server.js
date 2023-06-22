@@ -3926,6 +3926,20 @@ AdminPanel.reloadClients = () => {
         SOCKET_LIST[i].emit('reload');
     }
 }
+AdminPanel.printPlayerList = () => {
+    for (let i in players) {
+        console.log('Player ' + i + ':');
+        for (let p in players[i]) {
+            if (p != 'socket' && p != 'token') {
+                console.log('\t' + p + ': ' + players[i][p]);
+            }
+        }
+        //players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1 }
+    }
+}
+AdminPanel.printRoomsList = () => {
+    //TODO
+}
 
 //Begin listening
 if (DEBUG_MODE) {

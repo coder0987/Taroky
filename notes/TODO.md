@@ -32,6 +32,7 @@ This file contains a list of things we have yet TODO in no particular order
   * Potential: user pfp?
   * Potential: game history?
   * AI deep-learning bots are stored on the AI server, not the user database
+  * Store admin usernames as well, for access to the admin panel
 * Include ELO ratings for players and bots
 * Add ranked matches for competitive play
 * Increase back-end modularity for ease of variation additions

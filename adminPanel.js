@@ -15,6 +15,7 @@ const path = require('path');
 class AdminPanel {
 static shouldRestartServer = false;
 static reloadClients = () => {};
+static printPlayerList = () => {};
 static startAdminPanel(port) {
     const panel = http.createServer((req, res) => {
         if (req.method == 'GET') {
@@ -63,6 +64,9 @@ static startAdminPanel(port) {
                     break;
                 case '/RELOAD_ALL_CLIENTS':
                     AdminPanel.reloadClients();
+                    break;
+                case '/PRINT_PLAYER_LIST':
+                    AdminPanel.printPlayerList();
                     break;
                 //This is where we can add more functions to the admin panel
             }
