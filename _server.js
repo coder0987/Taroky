@@ -3799,7 +3799,7 @@ io.sockets.on('connection', function (socket) {
                             players[socketId].userInfo = info;
                             socket.emit('elo',info.elo);
                             socket.emit('admin',info.admin);
-                            socket.emit('defaultSettings',info.settings);
+                            socket.emit('defaultSettings',notationToObject(info.settings));
                         }).catch((err) => {
                             SERVER.warn('Database error:' + err);
                         });
