@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .grid {
+            display: grid;
+            gap: 1px;
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .container {
+            display: grid;
+            gap: 1px;
+            height: 100%;
+            width 100%;
+            grid-template-columns: [cols-start col1-start] 1fr [col1-end col2-start] 5fr [col2-end col3-start] 1fr [col3-end cols-end];
+            grid-template-rows: [rows-start row1-start] 1fr [row1-end row2-start] 5fr [row2-end row3-start] 1fr [row3-end rows-end];
+            outline: green solid 3px;
+        }
+
+        .player-1 {
+            grid-column: col2-start / col2-end;
+            grid-row: row3-start / row3-end;
+        }
+
+        .player-2 {
+            grid-column: col3-start / col3-end;
+            grid-row: row2-start / row2-end;
+        }
+
+        .player-3 {
+            grid-column: col2-start / col2-end;
+            grid-row: row1-start / row1-end;
+        }
+
+        .player-4 {
+            grid-column: col1-start / col1-end;
+            grid-row: row2-start / row2-end;
+        }
+
+        .table {
+            grid-column: col2-start / col2-end;
+            grid-row: row2-start / row2-end;
+        }
+
+        .chat-box {
+            grid-column: col1-start / col1-end;
+            grid-row: row3-start / row3-end;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="player-1"> P1 </div>
+        <div class="player-2"> P2 </div>
+        <div class="player-3"> P3 </div>
+        <div class="player-4"> P4 </div>
+        <div class="table"> TABLE </div>
+        <div class="chat-box"> CHAT BOX </div>
+
+
+    </div>
+</body>
+</html>
