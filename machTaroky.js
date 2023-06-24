@@ -490,40 +490,8 @@ function createSettings(tools) {
     let defaultLocked = false;
 
     if (defaultSettings) {
-        console.log('default settings loading in...')
-        //Player has default settings
-        let theSettings = defaultSettings.split(';')
-        for (let i in theSettings) {
-            let [currentSetting,currentRule] = theSettings[i].split('=');
-            switch (currentSetting) {
-                case 'difficulty':
-                    if (DIFFICULTY_TABLE[currentRule]) {
-                        console.log('difficulty default changed')
-                        defaultDifficulty = +currentRule;
-                    }
-                    break;
-                case 'timeout':
-                    currentRule = +currentRule;
-                    if (!isNaN(currentRule)) {
-                        if (currentRule <= 0) {
-                            currentRule = 0;//No timeout for negatives
-                        } else if (currentRule <= 20000) {
-                            currentRule = 20000;//20 second min
-                        } else if (currentRule >= 3600000) {
-                            currentRule = 3600000;//One hour max
-                        }
-                        console.log('timeout default changed')
-                        defaultTimeout = currentRule / 1000;
-                    }
-                    break;
-                case 'lock':
-                case 'locked':
-                case 'pn':
-                    break;
-                default:
-                    addError('Unknown setting: ' + currentSetting + '=' + currentRule);
-            }
-        }
+        defaultDifficulty = defaultSettings.difficulty;
+        defaultTimeout = defaultSettings.timeout;
     }
 
     let settings = document.createElement('div');

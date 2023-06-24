@@ -372,6 +372,45 @@ function notationToSettings(room,notation) {
         }
     }
 }
+function notationToObject(notation) {
+    let settingsObject = {};
+    let theSettings = notation.split(';')
+    for (let i in theSettings) {
+        let [setting,rule] = theSettings[i].split('=');
+        if (u(setting) || u(rule)) {
+            SERVER.debug('Undefined setting or rule')
+        } else {
+            switch (setting) {
+                case 'difficulty':
+                    if (DIFFICULTY_TABLE[rule]) {
+                        settingsObject.difficulty = +rule;
+                    }
+                    break;
+                case 'timeout':
+                    rule = +rule;
+                    if (!isNaN(rule)) {
+                        if (rule <= 0) {
+                            rule = 0;//No timeout for negatives
+                        } else if (rule <= 20000) {
+                            rule = 20000;//20 second min
+                        } else if (rule >= 3600000) {
+                            rule = 3600000;//One hour max
+                        }
+                       settingsObject.timeout = rule;
+                    }
+                    break;
+                case 'lock':
+                case 'locked':
+                case 'pn':
+                    //Handled later
+                    break;
+                default:
+                    SERVER.warn('Unknown setting: ' + setting + '=' + rule);
+            }
+        }
+    }
+    return settingsObject;
+}
 
 let baseDeck = Deck.createDeck();
 
@@ -3236,7 +3275,7 @@ function autoReconnect(socketId) {
         SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
         SOCKET_LIST[socketId].emit('elo',players[socketId].userInfo.elo);
         SOCKET_LIST[socketId].emit('admin',players[socketId].userInfo.admin);
-        SOCKET_LIST[socketId].emit('defaultSettings',players[socketId].userInfo.settings);
+        SOCKET_LIST[socketId].emit('defaultSettings',notationToObject(players[socketId].userInfo.settings));
     }
 }
 
@@ -3786,7 +3825,8 @@ io.sockets.on('connection', function (socket) {
     socket.on('saveSettings', function() {
         if (players[socketId] && rooms[players[socketId].room] && players[socketId].username != 'Guest') {
             Database.saveSettings(players[socketId].username, rooms[players[socketId].room].settingsNotation);
-            socket.emit('defaultSettings',rooms[players[socketId].room].settingsNotation);
+            players[socketId].userInfo.settings = rooms[players[socketId].room].settingsNotation;
+            socket.emit('defaultSettings',notationToObject(rooms[players[socketId].room].settingsNotation));
             SERVER.log('Default settings saved for user ' + players[socketId].username + ': ' + rooms[players[socketId].room].settingsNotation);
         }
     });
@@ -3817,7 +3857,7 @@ io.sockets.on('connection', function (socket) {
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
-function checkRoomsEquality(a, b) { if (Object.keys(a).length != Object.keys(b).length) { return false; } for (let i in a) { if (a[i].count != b[i].count) { return false; } } return true; }
+function checkRoomsEquality(a, b) { if (Object.keys(a).length != Object.keys(b).length) { return false; } for (let i in a) { if (!b[i] || a[i].count != b[i].count) { return false; } } return true; }
 
 function tick() {
     if (!ticking) {
