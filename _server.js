@@ -4,6 +4,7 @@ const Room = require('./room.js');
 const Deck = require('./deck.js');
 const AI = require('./AI.js');
 const AdminPanel = require('./adminPanel.js');
+const Database = require('./database.js');
 const { SUIT,
     SUIT_REVERSE,
     RED_VALUE,
