@@ -67,7 +67,7 @@ let discardingOrPlaying = true;
 let timeOffset = 0;
 let elo;
 let admin;
-let defaultSettings;
+let defaultSettings = {'timeout':30,'difficulty':2};
 let activeUsername;
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
@@ -485,15 +485,6 @@ function submitSettings(type) {
 
 function createSettings(tools) {
 
-    let defaultDifficulty = 2;
-    let defaultTimeout = 30;
-    let defaultLocked = false;
-
-    if (defaultSettings) {
-        defaultDifficulty = defaultSettings.difficulty;
-        defaultTimeout = defaultSettings.timeout;
-    }
-
     let settings = document.createElement('div');
     settings.id = 'settings';
 
@@ -510,7 +501,7 @@ function createSettings(tools) {
         difficultySelectOption.selected = false;
         difficultySelectOption.value = i;
         difficultySelectOption.id = DIFFICULTY_TABLE[i];
-        if (i==defaultDifficulty) {
+        if (i==defaultSettings.difficulty) {
             difficultySelectOption.selected = 'selected';
         }
         difficultySelectOption.innerHTML = DIFFICULTY_TABLE[i];
@@ -529,8 +520,8 @@ function createSettings(tools) {
 
     let timeoutButton = document.createElement('input');
     timeoutButton.setAttribute('type', 'number');
-    timeoutButton.defaultValue = defaultTimeout;
-    timeoutButton.value = defaultTimeout;
+    timeoutButton.defaultValue = defaultSettings.timeout;
+    timeoutButton.setAttribute('value',defaultSettings.timeout);
     timeoutButton.min = -1;//-1 or 0 mean no timeout
     timeoutButton.id = 'timeoutButton';
     timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
@@ -551,9 +542,6 @@ function createSettings(tools) {
         submitSettings("lock");
     });
     settings.appendChild(lockButton);
-    if (defaultLocked) {
-        lockButton.click();
-    }
     settings.appendChild(document.createElement('br'));
 
     //Create save button
@@ -585,7 +573,6 @@ function hostRoom() {
     if (roomHosted) {
         document.getElementById('lockButton').removeAttribute('hidden');
         document.getElementById('lockButtonP').removeAttribute('hidden');
-        document.getElementById('timeoutButton').value = 30;
         document.getElementById(DIFFICULTY_TABLE[2]).setAttribute('selected','selected');
         return;
     }
@@ -1578,6 +1565,7 @@ function displaySignOut(withName) {
 }
 
 function signOut() {
+    let accHandler = document.getElementById('accountHandler');
    document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    accHandler.removeEventListener('click',signOut);

@@ -3797,6 +3797,9 @@ io.sockets.on('connection', function (socket) {
 
                         Database.promiseCreateOrRetrieveUser(username).then((info) => {
                             players[socketId].userInfo = info;
+                            socket.emit('elo',info.elo);
+                            socket.emit('admin',info.admin);
+                            socket.emit('defaultSettings',info.settings);
                         }).catch((err) => {
                             SERVER.warn('Database error:' + err);
                         });
