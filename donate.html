@@ -107,7 +107,7 @@
                 document.body.appendChild(inp)
                 inp.value = that.textContent
                 inp.select();
-                document.execCommand('copy', false);
+                document.execCommand('copy', false); //works on PC may need to change this line to support mobile
                 inp.remove();
                 notifyCopied(that);
             }
@@ -129,9 +129,9 @@
                 donationList.appendChild(listItem);
             }
 
-            addDonation("Bitcoin", "bt1notarealaddress");
-            addDonation("Etherum/All EVM Chain", "0xnotarealaddress2");
-            addDonation("Venmo", "@notrealvenmo");
+            // Manually Enter Donation Addresses
+            addDonation("Bitcoin", "bc1qjqfv40dswdl0lssp45tmuwa5ts8p03dfx45nxl");
+            addDonation("All EVM Chains", "0x5f2CfF4a4850Bd209e721b0C26fcF63F0EB79c6a");
         </script>
     </div>
 </body>
