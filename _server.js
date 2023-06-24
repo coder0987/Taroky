@@ -3970,4 +3970,3 @@ function shutDown() {
     //Finally, shut down the server
     throw 'Shutting down...';
 }
-
