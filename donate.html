@@ -2,6 +2,26 @@
 <html>
 <head>
     <title>Donation Page</title>
+
+    <style>
+        .flash {
+            animation: flash-animation 0.5s;
+        }
+
+        @keyframes flash-animation {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 <body>
     <h1>Donate</h1>
@@ -11,35 +31,55 @@
     <ul id="donationList"></ul>
 
     <script>
-        function copy(that) {
-            var inp = document.createElement('input');
-            document.body.appendChild(inp)
-            inp.value = that.textContent
-            inp.select();
-            document.execCommand('copy', false);
-            inp.remove();
+    	function notifyCopied(element) {
+          // Add the flash class to the clicked element
+          element.classList.add('flash');
+
+          // Create a notification element
+          var notification = document.createElement('div');
+          notification.innerText = 'Text Copied!';
+          notification.classList.add('notification');
+
+          // Append the notification element to the body
+          document.body.appendChild(notification);
+
+          // Remove the flash class and notification element after a delay
+          setTimeout(function() {
+            element.classList.remove('flash');
+            document.body.removeChild(notification);
+          }, 1500);
         }
-
-        function addDonation(name, address) {
-
-            var listItem = document.createElement("li");
-
-            var nameLabel = document.createElement("span");
-            nameLabel.textContent = name + ": ";
-            var addressLabel = document.createElement("span");
-            addressLabel.textContent = address;
-            addressLabel.setAttribute("onclick", "copy(this)");
-
-            listItem.appendChild(nameLabel);
-            listItem.appendChild(addressLabel);
-
-            var donationList = document.getElementById("donationList");
-            donationList.appendChild(listItem);
+    
+    	function copy(that){
+          var inp =document.createElement('input');
+          document.body.appendChild(inp)
+          inp.value =that.textContent
+          inp.select();
+          document.execCommand('copy',false);
+          inp.remove();
+          notifyCopied(that);
         }
+    
+      function addDonation(name, address) {
 
-        addDonation("Bitcoin", "bt1notarealaddress");
-        addDonation("Etherum/All EVM Chain", "0xnotarealaddress2");
-        addDonation("Venmo", "@notrealvenmo");
+        var listItem = document.createElement("li");
+
+        var nameLabel = document.createElement("span");
+        nameLabel.textContent = name+": ";
+        var addressLabel = document.createElement("span");
+        addressLabel.textContent = address;
+        addressLabel.setAttribute("onclick", "copy(this)");
+
+        listItem.appendChild(nameLabel);
+        listItem.appendChild(addressLabel);
+
+        var donationList = document.getElementById("donationList");
+        donationList.appendChild(listItem);
+      }
+
+      addDonation("Bitcoin","bt1notarealaddress");
+      addDonation("Etherum/All EVM Chain","0xnotarealaddress2");
+      addDonation("Venmo","@notrealvenmo");
     </script>
 </body>
 </html>
