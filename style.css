@@ -294,4 +294,18 @@ h4 {
 
 .notification {
     color: var(--red);
+    position: fixed;
+    top: 95%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #f1f1f1;
+    padding: 10px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+
+.notification.fade-out {
+    opacity: 0;
 }

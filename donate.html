@@ -93,7 +93,12 @@
                 // Remove the flash class and notification element after a delay
                 setTimeout(function () {
                     element.classList.remove('flash');
-                    donation.removeChild(notification);
+                    notification.classList.add('fade-out');
+
+                    // Remove the notification element after the fade-out transition completes
+                    setTimeout(function () {
+                        donation.removeChild(notification);
+                    }, 500);
                 }, 1500);
             }
 
