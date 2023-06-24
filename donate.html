@@ -69,7 +69,7 @@
 </head>
 <body style="padding: 0px;">
     <div w3-include-html="/nav.html"></div>
-    <div class="container navy-txt">
+    <div class="container navy-txt" id="donation">
         <h1>Donate</h1>
 
 
@@ -83,16 +83,17 @@
 
                 // Create a notification element
                 var notification = document.createElement('div');
-                notification.innerText = 'Text Copied!';
+                notification.innerText = 'Address Copied!';
                 notification.classList.add('notification');
 
                 // Append the notification element to the body
-                document.body.appendChild(notification);
+                var donation = document.getElementById("donation");
+                donation.appendChild(notification);
 
                 // Remove the flash class and notification element after a delay
                 setTimeout(function () {
                     element.classList.remove('flash');
-                    document.body.removeChild(notification);
+                    donation.removeChild(notification);
                 }, 1500);
             }
 

@@ -291,3 +291,7 @@ h4 {
         opacity: 1;
     }
 }
+
+.notification {
+    color: var(--red);
+}
