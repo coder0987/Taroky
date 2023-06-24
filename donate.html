@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Donation Page</title>
+</head>
+<body>
+    <h1>Donate</h1>
+
+
+    <h2>Addresses</h2>
+    <ul id="donationList"></ul>
+
+    <script>
+        function addDonation(name, address) {
+
+            var listItem = document.createElement("li");
+            listItem.textContent = name + ": " + address;
+
+            var donationList = document.getElementById("donationList");
+            donationList.appendChild(listItem);
+        }
+
+        addDonation("Bitcoin", "notarealaddress");
+        addDonation("Etherum/All EVM Chains", "notarealaddress2");
+        addDonation("Venmo", "notrealvenmo");
+    </script>
+</body>
+</html>
