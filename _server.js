@@ -3239,7 +3239,7 @@ io.sockets.on('connection', function (socket) {
     }
     if (!SOCKET_LIST[socketId]) {
         SOCKET_LIST[socketId] = socket;
-        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1 };
+        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null };
         SERVER.log('Player joined with socketID ' + socketId);
         SERVER.debug('Join time: ' + Date.now());
         numOnlinePlayers++;
@@ -3509,6 +3509,9 @@ io.sockets.on('connection', function (socket) {
                         rooms[players[socketId].room].informPlayers('The room has been locked. No more players may join', MESSAGE_TYPE.SETTING);
                     }
                     break;
+                case 'save':
+                    //TODO
+                    break;
             }
         }
     });
@@ -3741,6 +3744,12 @@ io.sockets.on('connection', function (socket) {
                         players[socketId].token = token;
                         socket.emit('loginSuccess', username);
                         SERVER.log('Player ' + socketId + ' has signed in as ' + username);
+
+                        Database.promiseCreateOrRetrieveUser(username).then((info) => {
+                            players[socketId].userInfo = info;
+                        }).catch((err) => {
+                            SERVER.warn('Database error:' + err);
+                        });
                     } else {
                         SERVER.log('Player ' + socketId + ' send an invalid token or username');
                         socket.emit('loginFail');

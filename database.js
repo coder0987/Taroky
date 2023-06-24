@@ -5,16 +5,17 @@ const pool = mariadb.createPool({
      //Host: localhost, port: 3306,
      user:'TarokyAdmin',
      database: 'machtarok',
-     password: process.env.password,
+     password: process.env.PASSWORD,
      connectionLimit: 15
 });
 
 class Database {
     static async getUsers() {
-        let conn;
+        let conn,
+            infoFromDatabase;
         try {
             conn = await pool.getConnection();
-            infoFromDatabase = await conn.query("SELECT ALL FROM users");
+            infoFromDatabase = await conn.query("SELECT * FROM users");
         } catch (err) {
             throw err;
         } finally {
@@ -24,10 +25,12 @@ class Database {
     }
 
     static async getUser(username) {
-        let conn;
+        username = username.toLowerCase();
+        let conn,
+            infoFromDatabase;
         try {
             conn = await pool.getConnection();
-            infoFromDatabase = await conn.query("SELECT ALL FROM users WHERE username = ?", username);
+            infoFromDatabase = await conn.query("SELECT * FROM users WHERE username = ?", username);
         } catch (err) {
             throw err;
         } finally {
@@ -37,6 +40,7 @@ class Database {
     }
 
     static async createUser(username, elo, admin, settings) {
+        username = username.toLowerCase();
         let conn;
         try {
             conn = await pool.getConnection();
@@ -52,11 +56,38 @@ class Database {
         }
     }
 
+    static async createOrRetrieveUser(username) {
+        username = username.toLowerCase();
+        let conn,
+            info;
+        try {
+            conn = await pool.getConnection();
+            let usernameCheck = await conn.query("SELECT * FROM users WHERE username = ?", username);
+
+            if (usernameCheck.length > 0) {
+                info = await Database.getUser(username);
+            } else {
+                await conn.query("INSERT INTO users (username) VALUES (?)", [username]);
+                info = {username: username, elo: 300, admin: false, settings: null};
+            }
+        } catch (err) {
+            throw err;
+        } finally {
+            if (conn) conn.end();
+        }
+        return info;
+    }
+
+    static promiseCreateOrRetrieveUser(username) {
+        return Promise.resolve(Database.createOrRetrieveUser(username));
+    }
+
     static async updateUser(username, column, data) {
+        username = username.toLowerCase();
         let conn;
         try {
             conn = await pool.getConnection();
-            await conn.query("UPDATE users SET ? = ? WHERE id=?", [column, data, username]);
+            await conn.query("UPDATE users SET ? = ? WHERE username=?", [column, data, username]);
         } catch (err) {
             throw err;
         } finally {
