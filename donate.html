@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Donation Page</title>
+</head>
+<body>
+    <h1>Donate</h1>
+
+
+    <h2>Addresses</h2>
+    <ul id="donationList"></ul>
+
+    <script>
+        function copy(that) {
+            var inp = document.createElement('input');
+            document.body.appendChild(inp)
+            inp.value = that.textContent
+            inp.select();
+            document.execCommand('copy', false);
+            inp.remove();
+        }
+
+        function addDonation(name, address) {
+
+            var listItem = document.createElement("li");
+
+            var nameLabel = document.createElement("span");
+            nameLabel.textContent = name + ": ";
+            var addressLabel = document.createElement("span");
+            addressLabel.textContent = address;
+            addressLabel.setAttribute("onclick", "copy(this)");
+
+            listItem.appendChild(nameLabel);
+            listItem.appendChild(addressLabel);
+
+            var donationList = document.getElementById("donationList");
+            donationList.appendChild(listItem);
+        }
+
+        addDonation("Bitcoin", "bt1notarealaddress");
+        addDonation("Etherum/All EVM Chain", "0xnotarealaddress2");
+        addDonation("Venmo", "@notrealvenmo");
+    </script>
+</body>
+</html>
