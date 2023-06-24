@@ -21,6 +21,7 @@ class Room {
         this._audienceCount = 0;
         this._trainingRoom = trainingRoom;
         this._trainingGoal = trainingRoom ? 100 : -1;
+        this.setSettingsNotation();
     }
 
     resetForNextRound() {
@@ -75,6 +76,14 @@ class Room {
         for (let i in this._audience) {
             this._audience[i].messenger.emit('gameEnded');
         }
+    }
+
+    setSettingsNotation() {
+        let settingNotation = '';
+        for (let i in room.settings) {
+            settingNotation += i + '=' + settingNotation[i] + ';';
+        }
+        this._settingsNotation = settingNotation.substring(0,settingNotation.length - 2);
     }
 
     // Getters

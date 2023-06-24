@@ -78,9 +78,7 @@ class Database {
         return info;
     }
 
-    static promiseCreateOrRetrieveUser(username) {
-        return Promise.resolve(Database.createOrRetrieveUser(username));
-    }
+
 
     static async updateUser(username, column, data) {
         username = username.toLowerCase();
@@ -93,6 +91,13 @@ class Database {
         } finally {
             if (conn) conn.end();
         }
+    }
+
+    static promiseCreateOrRetrieveUser(username) {
+        return Promise.resolve(Database.createOrRetrieveUser(username));
+    }
+    static saveSettings(username,settings) {
+        Promise.resolve(Database.updateUser(username,'settings',settings));
     }
 }
 

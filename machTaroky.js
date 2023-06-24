@@ -65,6 +65,9 @@ let drawnCards = [];
 let queued = false;
 let discardingOrPlaying = true;
 let timeOffset = 0;
+let elo;
+let admin;
+let defaultSettings;
 let activeUsername;
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
@@ -472,12 +475,65 @@ function submitSettings(type) {
             document.getElementById('lockButton').setAttribute('hidden','hidden');
             document.getElementById('lockButtonP').setAttribute('hidden','hidden');
             break;
+        case 'save':
+            socket.emit('saveSettings');
+            break;
         default:
             addError('Unknown setting: ' + type);
     }
 }
 
 function createSettings(tools) {
+
+    let defaultDifficulty = 2;
+    let defaultTimeout = 30;
+    let defaultLocked = false;
+
+    if (defaultSettings) {
+        //Player has default settings
+        let theSettings = notation.split(';')
+        for (let i in theSettings) {
+            let [setting,rule] = theSettings[i].split('=');
+            if (u(setting) || u(rule)) {
+                SERVER.debug('Undefined setting or rule')
+            } else {
+                switch (setting) {
+                    case 'difficulty':
+                        if (DIFFICULTY_TABLE[rule]) {
+                            defaultDifficulty = +rule;
+                        }
+                        break;
+                    case 'timeout':
+                        rule = +rule;
+                        if (!isNaN(rule)) {
+                            if (rule <= 0) {
+                                rule = 0;//No timeout for negatives
+                            } else if (rule <= 20000) {
+                                rule = 20000;//20 second min
+                            } else if (rule >= 3600000) {
+                                rule = 3600000;//One hour max
+                            }
+                            defaultTimeout = rule / 1000;
+                        }
+                        break;
+                    case 'lock':
+                    case 'locked':
+                        rule = !(!rule);
+                        if (rule) {
+                            //Room may be locked but not unlocked
+                            defaultLocked = true;
+                        }
+                        break;
+                    case 'pn':
+                        //Handled later
+                        break;
+                    default:
+                        SERVER.warn('Unknown setting: ' + setting + '=' + rule);
+                }
+            }
+        }
+    }
+
     let settings = document.createElement('div');
     settings.id = 'settings';
 
@@ -494,7 +550,7 @@ function createSettings(tools) {
         difficultySelectOption.selected = false;
         difficultySelectOption.value = i;
         difficultySelectOption.id = DIFFICULTY_TABLE[i];
-        if (i==2) {
+        if (i==defaultDifficulty) {
             difficultySelectOption.selected = 'selected';
         }
         difficultySelectOption.innerHTML = DIFFICULTY_TABLE[i];
@@ -513,7 +569,7 @@ function createSettings(tools) {
 
     let timeoutButton = document.createElement('input');
     timeoutButton.setAttribute('type', 'number');
-    timeoutButton.defaultValue = 30;
+    timeoutButton.defaultValue = defaultTimeout;
     timeoutButton.min = -1;//-1 or 0 mean no timeout
     timeoutButton.id = 'timeoutButton';
     timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
@@ -534,6 +590,22 @@ function createSettings(tools) {
         submitSettings("lock");
     });
     settings.appendChild(lockButton);
+    if (defaultLocked) {
+        lockButton.click();
+    }
+
+    //Create save button
+    let saveButtonP = document.createElement('span');
+    saveButtonP.innerHTML = 'Save Settings:\t';
+    saveButtonP.style='display:inline-block; width: 175px';
+
+    let saveButton = document.createElement('button');
+    saveButton.innerHTML = 'Save';
+    saveButton.addEventListener('click', function(){
+        submitSettings("save");
+    });
+    settings.appendChild(saveButton);
+
     settings.appendChild(document.createElement('br'));
     settings.appendChild(document.createElement('br'));
 
@@ -1192,6 +1264,16 @@ function onLoad() {
     socket.on('gameEnded', function() {
         exitCurrentRoom(true);
     });
+    socket.on('elo', function(returnElo) {
+        elo = returnElo;
+    });
+    socket.on('admin', function(returnAdmin) {
+        admin = returnAdmin;
+    });
+    socket.on('defaultSettings', function(returnSettings) {
+        defaultSettings = returnSettings;
+    });
+
     refresh();
     setInterval(tick, 200);
 }

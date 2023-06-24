@@ -219,47 +219,9 @@ function notate(room, notation) {
 
             //This is the first point at which the game may reasonably be played from
             //So, encode the settings if they exist. Then, if no more is present, return the room
-            let theSettings = values[values.length - 1].split(';');
-            for (let i in theSettings) {
-                let [setting,rule] = theSettings[i].split('=');
-                if (u(setting) || u(rule)) {
-                    SERVER.debug('Undefined setting or rule')
-                } else {
-                    switch (setting) {
-                        case 'difficulty':
-                            if (DIFFICULTY_TABLE[rule]) {
-                                room.settings.difficulty = +rule;
-                            }
-                            break;
-                        case 'timeout':
-                            rule = +rule;
-                            if (!isNaN(rule)) {
-                                if (rule <= 0) {
-                                    rule = 0;//No timeout for negatives
-                                } else if (rule <= 20000) {
-                                    rule = 20000;//20 second min
-                                } else if (rule >= 3600000) {
-                                    rule = 3600000;//One hour max
-                                }
-                               room.settings.timeout = rule;
-                            }
-                            break;
-                        case 'lock':
-                        case 'locked':
-                            rule = !(!rule);
-                            if (rule) {
-                                //Room may be locked but not unlocked
-                                room.settings.locked = true;
-                            }
-                            break;
-                        case 'pn':
-                            //Handled later
-                            break;
-                        default:
-                            SERVER.warn('Unknown setting: ' + setting + '=' + rule);
-                    }
-                }
-            }
+            let theSettings = values[values.length - 1];
+            notationToSettings(room, theSettings);
+
             room.board.hasTheI = findTheI(room.players);
             if (values.length === 10) {
                 room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
@@ -366,6 +328,49 @@ function setSettingNotation(room) {
         settingNotation += i + '=' + settingNotation[i] + ';';
     }
     room.settingsNotation = settingNotation.substring(0,settingNotation.length - 2);
+}
+function notationToSettings(room,notation) {
+    let theSettings = notation.split(';')
+    for (let i in theSettings) {
+        let [setting,rule] = theSettings[i].split('=');
+        if (u(setting) || u(rule)) {
+            SERVER.debug('Undefined setting or rule')
+        } else {
+            switch (setting) {
+                case 'difficulty':
+                    if (DIFFICULTY_TABLE[rule]) {
+                        room.settings.difficulty = +rule;
+                    }
+                    break;
+                case 'timeout':
+                    rule = +rule;
+                    if (!isNaN(rule)) {
+                        if (rule <= 0) {
+                            rule = 0;//No timeout for negatives
+                        } else if (rule <= 20000) {
+                            rule = 20000;//20 second min
+                        } else if (rule >= 3600000) {
+                            rule = 3600000;//One hour max
+                        }
+                       room.settings.timeout = rule;
+                    }
+                    break;
+                case 'lock':
+                case 'locked':
+                    rule = !(!rule);
+                    if (rule) {
+                        //Room may be locked but not unlocked
+                        room.settings.locked = true;
+                    }
+                    break;
+                case 'pn':
+                    //Handled later
+                    break;
+                default:
+                    SERVER.warn('Unknown setting: ' + setting + '=' + rule);
+            }
+        }
+    }
 }
 
 let baseDeck = Deck.createDeck();
@@ -3229,6 +3234,12 @@ function autoReconnect(socketId) {
         }
         SOCKET_LIST[socketId].emit('returnPovinnost', rooms[players[socketId].room].board.povinnost);
     }
+    if (players[socketId].info) {
+        //Player account info
+        SOCKET_LIST[socketId].emit('elo',players[socketId].info.elo);
+        SOCKET_LIST[socketId].emit('admin',players[socketId].info.admin);
+        SOCKET_LIST[socketId].emit('defaultSettings',players[socketId].info.settings);
+    }
 }
 
 io.sockets.on('connection', function (socket) {
@@ -3345,6 +3356,9 @@ io.sockets.on('connection', function (socket) {
                         SERVER.debug('New room host',roomID);
                         if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
                             socket.emit('youStart');
+                            if (players[socketId].info && players.socketId.info.settings) {
+                                notationToSettings(rooms[roomID],players.socketId.info.settings);
+                            }
                         } else {
                             autoReconnect(socketId);
                             SERVER.error('Player joined empty room with no host that was started',roomID);
@@ -3508,9 +3522,6 @@ io.sockets.on('connection', function (socket) {
                         SERVER.log('This room has been locked by the host', players[socketId].room);
                         rooms[players[socketId].room].informPlayers('The room has been locked. No more players may join', MESSAGE_TYPE.SETTING);
                     }
-                    break;
-                case 'save':
-                    //TODO
                     break;
             }
         }
@@ -3725,6 +3736,8 @@ io.sockets.on('connection', function (socket) {
             players[socketId].savePoints.push(rooms[players[socketId].room].board.notation + room.settingsNotation);
         }
     });
+
+    //User account tools
     socket.on('login', function(username, token) {
         if (typeof username == 'string' && typeof token == 'string' && players[socketId]) {
             try {
@@ -3772,6 +3785,36 @@ io.sockets.on('connection', function (socket) {
             SERVER.log('Player ' + socketId + ' has signed out');
         }
     });
+    socket.on('saveSettings', function() {
+        if (players[socketId] && rooms[players[socketId].room] && players[socketId].username != 'Guest') {
+            Database.saveSettings(players[socketId].username, rooms[players[socketId].room].settingsNotation);
+            socket.emit('defaultSettings',rooms[players[socketId].room].settingsNotation);
+        }
+    });
+
+    //Admin tools
+    socket.on('restartServer', function() {
+        if (players[socketId] && players[socketId].info && players[socketId].info.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' restarted the server');
+            AdminPanel.shouldRestartServer = true;
+        } else {
+            if (players[socketId]) {
+                SERVER.warn('Player with info ' + players[socketId].info + ' attempted an admin action');
+            }
+        }
+    });
+    socket.on('reloadClients', function() {
+        if (players[socketId] && players[socketId].info && players[socketId].info.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' reloaded the clients');
+            AdminPanel.reloadClients();
+        }
+    });
+    socket.on('printPlayerList', function() {
+        if (players[socketId] && players[socketId].info && players[socketId].info.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' printed the player list');
+            AdminPanel.printPlayerList();
+        }
+    });
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
@@ -3790,14 +3833,14 @@ function tick() {
             }
         }
         if (Object.keys(rooms).length == 0) {
-            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true,players);}
-            rooms[1] = new Room(1,false,players);
+            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);}
+            rooms[1] = new Room(1,false,LOG_LEVEL,players);
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) { }
-            rooms[i] = new Room(i,false,players);
+            rooms[i] = new Room(i,false,LOG_LEVEL,players);
         } else if (DEBUG_MODE && !rooms['Debug']) {
-            rooms['Debug'] = new Room('Debug',true,players);
+            rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);
         }
         simplifiedRooms = {};
         for (let i in rooms) {
@@ -3956,12 +3999,10 @@ if (DEBUG_MODE) {
     console.log("DEBUG MODE ACTIVATED");
     console.log("Listening on port 8448 (Accessible at http://localhost:8448/ )")
     server.listen(8448);
-    AdminPanel.startAdminPanel(8401);
 } else {
     console.log("Server running in production mode. For debug mode, run \nnode _server.js debug")
     console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
     server.listen(8442);
-    AdminPanel.startAdminPanel(8400);
 }
 console.log("Log level: " + LOG_LEVEL);
 
