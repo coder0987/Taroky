@@ -83,13 +83,15 @@ class Database {
     static async updateUser(username, column, data) {
         username = username.toLowerCase();
         let conn;
-        try {
-            conn = await pool.getConnection();
-            await conn.query("UPDATE users SET ? = ? WHERE username=?", [column, data, username]);
-        } catch (err) {
-            throw err;
-        } finally {
-            if (conn) conn.end();
+        if (column == 'settings' || column == 'admin' || column == 'elo') {
+            try {
+                conn = await pool.getConnection();
+                await conn.query("UPDATE users SET " + column + " = ? WHERE username in (?)", [data, username]);
+            } catch (err) {
+                throw err;
+            } finally {
+                if (conn) conn.end();
+            }
         }
     }
 

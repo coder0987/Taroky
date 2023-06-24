@@ -490,46 +490,38 @@ function createSettings(tools) {
     let defaultLocked = false;
 
     if (defaultSettings) {
+        console.log('default settings loading in...')
         //Player has default settings
-        let theSettings = notation.split(';')
+        let theSettings = defaultSettings.split(';')
         for (let i in theSettings) {
-            let [setting,rule] = theSettings[i].split('=');
-            if (u(setting) || u(rule)) {
-                SERVER.debug('Undefined setting or rule')
-            } else {
-                switch (setting) {
-                    case 'difficulty':
-                        if (DIFFICULTY_TABLE[rule]) {
-                            defaultDifficulty = +rule;
+            let [currentSetting,currentRule] = theSettings[i].split('=');
+            switch (currentSetting) {
+                case 'difficulty':
+                    if (DIFFICULTY_TABLE[currentRule]) {
+                        console.log('difficulty default changed')
+                        defaultDifficulty = +currentRule;
+                    }
+                    break;
+                case 'timeout':
+                    currentRule = +currentRule;
+                    if (!isNaN(currentRule)) {
+                        if (currentRule <= 0) {
+                            currentRule = 0;//No timeout for negatives
+                        } else if (currentRule <= 20000) {
+                            currentRule = 20000;//20 second min
+                        } else if (currentRule >= 3600000) {
+                            currentRule = 3600000;//One hour max
                         }
-                        break;
-                    case 'timeout':
-                        rule = +rule;
-                        if (!isNaN(rule)) {
-                            if (rule <= 0) {
-                                rule = 0;//No timeout for negatives
-                            } else if (rule <= 20000) {
-                                rule = 20000;//20 second min
-                            } else if (rule >= 3600000) {
-                                rule = 3600000;//One hour max
-                            }
-                            defaultTimeout = rule / 1000;
-                        }
-                        break;
-                    case 'lock':
-                    case 'locked':
-                        rule = !(!rule);
-                        if (rule) {
-                            //Room may be locked but not unlocked
-                            defaultLocked = true;
-                        }
-                        break;
-                    case 'pn':
-                        //Handled later
-                        break;
-                    default:
-                        SERVER.warn('Unknown setting: ' + setting + '=' + rule);
-                }
+                        console.log('timeout default changed')
+                        defaultTimeout = currentRule / 1000;
+                    }
+                    break;
+                case 'lock':
+                case 'locked':
+                case 'pn':
+                    break;
+                default:
+                    addError('Unknown setting: ' + currentSetting + '=' + currentRule);
             }
         }
     }
@@ -570,6 +562,7 @@ function createSettings(tools) {
     let timeoutButton = document.createElement('input');
     timeoutButton.setAttribute('type', 'number');
     timeoutButton.defaultValue = defaultTimeout;
+    timeoutButton.value = defaultTimeout;
     timeoutButton.min = -1;//-1 or 0 mean no timeout
     timeoutButton.id = 'timeoutButton';
     timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
@@ -593,11 +586,13 @@ function createSettings(tools) {
     if (defaultLocked) {
         lockButton.click();
     }
+    settings.appendChild(document.createElement('br'));
 
     //Create save button
     let saveButtonP = document.createElement('span');
     saveButtonP.innerHTML = 'Save Settings:\t';
     saveButtonP.style='display:inline-block; width: 175px';
+    settings.appendChild(saveButtonP);
 
     let saveButton = document.createElement('button');
     saveButton.innerHTML = 'Save';
@@ -1272,6 +1267,7 @@ function onLoad() {
     });
     socket.on('defaultSettings', function(returnSettings) {
         defaultSettings = returnSettings;
+        addBoldMessage('Settings loaded');
     });
 
     refresh();

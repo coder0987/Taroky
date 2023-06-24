@@ -325,9 +325,9 @@ function cardsToNotation(cards) {
 function setSettingNotation(room) {
     let settingNotation = '';
     for (let i in room.settings) {
-        settingNotation += i + '=' + settingNotation[i] + ';';
+        settingNotation += i + '=' + room.settings[i] + ';';
     }
-    room.settingsNotation = settingNotation.substring(0,settingNotation.length - 2);
+    room.settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
 }
 function notationToSettings(room,notation) {
     let theSettings = notation.split(';')
@@ -3229,16 +3229,14 @@ function autoReconnect(socketId) {
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         }
-        if (players[socketId].username != 'Guest') {
-            SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
-        }
+
         SOCKET_LIST[socketId].emit('returnPovinnost', rooms[players[socketId].room].board.povinnost);
     }
-    if (players[socketId].info) {
-        //Player account info
-        SOCKET_LIST[socketId].emit('elo',players[socketId].info.elo);
-        SOCKET_LIST[socketId].emit('admin',players[socketId].info.admin);
-        SOCKET_LIST[socketId].emit('defaultSettings',players[socketId].info.settings);
+    if (players[socketId].username != 'Guest') {
+        SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
+        SOCKET_LIST[socketId].emit('elo',players[socketId].userInfo.elo);
+        SOCKET_LIST[socketId].emit('admin',players[socketId].userInfo.admin);
+        SOCKET_LIST[socketId].emit('defaultSettings',players[socketId].userInfo.settings);
     }
 }
 
@@ -3356,8 +3354,8 @@ io.sockets.on('connection', function (socket) {
                         SERVER.debug('New room host',roomID);
                         if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
                             socket.emit('youStart');
-                            if (players[socketId].info && players.socketId.info.settings) {
-                                notationToSettings(rooms[roomID],players.socketId.info.settings);
+                            if (players[socketId].userInfo && players[socketId].userInfo.settings) {
+                                notationToSettings(rooms[roomID],players[socketId].userInfo.settings);
                             }
                         } else {
                             autoReconnect(socketId);
@@ -3789,12 +3787,13 @@ io.sockets.on('connection', function (socket) {
         if (players[socketId] && rooms[players[socketId].room] && players[socketId].username != 'Guest') {
             Database.saveSettings(players[socketId].username, rooms[players[socketId].room].settingsNotation);
             socket.emit('defaultSettings',rooms[players[socketId].room].settingsNotation);
+            SERVER.log('Default settings saved for user ' + players[socketId].username + ': ' + rooms[players[socketId].room].settingsNotation);
         }
     });
 
     //Admin tools
     socket.on('restartServer', function() {
-        if (players[socketId] && players[socketId].info && players[socketId].info.admin) {
+        if (players[socketId] && players[socketId].info && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' restarted the server');
             AdminPanel.shouldRestartServer = true;
         } else {
@@ -3804,13 +3803,13 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('reloadClients', function() {
-        if (players[socketId] && players[socketId].info && players[socketId].info.admin) {
+        if (players[socketId] && players[socketId].info && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' reloaded the clients');
             AdminPanel.reloadClients();
         }
     });
     socket.on('printPlayerList', function() {
-        if (players[socketId] && players[socketId].info && players[socketId].info.admin) {
+        if (players[socketId] && players[socketId].info && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' printed the player list');
             AdminPanel.printPlayerList();
         }
