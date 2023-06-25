@@ -373,6 +373,9 @@ function notationToSettings(room,notation) {
     }
 }
 function notationToObject(notation) {
+    if (!notation) {
+        return null;
+    }
     let settingsObject = {};
     let theSettings = notation.split(';')
     for (let i in theSettings) {
@@ -3821,6 +3824,7 @@ io.sockets.on('connection', function (socket) {
         if (players[socketId]) {
             players[socketId].username = 'Guest';
             players[socketId].token = -1;
+            players[socketId].userInfo = null;
             socket.emit('logout');
             SERVER.log('Player ' + socketId + ' has signed out');
         }
@@ -3836,23 +3840,20 @@ io.sockets.on('connection', function (socket) {
 
     //Admin tools
     socket.on('restartServer', function() {
-        if (players[socketId] && players[socketId].info && players[socketId].userInfo.admin) {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' restarted the server');
             AdminPanel.shouldRestartServer = true;
-        } else {
-            if (players[socketId]) {
-                SERVER.warn('Player with info ' + players[socketId].info + ' attempted an admin action');
-            }
+            socket.disconnect();
         }
     });
     socket.on('reloadClients', function() {
-        if (players[socketId] && players[socketId].info && players[socketId].userInfo.admin) {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' reloaded the clients');
             AdminPanel.reloadClients();
         }
     });
     socket.on('printPlayerList', function() {
-        if (players[socketId] && players[socketId].info && players[socketId].userInfo.admin) {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' printed the player list');
             AdminPanel.printPlayerList();
         }

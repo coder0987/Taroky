@@ -26,13 +26,13 @@ This file contains a list of things we have yet TODO in no particular order
 * Add persistent debug logs
 * Add variations and variation requests
 * Expand available room settings
-* Connect a database (likely MariaDB) for player info
-  * Stores ELO ratings
-  * Stores default settings
+* Connect a database (likely MariaDB) for player info - DONE
+  * Stores ELO ratings - DONE
+  * Stores default settings - DONE
   * Potential: user pfp?
   * Potential: game history?
   * AI deep-learning bots are stored on the AI server, not the user database
-  * Store admin usernames as well, for access to the admin panel
+  * Store admin usernames as well, for access to the admin panel - DONE
 * Include ELO ratings for players and bots
 * Add ranked matches for competitive play
 * Increase back-end modularity for ease of variation additions

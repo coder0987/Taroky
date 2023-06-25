@@ -1221,8 +1221,10 @@ function onLoad() {
         admin = returnAdmin;
     });
     socket.on('defaultSettings', function(returnSettings) {
-        defaultSettings = returnSettings;
-        addBoldMessage('Settings loaded');
+        if (defaultSettings) {
+            defaultSettings = returnSettings;
+            addBoldMessage('Settings loaded');
+        }
     });
 
     refresh();
