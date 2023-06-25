@@ -13,8 +13,24 @@ window.onload = () => {
         let theToken = getCookie('token');
         if (theUsername && theToken) {
             socket.emit('login',theUsername,theToken);
+        } else {
+            //no admin
+            document.getElementById('goAway').removeAttribute('hidden');
+            window.location = 'https://machtarok.com/';
         }
     }
+
+    socket.on('admin', function(returnAdmin) {
+        if (returnAdmin) {
+            //good for you
+            document.getElementById('main').removeAttribute('hidden');
+            document.getElementById('message').innerHTML = 'Welcome, Admin ' + getCookie('username');
+        } else {
+            //no access granted
+            document.getElementById('goAway').removeAttribute('hidden');
+            window.location = 'https://machtarok.com/';
+        }
+    });
 }
 
 //thanks w3 schools
