@@ -3839,11 +3839,13 @@ io.sockets.on('connection', function (socket) {
     });
 
     //Admin tools
-    socket.on('restartServer', function() {
+    socket.on('restartServer', function(immediately) {
         if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' restarted the server');
             AdminPanel.shouldRestartServer = true;
-            socket.disconnect();
+            if (immediately) {
+                shutDown();
+            }
         }
     });
     socket.on('reloadClients', function() {
@@ -3855,7 +3857,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('printPlayerList', function() {
         if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' printed the player list');
-            AdminPanel.printPlayerList();
+            socket.emit('playerList',AdminPanel.printPlayerList());
         }
     });
 });
@@ -4022,16 +4024,22 @@ AdminPanel.reloadClients = () => {
         SOCKET_LIST[i].emit('reload');
     }
 }
-AdminPanel.printPlayerList = () => {
+AdminPanel.printPlayerList = (printToConsole) => {
+    const playerListObject = [];
     for (let i in players) {
-        console.log('Player ' + i + ':');
+        if (printToConsole) {console.log('Player ' + i + ':');}
+        playerListObject.push({});
         for (let p in players[i]) {
             if (p != 'socket' && p != 'token') {
-                console.log('\t' + p + ': ' + players[i][p]);
+                playerListObject[playerListObject.length - 1][p] = players[i][p];
+                if (printToConsole) {
+                    console.log('\t' + p + ': ' + players[i][p]);
+                }
             }
         }
         //players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1 }
     }
+    return playerListObject;
 }
 AdminPanel.printRoomsList = () => {
     //TODO

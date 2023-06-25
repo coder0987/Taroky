@@ -40,9 +40,11 @@ TODO:
     <div id="main" class="container" hidden="hidden">
         <h1>Admin Panel</h1>
         <button onclick="socket.emit('restartServer')">Restart Server When it Empties</button>
+        <button onclick="socket.emit('restartServer',true)">Restart Server NOW</button>
         <button onclick="socket.emit('reloadClients')">Reload All Clients</button>
-        <button onclick="socket.emit('printPlayerList')">Print Player List</button>
+        <button onclick="socket.emit('printPlayerList')">Fetch Player List</button>
         <p id="message"></p>
+        <table id="table"></table>
     </div>
     <div id="goAway" class="container" hidden="hidden">
         <h1>Restricted Area</h1>

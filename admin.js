@@ -31,6 +31,34 @@ window.onload = () => {
             window.location = 'https://machtarok.com/';
         }
     });
+
+    socket.on('playerList', function(playerData) {
+        const tbl = document.getElementById('table');
+        tbl.innerHTML = '';
+        tbl.id = 'table';
+        tbl.style.width = '100px';
+        tbl.style.border = '1px solid black';
+
+        const headerRow = tbl.insertRow();
+        for (let value in playerData[0]) {
+            const td = headerRow.insertCell();
+            td.appendChild(document.createTextNode(value));
+            td.style.border = '1px solid black';
+        }
+
+        for (let i = 0; i < playerData.length; i++) {
+            const tr = tbl.insertRow();
+            for (let value in playerData[i]) {
+                const td = tr.insertCell();
+                td.appendChild(document.createTextNode(
+                    typeof playerData[i][value] == 'object' ?
+                        JSON.stringify(playerData[i][value]) :
+                        playerData[i][value]
+                ));
+                td.style.border = '1px solid black';
+            }
+        }
+    });
 }
 
 //thanks w3 schools

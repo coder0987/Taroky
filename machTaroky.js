@@ -1219,6 +1219,7 @@ function onLoad() {
     });
     socket.on('admin', function(returnAdmin) {
         admin = returnAdmin;
+        document.getElementById('adminHandler').removeAttribute('hidden');
     });
     socket.on('defaultSettings', function(returnSettings) {
         if (defaultSettings) {
