@@ -34,17 +34,29 @@ TODO:
     <div id="navbar" class="navbar navy">
         <div class="container-fluid">
             <img src="/assets/logo/logo-full-white.png" alt="MachTarok" class="navbar-brand">
+            <p id="status"></p>
         </div>
     </div>
 
     <div id="main" class="container" hidden="hidden">
-        <h1>Admin Panel</h1>
-        <button onclick="socket.emit('restartServer')">Restart Server When it Empties</button>
-        <button onclick="socket.emit('restartServer',true)">Restart Server NOW</button>
-        <button onclick="socket.emit('reloadClients')">Reload All Clients</button>
-        <button onclick="socket.emit('printPlayerList')">Fetch Player List</button>
-        <p id="message"></p>
-        <table id="table"></table>
+        <div class="row">
+            <div class="col-12">
+                <h1>Admin Panel</h1>
+                <button onclick="socket.emit('restartServer')">Restart Server When it Empties</button>
+                <button onclick="socket.emit('restartServer',true)">Restart Server NOW</button>
+                <button onclick="socket.emit('reloadClients')">Reload All Clients</button>
+                <button onclick="socket.emit('printPlayerList')">Fetch Player List</button>
+                <button onclick="socket.emit('printRoomList')">Fetch Room List</button>
+                <p id="message"></p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <table id="table" class="table table-hover table-bordered border-secondary"></table>
+                <hr>
+                <table id="roomTable" class="table table-hover table-bordered border-secondary"></table>
+            </div>
+        </div>
     </div>
     <div id="goAway" class="container" hidden="hidden">
         <h1>Restricted Area</h1>

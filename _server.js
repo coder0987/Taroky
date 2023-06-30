@@ -357,11 +357,6 @@ function notationToSettings(room,notation) {
                     break;
                 case 'lock':
                 case 'locked':
-                    rule = !(!rule);
-                    if (rule) {
-                        //Room may be locked but not unlocked
-                        room.settings.locked = true;
-                    }
                     break;
                 case 'pn':
                     //Handled later
@@ -3860,10 +3855,45 @@ io.sockets.on('connection', function (socket) {
             socket.emit('playerList',AdminPanel.printPlayerList());
         }
     });
+    socket.on('printRoomList', function() {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' printed the room list');
+            try {
+                socket.emit('roomList',AdminPanel.printRoomsList());
+            } catch (maximumcallstacksize) {
+                //too much info for one socket message
+                SERVER.error('tmi');
+                AdminPanel.printRoomsList(true);
+            }
+        }
+    });
+    socket.on('adminMessage', function(id, message) {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' sent ' + id + ' the message ' + message);
+            players[id].socket.emit('broadcast',message);
+        }
+    });
+    socket.on('removeRoom', function(id) {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin && rooms[id]) {
+            SERVER.log('Admin ' + players[socketId].username + ' removed room ' + id);
+            clearTimeout(rooms[id].autoAction);
+            rooms[id].ejectAudience();
+            rooms[id].ejectPlayers();
+            delete rooms[id];
+        }
+    });
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
-function checkRoomsEquality(a, b) { if (Object.keys(a).length != Object.keys(b).length) { return false; } for (let i in a) { if (!b[i] || a[i].count != b[i].count) { return false; } } return true; }
+function checkRoomsEquality(a, b) {
+    if (Object.keys(a).length != Object.keys(b).length) { return false; }
+    for (let i in a) {
+        if (!b[i] || a[i].count != b[i].count) {
+            return false;
+        }
+    }
+    return true;
+}
 
 function tick() {
     if (!ticking) {
@@ -3887,6 +3917,8 @@ function tick() {
         } else if (DEBUG_MODE && !rooms['Debug']) {
             rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);
         }
+
+        //TODO: something in this code is bugged to where it always considers players "up-to-date" and does not refresh the rooms automatically
         simplifiedRooms = {};
         for (let i in rooms) {
             if (rooms[i] && !rooms[i].settings.locked) {
@@ -3897,6 +3929,12 @@ function tick() {
                     }
                 }
                 simplifiedRooms[i] = { 'count': rooms[i].playerCount, 'usernames': theUsernames, 'audienceCount': rooms[i].audienceCount };
+            } else {
+                if (!rooms[i]) {
+                    SERVER.warn('A room disappeared');
+                } else {
+                    //Locked
+                }
             }
         }
         for (let i in players) {
@@ -4041,8 +4079,23 @@ AdminPanel.printPlayerList = (printToConsole) => {
     }
     return playerListObject;
 }
-AdminPanel.printRoomsList = () => {
-    //TODO
+AdminPanel.printRoomsList = (printToConsole) => {
+    const roomListObject = [];
+    for (let i in rooms) {
+        if (printToConsole) {console.log('Room ' + i + ':');}
+        roomListObject.push({});
+        for (let r in rooms[i]) {
+            if (r != '_deck' && r != '_playerList' && r != '_players' && r != '_trainingGoal'
+                    && r != '_settings' && r != '_audience' && r != '_board') {
+                //todo: players, audience, and board have useful information that needs to be extracted and sent
+                roomListObject[roomListObject.length - 1][r] = rooms[i][r];
+                if (printToConsole) {
+                    console.log('\t' + r + ': ' + rooms[i][r]);
+                }
+            }
+        }
+    }
+    return roomListObject;
 }
 
 //Begin listening

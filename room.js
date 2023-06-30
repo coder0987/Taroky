@@ -77,6 +77,17 @@ class Room {
         }
     }
 
+    ejectPlayers() {
+        for (let i in this._players) {
+            if (this._players[i].messenger) {
+                players[this._players[i].socket]['room'] = -1;
+                players[this._players[i].socket]['pn'] = -1;
+                players[this._players[i].socket]['roomsSeen'] = {};
+                this._players[i].messenger.emit('gameEnded');
+            }
+        }
+    }
+
     setSettingsNotation() {
         let settingNotation = '';
         for (let i in this._settings) {
