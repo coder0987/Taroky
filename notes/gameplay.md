@@ -33,9 +33,9 @@ All player then may declare point cards:
     2: Little ones (8-9 taroks)
     2: Bida (1-2 taroks)
     4: Uni (0 taroks)
-    2: Honery (pronounced pawn-e or ponnie, 4+ 5-point cards)
-    4: Rosa-Honery (all 4 kings)
-    6: Rosa-Honery+ (all 4 kings plus another 5-point card)  
+    2: Pane (pronounced pawn-e or ponnie, 4+ 5-point cards)
+    4: Rosa-Pane (all 4 kings)
+    6: Rosa-Pane+ (all 4 kings plus another 5-point card)  
     2: Trul (Skyz, XXI/Mund, I/Pagat)
 
 If any player believes that his team will win every trick, he may call Valat (which translates to "roll")

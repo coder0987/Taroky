@@ -37,13 +37,15 @@
         <button class="button btn green" id="load" onclick="loadButton()">Page not loading? Click here</button>
     </div>
 </div>
-    
+
+<!--
 <div id="navbar" class="navbar navy">
     <div class="container-fluid">
         <img src="/assets/logo/logo-full-white.png" alt="MachTarok" class="navbar-brand">
         <a id="accountHandler" class="navbar-brand" target="_blank" rel="opener" href="https://sso.smach.us/?redirect=https://machtarok.com/">Sign In</a>
     </div>
 </div>
+-->
 <div w3-include-html="/nav.html"></div>
 
 <div class="container">
@@ -105,14 +107,16 @@
         <img hidden="hidden" src="/assets/mach-deck-thumb/card-back-t.png" id="cardBack" onload="cardBackLoaded=true">
     </div>
     <br><br>
-    <div class="row centered footer">
+    <div class="row centered footer" id="footer">
         <div class="col-xs-12 col-md-2">
             <p style="margin: 0;"><span id="online">1</span> Players Online</p>
         </div>
         <div class="col-xs-12 col-md-8 footer-content">
             <p class="footer-content">Open Source Code available on <a target="_blank" rel="noopener noreferrer" class="small-link" href="https://github.com/coder0987/Taroky">GitHub</a></p>
         </div>
-        <div class="col-xs-12 col-md-2"></div>
+        <div class="col-xs-12 col-md-2">
+            <p style="margin: 0;"><span id="donate"></span> <a class="small-link" href="donate.html">Donate</a></p>
+        </div>
     </div>
 </div>
 

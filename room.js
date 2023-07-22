@@ -4,7 +4,7 @@ const Deck = require('./deck.js');
 const {DIFFICULTY, PLAYER_TYPE} = require('./enums.js');
 
 class Room {
-    constructor(name, debugRoom, logLevel, playerList) {
+    constructor(name, debugRoom, logLevel, playerList, trainingRoom) {
         this._settings = {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'locked':false};
         this._name = name;
         this._host = -1;
@@ -19,6 +19,8 @@ class Room {
         this._playerList = playerList;
         this._audience = {};
         this._audienceCount = 0;
+        this._trainingRoom = trainingRoom;
+        this._trainingGoal = trainingRoom ? 100 : -1;
     }
 
     resetForNextRound() {
@@ -75,6 +77,25 @@ class Room {
         }
     }
 
+    ejectPlayers() {
+        for (let i in this._players) {
+            if (this._players[i].messenger) {
+                players[this._players[i].socket]['room'] = -1;
+                players[this._players[i].socket]['pn'] = -1;
+                players[this._players[i].socket]['roomsSeen'] = {};
+                this._players[i].messenger.emit('gameEnded');
+            }
+        }
+    }
+
+    setSettingsNotation() {
+        let settingNotation = '';
+        for (let i in this._settings) {
+            settingNotation += i + '=' + this._settings[i] + ';';
+        }
+        this._settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
+    }
+
     // Getters
     get settings() {
         return this._settings;
@@ -128,6 +149,25 @@ class Room {
         return this._audienceCount;
     }
 
+    get trainingRoom() {
+        return this._trainingRoom;
+    }
+
+    get trainingGoal() {
+        return this._trainingGoal;
+    }
+
+    get winner() {
+        //Returns the player with the most chips. If tie, ignore it
+        let highestChipsCount = 0;
+        for (let i in this._players) {
+            if (this._players[i].chips > this._players[0].chips) {
+                highestChipsCount = i;
+            }
+        }
+        return this._players[highestChipsCount];
+    }
+
     // Setters
     set settings(settings) {
         this._settings = settings;
@@ -179,6 +219,14 @@ class Room {
 
     set audienceCount(audienceCount) {
         this._audienceCount = audienceCount;
+    }
+
+    set trainingRoom(trainingRoom) {
+        this._trainingRoom = trainingRoom;
+    }
+
+    set trainingGoal(trainingGoal) {
+        this._trainingGoal = trainingGoal;
     }
 }
 

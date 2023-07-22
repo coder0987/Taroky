@@ -128,6 +128,43 @@ class Deck {
         return 0;
     }
 
+    static handContainsCard(handToCheck, cardName) {
+        for (let i in handToCheck) {
+            if (handToCheck[i].value == cardName) {
+                return true;
+            }
+        }
+        return false;
+    }
+    static handHasSuit(handToCheck, suitToCheck) {
+        for (let i in handToCheck) {
+            if (handToCheck[i].suit == suitToCheck) {
+                return true;
+            }
+        }
+        return false;
+    }
+    static handContains(handToCheck, valueToCheck, suitToCheck) {
+        for (let i in handToCheck) {
+            if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
+                return true;
+            }
+        }
+        return false;
+    }
+    static isCardPlayable(hand, card, leadCard) {
+        if (handHasSuit(hand, leadCard.suit)) {
+            return card.suit == leadCard.suit;
+        } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+            return card.suit == 'Trump';
+        } else {
+            return true;
+        }
+    }
+
+    static cardId(card) {
+        return VALUE_REVERSE[card.value] + SUIT_REVERSE[card.suit] * 8;
+    }
 
     //Getters
 

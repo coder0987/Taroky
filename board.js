@@ -27,6 +27,11 @@ class Board {
         this._gameNumber = 0;
         this._importantInfo = {};
         this._notation = '';
+
+        this._trickHistory = [];
+        this._cardsPlayed = new Array(54).fill(false);//Spade, Club, Heart, Diamond, Trump -> Low to high
+        this._publicPreverTalon = [];
+        this._trumpDiscarded = [[],[],[]];
     }
 
     resetForNextRound() {
@@ -37,7 +42,7 @@ class Board {
         this._preverTalonStep = 0;
         this._prever = -1;
         this._playingPrever = false;
-        this._povinnost = (this.povinnost + 1) % 4;
+        this._povinnost = (this._povinnost + 1) % 4;
         this._buc = false;
         this._leadPlayer = -1;
         this._leadCard = null;
@@ -55,6 +60,11 @@ class Board {
         this._firstContraPlayer = -1;
         this._importantInfo = {};
         this._notation = '';
+
+        this._trickHistory = [];
+        this._cardsPlayed = new Array(54).fill(false);
+        this._publicPreverTalon = [];
+        this._trumpDiscarded = [[],[],[]];
     }
 
     //Setters
@@ -146,6 +156,22 @@ class Board {
         this._trickWinCount = winCount;
     }
 
+    set trickHistory(trickHistory) {
+        this._trickHistory = trickHistory;
+    }
+
+    set cardsPlayed(cardsPlayed) {
+        this._cardsPlayed = cardsPlayed;
+    }
+
+    set publicPreverTalon(publicPreverTalon) {
+        this._publicPreverTalon = publicPreverTalon;
+    }
+
+    set trumpDiscarded(trumpDiscarded) {
+        this._trumpDiscarded = trumpDiscarded;
+    }
+
     //Getters
     get partnerCard() {
         return this._partnerCard;
@@ -233,6 +259,22 @@ class Board {
 
     get hasTheI() {
         return this._hasTheI;
+    }
+
+    get trickHistory() {
+        return this._trickHistory;
+    }
+
+    get cardsPlayed() {
+        return this._cardsPlayed;
+    }
+
+    get publicPreverTalon() {
+        return this._publicPreverTalon;
+    }
+
+    get trumpDiscarded() {
+        return this._trumpDiscarded;
     }
 }
 

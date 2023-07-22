@@ -4,6 +4,8 @@ const Room = require('./room.js');
 const Deck = require('./deck.js');
 const AI = require('./AI.js');
 const AdminPanel = require('./adminPanel.js');
+const Database = require('./database.js');
+const { Buffer } = require('node:buffer')
 const { SUIT,
     SUIT_REVERSE,
     RED_VALUE,
@@ -159,10 +161,6 @@ let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
-//TODO: Move to class files
-let latestAI = null;
-let trainees = [];
-let trainingRooms = [];
 
 function notate(room, notation) {
     if (notation) {
@@ -222,47 +220,9 @@ function notate(room, notation) {
 
             //This is the first point at which the game may reasonably be played from
             //So, encode the settings if they exist. Then, if no more is present, return the room
-            let theSettings = values[values.length - 1].split(';');
-            for (let i in theSettings) {
-                let [setting,rule] = theSettings[i].split('=');
-                if (u(setting) || u(rule)) {
-                    SERVER.debug('Undefined setting or rule')
-                } else {
-                    switch (setting) {
-                        case 'difficulty':
-                            if (DIFFICULTY_TABLE[rule]) {
-                                room.settings.difficulty = +rule;
-                            }
-                            break;
-                        case 'timeout':
-                            rule = +rule;
-                            if (!isNaN(rule)) {
-                                if (rule <= 0) {
-                                    rule = 0;//No timeout for negatives
-                                } else if (rule <= 20000) {
-                                    rule = 20000;//20 second min
-                                } else if (rule >= 3600000) {
-                                    rule = 3600000;//One hour max
-                                }
-                               room.settings.timeout = rule;
-                            }
-                            break;
-                        case 'lock':
-                        case 'locked':
-                            rule = !(!rule);
-                            if (rule) {
-                                //Room may be locked but not unlocked
-                                room.settings.locked = true;
-                            }
-                            break;
-                        case 'pn':
-                            //Handled later
-                            break;
-                        default:
-                            SERVER.warn('Unknown setting: ' + setting + '=' + rule);
-                    }
-                }
-            }
+            let theSettings = values[values.length - 1];
+            notationToSettings(room, theSettings);
+
             room.board.hasTheI = findTheI(room.players);
             if (values.length === 10) {
                 room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
@@ -363,56 +323,103 @@ function cardsToNotation(cards) {
     }
     return theNotation;
 }
-
 function setSettingNotation(room) {
     let settingNotation = '';
     for (let i in room.settings) {
-        settingNotation += i + '=' + settingNotation[i] + ';';
+        settingNotation += i + '=' + room.settings[i] + ';';
     }
-    room.settingsNotation = settingNotation.substring(0,settingNotation.length - 2);
+    room.settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
+}
+function notationToSettings(room,notation) {
+    let theSettings = notation.split(';')
+    for (let i in theSettings) {
+        let [setting,rule] = theSettings[i].split('=');
+        if (u(setting) || u(rule)) {
+            SERVER.debug('Undefined setting or rule')
+        } else {
+            switch (setting) {
+                case 'difficulty':
+                    if (DIFFICULTY_TABLE[rule]) {
+                        room.settings.difficulty = +rule;
+                    }
+                    break;
+                case 'timeout':
+                    rule = +rule;
+                    if (!isNaN(rule)) {
+                        if (rule <= 0) {
+                            rule = 0;//No timeout for negatives
+                        } else if (rule <= 20000) {
+                            rule = 20000;//20 second min
+                        } else if (rule >= 3600000) {
+                            rule = 3600000;//One hour max
+                        }
+                       room.settings.timeout = rule;
+                    }
+                    break;
+                case 'lock':
+                case 'locked':
+                    break;
+                case 'pn':
+                    //Handled later
+                    break;
+                default:
+                    SERVER.warn('Unknown setting: ' + setting + '=' + rule);
+            }
+        }
+    }
+}
+function notationToObject(notation) {
+    if (!notation) {
+        return null;
+    }
+    let settingsObject = {};
+    let theSettings = notation.split(';')
+    for (let i in theSettings) {
+        let [setting,rule] = theSettings[i].split('=');
+        if (u(setting) || u(rule)) {
+            SERVER.debug('Undefined setting or rule')
+        } else {
+            switch (setting) {
+                case 'difficulty':
+                    if (DIFFICULTY_TABLE[rule]) {
+                        settingsObject.difficulty = +rule;
+                    }
+                    break;
+                case 'timeout':
+                    rule = +rule;
+                    if (!isNaN(rule)) {
+                        if (rule <= 0) {
+                            rule = 0;//No timeout for negatives
+                        } else if (rule <= 20000) {
+                            rule = 20000;//20 second min
+                        } else if (rule >= 3600000) {
+                            rule = 3600000;//One hour max
+                        }
+                       settingsObject.timeout = rule;
+                    }
+                    break;
+                case 'lock':
+                case 'locked':
+                case 'pn':
+                    //Handled later
+                    break;
+                default:
+                    SERVER.warn('Unknown setting: ' + setting + '=' + rule);
+            }
+        }
+    }
+    return settingsObject;
 }
 
 let baseDeck = Deck.createDeck();
 
-function handContainsCard(handToCheck, cardName) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].value == cardName) {
-            return true;
-        }
-    }
-    return false;
-}
-function handHasSuit(handToCheck, suitToCheck) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].suit == suitToCheck) {
-            return true;
-        }
-    }
-    return false;
-}
-function handContains(handToCheck, valueToCheck, suitToCheck) {
-    for (let i in handToCheck) {
-        if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
-            return true;
-        }
-    }
-    return false;
-}
-function isCardPlayable(hand, card, leadCard) {
-    if (handHasSuit(hand, leadCard.suit)) {
-        return card.suit == leadCard.suit;
-    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
-        return card.suit == 'Trump';
-    } else {
-        return true;
-    }
-}
+
 
 function findPovinnost(players) {
     let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povinnost is found
     while (true) { //loop until we find povinnost
         for (let i = 0; i < 4; i++) {
-            if (handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
+            if (Deck.handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
                 return i; //found povinnost
             }
         }
@@ -421,7 +428,7 @@ function findPovinnost(players) {
 }
 function findTheI(players) {
    for (let i = 0; i < 4; i++) {
-       if (handContainsCard(players[i].hand, TRUMP_VALUE[0])) {
+       if (Deck.handContainsCard(players[i].hand, TRUMP_VALUE[0])) {
            return i; //found the I
        }
    }
@@ -435,10 +442,10 @@ function possiblePartners(hand) {
     //can always partner with XIX
     partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
     //if we hold XIX we can partner with the next lowest trump we don't hold, down to the XV
-    if (handContainsCard(hand, 'XIX')) {
-        for (let v = 17; v >= 15; v--) {
+    if (Deck.handContainsCard(hand, 'XIX')) {
+        for (let v = 17; v >= 14; v--) {
             //18 is XIX and 14 is XV
-            if (!handContainsCard(hand, TRUMP_VALUE[v])) {
+            if (!Deck.handContainsCard(hand, TRUMP_VALUE[v])) {
                 partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
                 break;
             }
@@ -479,7 +486,7 @@ function grayUndiscardables(hand) {
     return true;
 }
 function grayUnplayables(hand, leadCard) {
-    if (handHasSuit(hand, leadCard.suit)) {
+    if (Deck.handHasSuit(hand, leadCard.suit)) {
         for (let i in hand) {
             if (hand[i].suit != leadCard.suit) {
                 hand[i].grayed = true;
@@ -487,7 +494,7 @@ function grayUnplayables(hand, leadCard) {
                 hand[i].grayed = false;
             }
         }
-    } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+    } else if (leadCard.suit != 'Trump' && Deck.handHasSuit(hand, 'Trump')) {
         for (let i in hand) {
             if (hand[i].suit != 'Trump') {
                 hand[i].grayed = true;
@@ -501,6 +508,22 @@ function grayUnplayables(hand, leadCard) {
             hand[i].grayed = false;
         }
     }
+}
+function grayTheI(hand) {
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump' && hand[i].value == 'I') {
+            hand[i].grayed = true;
+        }
+    }
+    return hand;//should be linked as well
+}
+function grayTheXXI(hand) {
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump' && hand[i].value == 'XXI') {
+            hand[i].grayed = true;
+        }
+    }
+    return hand;//should be linked as well
 }
 function unGrayCards(hand) {
     //Used to un-gray cards before a player leads
@@ -544,6 +567,50 @@ function highestPointValue(hand) {
     }
     return pv;
 }
+function lowestPointValue(hand) {
+    let pv = hand[0];
+    for (let i in hand) {
+        if (Deck.pointValue(hand[i]) < Deck.pointValue(pv)) {
+            pv = hand[i];
+        }
+    }
+    return pv;
+}
+function lowestTrump(hand) {
+    //Assuming the inserted hand is all trump
+    let lowest = hand[0];
+    for (let i in hand) {
+        if (VALUE_REVERSE[lowest.value] > VALUE_REVERSE[hand[i].value]) {
+            lowest = hand[i];
+        }
+    }
+    return lowest;
+}
+function highestTrump(hand) {
+    //Assuming the inserted hand is all trump
+    let highest = hand[0];
+    for (let i in hand) {
+        if (VALUE_REVERSE[highest.value] < VALUE_REVERSE[hand[i].value]) {
+            highest = hand[i];
+        }
+    }
+    return highest;
+}
+function lowestTrumpThatBeats(hand, card) {
+    //Assuming the inserted hand is all trump
+    let lowest = highestTrump(hand);
+    if (VALUE_REVERSE[card.value] > VALUE_REVERSE[lowest.value]) {
+        //No cards can win
+        return lowestTrump(hand);
+    }
+    for (let i in hand) {
+        if (VALUE_REVERSE[lowest.value] > VALUE_REVERSE[hand[i].value] &&
+            VALUE_REVERSE[card.value] < VALUE_REVERSE[hand[i].value]) {
+            lowest = hand[i];
+        }
+    }
+    return lowest;
+}
 function whoWon(table, leadPlayer) {
     //First card in the table belongs to the leadPlayer
     let trickLeadCard = table[0];
@@ -569,6 +636,40 @@ function whoWon(table, leadPlayer) {
     }
     //No trumps means that the winner is whoever played the card of the lead suit with the highest value
     return (leadPlayer+currentWinner)%4;
+}
+function whoIsWinning(table) {
+    let trickLeadCard = table[0];
+    let trickLeadSuit = trickLeadCard.suit;
+    let highestTrump = -1;
+    let currentWinner = 0;//LeadPlayer is assumed to be winning
+    for (let i=0; i<table.length; i++) {
+        if (table[i].suit == 'Trump' && VALUE_REVERSE[table[i].value] > highestTrump) {
+            highestTrump = VALUE_REVERSE[table[i].value];
+            currentWinner = i;
+        }
+    }
+    if (highestTrump != -1) {
+        //If a trump was played, then the highest trump wins
+        return table[currentWinner];
+    }
+    let highestOfLeadSuit = VALUE_REVERSE[trickLeadCard.value];
+    for (let i=1; i<table.length; i++) {
+        if (table[i].suit == trickLeadSuit && VALUE_REVERSE[table[i].value] > highestOfLeadSuit) {
+            highestOfLeadSuit = VALUE_REVERSE[table[i].value];
+            currentWinner = i;
+        }
+    }
+    return table[currentWinner];
+}
+
+function highestUnplayedTrump(booleanArray) {
+    for (let i=53; i>=32; i--) {
+        if (!booleanArray[i]) {
+            //This trump has not been played
+            return {suit:'Trump', value:TRUMP_VALUE[i - 32]};
+        }
+    }
+    return {suit:'Trump', value:'I'};
 }
 
 //Robot Functions TODO: MOVE TO CLASS FILE
@@ -602,7 +703,7 @@ function trumpChain(hand) {
     let guarantees = 0;
     let misses = 0;
     for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (handContainsCard(TRUMP_VALUE[i])) {
+        if (Deck.handContainsCard(TRUMP_VALUE[i])) {
             if (misses > 0) {
                 misses--;
             } else {
@@ -617,7 +718,7 @@ function trumpChain(hand) {
 function unbrokenTrumpChain(hand) {
     let guarantees = 0;
     for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (handContainsCard(TRUMP_VALUE[i])) {
+        if (Deck.handContainsCard(hand,TRUMP_VALUE[i])) {
             guarantees++;
         } else {
             return guarantees;
@@ -659,7 +760,6 @@ function basicHandRanking(hand) {
 function robotDiscard(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
             /*TODO: Discard cards from the suit with the least number of possible cards that does not have a king
                 If tied, discard the highest point value
@@ -693,7 +793,6 @@ function robotPartner(hand, difficulty) {
     let robotPossiblePartners = possiblePartners(hand);
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -712,11 +811,90 @@ function robotPartner(hand, difficulty) {
             return { 'value': 'XIX', 'suit': SUIT[4] };
     }
 }
+function robotPrever(hand, difficulty, room) {
+    switch (difficulty) {
+        case DIFFICULTY.AI:
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            if (numOfSuit(hand, SUIT[4]) >= 8 && trumpChain(hand) >= 2 && basicHandRanking(hand) >= 10 && Deck.handContainsCard(hand, 'King')) {
+                //Must have 2 guaranteed tricks, tarocky, and a King
+                return 'goPrever';
+            }
+        case DIFFICULTY.EASY:
+            if (numOfSuit(hand, SUIT[4]) >= 8 && unbrokenTrumpChain(hand) >= 3 && basicHandRanking(hand) >= 15 && Deck.handContainsCard(hand, 'King')) {
+                //Must have Skyz, XXI, XX, tarocky, and a King
+                return 'goPrever';
+            }
+        case DIFFICULTY.RUDIMENTARY:
+            return 'passPrever';
+        default:
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
+            return 'passPrever';
+    }
+
+}
+function robotPreverTalon(hand, difficulty, talon, room) {
+    let step = room.board.preverTalonStep;
+    let top = step == 1;
+    let numTrump = 0;
+    let highTrump = 0;
+    let kings = 0;
+    for (let i in talon) {
+        if (talon[i].suit == 'Trump') {
+            numTrump++;
+            if (VALUE_REVERSE[talon[i].value] > 16) {
+                highTrump++;
+            }
+        } else if (talon[i].value == 'King') {
+            kings++;
+        }
+    }
+    let otherSide = 0;
+    if (step == 2) {
+        //Allowed to see the other set of cards
+        for (let i in room.board.talon) {
+            if (room.board.talon[i].suit == 'Trump') {
+                otherSide++;
+                if (VALUE_REVERSE[room.board.talon[i].value] > 16) {
+                    otherSide++;
+                }
+            } else if (room.board.talon[i].value == 'King') {
+                otherSide++;
+            }
+        }
+    }
+    switch (difficulty) {
+        case DIFFICULTY.AI:
+            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
+        case DIFFICULTY.RUTHLESS:
+        case DIFFICULTY.HARD:
+        case DIFFICULTY.NORMAL:
+            if (top) {
+                if (kings || highTrump || numTrump == 3) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                if (otherSide > (kings + highTrump + numTrump)) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        case DIFFICULTY.EASY:
+        case DIFFICULTY.RUDIMENTARY:
+            return true;
+        default:
+            SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
+            return true;
+    }
+}
 function robotCall(hand, difficulty) {
     //Valat
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -735,7 +913,6 @@ function robotCall(hand, difficulty) {
 function robotIOTE(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -754,7 +931,6 @@ function robotIOTE(hand, difficulty) {
 function robotContra(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
             if (basicHandRanking(hand) >= 18) {
@@ -773,7 +949,6 @@ function robotContra(hand, difficulty) {
 function robotPovinnostBidaUniChoice(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -788,22 +963,120 @@ function robotPovinnostBidaUniChoice(hand, difficulty) {
     }
 }
 function robotLead(hand, difficulty, room) {
+    let playableCards = handWithoutGray(hand);
+    if (playableCards.length == 1) {
+        return playableCards[0];
+    }
+    playableCards = grayTheI(playableCards);
+    playableCards = handWithoutGray(playableCards);
+    if (playableCards.length == 1) {
+        return playableCards[0];
+    }
+    if (!Deck.handContainsCard(hand, 'Skyz') && highestUnplayedTrump(room.board.cardsPlayed).value == 'Skyz') {
+        //Someone else has Skyz and has not played it
+        playableCards = grayTheXXI(playableCards);
+        playableCards = handWithoutGray(playableCards);
+        if (playableCards.length == 1) {
+            return playableCards[0];
+        }
+    }
+
+    let pn = room.board.nextStep.player;
+    let trumpCount = 0;
+    let colorCount = 0;
+    let hasAKing = false;
+    let colorCards = [];
+    let trumpCards = [];
+    for (let i in playableCards) {
+        if (playableCards[i].suit != 'Trump') {
+            colorCards.push(playableCards[i]);
+            colorCount++;
+            if (playableCards[i].value == 'King') {
+                hasAKing = true;
+            }
+        } else {
+            trumpCards.push(playableCards[i]);
+            trumpCount++;
+        }
+    }
+
+    let calledTaroky = false;
+    for (let i in room.board.moneyCards) {
+        for (let j in room.board.moneyCards[i]) {
+            if (room.board.moneyCards[i][j] == 'Taroky' || room.board.moneyCards[i][j] == 'Tarocky') {
+                calledTaroky = true;
+            }
+        }
+    }
+    let partnerCard = room.board.partnerCard;//String
+    if (hand.length == 12 && calledTaroky && room.board.prever == -1 && !Deck.handContainsCard(hand, partnerCard)) {
+        //First trick. Not Prever. Povinnost called someone else. Someone has 8+ tarocks
+
+        //TODO: Skyz may be played first in order to allow partner to come back with XXI and try for a valat
+
+        //I is not in here
+        return lowestTrump(trumpCards);
+    }
+
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
             //Possible strategies: run trump until almost out, play kings, reclaim control with trump
         case DIFFICULTY.NORMAL:
             //Possible strategies: run trump until out, then play kings
-        case DIFFICULTY.EASY:
-            if (handContainsCard(hand,'XIX')) {
-                //My parents were very upset that the robots would not play the XIX
-                //This is the temporary fix
-                return {'suit':SUIT[4],'value':'XIX'};
+            if (room.board.iote == pn) {
+                //I called IOTE
+                //2 scenarios: 1, I can bulldoze. 2, I have a lot of trump
+                if (trumpCount > 0 && VALUE_REVERSE[highestTrump(trumpCards).value] >= VALUE_REVERSE[highestUnplayedTrump[room.board.playedCards]]) {
+                    //I have the biggest trump
+                    return highestTrump(trumpCards);
+                }
+                if (colorCount == 0 || (trumpCount > colorCount)) {
+                    //Pull trump
+                    return lowestTrump(trumpCards);
+                }
+                //Play color to save I for later
+                if (hasAKing) {
+                    //Play the king
+                    for (let i in playableCards) {
+                        if (playableCards[i].value == 'King') {
+                            return playableCards[i];
+                        }
+                    }
+                }
+                return lowestPointValue(colorCards);
             }
+            if (trumpCount > colorCount && (colorCount < 5)) {
+                let biggest = highestTrump(trumpCards);
+                if (VALUE_REVERSE[biggest.value] < 14) {
+                    return lowestTrump(trumpCards);
+                }
+                return biggest;
+            }
+            if (hasAKing) {
+                //Play the king
+                for (let i in playableCards) {
+                    if (playableCards[i].value == 'King') {
+                        return playableCards[i];
+                    }
+                }
+            }
+            return lowestPointValue(colorCards);
+        case DIFFICULTY.EASY:
+            if (hasAKing) {
+                //Play the king
+                for (let i in playableCards) {
+                    if (playableCards[i].value == 'King') {
+                        return playableCards[i];
+                    }
+                }
+            }
+            if (colorCards.length > 0) {
+                return lowestPointValue(colorCards);
+            }
+            return lowestTrump(playableCards);
         case DIFFICULTY.RUDIMENTARY:
-            //TODO: more difficulty algos
             return firstSelectableCardExceptPagat(hand);
         default:
             SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
@@ -813,20 +1086,229 @@ function robotLead(hand, difficulty, room) {
     }
 }
 function robotPlay(hand, difficulty, room) {
-    //TODO: add context. Robots need to know: the table, if partners have been revealed, money cards, povinnost, valat, contra, IOTE, etc
+    //TODO: add context. Robots need to know: money cards, povinnost
+    let playableCards = handWithoutGray(hand);
+
+    if (playableCards.length == 1) {
+        return playableCards[0];
+    }
+
+    let pn = room.board.nextStep.player;
+    let table = room.board.table;
+    //{'card':card,'pn':pn,'lead':true}
+    let orderedTable = [];
+    for (let i in table) {
+        orderedTable[orderedTable.length] = table[i].card;
+    }
+    let winningCard = whoIsWinning(orderedTable);
+    let winningPlayer = 0;
+    for (let i in table) {
+        if (table[i].card == winningCard) {
+            winningPlayer = table[i].pn;
+            break;
+        }
+    }
+    let myTeam = room.players[pn].isTeamPovinnost;//I always know my team. boolean
+    let winningTeam = room.players[winningPlayer].publicTeam;//-1, 0, or 1
+    let myTeamWinning = false;
+    if (winningTeam && ((!myTeam && winningTeam == -1) || (myTeam && winningTeam == 1))) {
+        myTeamWinning = true;
+    }
+    let ioteCalled = room.board.iote != -1;
+    let valatCalled = room.board.valat != -1;
+    let lastPlayer = orderedTable.length == 3;
+
+    let playingTrump = playableCards[0].suit == 'Trump';
+    let trumped = winningCard.suit == 'Trump';
+    let trumpLead = table[0].card.suit == 'Trump';
+
+    let partnerCard = room.board.partnerCard;
+
+    let partnerFollowsLater = false;
+    let notPartnerFollowsLater = false;
+    let numPlayerRemaining = 3 - orderedTable.length;
+    for (let i in numPlayerRemaining) {
+        let thisPlayersTeam = room.players[(pn+i)%4].publicTeam
+        if (thisPlayersTeam && ((!myTeam && thisPlayersTeam == -1) || (myTeam && thisPlayersTeam == 1))) {
+            partnerFollowsLater = true;
+        } else {
+            notPartnerFollowsLater = true;
+        }
+    }
+
+    let lastPlayerOrOnlyPartnersFollow = lastPlayer || !notPartnerFollowsLater;
+
+    let biggestTrump = highestUnplayedTrump(room.board.cardsPlayed);
+    let tempArray = [...room.board.cardsPlayed];
+    for (let i in hand) {
+        tempArray[Deck.cardId(hand[i])] = true;
+    }
+    let biggestTrumpTheyHave = highestUnplayedTrump(tempArray);
+
+    let skyzIsOut = biggestTrumpTheyHave.value == 'Skyz';
+
+    if (hand.length == 12 && room.board.prever == -1 && Deck.handContainsCard(hand, partnerCard)) {
+        //First trick, no prever, have partner card
+        if (trumpLead && VALUE_REVERSE[winningCard.value] < VALUE_REVERSE[partnerCard]) {
+            //Playing trump; partner card is winning
+            return {suit:'Trump', value: partnerCard};
+        }
+    }
+
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
             //If last in line and no trumps have been played, play the I unless IOTE was called
-            //If last in line and low on trump, play the XXI
+            if (playingTrump) {
+                if (ioteCalled) {
+                    playableCards = grayTheI(playableCards);
+                    //There will always be a card to play because if the I was forced it would have already returned at the top of the function
+                    playableCards = handWithoutGray(playableCards);
+                    if (playableCards.length == 1) {
+                        return playableCards[0];
+                    }
+                }
+                if (trumped) {
+                    if (lastPlayerOrOnlyPartnersFollow && myTeamWinning) {
+                        return lowestTrump(playableCards);
+                    }
+                    if (lastPlayerOrOnlyPartnersFollow && !myTeamWinning) {
+                        if (skyzIsOut && Deck.handContainsCard(playableCards, 'XXI') && winningCard.value != 'Skyz') {
+                            //Get the XXI home
+                            return {suit:'Trump',value:'XXI'};
+                        }
+                        playableCards = grayTheI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
+                        return lowestTrumpThatBeats(playableCards, winningCard);
+                    }
+                    if (myTeamWinning && VALUE_REVERSE[winningCard.value] < 12) {
+                        //Partner played low
+                        playableCards = grayTheXXI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
+                        return highestTrump(playableCards);
+                    } else {
+                        //Partner played high
+                        if (VALUE_REVERSE[winningCard.value] >= VALUE_REVERSE[biggestTrumpTheyHave.value]) {
+                            //I is safe
+                            return lowestTrump(playableCards);
+                        }
+                        playableCards = grayTheI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
+                        return lowestTrump(playableCards);
+                    }
+                    //My team is losing
+                    playableCards = grayTheI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    if (playableCards.length == 1) {
+                        return playableCards[0];
+                    }
+                    if (skyzIsOut) {
+                        playableCards = grayTheXXI(playableCards);
+                        playableCards = handWithoutGray(playableCards);
+                    }
+                    if (notPartnerFollowsLater) {
+                        return highestTrump(playableCards);
+                    }
+                    return lowestTrumpThatBeats(playableCards,winningCard);
+                } else {
+                    if (lastPlayerOrOnlyPartnersFollow) {
+                        return lowestTrump(playableCards);
+                    }
+                    if (winningCard.value == 'King') {
+                        //Points on the line
+                        if (skyzIsOut) {
+                            playableCards = grayTheXXI(playableCards);
+                            playableCards = handWithoutGray(playableCards);
+                        }
+                        return highestTrump(playableCards);
+                    }
+                    //todo if povenost follows then trumping is more likely so play higher
+                    return lowestTrump(playableCards);
+                }
+            } else {
+                //No trump. Playing color
+                if (trumped) {
+                    //Ducking
+                    if (myTeamWinning && lastPlayerOrOnlyPartnersFollow) {
+                        //Throw most points
+                        return highestPointValue(playableCards);
+                    }
+                    if (myTeamWinning && VALUE_REVERSE[winningCard.value] >= VALUE_REVERSE[biggestTrump.value]) {
+                        //They can't trump my partner
+                        return highestPointValue(playableCards);
+                    }
+                    return lowestPointValue(playableCards);
+                } else {
+                    //Could win
+                    let check = highestPointValue(playableCards);
+                    if (check.value == 'King' && check.suit == orderedTable[0].suit) {
+                        return check;
+                    }
+                    if (myTeamWinning && winningCard.value == 'King') {
+                        return check;
+                    }
+                    if (!myTeamWinning && winningCard.value == 'King') {
+                        return lowestPointValue(playableCards);
+                    } else if (!myTeamWinning && partnerFollowsLater) {
+                        return check;//Throw points to my partner
+                    }
+                    return lowestPointValue(playableCards);
+                }
+            }
         case DIFFICULTY.EASY:
             //Over-under. If it can beat the current highest card, play the highest one available. Otherwise, play the lowest non-I trump available
             //If last in line, play the lowest winning card
+            if (playingTrump) {
+                if (ioteCalled) {
+                    playableCards = grayTheI(playableCards);
+                    //There will always be a card to play because if the I was forced it would have already returned at the top of the function
+                    playableCards = handWithoutGray(playableCards);
+                    if (playableCards.length == 1) {
+                        return playableCards[0];
+                    }
+                }
+                if (myTeamWinning && lastPlayer) {
+                    //play the one
+                    if (Deck.handContainsCard(playableCards, 'I')) {
+                        return {suit:'Trump',value:'I'};
+                    }
+                }
+                if (myTeamWinning && VALUE_REVERSE[winningCard.value] < 12) {
+                    //Partner played low
+                    playableCards = grayTheXXI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    if (playableCards.length == 1) {
+                        return playableCards[0];
+                    }
+                    playableCards = grayTheI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    return highestTrump(playableCards);
+                } else {
+                    //Partner played high
+                    if (VALUE_REVERSE[winningCard.value] > 18) {
+                        return lowestTrump(playableCards);
+                    }
+                    playableCards = grayTheI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    return lowestTrump(playableCards);
+                }
+                if (!partnerFollowsLater && !lastPlayer) {
+                    playableCards = grayTheXXI(playableCards);
+                    playableCards = handWithoutGray(playableCards);
+                    return highestTrump(playableCards);
+                }
+
+                return lowestTrumpThatBeats(playableCards, winningCard);
+            } else {
+                if (trumped) {
+                    return lowestPointValue(playableCards);
+                } else {
+                    return highestPointValue(playableCards);
+                }
+            }
         case DIFFICULTY.RUDIMENTARY:
-            //TODO: more difficulty algos
             return firstSelectableCardExceptPagat(hand);
         default:
             SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
@@ -971,9 +1453,11 @@ function robotAction(action, room, pn) {
                 action.info.choice = robotChooseHand(room.board.hands);
                 break;
             case 'prever':
-                action.action = 'passPrever';
+                action.action = robotPrever(hand, room.settings.difficulty, room);
                 break;
             case 'drawPreverTalon':
+                action.info.accept = robotPreverTalon(hand, room.settings.difficulty, room.players[pn].tempHand, room);
+                break;
             case 'drawTalon':
                 break;
             case 'discard':
@@ -1137,9 +1621,264 @@ function playerAction(action, room, pn) {
 }
 function aiAction(action, room, pn) {
     //Uses the AI to take an action IF and only IF the AI is supposed to
-    SERVER.error('AI not implemented yet!!');
-    SERVER.errorTrace();
+    let hand = room['players'][pn].hand;
+    let fakeMoneyCards = false;
+    let actionNeedsAI = false;
 
+    if (action.player == pn) {
+
+        switch (action.action) {
+                case 'play':
+                case 'shuffle':
+                    break;
+                case 'cut':
+                    action.info.style = 'Cut';//Since this has 0 effect on gameplay, no ai necessary
+                    break;
+                case 'deal':
+                    break;
+                case '12choice':
+                    action.info.choice = robotChooseHand(room.board.hands);//Again, 0 effect on gameplay
+                    break;
+                case 'prever':
+                    actionNeedsAI = true;
+                    think(8,5,action,room,pn,fakeMoneyCards).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'drawPreverTalon':
+                case 'drawTalon':
+                    break;
+                case 'discard':
+                    {
+                    grayUndiscardables(hand);
+                    let choices = handWithoutGray(hand);
+                    if (choices.length == 1) {
+                        action.info.card = choices[0];
+                        break;
+                    }
+                    actionNeedsAI = true;
+                    let discardPromises = [];
+                    for (let i in choices) {
+                        discardPromises[i] = think(0,8,action,room,pn,fakeMoneyCards,choices[i]);
+                    }
+                    Promise.all(discardPromises).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    }
+                    break;
+                case 'povinnostBidaUniChoice':
+                    actionNeedsAI = true;
+                    think(11,9,action,room,pn,fakeMoneyCards).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                case 'moneyCards':
+                    break;
+                case 'partner':
+                    //if povinnost choose partner
+                    actionNeedsAI = true;
+                    let p1 = think(12,11,action,room,pn,fakeMoneyCards);
+                    let p2 = think(13,11,action,room,pn,fakeMoneyCards);
+                    Promise.all([p1, p2]).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'valat':
+                    actionNeedsAI = true;
+                    think(9,12,action,room,pn,fakeMoneyCards).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'iote':
+                    actionNeedsAI = true;
+                    think(10,13,action,room,pn,fakeMoneyCards).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'contra':
+                case 'preverContra':
+                case 'preverValatContra':
+                case 'valatContra':
+                    actionNeedsAI = true;
+                    let myPromise;
+                    if (room.board.contra == -1) {
+                        //Regular contra
+                        myPromise = think(5,17,action,room,pn,fakeMoneyCards);
+                    } else if (room.board.rheaContra == -1) {
+                        myPromise = think(6,17,action,room,pn,fakeMoneyCards);
+                    } else {
+                        myPromise = think(7,17,action,room,pn,fakeMoneyCards);
+                    }
+                    myPromise.then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'lead':
+                    if (hand.length == 1) {
+                        action.info.card = hand[0];
+                        break;
+                    }
+                    {
+                    actionNeedsAI = true;
+                    let leadPromises = [];
+                    unGrayCards(hand);
+                    //Rank each card
+                    //think(8,5,action,room,pn,fakeMoneyCards);
+
+                    let choices = handWithoutGray(hand);
+                    for (let i in choices) {
+                        leadPromises[i] = think(1,18,action,room,pn,fakeMoneyCards,choices[i]);
+                    }
+                    Promise.all(leadPromises).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    }
+                    break;
+                case 'follow':
+                    let choices = handWithoutGray(hand);
+                    if (choices.length == 1) {
+                        action.info.card = choices[0];
+                        break;
+                    }
+                    {
+                    actionNeedsAI = true;
+                    let followPromises = [];
+                    //Rank each card
+
+                    let choices = handWithoutGray(hand);
+                    for (let i in choices) {
+                        followPromises[i] = think(1,19,action,room,pn,fakeMoneyCards,choices[i]);
+                    }
+                    Promise.all(followPromises).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    }
+                    break;
+                case 'winTrick':
+                    break;
+                case 'countPoints':
+                    break;//Point counting will be added later
+                case 'resetBoard':
+                    break;//Utilitarian, no input needed
+                default:
+                    SERVER.warn('Unknown ai action: ' + action.action,room.name);
+            }
+    }
+    if (action.action == 'iote' || 'contra' || 'preverContra' ||'preverValatContra' || 'valatContra') {
+        //Don't inform players of private actions
+        for (let i = 0; i < 4; i++) {
+            if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                players[room['players'][i].socket].socket.emit('nextAction', action);
+            }
+        }
+        for (let i in room.audience) {
+            room.audience[i].messenger.emit('nextAction', action);
+        }
+        if (fakeMoneyCards) {
+            action.action = 'povinnostBidaUniChoice';
+        }
+    }
+    if (!actionNeedsAI) {
+        aiActionComplete(action, room, pn, fakeMoneyCards);
+    }
+}
+function think(outputNumber, actionNumber, action, room, pn, fakeMoneyCards, cardPrompt) {
+    const myPromise = new Promise((resolve, reject) => {
+        const dataToSend = AI.generateInputs(room,pn,actionNumber,cardPrompt);
+        //dataToSend is already a binary buffer of 1s and 0s
+        const options = {
+            hostname: 'localhost',
+            path: '/' + room['players'][pn].ai + '/',
+            method: 'POST',
+            protocol: 'http:',
+            port: 8441,
+            headers: {
+                'output': outputNumber
+            }
+        };
+        const req = http.request(options, (res) => {
+            let postData = [];
+            res.on('data', function(chunk) {
+                postData.push(chunk);
+                //CODE REACHES HERE
+            });
+            function complete() {
+                //postData = Buffer.concat(postData).toString();
+                let stringData = '';
+                for (let i in postData) {
+                    stringData += postData[i];
+                }
+                try {
+                    postData = JSON.parse(stringData)
+                } catch (e) {
+                    SERVER.error('JSON error: ' + e)
+                }
+                resolve(postData.answer);
+            }
+            res.on('finish', complete);
+            res.on('end', complete);
+            res.on('close', complete);
+            SERVER.debug('AI status: ' + res.statusCode);
+            if (res.statusCode === 200) {
+                //Action successfully completed
+            } else {
+                //Action failed
+                reject('AI action failed');
+            }
+        }).on("error", (err) => {
+            //TODO: there's a really weird error that I'm ignoring here
+            //reject(err);
+        });
+        req.setTimeout(10000);//10 seconds max
+        req.end(dataToSend);
+    });
+    return myPromise;
+}
+function aiActionCallback(action, room, pn, fakeMoneyCards, result) {
     //Generate possible choices
     //If only one choice, choose it
     //Otherwise, generate inputs
@@ -1164,115 +1903,103 @@ function aiAction(action, room, pn) {
     13. Play together (call lowest)
     Total: 14
     */
+
+    let ranking = 0;
+    let currentAI = room.players[pn].ai;
     let hand = room['players'][pn].hand;
-    let fakeMoneyCards = false;
 
-    if (action.player == pn) {
-        let ranking = 0;
-        let currentAI = room.players[pn].ai;
-        let think = (outputNumber, specialInfo) => {return currentAI.evaluate(generateInputs(room,pn),outputNumber,specialInfo);}
-        switch (action.action) {
-                case 'play':
-                case 'shuffle':
-                    break;
-                case 'cut':
-                    action.info.style = 'Cut';//Since this has 0 effect on gameplay, no ai necessary
-                    break;
-                case 'deal':
-                    break;
-                case '12choice':
-                    action.info.choice = robotChooseHand(room.board.hands);//Again, 0 effect on gameplay
-                    break;
-                case 'prever':
-                    action.action = 'passPrever';
-                    ranking = think(8,false);
-                    if (ranking > 0.5) {
-                        action.action = 'callPrever';
-                    }
-                    break;
-                case 'drawPreverTalon':
-                case 'drawTalon':
-                    break;
-                case 'discard':
-                    grayUndiscardables(hand);
-                    //Rank each card TODO
-
-                    action.info.card = robotDiscard(hand, room.settings.difficulty);
-                    break;
-                case 'povinnostBidaUniChoice':
-                    fakeMoneyCards = true;
-                    action.action = 'moneyCards';
-                    ranking = think(11,false);
-                    room.board.buc = false;
-                    if (ranking > 0.5) {
-                        room.board.buc = true;
-                    }
-                case 'moneyCards':
-                    break;
-                case 'partner':
-                    //if povinnost choose partner
-                    //Rank each choice TODO
-                    if (room['board'].povinnost == pn) {
-                        action.info.partner = robotPartner(hand, room.settings.difficulty);
-                    }
-                    break;
-                case 'valat':
-                    ranking = think(9,false);
-                    action.info.valat = false;
-                    if (ranking > 0.5) {
-                        action.info.valat = true;
-                    }
-                    break;
-                case 'iote':
-                    ranking = think(10,false);
-                    action.info.iote = false;
-                    if (ranking > 0.5) {
-                        action.info.iote = true;
-                    }
-                    SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
-                    actionCallback(action, room, pn);
-                    return;//Don't inform the players who has the I
-                case 'contra':
-                case 'preverContra':
-                case 'preverValatContra':
-                case 'valatContra':
-                    action.info.contra = robotContra(hand, room.settings.difficulty);
-                    //TODO. Remember that contra, rhea-contra, and supra-contra are different outputs
-                    SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
-                    actionCallback(action, room, pn);
-                    return;
-                case 'lead':
-                    //Rank each card TODO
-                    unGrayCards(hand);
-                    action.info.card = robotLead(hand, room.settings.difficulty,room);
-                    break;
-                case 'follow':
-                    //Rank each card TODO
-                    grayUnplayables(hand, room.board.leadCard);
-                    action.info.card = robotPlay(hand, room.settings.difficulty, room);
-                    break;
-                case 'winTrick':
-                    break;
-                case 'countPoints':
-                    break;//Point counting will be added later
-                case 'resetBoard':
-                    break;//Utilitarian, no input needed
-                default:
-                    SERVER.warn('Unknown ai action: ' + action.action,room.name);
+    switch (action.action) {
+        case 'prever':
+            action.action = 'passPrever';
+            if (result > 0.5) {
+                action.action = 'callPrever';
             }
+            break;
+        case 'discard':
+            {
+            grayUndiscardables(hand);
+            let choices = handWithoutGray(hand);
+            let highestRanking = 0;
+            for (let i in choices) {
+                if (result[i] > result[highestRanking]) {
+                    highestRanking = i;
+                }
+            }
+            action.info.card = choices[highestRanking];
+            }
+            break;
+        case 'povinnostBidaUniChoice':
+            fakeMoneyCards = true;
+            action.action = 'moneyCards';
+            room.board.buc = false;
+            if (result > 0.5) {
+                room.board.buc = true;
+            }
+            break;
+        case 'partner':
+            if (room['board'].povinnost == pn) {
+                let goAloneRanking = result[0];
+                let goPartnerRanking = result[1];
+                if (goAloneRanking > goPartnerRanking) {
+                    action.info.partner = {suit:'Trump',value:'XIX'};
+                }  else {
+                    //Rudimentary always plays with a partner
+                    action.info.partner = robotPartner(hand, DIFFICULTY.RUDIMENTARY);
+                }
+            }
+            break;
+        case 'valat':
+            action.info.valat = false;
+            if (result > 0.5) {
+                action.info.valat = true;
+            }
+        case 'iote':
+            action.info.iote = false;
+            if (result > 0.5) {
+                action.info.iote = true;
+            }
+            break;
+        case 'contra':
+        case 'preverContra':
+        case 'preverValatContra':
+        case 'valatContra':
+            action.info.contra = result > 0.5;
+            break;
+        case 'lead':
+            {
+            unGrayCards(hand);
+            //Rank each card
+            let choices = handWithoutGray(hand);
+            let highestRanking = 0;
+            for (let i in choices) {
+                if (result[i] > result[highestRanking]) {
+                    highestRanking = i;
+                }
+            }
+            action.info.card = choices[highestRanking];
+            }
+            break;
+        case 'follow':
+            {
+            //Rank each card
+            grayUnplayables(hand, room.board.leadCard);
+            let choices = handWithoutGray(hand);
+            let highestRanking = 0;
+            for (let i in choices) {
+                if (result[i] > result[highestRanking]) {
+                    highestRanking = i;
+                }
+            }
+            action.info.card = choices[highestRanking];
+            }
+            break;
     }
+    aiActionComplete(action, room, pn, fakeMoneyCards);
+}
+function aiActionComplete(action, room, pn, fakeMoneyCards) {
+    //actionCallback() -> aiAction() -> aiActionCallback() -> ai server -> response -> aiActionComplete -> actionCallback
+    //if no ai is needed: actionCallback() -> aiAction() -> robot action -> aiActionComplete() -> actionCallback()
 
-    for (let i = 0; i < 4; i++) {
-        if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-            players[room['players'][i].socket].socket.emit('nextAction', action);
-        }
-    }
-    for (let i in room.audience) {
-        room.audience[i].messenger.emit('nextAction', action);
-    }
-    if (fakeMoneyCards) {
-        action.action = 'povinnostBidaUniChoice';
-    }
     actionCallback(action, room, pn);
 }
 
@@ -1416,6 +2143,7 @@ function actionCallback(action, room, pn) {
                                     + cardsToNotation(room.players[playerOffset(room['board'].povinnost,3)].hand) + '/'
                                     + cardsToNotation(room.board.talon) + '/';
             //Povinnost rotation is handled by the board reset function
+            SERVER.log(room.board.notation);//For debug when the server crashes
             SERVER.debug('Povinnost is ' + room['board'].povinnost,room.name, room.name);
             room.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':room['board'].povinnost},room['board'].povinnost);
             action.action = 'prever';
@@ -1450,15 +2178,6 @@ function actionCallback(action, room, pn) {
             break;
         case 'prever':
             break;//ignore this, the callback is for the players
-        case 'passPrever':
-            action.player = (action.player + 1) % 4;
-            if (action.player == room['board'].povinnost) {
-                action.action = 'drawTalon';
-            } else {
-                action.action = 'prever';
-            }
-            actionTaken = true;
-            break;
         case 'drawTalon':
             if (action.player == room['board'].povinnost) {
                 room.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,4)});
@@ -1468,37 +2187,99 @@ function actionCallback(action, room, pn) {
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 action.player = (action.player + 1) % 4;
-                actionTaken = true;
             } else {
                 room.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
                 room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
                 if (action.player == (room['board'].povinnost + 2) % 4) {
-                    //TODO draw or pass choice
+                    //Player +2 pov. has drawn the final card in the talon
                     action.player = room['board'].povinnost;
                     action.action = 'discard';
-                    actionTaken = true;
+                } else if (action.player == (room['board'].povinnost + 3) % 4) {
+                    //Player +3 pov. has drawn a rejected card from the talon
+                    if (room['board'].talon.length == 0) {
+                        //Player +2 pov. rejected the card
+                        action.player = room['board'].povinnost;
+                        action.action = 'discard';
+                        //TODO: can both +1 and +2 reject the cards and +3 draw them both? I've never encountered this in a real game before
+                    } else {
+                        action.player = (room['board'].povinnost + 2) % 4;
+                    }
+
                 } else {
                     action.player = (action.player + 1) % 4;
-                    actionTaken = true;
                 }
             }
+            actionTaken = true;
             break;
-        case 'callPrever':
-            room['board'].playingPrever = true;
-            room['board'].prever = pn;
-            room['board'].preverTalonStep = 0;
-            room.board.importantInfo.prever = (room.board.prever+1);
-            action.action = 'drawPreverTalon';
-            if (room['board'].povinnost == pn) {
-                for (let i=0; i<4; i++) {
-                    room['players'][i].isTeamPovinnost = false;
+        case 'passTalon':
+            //2 cases
+            if (action.player == (room['board'].povinnost + 3) % 4) {
+                //Player 1 or 2 from pov. has passed the card and it has been rejected again
+                if (room['board'].talon.length == 2) {
+                    //Player +1 pov. passed the card
+                    room.informPlayer((room['board'].povinnost + 1) % 4, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
+                    room['players'][(room['board'].povinnost + 1) % 4].hand.push(room['board'].talon.splice(0, 1)[0]);
                 }
-                room['players'][pn].isTeamPovinnost = true;
+                //Player +2 pov. gets the remaining card in every case
+                room.informPlayer((room['board'].povinnost + 2) % 4, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
+                room['players'][(room['board'].povinnost + 2) % 4].hand.push(room['board'].talon.splice(0, 1)[0]);
+
+                action.player = room['board'].povinnost;
+                action.action = 'discard';
+                actionTaken = true;
             } else {
-                for (let i=0; i<4; i++) {
-                    room['players'][i].isTeamPovinnost = true;
+                //Player 1 or 2 from pov. would like to pass a card
+                action.player = (room['board'].povinnost + 3) % 4;
+                action.action = 'drawTalon';
+                actionTaken = true;
+            }
+            break;
+        case 'passPrever':
+            action.player = (action.player + 1) % 4;
+            if (action.player == room['board'].povinnost) {
+                if (room.board.prever != -1) {
+                    action.action = 'drawPreverTalon';
+                    action.player = room.board.prever;
+                } else {
+                    action.action = 'drawTalon';
+                    actionTaken = true;
+                    break;
                 }
-                room['players'][pn].isTeamPovinnost = false;
+            } else {
+                action.action = 'prever';
+                actionTaken = true;
+                break;
+            }
+        case 'callPrever':
+            if (action.action == 'callPrever') {
+                room['board'].playingPrever = true;
+                room['board'].prever = pn;
+                room['board'].preverTalonStep = 0;
+                room.board.importantInfo.prever = (room.board.prever+1);
+                action.action = 'prever';
+            }
+            if (room.board.povinnost == (pn+1)%4 || action.action == 'drawPreverTalon') {
+            //Last player called prever.
+                action.action = 'drawPreverTalon';
+                if (room['board'].povinnost == action.player) {
+                    for (let i=0; i<4; i++) {
+                        room['players'][i].isTeamPovinnost = false;
+                        room.players[i].publicTeam = -1;
+                    }
+                    room['players'][action.player].isTeamPovinnost = true;
+                    room.players[action.player].publicTeam = 1;
+                } else {
+                    for (let i=0; i<4; i++) {
+                        room['players'][i].isTeamPovinnost = true;
+                        room.players[i].publicTeam = 1;
+                    }
+                    room['players'][action.player].isTeamPovinnost = false;
+                    room.players[action.player].publicTeam = -1;
+                }
+            } else {
+                action.player = (action.player + 1) % 4;
+                actionTaken = true;
+                break;
             }
             //Fallthrough to inform the player
         case 'drawPreverTalon':
@@ -1510,8 +2291,8 @@ function actionCallback(action, room, pn) {
                 Deck.sortCards(room['players'][action.player].tempHand);
 
                 //Inform player of cards
-                if (room.players[pn].type == PLAYER_TYPE.HUMAN) {
-                    room.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards':room['players'][action.player].tempHand,'step':0});
+                if (room.players[action.player].type == PLAYER_TYPE.HUMAN) {
+                    room.informPlayer(action.player, '', MESSAGE_TYPE.PREVER_TALON,{'cards':room['players'][action.player].tempHand,'step':0});
                 }
 
                 actionTaken = true;
@@ -1542,6 +2323,9 @@ function actionCallback(action, room, pn) {
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
                     room.informPlayers('rejected the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':1},pn);
+                    room.board.publicPreverTalon[0] = {suit:temp[0].suit, value:temp[0].value};
+                    room.board.publicPreverTalon[1] = {suit:temp[1].suit, value:temp[1].value};
+                    room.board.publicPreverTalon[2] = {suit:temp[2].suit, value:temp[2].value};
 
                     //Show prever the second set of cards from the talon
                     room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1570,9 +2354,13 @@ function actionCallback(action, room, pn) {
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
 
                     //Opposing team claims the first set of cards
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[0])] = true;
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[1])] = true;
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[2])] = true;
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
+
                     room.informPlayers('kept the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':pn,'step':3},pn);
                     action.action = 'discard';
                     actionTaken = true;
@@ -1586,6 +2374,9 @@ function actionCallback(action, room, pn) {
                     temp.push(room['players'][action.player].tempHand.splice(0,1)[0]);
 
                     room.informPlayers('rejected the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':temp,'pn':pn,'step':2},pn);
+                    room.board.publicPreverTalon[3] = {suit:temp[0].suit, value:temp[0].value};
+                    room.board.publicPreverTalon[4] = {suit:temp[1].suit, value:temp[1].value};
+                    room.board.publicPreverTalon[5] = {suit:temp[2].suit, value:temp[2].value};
 
                     //Give prever the cards from the talon
                     room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
@@ -1593,6 +2384,9 @@ function actionCallback(action, room, pn) {
                     room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
 
                     //Give second set of cards to opposing team's discard
+                    room.board.cardsPlayed[Deck.cardId(temp[0])] = true;
+                    room.board.cardsPlayed[Deck.cardId(temp[1])] = true;
+                    room.board.cardsPlayed[Deck.cardId(temp[2])] = true;
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
@@ -1621,19 +2415,31 @@ function actionCallback(action, room, pn) {
                 //Announce discard Trump cards
                 if (card.suit == 'Trump') {
                     room.informPlayers('discarded the ' + card.value, MESSAGE_TYPE.TRUMP_DISCARD, {pn: pn, card: card}, pn);
+                    if (room.board.prever != -1) {
+                        room.board.trumpDiscarded[0].push({suit:card.suit, value:card.value});
+                    } else {
+                        room.board.trumpDiscarded[((+room.board.povinnost - +pn) + 4)%4].push({suit:card.suit, value:card.value});
+                    }
+                    room.board.cardsPlayed[Deck.cardId(card)] = true;
                 }
                 if (room['players'][action.player].hand.length == 12) {
                     action.player = (action.player + 1) % 4;
                     if (room['players'][action.player].hand.length == 12) {
-                        action.player = room['board'].povinnost;
-                        if (room['board'].playingPrever) {
-                            //A player is going prever. No partner cards
-                            action.action = 'moneyCards';
-                            //Note that prever is calling Bida or Uni no matter what
-                            //If prever has bida or uni, he calls bida or uni. No choice.
-                        } else {
-                            //No player going prever. Povinnost will call a partner
-                            action.action = 'partner';
+                        action.player = (action.player + 1) % 4;
+                        if (room['players'][action.player].hand.length == 12) {
+                            action.player = (action.player + 1) % 4;
+                            if (room['players'][action.player].hand.length == 12) {
+                                action.player = room['board'].povinnost;
+                                if (room['board'].playingPrever) {
+                                    //A player is going prever. No partner cards
+                                    action.action = 'moneyCards';
+                                    //Note that prever is calling Bida or Uni no matter what
+                                    //If prever has bida or uni, he calls bida or uni. No choice.
+                                } else {
+                                    //No player going prever. Povinnost will call a partner
+                                    action.action = 'partner';
+                                }
+                            }
                         }
                     }
                 }
@@ -1685,25 +2491,25 @@ function actionCallback(action, room, pn) {
             }
             if (fiverCount >= 3) {
                 //Check for trul
-                if (handContainsCard(currentHand, "I") && handContainsCard(currentHand, "XXI") && handContainsCard(currentHand, "Skyz")) {
+                if (Deck.handContainsCard(currentHand, "I") && Deck.handContainsCard(currentHand, "XXI") && Deck.handContainsCard(currentHand, "Skyz")) {
                     //Trul
                     owedChips += 2;
                     room['board'].moneyCards[pn].push("Trul");
                 }
-                if (handContains(currentHand, "King", "Spade") && handContains(currentHand, "King", "Club") && handContains(currentHand, "King", "Heart") && handContains(currentHand, "King", "Diamond")) {
+                if (Deck.handContains(currentHand, "King", "Spade") && Deck.handContains(currentHand, "King", "Club") && Deck.handContains(currentHand, "King", "Heart") && Deck.handContains(currentHand, "King", "Diamond")) {
                     if (fiverCount > 4) {
-                        //Rosa-Honery+
+                        //Rosa-Pane+
                         owedChips += 6;
-                        room['board'].moneyCards[pn].push("Rosa-Honery+");
+                        room['board'].moneyCards[pn].push("Rosa-Pane+");
                     } else {
-                        //Rosa-Honery
+                        //Rosa-Pane
                         owedChips += 4;
-                        room['board'].moneyCards[pn].push("Rosa-Honery");
+                        room['board'].moneyCards[pn].push("Rosa-Pane");
                     }
                 } else if (fiverCount >= 4) {
-                    //Honery
+                    //Pane
                     owedChips += 2;
-                    room['board'].moneyCards[pn].push("Honery");
+                    room['board'].moneyCards[pn].push("Pane");
                 }
             }
 
@@ -1745,15 +2551,15 @@ function actionCallback(action, room, pn) {
             break;
         case 'partner':
             let povinnostChoice = room['board'].partnerCard;
-            if (!handContainsCard(currentHand, "XIX") || (handContainsCard(currentHand, "XIX") && povinnostChoice == 'XIX')) {
+            if (!Deck.handContainsCard(currentHand, "XIX") || (Deck.handContainsCard(currentHand, "XIX") && povinnostChoice == 'XIX')) {
                 room['board'].partnerCard = "XIX";
-            } else if (!handContainsCard(currentHand, "XVIII")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVIII")) {
                 room['board'].partnerCard = "XVIII";
-            } else if (!handContainsCard(currentHand, "XVII")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVII")) {
                 room['board'].partnerCard = "XVII";
-            } else if (!handContainsCard(currentHand, "XVI")) {
+            } else if (!Deck.handContainsCard(currentHand, "XVI")) {
                 room['board'].partnerCard = "XVI";
-            } else if (!handContainsCard(currentHand, "XV")) {
+            } else if (!Deck.handContainsCard(currentHand, "XV")) {
                 room['board'].partnerCard = "XV";
             } else {
                 room['board'].partnerCard = "XIX";
@@ -1761,9 +2567,10 @@ function actionCallback(action, room, pn) {
 
 
             for (let i=0; i<4; i++) {
-                room['players'][i].isTeamPovinnost = handContainsCard(room['players'][i].hand, room['board'].partnerCard);
+                room['players'][i].isTeamPovinnost = Deck.handContainsCard(room['players'][i].hand, room['board'].partnerCard);
             }
             room['players'][room['board'].povinnost].isTeamPovinnost = true;
+            room['players'][room['board'].povinnost].publicTeam = 1;
 
             let numTrumpsInHand = 0;
             for (let i in currentHand) {
@@ -1774,7 +2581,6 @@ function actionCallback(action, room, pn) {
             } else {
                 action.action = 'moneyCards';
             }
-
 
             //Inform players what Povinnost called
             room.informPlayers('(Povinnost) is playing with the ' + room['board'].partnerCard, MESSAGE_TYPE.PARTNER, {youMessage: 'You are playing with the ' + room['board'].partnerCard, pn: pn},pn);
@@ -1924,6 +2730,7 @@ function actionCallback(action, room, pn) {
                     //Povinnost's team called rhea-contra
                     room['board'].contra[1] = 1;
                     room.board.rheaContra = pn;
+                    room.players[pn].publicTeam = 1;
 
                     //Swap play to opposing team
                     do {
@@ -1936,6 +2743,7 @@ function actionCallback(action, room, pn) {
                         //Regular contra
                         room.board.contra[0] = 1;
                         room.board.calledContra = pn;
+                        room.players[pn].publicTeam = -1;
 
                         //Swap play to opposing team
                         do {
@@ -1946,6 +2754,7 @@ function actionCallback(action, room, pn) {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
                         room.board.supraContra = pn;
+                        room.players[pn].publicTeam = -1;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povinnost;
@@ -1988,6 +2797,7 @@ function actionCallback(action, room, pn) {
                     //Povinnost's team called rhea-contra
                     room['board'].contra[1] = 1;
                     room.board.rheaContra = pn;
+                    room.players[pn].publicTeam = 1;
 
                     //Swap play to opposing team
                     do {
@@ -2000,6 +2810,7 @@ function actionCallback(action, room, pn) {
                         //Regular contra
                         room.board.contra[0] = 1;
                         room.board.calledContra = pn;
+                        room.players[pn].publicTeam = -1;
 
                         //Swap play to opposing team
                         do {
@@ -2010,6 +2821,7 @@ function actionCallback(action, room, pn) {
                         //Supra-contra. No more contras can be called
                         room.board.contra[0] = 2;
                         room.board.supraContra = pn;
+                        room.players[pn].publicTeam = -1;
                         shouldReturnTable = true;
                         action.action = 'lead';
                         action.player = room['board'].povinnost;
@@ -2067,7 +2879,16 @@ function actionCallback(action, room, pn) {
                 action.player = (action.player + 1) % 4;
                 room['board'].table.push({'card':lead,'pn':pn,'lead':true});
                 room['board'].leadCard = lead;
+                room.board.cardsPlayed[Deck.cardId(lead)] = true;
                 room.informPlayers('lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {pn: pn, card: lead},pn);
+                if (lead.value == room.board.partnerCard) {
+                    room.players[pn].publicTeam = 1;
+                    for (let i in room.players) {
+                        if (room.players[i].publicTeam == 0) {
+                            room.players[i].publicTeam = -1;
+                        }
+                    }
+                }
             } else {
                 if (room['players'][pn].type == PLAYER_TYPE.HUMAN) {
                     SOCKET_LIST[room['players'][pn].socket].emit('failedLeadCard', cardToLead);
@@ -2095,7 +2916,16 @@ function actionCallback(action, room, pn) {
                 shouldReturnTable = true;
                 room['board'].table.push({'card':played,'pn':pn,'lead':false});
                 action.player = (action.player + 1) % 4;
+                room.board.cardsPlayed[Deck.cardId(played)] = true;
                 room.informPlayers('played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {pn: pn, card: played}, pn);
+                if (played.value == room.board.partnerCard) {
+                    room.players[pn].publicTeam = 1;
+                    for (let i in room.players) {
+                        if (room.players[i].publicTeam == 0) {
+                            room.players[i].publicTeam = -1;
+                        }
+                    }
+                }
                 //If all players have played a card, determine who won the trick
                 if (action.player == room.board.leadPlayer) {
                     action.action = 'winTrick';
@@ -2160,6 +2990,19 @@ function actionCallback(action, room, pn) {
                 }
             }
 
+            room.board.trickHistory.push(
+                {
+                    leadPlayer: room.board.leadPlayer,
+                    winner: pn,
+                    cards: [
+                        {suit:room.board.table[0].suit, value:room.board.table[0].value},
+                        {suit:room.board.table[1].suit, value:room.board.table[1].value},
+                        {suit:room.board.table[2].suit, value:room.board.table[2].value},
+                        {suit:room.board.table[3].suit, value:room.board.table[3].value}
+                    ]
+                }
+            );
+
             //Transfer the table to the winner's discard
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
             room.players[pn].discard.push(room.board.table.splice(0,1)[0].card);
@@ -2193,11 +3036,14 @@ function actionCallback(action, room, pn) {
                     if (room.board.trickWinCount[1] > 0) {
                         //Opposing team won a trick
                         chipsOwed = -40;
-                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
+                        if (room.board.prever != -1) {
+                            chipsOwed = -60;
+                        }
+                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':Math.abs(chipsOwed)});
                     } else {
                         chipsOwed = 40;
                         if (room.board.prever != -1) {
-                            chipsOwed = 60;//TODO: I'm not sure if this applies to a lost call of valat during prever games
+                            chipsOwed = 60;
                         }
                         pointCountMessageTable.push({'name':'Won a Called Valat', 'value':chipsOwed});
                     }
@@ -2206,7 +3052,10 @@ function actionCallback(action, room, pn) {
                     if (room.board.trickWinCount[0] > 0) {
                         //Povinnost team won a trick
                         chipsOwed = 40;
-                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':40});
+                        if (room.board.prever != -1) {
+                            chipsOwed = 60;
+                        }
+                        pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':chipsOwed});
                     } else {
                         chipsOwed = -40;
                         if (room.board.prever != -1) {
@@ -2467,10 +3316,9 @@ function actionCallback(action, room, pn) {
 
     if (actionTaken) {
 
-        //Sanity Check 
-        if (action.player > 3 || action.player < 0) {SERVER.error('Illegal player number: ' + action.player + ' during action ' + action.action,room.name); action.player %= 4; }
-        if (!room['players'][action.player]) { SERVER.error('There is no player. PN: ' + action.player + ', Players: ' + JSON.stringify(room['players']),room.name); }
-
+        //Sanity Check
+        if (!room['players'][action.player]) { SERVER.error('There is no player. PN: ' + action.player,room.name); }
+        if (action.player > 3 || action.player < 0) {SERVER.error('Illegal player number: ' + action.player + ' during action ' + action.action,room.name); action.player+=4;action.player %= 4; }
 
         action.time = Date.now();
         playerType = room['players'][action.player].type;
@@ -2531,6 +3379,7 @@ function disconnectPlayerTimeout(socketId) {
         SERVER.log('Player ' + socketId + ' disconnected');
         if (~players[socketId].room) {
             if (rooms[players[socketId].room].audience[socketId]) {
+                rooms[players[socketId].room].audience[socketId] = null;
                 delete rooms[players[socketId].room].audience[socketId];
                 rooms[players[socketId].room].audienceCount--;
             } else {
@@ -2608,9 +3457,14 @@ function autoReconnect(socketId) {
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         }
-        if (players[socketId].username != 'Guest') {
-            SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
-        }
+
+        SOCKET_LIST[socketId].emit('returnPovinnost', rooms[players[socketId].room].board.povinnost);
+    }
+    if (players[socketId].username != 'Guest') {
+        SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
+        SOCKET_LIST[socketId].emit('elo',players[socketId].userInfo.elo);
+        SOCKET_LIST[socketId].emit('admin',players[socketId].userInfo.admin);
+        SOCKET_LIST[socketId].emit('defaultSettings',notationToObject(players[socketId].userInfo.settings));
     }
 }
 
@@ -2622,7 +3476,7 @@ io.sockets.on('connection', function (socket) {
     }
     if (!SOCKET_LIST[socketId]) {
         SOCKET_LIST[socketId] = socket;
-        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1 };
+        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null };
         SERVER.log('Player joined with socketID ' + socketId);
         SERVER.debug('Join time: ' + Date.now());
         numOnlinePlayers++;
@@ -2652,6 +3506,7 @@ io.sockets.on('connection', function (socket) {
         if (players[socketId]) {
             if (~players[socketId].room) {
                 if (rooms[players[socketId].room].audience[socketId]) {
+                    rooms[players[socketId].room].audience[socketId] = null;
                     delete rooms[players[socketId].room].audience[socketId];
                     rooms[players[socketId].room].audienceCount--;
                 } else {
@@ -2727,6 +3582,9 @@ io.sockets.on('connection', function (socket) {
                         SERVER.debug('New room host',roomID);
                         if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
                             socket.emit('youStart');
+                            if (players[socketId].userInfo && players[socketId].userInfo.settings) {
+                                notationToSettings(rooms[roomID],players[socketId].userInfo.settings);
+                            }
                         } else {
                             autoReconnect(socketId);
                             SERVER.error('Player joined empty room with no host that was started',roomID);
@@ -2848,6 +3706,23 @@ io.sockets.on('connection', function (socket) {
                         setSettingNotation(rooms[players[socketId].room]);
                         SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[rule],players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + DIFFICULTY_TABLE[rule], MESSAGE_TYPE.SETTING);
+
+                        if (rule == DIFFICULTY.AI) {
+                            //Replace bots with AI
+                            for (let i in rooms[players[socketId].room].players) {
+                                if (rooms[players[socketId].room].players[i].type == PLAYER_TYPE.ROBOT) {
+                                    rooms[players[socketId].room].players[i] = new Player(PLAYER_TYPE.AI, 'standard');
+                                }
+                            }
+                        } else {
+                            //Replace AI with bots
+                            for (let i in rooms[players[socketId].room].players) {
+                                if (rooms[players[socketId].room].players[i].type == PLAYER_TYPE.AI) {
+                                    rooms[players[socketId].room].players[i] = new Player(PLAYER_TYPE.ROBOT);
+                                }
+                            }
+                        }
+
                     }
                     break;
                 case 'timeout':
@@ -2946,8 +3821,19 @@ io.sockets.on('connection', function (socket) {
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
-    socket.on('drawTalon', function () {
-        if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+    socket.on('goTalon', function () {
+        if (players[socketId] && rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' || rooms[players[socketId].room]['board']['nextStep'].action == 'passTalon') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].action = 'drawTalon';
+            actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
+        }
+    });
+    socket.on('noTalon', function () {
+        if (players[socketId] && rooms[players[socketId].room] && (rooms[players[socketId].room]['board']['nextStep'].action == 'drawTalon' || rooms[players[socketId].room]['board']['nextStep'].action == 'passTalon') && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
+            rooms[players[socketId].room]['board']['nextStep'].action = 'passTalon';
+            if (players[socketId]['pn'] == rooms[players[socketId].room].board.povinnost) {
+                //Povinnost cannot pass the talon
+                rooms[players[socketId].room]['board']['nextStep'].action = 'drawTalon';
+            }
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });
@@ -3076,6 +3962,8 @@ io.sockets.on('connection', function (socket) {
             players[socketId].savePoints.push(rooms[players[socketId].room].board.notation + room.settingsNotation);
         }
     });
+
+    //User account tools
     socket.on('login', function(username, token) {
         if (typeof username == 'string' && typeof token == 'string' && players[socketId]) {
             try {
@@ -3095,6 +3983,15 @@ io.sockets.on('connection', function (socket) {
                         players[socketId].token = token;
                         socket.emit('loginSuccess', username);
                         SERVER.log('Player ' + socketId + ' has signed in as ' + username);
+
+                        Database.promiseCreateOrRetrieveUser(username).then((info) => {
+                            players[socketId].userInfo = info;
+                            socket.emit('elo',info.elo);
+                            socket.emit('admin',info.admin);
+                            socket.emit('defaultSettings',notationToObject(info.settings));
+                        }).catch((err) => {
+                            SERVER.warn('Database error:' + err);
+                        });
                     } else {
                         SERVER.log('Player ' + socketId + ' send an invalid token or username');
                         socket.emit('loginFail');
@@ -3113,14 +4010,81 @@ io.sockets.on('connection', function (socket) {
         if (players[socketId]) {
             players[socketId].username = 'Guest';
             players[socketId].token = -1;
+            players[socketId].userInfo = null;
             socket.emit('logout');
             SERVER.log('Player ' + socketId + ' has signed out');
+        }
+    });
+    socket.on('saveSettings', function() {
+        if (players[socketId] && rooms[players[socketId].room] && players[socketId].username != 'Guest') {
+            Database.saveSettings(players[socketId].username, rooms[players[socketId].room].settingsNotation);
+            players[socketId].userInfo.settings = rooms[players[socketId].room].settingsNotation;
+            socket.emit('defaultSettings',notationToObject(rooms[players[socketId].room].settingsNotation));
+            SERVER.log('Default settings saved for user ' + players[socketId].username + ': ' + rooms[players[socketId].room].settingsNotation);
+        }
+    });
+
+    //Admin tools
+    socket.on('restartServer', function(immediately) {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' restarted the server');
+            AdminPanel.shouldRestartServer = true;
+            if (immediately) {
+                shutDown();
+            }
+        }
+    });
+    socket.on('reloadClients', function() {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' reloaded the clients');
+            AdminPanel.reloadClients();
+        }
+    });
+    socket.on('printPlayerList', function() {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' printed the player list');
+            socket.emit('playerList',AdminPanel.printPlayerList());
+        }
+    });
+    socket.on('printRoomList', function() {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' printed the room list');
+            try {
+                socket.emit('roomList',AdminPanel.printRoomsList());
+            } catch (maximumcallstacksize) {
+                //too much info for one socket message
+                SERVER.error('tmi');
+                AdminPanel.printRoomsList(true);
+            }
+        }
+    });
+    socket.on('adminMessage', function(id, message) {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
+            SERVER.log('Admin ' + players[socketId].username + ' sent ' + id + ' the message ' + message);
+            players[id].socket.emit('broadcast',message);
+        }
+    });
+    socket.on('removeRoom', function(id) {
+        if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin && rooms[id]) {
+            SERVER.log('Admin ' + players[socketId].username + ' removed room ' + id);
+            clearTimeout(rooms[id].autoAction);
+            rooms[id].ejectAudience();
+            rooms[id].ejectPlayers();
+            delete rooms[id];
         }
     });
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
-function checkRoomsEquality(a, b) { if (Object.keys(a).length != Object.keys(b).length) { return false; } for (let i in a) { if (a[i].count != b[i].count) { return false; } } return true; }
+function checkRoomsEquality(a, b) {
+    if (Object.keys(a).length != Object.keys(b).length) { return false; }
+    for (let i in a) {
+        if (!b[i] || a[i].count != b[i].count) {
+            return false;
+        }
+    }
+    return true;
+}
 
 function tick() {
     if (!ticking) {
@@ -3135,25 +4099,33 @@ function tick() {
             }
         }
         if (Object.keys(rooms).length == 0) {
-            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true,players);}
-            rooms[1] = new Room(1,false,players);
+            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);}
+            rooms[1] = new Room(1,false,LOG_LEVEL,players);
         } else if (numEmptyRooms() == 0) {
             let i = 1;
             for (; rooms[i]; i++) { }
-            rooms[i] = new Room(i,false,players);
+            rooms[i] = new Room(i,false,LOG_LEVEL,players);
         } else if (DEBUG_MODE && !rooms['Debug']) {
-            rooms['Debug'] = new Room('Debug',true,players);
+            rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);
         }
+
+        //TODO: something in this code is bugged to where it always considers players "up-to-date" and does not refresh the rooms automatically
         simplifiedRooms = {};
         for (let i in rooms) {
             if (rooms[i] && !rooms[i].settings.locked) {
                 let theUsernames = [];
                 for (let p in rooms[i].players) {
-                    if (rooms[i].players[p].type == PLAYER_TYPE.HUMAN) {
+                    if (rooms[i].players[p].type == PLAYER_TYPE.HUMAN && players[rooms[i].players[p].socket]) {
                         theUsernames.push(players[rooms[i].players[p].socket].username);
                     }
                 }
                 simplifiedRooms[i] = { 'count': rooms[i].playerCount, 'usernames': theUsernames, 'audienceCount': rooms[i].audienceCount };
+            } else {
+                if (!rooms[i]) {
+                    SERVER.warn('A room disappeared');
+                } else {
+                    //Locked
+                }
             }
         }
         for (let i in players) {
@@ -3163,7 +4135,7 @@ function tick() {
             }
         }
         if (Object.keys(players).length == 0 && AdminPanel.shouldRestartServer) {
-            throw "Restarting the server...";
+            shutDown();
         }
         ticking = false;
     }
@@ -3221,36 +4193,126 @@ function startAITraining() {
     if (TRAINING_MODE) {
         /*The system
         All AI are based on "latest", the winner so far
-        New AI, training to beat latest, are stored in trainees (an array)
-
         */
-        /*TODO
-            Create a series of 8 rooms with a no-delete flag (and a no-log flag)
-            After each room plays 100 games, take the winner from each
-            The winner from room 1 is used as the "parent" for the next gen
-            Winners of 1-4 compete in room 1
-            Winners of 5-8 compete in room 2
-            Children compete in rooms 3-8
-            After 10 generations, overwrite the file "latest" with the latest gen
-            After 100 generations, create a file Date.now() as a backup
-            If this save happens too often, it can be expanded later
-            */
+
+        //Create the rooms filled with AI. Training goal defaults to 100
+        const ROOM_NAMES = ['AI-1','AI-2','AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
+        const LEARNING_ROOMS = ['AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
+        const LEARNING_RATE = 0.5;
+        for (let i in ROOM_NAMES) {
+            rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
+            rooms[ROOM_NAMES[i]].players = [
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
+                    ];
+        }
+        rooms[ROOM_NAMES[0]].players[0] = new Player(PLAYER_TYPE.AI, latest);
+
+        //TODO: prompt rooms to start training
+
+        for (let gen=1; gen<1000; gen++) {
+            //Run 1000 generations of training
+            latest = rooms[ROOM_NAMES[0]].winner.ai;
+            if (gen%100 == 0) {
+                AI.aiToFile(latest,'latest.h5');
+                AI.aiToFile(latest,'AI_SAVES/' + Date.now() + '.h5');
+            }
+            rooms[ROOM_NAMES[0]] = new Room(ROOM_NAMES[0], true, 0, players, true);
+            rooms[ROOM_NAMES[0]].players = [
+                new Player(PLAYER_TYPE.AI, new AI(latest)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[1]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[2]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[3]].winner.ai.seed))
+            ];
+            rooms[ROOM_NAMES[1]].players = [
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[4]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[5]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[6]].winner.ai.seed)),
+                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[7]].winner.ai.seed))
+            ];
+            for (let i in LEARNING_ROOMS) {
+                rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
+                rooms[ROOM_NAMES[i]].players = [
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
+                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
+                        ];
+            }
+            //TODO: prompt room to start training
+        }
     }
 }
 
 let interval = setInterval(tick, 1000 / 60.0);//60 FPS
 let verifyUsers = setInterval(checkAllUsers, 5*60*1000);
+AdminPanel.reloadClients = () => {
+    for (let i in SOCKET_LIST) {
+        SOCKET_LIST[i].emit('reload');
+    }
+}
+AdminPanel.printPlayerList = (printToConsole) => {
+    const playerListObject = [];
+    for (let i in players) {
+        if (printToConsole) {console.log('Player ' + i + ':');}
+        playerListObject.push({});
+        for (let p in players[i]) {
+            if (p != 'socket' && p != 'token') {
+                playerListObject[playerListObject.length - 1][p] = players[i][p];
+                if (printToConsole) {
+                    console.log('\t' + p + ': ' + players[i][p]);
+                }
+            }
+        }
+        //players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1 }
+    }
+    return playerListObject;
+}
+AdminPanel.printRoomsList = (printToConsole) => {
+    const roomListObject = [];
+    for (let i in rooms) {
+        if (printToConsole) {console.log('Room ' + i + ':');}
+        roomListObject.push({});
+        for (let r in rooms[i]) {
+            if (r != '_deck' && r != '_playerList' && r != '_players' && r != '_trainingGoal'
+                    && r != '_settings' && r != '_audience' && r != '_board') {
+                //todo: players, audience, and board have useful information that needs to be extracted and sent
+                roomListObject[roomListObject.length - 1][r] = rooms[i][r];
+                if (printToConsole) {
+                    console.log('\t' + r + ': ' + rooms[i][r]);
+                }
+            }
+        }
+    }
+    return roomListObject;
+}
 
 //Begin listening
 if (DEBUG_MODE) {
     console.log("DEBUG MODE ACTIVATED");
     console.log("Listening on port 8448 (Accessible at http://localhost:8448/ )")
     server.listen(8448);
-    AdminPanel.startAdminPanel(8401);
 } else {
     console.log("Server running in production mode. For debug mode, run \nnode _server.js debug")
     console.log("Listening on port 8442 (Accessible at http://localhost:8442/ )");
     server.listen(8442);
-    AdminPanel.startAdminPanel(8400);
 }
 console.log("Log level: " + LOG_LEVEL);
+
+function shutDown() {
+    //First, save any information
+    /*
+        - Error logs
+        - Debug info
+        - Player stats
+    */
+    //Then, close all open things
+    /*
+        - H5 files
+        - Database connections
+    */
+    //Finally, shut down the server
+    throw 'Shutting down...';
+}

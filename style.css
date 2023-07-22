@@ -17,6 +17,13 @@ body {
     background-color: var(--green);
     padding: 4rem;
 }
+body:fullscreen {
+   padding: 1rem;
+}
+
+:fullscreen, ::backdrop {
+    background-color: var(--green);
+}
 
 .canvas {
     width: 100%;
@@ -252,4 +259,53 @@ h4 {
 
 .centered {
     text-align: center;
+}
+
+.right-align {
+    text-align: right;
+}
+
+.dark-background {
+    background-color: var(--navy);
+    color: var(--white);
+}
+
+.hidden {
+    display: none;
+}
+
+.flash {
+    animation: flash-animation 0.5s;
+}
+
+@keyframes flash-animation {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.notification {
+    color: var(--red);
+    position: fixed;
+    top: 95%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #f1f1f1;
+    padding: 10px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 1;
+    transition: opacity 0.5s;
+}
+
+.notification.fade-out {
+    opacity: 0;
 }

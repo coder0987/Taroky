@@ -7,10 +7,10 @@ const ERR_FONT = '24px Arial';
 const INFO_FONT = '24px Arial';
 const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16};
-const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5};
-const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon'};
+const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5, DRAW_TALON: 6};
+const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon',6:'Talon'};
 const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'};//TODO add ai
+const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
 const ACTION_TABLE = {
     'start': 'Start the Game',
     'play': 'Start the Next Round',
@@ -55,6 +55,7 @@ let connectingToRoom = false;
 let inGame = false;
 let chipCount = 100;
 let playerNumber = -1;
+let povinnostNumber = -1;
 let hostNumber = -1;
 let currentAction;
 let baseDeck = [];
@@ -64,6 +65,9 @@ let drawnCards = [];
 let queued = false;
 let discardingOrPlaying = true;
 let timeOffset = 0;
+let elo;
+let admin;
+let defaultSettings = {'timeout':30,'difficulty':2};
 let activeUsername;
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
@@ -100,6 +104,75 @@ function includeHTML() {
       }
     }
   }
+
+let fullscreenMode = false;
+function fullscreen() {
+    fullscreenMode = !fullscreenMode;
+    try {
+        if (!fullscreenMode) {
+            //disable fullscreen
+            if (document.fullscreenElement) {
+                closeFullscreen();
+            }
+            document.getElementById('navbar').classList.remove('hidden');
+            document.getElementById('footer').classList.remove('hidden');
+        } else {
+            //enable fullscreen
+            if (!document.fullscreenElement) {
+                openFullscreen();
+            }
+            document.getElementById('navbar').classList.add('hidden');
+            document.getElementById('footer').classList.add('hidden');
+        }
+    } catch (footerMightNotExist) {}
+}
+
+//Interface with officially supported functions
+function openFullscreen() {
+  if (document.body.requestFullscreen) {
+    document.body.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) { /* Safari */
+    document.body.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) { /* IE11 */
+    document.body.msRequestFullscreen();
+  }
+}
+
+/* Close fullscreen */
+function closeFullscreen() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) { /* Safari */
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) { /* IE11 */
+    document.msExitFullscreen();
+  }
+}
+
+function keyListener(e) {
+    //TODO add hotkeys
+    switch (e.code) {
+        case 'Escape':
+            if (fullscreenMode) {
+                fullscreen();
+            }
+            break;
+    }
+}
+
+function fullscreenChangeEvent(e) {
+    if (fullscreenMode) {
+        //should be in fullscreen
+        if (!document.fullscreenElement) {
+            fullscreen();
+        }
+    } else {
+        //shouldn't be in fullscreen
+        if (document.fullscreenElement) {
+            fullscreen();
+        }
+    }
+}
 
     /**loader */
 $(document).ready(function() {
@@ -147,14 +220,25 @@ function isInHand(element) {
     return false;
 }
 
+function numTrumpInHand() {
+    let num = 0;
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump') {
+            num++;
+        }
+    }
+    return num;
+}
+
 function enter() {if (this.style.filter == '') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
-function exit() {this.classList.remove('image-hover-highlight');}
+function exit() {this.classList.remove('image-hover-highlight');this.title='';}
 function clickCard() {
     if (this.style.filter == '') {
         discardThis(this.suit,this.value);
         this.removeEventListener('mouseenter',enter);
         this.removeEventListener('mouseleave',exit);
         this.removeEventListener('click',clickCard);
+        this.title='';
         this.classList.remove('image-hover-highlight');
         this.hidden=true;
     }
@@ -221,10 +305,29 @@ function drawHand(withGray) {
 
 let tableDrawnTime = Date.now();//ms since START_TIME
 function drawTable() {
-    if (!returnTableQueue[0] || Date.now() - tableDrawnTime < 3000) {
+    if (!returnTableQueue[0]) {
         //Wait min 3s before redrawing the table
         //TODO: prevent user from taking an action while the table is still being drawn
-        //TODO: add time to the timeout when players play quickly so the table can load in
+        return;
+    }
+    let currentNumberOfCardsOnTable = 0;
+    if (!document.getElementById('table').hidden) {
+        let divTable = document.getElementById('table');
+        let returnToDeck = divTable.children;
+        for (let i=returnToDeck.length-1; i>=0; i--) {
+            for (let j in returnToDeck[i].children) {
+                if (returnToDeck[i].children[j] && returnToDeck[i].children[j].nodeName == 'IMG') {
+                    currentNumberOfCardsOnTable++;
+                }
+            }
+        }
+    }
+    if (Date.now() - tableDrawnTime < 3000 && currentNumberOfCardsOnTable >= 4) {
+        //Timeout only matters if the table is at full capacity
+        console.log('full');
+        return;
+    } else if (Date.now() - tableDrawnTime < 1000) {
+        console.log('partial');
         return;
     }
     tableDrawnTime = Date.now();
@@ -301,6 +404,13 @@ function emptyHand() {
     let returnToDeck = divHand.children;
     for (let i=returnToDeck.length-1; i>=0; i--) {
         let child = returnToDeck[i];
+        child.classList.remove('col-2');
+        child.style.filter = '';
+        child.removeEventListener('mouseenter',enter);
+        child.removeEventListener('mouseleave',exit);
+        child.removeEventListener('click',clickCard);
+        child.title = '';
+        child.classList.remove('image-hover-highlight');
         child.hidden = true;
         divDeck.appendChild(child);
     }
@@ -365,12 +475,16 @@ function submitSettings(type) {
             document.getElementById('lockButton').setAttribute('hidden','hidden');
             document.getElementById('lockButtonP').setAttribute('hidden','hidden');
             break;
+        case 'save':
+            socket.emit('saveSettings');
+            break;
         default:
             addError('Unknown setting: ' + type);
     }
 }
 
 function createSettings(tools) {
+
     let settings = document.createElement('div');
     settings.id = 'settings';
 
@@ -387,7 +501,7 @@ function createSettings(tools) {
         difficultySelectOption.selected = false;
         difficultySelectOption.value = i;
         difficultySelectOption.id = DIFFICULTY_TABLE[i];
-        if (i==2) {
+        if (i==defaultSettings.difficulty) {
             difficultySelectOption.selected = 'selected';
         }
         difficultySelectOption.innerHTML = DIFFICULTY_TABLE[i];
@@ -406,7 +520,8 @@ function createSettings(tools) {
 
     let timeoutButton = document.createElement('input');
     timeoutButton.setAttribute('type', 'number');
-    timeoutButton.defaultValue = 30;
+    timeoutButton.defaultValue = defaultSettings.timeout;
+    timeoutButton.setAttribute('value',defaultSettings.timeout);
     timeoutButton.min = -1;//-1 or 0 mean no timeout
     timeoutButton.id = 'timeoutButton';
     timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
@@ -428,6 +543,21 @@ function createSettings(tools) {
     });
     settings.appendChild(lockButton);
     settings.appendChild(document.createElement('br'));
+
+    //Create save button
+    let saveButtonP = document.createElement('span');
+    saveButtonP.innerHTML = 'Save Settings:\t';
+    saveButtonP.style='display:inline-block; width: 175px';
+    settings.appendChild(saveButtonP);
+
+    let saveButton = document.createElement('button');
+    saveButton.innerHTML = 'Save';
+    saveButton.addEventListener('click', function(){
+        submitSettings("save");
+    });
+    settings.appendChild(saveButton);
+
+    settings.appendChild(document.createElement('br'));
     settings.appendChild(document.createElement('br'));
 
     tools.appendChild(settings);
@@ -443,7 +573,6 @@ function hostRoom() {
     if (roomHosted) {
         document.getElementById('lockButton').removeAttribute('hidden');
         document.getElementById('lockButtonP').removeAttribute('hidden');
-        document.getElementById('timeoutButton').value = 30;
         document.getElementById(DIFFICULTY_TABLE[2]).setAttribute('selected','selected');
         return;
     }
@@ -498,6 +627,8 @@ window.addEventListener('message', (event) => {
         let [username,token] = event.data.split(':');
         addMessage('Attempting to sign in as ' + username +'...');
         socket.emit('login',username,token);
+        document.cookie = 'username=' + username + ';secure';
+        document.cookie = 'token=' + token + ';secure';
     } else {
         addMessage('Signing out...');
         socket.emit('logout');
@@ -506,6 +637,11 @@ window.addEventListener('message', (event) => {
 
 function onLoad() {
     generateDeck();
+    document.addEventListener('keydown', keyListener);
+    document.addEventListener("fullscreenchange", fullscreenChangeEvent);
+    document.addEventListener("mozfullscreenchange", fullscreenChangeEvent);
+    document.addEventListener("webkitfullscreenchange", fullscreenChangeEvent);
+    document.addEventListener("msfullscreenchange", fullscreenChangeEvent);
 
     if (!localStorage.getItem('tarokyInstance')) {
         do {
@@ -515,6 +651,15 @@ function onLoad() {
 
     socket = io({auth: {token: localStorage.getItem('tarokyInstance')}});
 
+    {
+        //Auto sign-in using cookies
+        let theUsername = getCookie('username');
+        let theToken = getCookie('token');
+        if (theUsername && theToken) {
+            socket.emit('login',theUsername,theToken);
+        }
+    }
+
     socket.on('reload', function() {
        addMessage('Reloading...');
        window.location.reload();
@@ -523,12 +668,14 @@ function onLoad() {
     socket.on('loginSuccess', function(username) {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
-        displaySignOut();
+        displaySignOut(username);
     });
 
     socket.on('loginFail', function() {
         addBoldMessage('Authentication failure');
         displaySignIn();
+        document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     });
 
     socket.on('loginExpired', function() {
@@ -562,6 +709,9 @@ function onLoad() {
     //TODO save points and return save points
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
+    });
+    socket.on('returnPovinnost', function(returnPovinnost) {
+        povinnostNumber = returnPovinnost;
     });
     socket.on('returnPlayerCount', function(playerCount) {
         document.getElementById('online').innerHTML = playerCount;
@@ -724,6 +874,7 @@ function onLoad() {
                 } else {
                     addBoldMessage(theMessage);
                 }
+                povinnostNumber = extraInfo.pn;
                 break;
             case MESSAGE_TYPE.DRAW:
                 //Player drew certain cards. These should be highlighted until after discarding
@@ -908,6 +1059,29 @@ function onLoad() {
                         });
                     }
 
+                    let shuffleButton;
+                    try {
+                        shuffleButton = document.getElementById('shuffleButton');
+                    } catch (ignore) {}
+                    if (!shuffleButton) {
+                        shuffleButton = document.createElement('button');
+                        shuffleButton.id = 'shuffleButton';
+                        shuffleButton.innerHTML = 'Shuffle';
+                        shuffleButton.addEventListener('click',function() {
+                            this.hidden = true;
+                            let deck = document.getElementById('deck');
+                            document.getElementById('cardBack').hidden = true;
+                            deck.appendChild(document.getElementById('cardBack'));
+                            addMessage('Shuffled!');
+                            socket.emit('shuffle',0,false);
+                        });
+                        document.getElementById('center').appendChild(document.createElement('br'));
+                        document.getElementById('center').appendChild(shuffleButton);
+                    } else {
+                        shuffleButton.removeAttribute('hidden');
+                    }
+
+
                     document.getElementById('cardBack').addEventListener('mouseenter',function() {
                         addMessage('Shuffling...');
                     });
@@ -916,6 +1090,7 @@ function onLoad() {
                         socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
                     });
                     document.getElementById('cardBack').addEventListener('mouseleave',function() {
+                        document.getElementById('shuffleButton').hidden = true;
                         this.hidden = true;
                         let deck = document.getElementById('deck');
                         deck.appendChild(this);
@@ -949,8 +1124,13 @@ function onLoad() {
                     createChoiceButtons(BUTTON_TYPE.PREVER_TALON);
                     break;
                 case 'drawTalon':
+                case 'passTalon':
                     addMessage('You are drawing cards from the talon.');
-                    socket.emit('drawTalon');
+                    if (povinnostNumber != playerNumber && numTrumpInHand() <= 2) {
+                        createChoiceButtons(BUTTON_TYPE.DRAW_TALON);
+                    } else {
+                        socket.emit('goTalon');
+                    }
                     break;
                 case 'discard':
                     discardingOrPlaying = true;
@@ -1018,7 +1198,6 @@ function onLoad() {
             if (action.action == 'lead' || action.action == 'follow' || action.action == 'winTrick') {
                 return;//No need. Handled by room.informPlayers
             }
-            //TODO translate important messages. For now it should all be handled by room info and informPlayers
             //addMessage('Player ' + (action.player + 1) + ' is performing the action ' + action.action);
         }
     });
@@ -1035,6 +1214,20 @@ function onLoad() {
     socket.on('gameEnded', function() {
         exitCurrentRoom(true);
     });
+    socket.on('elo', function(returnElo) {
+        elo = returnElo;
+    });
+    socket.on('admin', function(returnAdmin) {
+        admin = returnAdmin;
+        document.getElementById('adminHandler').removeAttribute('hidden');
+    });
+    socket.on('defaultSettings', function(returnSettings) {
+        if (defaultSettings) {
+            defaultSettings = returnSettings;
+            addBoldMessage('Settings loaded');
+        }
+    });
+
     refresh();
     setInterval(tick, 200);
 }
@@ -1250,6 +1443,10 @@ function createChoiceButtons(buttonType) {
             firstButton.innerHTML = 'Keep';
             secondButton.innerHTML = 'Pass';
             break;
+        case BUTTON_TYPE.DRAW_TALON:
+            firstButton.innerHTML = 'Draw';
+            secondButton.innerHTML = 'Pass';
+            break;
         default:
             addError('Unknown button type: ' + buttonType);
     }
@@ -1328,6 +1525,7 @@ function exitCurrentRoom(value) {
         inGame = false;
         chipCount = 100;
         playerNumber = -1;
+        povinnostNumber = -1;
         hostNumber = -1;
         currentAction = null;
         discardingOrPlaying = true;
@@ -1358,8 +1556,37 @@ function displaySignIn() {
     accHandler.href = 'https://sso.smach.us/?redirect=https://machtarok.com/';
 }
 
-function displaySignOut() {
+function displaySignOut(withName) {
     let accHandler = document.getElementById('accountHandler');
-    accHandler.innerHTML = 'Sign Out';
+    if (!withName) {
+        accHandler.innerHTML = 'Sign Out';
+    } else {
+        accHandler.innerHTML = 'Sign Out (' + withName + ')';
+    }
     accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
+    accHandler.addEventListener('click',signOut);
+}
+
+function signOut() {
+    let accHandler = document.getElementById('accountHandler');
+   document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+   document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+   accHandler.removeEventListener('click',signOut);
+}
+
+//thanks w3 schools
+function getCookie(cname) {
+  let name = cname + "=";
+  let decodedCookie = decodeURIComponent(document.cookie);
+  let ca = decodedCookie.split(';');
+  for(let i = 0; i <ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
 }
