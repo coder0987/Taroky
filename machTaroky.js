@@ -1218,8 +1218,10 @@ function onLoad() {
         elo = returnElo;
     });
     socket.on('admin', function(returnAdmin) {
-        admin = returnAdmin;
-        document.getElementById('adminHandler').removeAttribute('hidden');
+        if (returnAdmin) {
+            admin = returnAdmin;
+            document.getElementById('adminHandler').removeAttribute('hidden');
+        }
     });
     socket.on('defaultSettings', function(returnSettings) {
         if (defaultSettings) {
