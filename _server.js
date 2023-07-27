@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 //imports
 const Player = require('./player.js');
 const Room = require('./room.js');
@@ -69,7 +71,7 @@ const server = http.createServer((req, res) => {
     };
 
     fs.readFile(filename, function (err, data) {
-        if (err || filename.indexOf('_') != -1) {
+        if (err || filename.indexOf('_') != -1 || filename.indexOf('env') != -1) {
             res.writeHead(404, { 'Content-Type': 'text/html' });
             return res.end("404 Not Found");
         }
@@ -3271,9 +3273,11 @@ function autoReconnect(socketId) {
     }
     if (players[socketId].username != 'Guest') {
         SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
-        SOCKET_LIST[socketId].emit('elo',players[socketId].userInfo.elo);
-        SOCKET_LIST[socketId].emit('admin',players[socketId].userInfo.admin);
-        SOCKET_LIST[socketId].emit('defaultSettings',notationToObject(players[socketId].userInfo.settings));
+        if (players[socketId].userInfo) {
+            SOCKET_LIST[socketId].emit('elo',players[socketId].userInfo.elo);
+            SOCKET_LIST[socketId].emit('admin',players[socketId].userInfo.admin);
+            SOCKET_LIST[socketId].emit('defaultSettings',notationToObject(players[socketId].userInfo.settings));
+        }
     }
 }
 
