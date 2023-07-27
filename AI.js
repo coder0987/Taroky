@@ -1,5 +1,6 @@
 const math = require('mathjs');
 const Deck = require('./deck.js');
+const { Buffer } = require('node:buffer');
 const { SUIT,
     SUIT_REVERSE,
     RED_VALUE,
@@ -19,15 +20,23 @@ class AI {
     }
 
     static generateInputs(room, pn, action, cardPrompt) {
+        function vl(c,l,t) {
+            if (c != l) {
+                SERVER.error('Current length: ' + c + ', Should be: ' + l + ', After tally: ' + t);
+            }
+        }
+
         const thePlayers = room.players;
         const theBoard = room.board;
         let inputs = [];
 
         //Chips
-        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 0)].chips/100));
-        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 1)].chips/100));
-        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 2)].chips/100));
-        inputs.push(AI.sigmoid(thePlayers[playerOffset(pn, 3)].chips/100));
+        inputs.push(thePlayers[playerOffset(pn, 0)].chips>100?1:0);
+        inputs.push(thePlayers[playerOffset(pn, 1)].chips>100?1:0);
+        inputs.push(thePlayers[playerOffset(pn, 2)].chips>100?1:0);
+        inputs.push(thePlayers[playerOffset(pn, 3)].chips>100?1:0);
+
+        vl(inputs.length,4,'chips');
 
         //Povinnost
         let povinnostVector = new Array(4).fill(0);
@@ -36,6 +45,8 @@ class AI {
         }
         inputs = inputs.concat(povinnostVector);
 
+        vl(inputs.length,8,'povinnost');
+
         //Prever
         let preverVector = new Array(4).fill(0);
         if (theBoard.prever != -1) {
@@ -43,9 +54,13 @@ class AI {
         }
         inputs = inputs.concat(preverVector);
 
+        vl(inputs.length,12,'prever');
+
         //Prever talon doubling
         inputs.push(theBoard.preverTalonStep > 1 ? 1 : 0);
         inputs.push(theBoard.preverTalonStep > 2 ? 1 : 0);
+
+        vl(inputs.length,14,'ptd');
 
         //Moneycards
         let moneyCardsVector = new Array(32).fill(0);
@@ -57,12 +72,16 @@ class AI {
         }
         inputs = inputs.concat(moneyCardsVector);
 
+        vl(inputs.length,46,'moneycards');
+
         //Valat
         let valatVector = new Array(4).fill(0);
         if (theBoard.valat != -1) {
             valatVector[playerPerspective(theBoard.valat, pn)] = 1;
         }
         inputs = inputs.concat(valatVector);
+
+        vl(inputs.length,50,'valat');
 
         //I on the End
         let ioteVector = new Array(4).fill(0);
@@ -71,12 +90,16 @@ class AI {
         }
         inputs = inputs.concat(ioteVector);
 
+        vl(inputs.length,54,'chips');
+
         //Contra
         let contraVector = new Array(4).fill(0);
         if (theBoard.iote != -1) {
             contraVector[playerPerspective(theBoard.calledContra, pn)] = 1;
         }
         inputs = inputs.concat(contraVector);
+
+        vl(inputs.length,58,'contra');
 
         //Rhea-Contra
         let rheaContraVector = new Array(4).fill(0);
@@ -85,12 +108,16 @@ class AI {
         }
         inputs = inputs.concat(rheaContraVector);
 
+        vl(inputs.length,62,'rhea-contra');
+
         //Supra-contra
         let supraContraVector = new Array(4).fill(0);
         if (theBoard.iote != -1) {
             supraContraVector[playerPerspective(theBoard.supraContra, pn)] = 1;
         }
         inputs = inputs.concat(supraContraVector);
+
+        vl(inputs.length,66,'supra-contra');
 
         //PartnerCard
         inputs.push(theBoard.partnerCard == 'XIX' ? 1 : 0);
@@ -99,6 +126,8 @@ class AI {
         inputs.push(theBoard.partnerCard == 'XVI' ? 1 : 0);
         inputs.push(theBoard.partnerCard == 'XV' ? 1 : 0);
         inputs.push(Deck.handContains(thePlayers[pn].hand,theBoard.partnerCard) ? 1 : 0);
+
+        vl(inputs.length,72,'partnercard');
 
         //CURRENT TRICK INFORMATION
         let leaderVector = new Array(4).fill(0);
@@ -136,7 +165,7 @@ class AI {
                 inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[2]));
                 inputs = inputs.concat(cardToVector(theBoard.trickHistory[i].cards[3]));
             } else {
-                inputs = inputs.concat(new Array(129).fill(0));
+                inputs = inputs.concat(new Array(121).fill(0));
             }
         }
 
@@ -179,11 +208,14 @@ class AI {
         actionVector[action] = 1;
         inputs = inputs.concat(actionVector);
 
-        if (inputs.length != 2523) {
+        if (inputs.length != 2427) {
             SERVER.error('Inputs is incorrect length: ' + inputs.length);
         }
 
-        return inputs;
+        //TODO: stop using inputs altogether and just use buffer
+        let buffer = Buffer.from(inputs);
+
+        return buffer;
 
         /*Room
         room['board'] = {the board}

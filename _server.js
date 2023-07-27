@@ -7,6 +7,7 @@ const Deck = require('./deck.js');
 const AI = require('./AI.js');
 const AdminPanel = require('./adminPanel.js');
 const Database = require('./database.js');
+const { Buffer } = require('node:buffer')
 const { SUIT,
     SUIT_REVERSE,
     RED_VALUE,
@@ -761,7 +762,6 @@ function basicHandRanking(hand) {
 function robotDiscard(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
             /*TODO: Discard cards from the suit with the least number of possible cards that does not have a king
                 If tied, discard the highest point value
@@ -795,7 +795,6 @@ function robotPartner(hand, difficulty) {
     let robotPossiblePartners = possiblePartners(hand);
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -817,7 +816,6 @@ function robotPartner(hand, difficulty) {
 function robotPrever(hand, difficulty, room) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -899,7 +897,6 @@ function robotCall(hand, difficulty) {
     //Valat
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -918,7 +915,6 @@ function robotCall(hand, difficulty) {
 function robotIOTE(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -937,7 +933,6 @@ function robotIOTE(hand, difficulty) {
 function robotContra(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
             if (basicHandRanking(hand) >= 18) {
@@ -956,7 +951,6 @@ function robotContra(hand, difficulty) {
 function robotPovinnostBidaUniChoice(hand, difficulty) {
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -1028,7 +1022,6 @@ function robotLead(hand, difficulty, room) {
 
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
             //Possible strategies: run trump until almost out, play kings, reclaim control with trump
@@ -1166,7 +1159,6 @@ function robotPlay(hand, difficulty, room) {
 
     switch (difficulty) {
         case DIFFICULTY.AI:
-            SERVER.warn('AI not implemented yet. Defaulting to robot moves');
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
@@ -1631,7 +1623,264 @@ function playerAction(action, room, pn) {
 }
 function aiAction(action, room, pn) {
     //Uses the AI to take an action IF and only IF the AI is supposed to
+    let hand = room['players'][pn].hand;
+    let fakeMoneyCards = false;
+    let actionNeedsAI = false;
 
+    if (action.player == pn) {
+
+        switch (action.action) {
+                case 'play':
+                case 'shuffle':
+                    break;
+                case 'cut':
+                    action.info.style = 'Cut';//Since this has 0 effect on gameplay, no ai necessary
+                    break;
+                case 'deal':
+                    break;
+                case '12choice':
+                    action.info.choice = robotChooseHand(room.board.hands);//Again, 0 effect on gameplay
+                    break;
+                case 'prever':
+                    actionNeedsAI = true;
+                    think(8,5,action,room,pn,fakeMoneyCards).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'drawPreverTalon':
+                case 'drawTalon':
+                    break;
+                case 'discard':
+                    {
+                    grayUndiscardables(hand);
+                    let choices = handWithoutGray(hand);
+                    if (choices.length == 1) {
+                        action.info.card = choices[0];
+                        break;
+                    }
+                    actionNeedsAI = true;
+                    let discardPromises = [];
+                    for (let i in choices) {
+                        discardPromises[i] = think(0,8,action,room,pn,fakeMoneyCards,choices[i]);
+                    }
+                    Promise.all(discardPromises).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    }
+                    break;
+                case 'povinnostBidaUniChoice':
+                    actionNeedsAI = true;
+                    think(11,9,action,room,pn,fakeMoneyCards).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                case 'moneyCards':
+                    break;
+                case 'partner':
+                    //if povinnost choose partner
+                    actionNeedsAI = true;
+                    let p1 = think(12,11,action,room,pn,fakeMoneyCards);
+                    let p2 = think(13,11,action,room,pn,fakeMoneyCards);
+                    Promise.all([p1, p2]).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'valat':
+                    actionNeedsAI = true;
+                    think(9,12,action,room,pn,fakeMoneyCards).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'iote':
+                    actionNeedsAI = true;
+                    think(10,13,action,room,pn,fakeMoneyCards).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'contra':
+                case 'preverContra':
+                case 'preverValatContra':
+                case 'valatContra':
+                    actionNeedsAI = true;
+                    let myPromise;
+                    if (room.board.contra == -1) {
+                        //Regular contra
+                        myPromise = think(5,17,action,room,pn,fakeMoneyCards);
+                    } else if (room.board.rheaContra == -1) {
+                        myPromise = think(6,17,action,room,pn,fakeMoneyCards);
+                    } else {
+                        myPromise = think(7,17,action,room,pn,fakeMoneyCards);
+                    }
+                    myPromise.then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    break;
+                case 'lead':
+                    if (hand.length == 1) {
+                        action.info.card = hand[0];
+                        break;
+                    }
+                    {
+                    actionNeedsAI = true;
+                    let leadPromises = [];
+                    unGrayCards(hand);
+                    //Rank each card
+                    //think(8,5,action,room,pn,fakeMoneyCards);
+
+                    let choices = handWithoutGray(hand);
+                    for (let i in choices) {
+                        leadPromises[i] = think(1,18,action,room,pn,fakeMoneyCards,choices[i]);
+                    }
+                    Promise.all(leadPromises).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    }
+                    break;
+                case 'follow':
+                    let choices = handWithoutGray(hand);
+                    if (choices.length == 1) {
+                        action.info.card = choices[0];
+                        break;
+                    }
+                    {
+                    actionNeedsAI = true;
+                    let followPromises = [];
+                    //Rank each card
+
+                    let choices = handWithoutGray(hand);
+                    for (let i in choices) {
+                        followPromises[i] = think(1,19,action,room,pn,fakeMoneyCards,choices[i]);
+                    }
+                    Promise.all(followPromises).then((result) => {
+                            aiActionCallback(action, room, pn, fakeMoneyCards, result);
+                        }).catch((err) => {
+                            SERVER.error(err);
+                            //Default to robot action
+                            SERVER.warn('AI action failed. Falling back to robot action');
+                            robotAction(action, room, pn);
+                        });
+                    }
+                    break;
+                case 'winTrick':
+                    break;
+                case 'countPoints':
+                    break;//Point counting will be added later
+                case 'resetBoard':
+                    break;//Utilitarian, no input needed
+                default:
+                    SERVER.warn('Unknown ai action: ' + action.action,room.name);
+            }
+    }
+    if (action.action == 'iote' || 'contra' || 'preverContra' ||'preverValatContra' || 'valatContra') {
+        //Don't inform players of private actions
+        for (let i = 0; i < 4; i++) {
+            if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
+                players[room['players'][i].socket].socket.emit('nextAction', action);
+            }
+        }
+        for (let i in room.audience) {
+            room.audience[i].messenger.emit('nextAction', action);
+        }
+        if (fakeMoneyCards) {
+            action.action = 'povinnostBidaUniChoice';
+        }
+    }
+    if (!actionNeedsAI) {
+        aiActionComplete(action, room, pn, fakeMoneyCards);
+    }
+}
+function think(outputNumber, actionNumber, action, room, pn, fakeMoneyCards, cardPrompt) {
+    const myPromise = new Promise((resolve, reject) => {
+        const dataToSend = AI.generateInputs(room,pn,actionNumber,cardPrompt);
+        //dataToSend is already a binary buffer of 1s and 0s
+        const options = {
+            hostname: 'localhost',
+            path: '/' + room['players'][pn].ai + '/',
+            method: 'POST',
+            protocol: 'http:',
+            port: 8441,
+            headers: {
+                'output': outputNumber
+            }
+        };
+        const req = http.request(options, (res) => {
+            let postData = [];
+            res.on('data', function(chunk) {
+                postData.push(chunk);
+                //CODE REACHES HERE
+            });
+            function complete() {
+                //postData = Buffer.concat(postData).toString();
+                let stringData = '';
+                for (let i in postData) {
+                    stringData += postData[i];
+                }
+                try {
+                    postData = JSON.parse(stringData)
+                } catch (e) {
+                    SERVER.error('JSON error: ' + e)
+                }
+                resolve(postData.answer);
+            }
+            res.on('finish', complete);
+            res.on('end', complete);
+            res.on('close', complete);
+            SERVER.debug('AI status: ' + res.statusCode);
+            if (res.statusCode === 200) {
+                //Action successfully completed
+            } else {
+                //Action failed
+                reject('AI action failed');
+            }
+        }).on("error", (err) => {
+            //TODO: there's a really weird error that I'm ignoring here
+            //reject(err);
+        });
+        req.setTimeout(10000);//10 seconds max
+        req.end(dataToSend);
+    });
+    return myPromise;
+}
+function aiActionCallback(action, room, pn, fakeMoneyCards, result) {
     //Generate possible choices
     //If only one choice, choose it
     //Otherwise, generate inputs
@@ -1656,161 +1905,103 @@ function aiAction(action, room, pn) {
     13. Play together (call lowest)
     Total: 14
     */
+
+    let ranking = 0;
+    let currentAI = room.players[pn].ai;
     let hand = room['players'][pn].hand;
-    let fakeMoneyCards = false;
 
-    if (action.player == pn) {
-        let ranking = 0;
-        let currentAI = room.players[pn].ai;
-        let think = (outputNumber, specialInfo, actionNumber) => {
-            return currentAI.evaluate(AI.generateInputs(room,pn,actionNumber),outputNumber,specialInfo);
-        }
-        switch (action.action) {
-                case 'play':
-                case 'shuffle':
-                    break;
-                case 'cut':
-                    action.info.style = 'Cut';//Since this has 0 effect on gameplay, no ai necessary
-                    break;
-                case 'deal':
-                    break;
-                case '12choice':
-                    action.info.choice = robotChooseHand(room.board.hands);//Again, 0 effect on gameplay
-                    break;
-                case 'prever':
-                    action.action = 'passPrever';
-                    ranking = think(8,false,5);
-                    if (ranking > 0.5) {
-                        action.action = 'callPrever';
-                    }
-                    break;
-                case 'drawPreverTalon':
-                case 'drawTalon':
-                    break;
-                case 'discard':
-                    {
-                    grayUndiscardables(hand);
-                    let choices = handWithoutGray(hand);
-                    let rankings = new Array(choices.length);
-                    let highestRanking = 0;
-                    for (let i in choices) {
-                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,8,choices[i]),0,false);
-                        if (rankings[i] > rankings[highestRanking]) {
-                            highestRanking = i;
-                        }
-                    }
-                    action.info.card = choices[highestRanking];
-                    }
-                    break;
-                case 'povinnostBidaUniChoice':
-                    fakeMoneyCards = true;
-                    action.action = 'moneyCards';
-                    ranking = think(11,false,9);
-                    room.board.buc = false;
-                    if (ranking > 0.5) {
-                        room.board.buc = true;
-                    }
-                case 'moneyCards':
-                    break;
-                case 'partner':
-                    //if povinnost choose partner
-                    if (room['board'].povinnost == pn) {
-                        let goAloneRanking = think(12,false,11);
-                        let goPartnerRanking = think(13,false,11);
-                        if (goAloneRanking > goPartnerRanking) {
-                            action.info.partner = {suit:'Trump',value:'XIX'};
-                        }  else {
-                            //Rudimentary always plays with a partner
-                            action.info.partner = robotPartner(hand, DIFFICULTY.RUDIMENTARY);
-                        }
-                    }
-                    break;
-                case 'valat':
-                    ranking = think(9,false,12);
-                    action.info.valat = false;
-                    if (ranking > 0.5) {
-                        action.info.valat = true;
-                    }
-                    break;
-                case 'iote':
-                    ranking = think(10,false,13);
-                    action.info.iote = false;
-                    if (ranking > 0.5) {
-                        action.info.iote = true;
-                    }
-                    SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
-                    actionCallback(action, room, pn);
-                    return;//Don't inform the players who has the I
-                case 'contra':
-                case 'preverContra':
-                case 'preverValatContra':
-                case 'valatContra':
-                    if (room.board.contra == -1) {
-                        //Regular contra
-                        action.info.contra = think(5,false,17) > 0.5;
-                    } else if (room.board.rheaContra == -1) {
-                        action.info.contra = think(6,false,17) > 0.5;
-                    } else {
-                        action.info.contra = think(7,false,17) > 0.5;
-                    }
-
-                    SERVER.functionCall('robotAction', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name});
-                    actionCallback(action, room, pn);
-                    return;
-                case 'lead':
-                    {
-                    unGrayCards(hand);
-                    //Rank each card
-                    let choices = handWithoutGray(hand);
-                    let rankings = new Array(choices.length);
-                    let highestRanking = 0;
-                    for (let i in choices) {
-                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,18,choices[i]),1,false);
-                        if (rankings[i] > rankings[highestRanking]) {
-                            highestRanking = i;
-                        }
-                    }
-                    action.info.card = choices[highestRanking];
-                    }
-                    break;
-                case 'follow':
-                    {
-                    //Rank each card
-                    grayUnplayables(hand, room.board.leadCard);
-                    let choices = handWithoutGray(hand);
-                    let rankings = new Array(choices.length);
-                    let highestRanking = 0;
-                    for (let i in choices) {
-                        rankings[i] = currentAI.evaluate(AI.generateInputs(room,pn,19,choices[i]),1,false);
-                        if (rankings[i] > rankings[highestRanking]) {
-                            highestRanking = i;
-                        }
-                    }
-                    action.info.card = choices[highestRanking];
-                    }
-                    break;
-                case 'winTrick':
-                    break;
-                case 'countPoints':
-                    break;//Point counting will be added later
-                case 'resetBoard':
-                    break;//Utilitarian, no input needed
-                default:
-                    SERVER.warn('Unknown ai action: ' + action.action,room.name);
+    switch (action.action) {
+        case 'prever':
+            action.action = 'passPrever';
+            if (result > 0.5) {
+                action.action = 'callPrever';
             }
+            break;
+        case 'discard':
+            {
+            grayUndiscardables(hand);
+            let choices = handWithoutGray(hand);
+            let highestRanking = 0;
+            for (let i in choices) {
+                if (result[i] > result[highestRanking]) {
+                    highestRanking = i;
+                }
+            }
+            action.info.card = choices[highestRanking];
+            }
+            break;
+        case 'povinnostBidaUniChoice':
+            fakeMoneyCards = true;
+            action.action = 'moneyCards';
+            room.board.buc = false;
+            if (result > 0.5) {
+                room.board.buc = true;
+            }
+            break;
+        case 'partner':
+            if (room['board'].povinnost == pn) {
+                let goAloneRanking = result[0];
+                let goPartnerRanking = result[1];
+                if (goAloneRanking > goPartnerRanking) {
+                    action.info.partner = {suit:'Trump',value:'XIX'};
+                }  else {
+                    //Rudimentary always plays with a partner
+                    action.info.partner = robotPartner(hand, DIFFICULTY.RUDIMENTARY);
+                }
+            }
+            break;
+        case 'valat':
+            action.info.valat = false;
+            if (result > 0.5) {
+                action.info.valat = true;
+            }
+        case 'iote':
+            action.info.iote = false;
+            if (result > 0.5) {
+                action.info.iote = true;
+            }
+            break;
+        case 'contra':
+        case 'preverContra':
+        case 'preverValatContra':
+        case 'valatContra':
+            action.info.contra = result > 0.5;
+            break;
+        case 'lead':
+            {
+            unGrayCards(hand);
+            //Rank each card
+            let choices = handWithoutGray(hand);
+            let highestRanking = 0;
+            for (let i in choices) {
+                if (result[i] > result[highestRanking]) {
+                    highestRanking = i;
+                }
+            }
+            action.info.card = choices[highestRanking];
+            }
+            break;
+        case 'follow':
+            {
+            //Rank each card
+            grayUnplayables(hand, room.board.leadCard);
+            let choices = handWithoutGray(hand);
+            let highestRanking = 0;
+            for (let i in choices) {
+                if (result[i] > result[highestRanking]) {
+                    highestRanking = i;
+                }
+            }
+            action.info.card = choices[highestRanking];
+            }
+            break;
     }
+    aiActionComplete(action, room, pn, fakeMoneyCards);
+}
+function aiActionComplete(action, room, pn, fakeMoneyCards) {
+    //actionCallback() -> aiAction() -> aiActionCallback() -> ai server -> response -> aiActionComplete -> actionCallback
+    //if no ai is needed: actionCallback() -> aiAction() -> robot action -> aiActionComplete() -> actionCallback()
 
-    for (let i = 0; i < 4; i++) {
-        if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-            players[room['players'][i].socket].socket.emit('nextAction', action);
-        }
-    }
-    for (let i in room.audience) {
-        room.audience[i].messenger.emit('nextAction', action);
-    }
-    if (fakeMoneyCards) {
-        action.action = 'povinnostBidaUniChoice';
-    }
     actionCallback(action, room, pn);
 }
 
@@ -3524,7 +3715,7 @@ io.sockets.on('connection', function (socket) {
                             //Replace bots with AI
                             for (let i in rooms[players[socketId].room].players) {
                                 if (rooms[players[socketId].room].players[i].type == PLAYER_TYPE.ROBOT) {
-                                    rooms[players[socketId].room].players[i] = new Player(PLAYER_TYPE.AI, latest);
+                                    rooms[players[socketId].room].players[i] = new Player(PLAYER_TYPE.AI, 'standard');
                                 }
                             }
                         } else {

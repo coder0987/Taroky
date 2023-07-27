@@ -9,8 +9,8 @@ const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16};
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5, DRAW_TALON: 6};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon',6:'Talon'};
-const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4/*, AI: 5*/};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless'/*, 5: 'AI'*/};
+const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
+const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
 const ACTION_TABLE = {
     'start': 'Start the Game',
     'play': 'Start the Next Round',
@@ -1218,8 +1218,10 @@ function onLoad() {
         elo = returnElo;
     });
     socket.on('admin', function(returnAdmin) {
-        admin = returnAdmin;
-        document.getElementById('adminHandler').removeAttribute('hidden');
+        if (returnAdmin) {
+            admin = returnAdmin;
+            document.getElementById('adminHandler').removeAttribute('hidden');
+        }
     });
     socket.on('defaultSettings', function(returnSettings) {
         if (defaultSettings) {
