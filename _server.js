@@ -1651,6 +1651,7 @@ function aiAction(action, room, pn) {
                         });
                     break;
                 case 'drawPreverTalon':
+                    //todo give ai choice to keep or pass prever talon cards
                 case 'drawTalon':
                     break;
                 case 'discard':
@@ -1904,8 +1905,6 @@ function aiActionCallback(action, room, pn, fakeMoneyCards, result) {
     Total: 14
     */
 
-    let ranking = 0;
-    let currentAI = room.players[pn].ai;
     let hand = room['players'][pn].hand;
 
     switch (action.action) {
@@ -2025,6 +2024,7 @@ function actionCallback(action, room, pn) {
     let actionTaken = false;
     let style;
     let shouldReturnTable = false;
+    let shouldTrainAI = room.players[pn].socket != -1 && players[room.players[pn].socket].username != 'Guest';
 
     SERVER.functionCall('actionCallback', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name}, {name:'info',value:JSON.stringify(action.info)});
 
@@ -2235,6 +2235,9 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'passPrever':
+            if (shouldTrainAI) {
+                room.players[pn].trainPersonalizedAI(room, pn, 5, 8, null, 0, true);
+            }
             action.player = (action.player + 1) % 4;
             if (action.player == room['board'].povinnost) {
                 if (room.board.prever != -1) {
@@ -2252,6 +2255,9 @@ function actionCallback(action, room, pn) {
             }
         case 'callPrever':
             if (action.action == 'callPrever') {
+                if (shouldTrainAI) {
+                    room.players[pn].trainPersonalizedAI(room, pn, 5, 8, null, 1);
+                }
                 room['board'].playingPrever = true;
                 room['board'].prever = pn;
                 room['board'].preverTalonStep = 0;
@@ -2411,6 +2417,9 @@ function actionCallback(action, room, pn) {
                 }
             }
             if (discarded) {
+                if (shouldTrainAI) {
+                    room.players[pn].trainPersonalizedAI(room, pn, 8, 0, card, 1);
+                }
                 actionTaken = true;
                 //Announce discard Trump cards
                 if (card.suit == 'Trump') {
@@ -2455,6 +2464,9 @@ function actionCallback(action, room, pn) {
             break;
         case 'povinnostBidaUniChoice':
             //player is assumed to be povinnost. This action is only taken if povinnost has bida or uni
+            if (shouldTrainAI) {
+                room.players[pn].trainPersonalizedAI(room, pn, 9, 11, null, action.info.choice ? 1 : 0);
+            }
             room.board.buc = action.info.choice;
             action.action = 'moneyCards';//Fallthrough. Go directly to moneyCards
         case 'moneyCards':
@@ -2565,6 +2577,14 @@ function actionCallback(action, room, pn) {
                 room['board'].partnerCard = "XIX";
             }
 
+            if (shouldTrainAI) {
+                if (Deck.handContainsCard(currentHand, 'XIX')) {
+                    //Player had a choice
+                    room.players[pn].trainPersonalizedAI(room, pn, 11, 12, null, room.board.partnerCard == 'XIX' ? 1 : 0);
+                    room.players[pn].trainPersonalizedAI(room, pn, 11, 13, null, room.board.partnerCard == 'XIX' ? 0 : 1);
+                }
+            }
+
 
             for (let i=0; i<4; i++) {
                 room['players'][i].isTeamPovinnost = Deck.handContainsCard(room['players'][i].hand, room['board'].partnerCard);
@@ -2588,6 +2608,9 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             break;
         case 'valat':
+            if (shouldTrainAI) {
+                room.players[pn].trainPersonalizedAI(room, pn, 12, 9, null, action.info.valat ? 1 : 0);
+            }
             if (action.info.valat) {
                 //Player called valat
                 room['board'].valat = pn;
@@ -2627,6 +2650,9 @@ function actionCallback(action, room, pn) {
             //Possible variations: IOTE may still be allowed in a valat game, contra may be disallowed
             break;
         case 'iote':
+            if (shouldTrainAI) {
+                room.players[pn].trainPersonalizedAI(room, pn, 13, 10, null, action.info.iote ? 1 : 0);
+            }
             if (action.info.iote) {
                 room.informPlayers('called the I on the end', MESSAGE_TYPE.IOTE, {pn: pn},pn);
                 room.board.iote = pn;
@@ -2648,6 +2674,13 @@ function actionCallback(action, room, pn) {
             room.board.firstContraPlayer = action.player;
             break;
         case 'preverContra':
+            /* TODO:
+                input: 17. output: 5, rhea 6, supra 7
+                AI should be trained to both call and avoid calling contra in all cases
+                if (shouldTrainAI) {
+                    room.players[pn].trainPersonalizedAI(room, pn, actionNumber, outputNumber, cardPrompt, value);
+                }
+            */
             let preverIsPovinnost = room.board.prever == room.board.povinnost;
             //If preverIsPovinnost, then isTeamPovinnost is isTeamPrever and no changes must be made
             //If !preverIsPovinnost, then isTeamPovinnost is prever and the roles must be reversed
@@ -2873,6 +2906,12 @@ function actionCallback(action, room, pn) {
                 }
             }
             if (lead) {
+                if (shouldTrainAI) {
+                    for (let i in room.players[pn].hand) {
+                        room.players[pn].trainPersonalizedAI(room, pn, 18, 1, room.players[pn].hand[i], 0);
+                    }
+                    room.players[pn].trainPersonalizedAI(room, pn, 18, 1, lead, 1);
+                }
                 actionTaken = true;
                 shouldReturnTable = true;
                 action.action = 'follow';
@@ -2912,6 +2951,12 @@ function actionCallback(action, room, pn) {
                 }
             }
             if (played) {
+                if (shouldTrainAI) {
+                    for (let i in room.players[pn].hand) {
+                        room.players[pn].trainPersonalizedAI(room, pn, 19, 1, room['players'][pn].hand[i], 0);
+                    }
+                    room.players[pn].trainPersonalizedAI(room, pn, 19, 1, played, 1);
+                }
                 actionTaken = true;
                 shouldReturnTable = true;
                 room['board'].table.push({'card':played,'pn':pn,'lead':false});
@@ -4062,6 +4107,12 @@ io.sockets.on('connection', function (socket) {
         if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin) {
             SERVER.log('Admin ' + players[socketId].username + ' sent ' + id + ' the message ' + message);
             players[id].socket.emit('broadcast',message);
+        }
+    });
+    socket.on('adminSignIn', function(username) {
+        //debug function
+        if (DEBUG_MODE && players[socketId]) {
+            players[socketId].username = username;
         }
     });
     socket.on('removeRoom', function(id) {

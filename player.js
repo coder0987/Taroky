@@ -1,4 +1,6 @@
 const Deck = require('./deck.js');
+const AI = require('./AI.js');
+const http = require('http');
 
 class Player {
     constructor(type, ai) {
@@ -23,6 +25,37 @@ class Player {
         this.tempHand = [];
         this.isTeamPovenost = false;
         this._publicTeam = 0;
+    }
+
+    trainPersonalizedAI(room, pn, actionNumber, outputNumber, cardPrompt, value, save) {
+        if (this._socket == -1 || players[this._socket].username == 'Guest') {
+            return;
+        }
+        SERVER.debug('Training player ' +  players[this._socket].username);
+
+        const dataToSend = AI.generateInputs(room,pn,actionNumber,cardPrompt);
+        //dataToSend is already a binary buffer of 1s and 0s
+        const options = {
+            hostname: 'localhost',
+            path: '/trainPlayer/' + players[this._socket].username,
+            method: 'POST',
+            protocol: 'http:',
+            port: 8441,
+            headers: {
+                'output': outputNumber,
+                'value': value
+            }
+        };
+        if (save) {
+            options.headers.save = 'true';
+        }
+        const req = http.request(options, (res) => {
+            SERVER.debug('Personalized AI training status: ' + res.statusCode);
+        }).on("error", (err) => {
+            SERVER.error(err);
+        });
+        req.setTimeout(10000);//10 seconds max
+        req.end(dataToSend);
     }
 
     handContainsCard(cardName) {
