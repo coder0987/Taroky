@@ -299,6 +299,9 @@ function drawHand(withGray) {
         }
     }
     numCardsSelected = 0;
+    if (document.getElementById('discard_info')) {
+        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
+    }
     for (let i in hand) {
         let card = document.getElementById(hand[i].value + hand[i].suit);
         card.suit = hand[i].suit;
