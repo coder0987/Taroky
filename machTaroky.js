@@ -267,7 +267,7 @@ function drawHand(withGray) {
         card.value = hand[i].value;
         card.classList.add('col-md-1');
         card.classList.add('col-xs-3');
-        card.classList.remove('col-2');//If claimed from prever-talon
+        card.classList.remove('col-2'); //If claimed from prever-talon
         if (withGray) {
             if (hand[i].grayed) {
                 //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
@@ -605,6 +605,7 @@ function displayNextAction(action) {
                 break;
             case 'discard':
                 discardingOrPlaying = true;
+                createConfirmButton();
                 addMessage('You are discarding. Choose a card to discard.');
                 drawHand(true);
                 break;
@@ -1597,6 +1598,19 @@ function createChoiceButtons(buttonType) {
     secondButton.addEventListener('click', buttonChoiceCallback);
     document.getElementById('center').appendChild(firstButton);
     document.getElementById('center').appendChild(secondButton);
+}
+
+function createConfirmButton() {
+    const confirmButton = document.create('button');
+    const displayInfoSpan = document.create('span');
+    confirmButton.type = 'button';
+    displayInfoSpan.type = 'span';
+    confirmButton.id = 'confirm_discard_button';
+    displayInfoSpan.id = 'discard_info';
+
+    confirmButton.innerHTML = 'Confirm Discard';
+
+
 }
 
 function buttonChoiceCallback() {
