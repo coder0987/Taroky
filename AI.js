@@ -19,6 +19,29 @@ class AI {
         return 1 / (1 + Math.exp(-z));
     }
 
+    static beginTraining() {
+        throw "not ready yet";
+        //Create 1 training room. Player 0 is the current winner
+        let trainingRoom = new Room({'name':'TRAINING','trainingRoom':true,'logLevel':0,'settings':{'difficulty':DIFFICULTY.AI, 'timeout': 60000, 'locked':true}})
+        rooms['TRAINING'] = trainingRoom;
+        trainingRoom.players = [
+            new Player(PLAYER_TYPE.AI, 'trainAI/latest'),
+            new Player(PLAYER_TYPE.AI, 'trainAI/1'),
+            new Player(PLAYER_TYPE.AI, 'trainAI/2'),
+            new Player(PLAYER_TYPE.AI, 'trainAI/3')
+        ];
+        for (let i in trainingRoom.players) {
+            trainingRoom.players[i].createAI();
+        }
+
+        //Play game
+
+        //Reset game and rotate (do 4x)
+
+        //Find winner
+        trainingRoom.winner.win();
+    }
+
     static generateInputs(room, pn, action, cardPrompt) {
         function vl(c,l,t) {
             if (c != l) {

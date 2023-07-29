@@ -51,7 +51,8 @@ img {
 }
 
 .grayed {
-    background-color: rgba(150,150,150,0.2);
+    background-color: rgba(150,150,150);
+    opacity: 0.8;
 }
 
 .image-hover-highlight {

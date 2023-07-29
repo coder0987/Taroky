@@ -272,8 +272,10 @@ function drawHand(withGray) {
             if (hand[i].grayed) {
                 //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
                 card.style.filter = 'grayscale(1)';
+                card.classList.add('grayed');
             } else {
                 card.style.filter = '';
+                card.classList.remove('grayed');
             }
             card.removeEventListener('mouseenter',enter);//don't want to double-up on events
             card.removeEventListener('mouseleave',exit);
