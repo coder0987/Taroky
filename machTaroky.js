@@ -824,7 +824,7 @@ function createSettings(tools, roomSettings) {
     saveButtonP.style='display:inline-block; width: 175px';
     settings.appendChild(saveButtonP);
 
-    if (activeUsername) {
+    if (activeUsername != '') {
         let saveButton = document.createElement('button');
         saveButton.innerHTML = 'Save';
         saveButton.addEventListener('click', function(){
@@ -963,12 +963,16 @@ function onLoad() {
     socket.on('loginExpired', function() {
         addBoldMessage('Your login session has expired. Please sign in again.');
         activeUsername = '';
+        defaultSettings = {'timeout':30000,'difficulty':2};
+        delete elo;
         displaySignIn();
     });
 
     socket.on('logout', function() {
         addBoldMessage('Successfully logged out');
         activeUsername = '';
+        defaultSettings = {'timeout':30000,'difficulty':2};
+        delete elo;
         displaySignIn();
     });
 
@@ -980,6 +984,8 @@ function onLoad() {
         if (typeof data.username !== 'undefined') {
             activeUsername = data.username;
             displaySignOut(data.username);
+        } else {
+            activeUsername = '';
         }
         if (typeof data.defaultSettings !== 'undefined') {
             defaultSettings = data.defaultSettings;
