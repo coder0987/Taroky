@@ -282,7 +282,21 @@ function drawHand(withGray) {
     let returnToDeck = divHand.children;
     for (let i=returnToDeck.length-1; i>=0; i--) {
         let child = returnToDeck[i];
-        if (!isInHand(child)) {child.classList.remove('drew');child.classList.remove('col-md-1');child.classList.remove('col-xs-3');child.hidden = true;divDeck.appendChild(child);}
+        if (!isInHand(child)) {
+            child.classList.remove('drew');
+            child.classList.remove('col-md-1');
+            child.classList.remove('col-xs-3');
+            child.hidden = true;
+            divDeck.appendChild(child);
+            child.removeEventListener('mouseenter',enter);
+            child.removeEventListener('mouseleave',exit);
+            child.removeEventListener('click',clickCard);
+            child.removeEventListener('click',discardClickListener);
+            child.title='';
+            child.classList.remove('image-hover-highlight');
+            child.classList.remove('selected');
+            child.classList.remove('grayed');
+        }
     }
     numCardsSelected = 0;
     for (let i in hand) {
@@ -1702,6 +1716,9 @@ function resetBoardButton() {
 
 function clearButtons() {
     let center = document.getElementById('center');
+    if (document.getElementById('discard_info')) {
+        document.getElementById('discard_info').remove();
+    }
     for (let i=center.children.length-1; i>=0; i--) {
         if (center.children[i] && center.children[i].nodeName == 'BUTTON') {
             center.removeChild(center.children[i])
