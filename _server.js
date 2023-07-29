@@ -17,7 +17,9 @@ const { SUIT,
     DIFFICULTY,
     DIFFICULTY_TABLE,
     MESSAGE_TYPE,
-    PLAYER_TYPE } = require('./enums.js');
+    PLAYER_TYPE,
+    DISCONNECT_TIMEOUT,
+    SENSITIVE_ACTIONS } = require('./enums.js');
 
 const http = require('http');
 const https = require('https');
@@ -92,11 +94,6 @@ const io = require('socket.io')(server);
 SOCKET_LIST = {};
 players = {};
 rooms = {};
-
-//TODO: MOVE TO ENUMS
-
-const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
-const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
 //Global variable
 SERVER = {
@@ -3469,60 +3466,6 @@ function disconnectPlayerTimeout(socketId) {
     }
 }
 
-function oldAutoReconnect(socketId) {
-    SERVER.log('Deprecated function oldAutoReconnect called');
-    SOCKET_LIST[socketId].emit('returnPlayerCount',numOnlinePlayers);
-    if (rooms[players[socketId].room]) {
-        if (rooms[players[socketId].room].audience[socketId]) {
-            //Player is in the audience for the room
-            SOCKET_LIST[socketId].emit('audienceConnected',players[socketId].room);
-            SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
-        } else {
-            //Player is playing in the room
-            SOCKET_LIST[socketId].emit('roomConnected',players[socketId].room);
-            SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
-            if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard') {
-                grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
-                SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
-            } else if (rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
-                grayUnplayables(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].board.leadCard);
-                SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
-            } else {
-                unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
-                SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
-            }
-            if (rooms[players[socketId].room]['board']['nextStep'].action != 'start') {
-                rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);
-                SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
-                rooms[players[socketId].room]['board'].importantInfo.pn = null;
-            }
-            if (!isNaN(rooms[players[socketId].room].povinnost)) {
-                rooms[players[socketId].room].informPlayer(players[socketId].pn, 'Player ' + (rooms[players[socketId].room].povinnost+1) + ' is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':rooms[players[socketId].room].povinnost});
-            }
-        }
-        SOCKET_LIST[socketId].emit('returnSettings', rooms[players[socketId].room].settings);
-        if (rooms[players[socketId].room].board.nextStep.action != 'shuffle') {
-            SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
-        }
-        if (rooms[players[socketId].room]['board']['nextStep'].action == 'start' && rooms[players[socketId].room].host == players[socketId].pn) {
-            SOCKET_LIST[socketId].emit('defaultSettings',rooms[players[socketId].room].settings);
-        }
-        if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
-            SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
-        }
-
-        SOCKET_LIST[socketId].emit('returnPovinnost', rooms[players[socketId].room].board.povinnost);
-    }
-    if (players[socketId].username != 'Guest') {
-        SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
-        if (players[socketId].userInfo) {
-            SOCKET_LIST[socketId].emit('elo',players[socketId].userInfo.elo);
-            SOCKET_LIST[socketId].emit('admin',players[socketId].userInfo.admin);
-            SOCKET_LIST[socketId].emit('defaultSettings',notationToObject(players[socketId].userInfo.settings));
-        }
-    }
-}
-
 function autoReconnect(socketId) {
     let reconnectInfo = {};
     reconnectInfo.playerCount = numOnlinePlayers;
@@ -3685,22 +3628,7 @@ io.sockets.on('connection', function (socket) {
                     players[socketId]['room'] = roomID;
                     players[socketId]['pn'] = i;
                     rooms[roomID].informPlayers('joined the game', MESSAGE_TYPE.CONNECT, {}, players[socketId].pn);
-                    if (rooms[roomID]['playerCount'] == 1) {
-                        rooms[roomID]['host'] = socketId;
-                        socket.emit('roomHost');
-                        SERVER.debug('New room host',roomID);
-                        if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
-                            socket.emit('youStart');
-                            if (players[socketId].userInfo && players[socketId].userInfo.settings) {
-                                notationToSettings(rooms[roomID],players[socketId].userInfo.settings);
-                            }
-                        } else {
-                            autoReconnect(socketId);
-                            SERVER.error('Player joined empty room with no host that was started',roomID);
-                        }
-                    } else {
-                        autoReconnect(socketId);
-                    }
+                    autoReconnect(socketId);
                     if (rooms[roomID].debug) {
                         socket.emit('debugRoomJoin');
                     }
@@ -4242,7 +4170,6 @@ function tick() {
             }
         }
 
-        //TODO: something in this code is bugged to where it always considers players "up-to-date" and does not refresh the rooms automatically
         simplifiedRooms = {};
         for (let i in rooms) {
             if (rooms[i] && !rooms[i].settings.locked) {
@@ -4311,7 +4238,6 @@ function checkAllUsers() {
     }
 }
 
-
 function playerOffset(startingPlayer, offset) {
     return (+startingPlayer + +offset)%4;
 }
@@ -4319,64 +4245,6 @@ function playerOffset(startingPlayer, offset) {
 function playerPerspective(originalPlace, viewpoint) {
     //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
     return ((+originalPlace - +viewpoint) + 4)%4;
-}
-
-function startAITraining() {
-    //Creates a table for AI to train at. Table is not publicly accessible.
-    if (TRAINING_MODE) {
-        /*The system
-        All AI are based on "latest", the winner so far
-        */
-
-        //Create the rooms filled with AI. Training goal defaults to 100
-        const ROOM_NAMES = ['AI-1','AI-2','AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
-        const LEARNING_ROOMS = ['AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
-        const LEARNING_RATE = 0.5;
-        for (let i in ROOM_NAMES) {
-            rooms[ROOM_NAMES[i]] = new Room({'name':ROOM_NAMES[i], 'debugRoom':true, 'logLevel':0,'trainingRoom':true});
-            rooms[ROOM_NAMES[i]].players = [
-                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
-                    ];
-        }
-        rooms[ROOM_NAMES[0]].players[0] = new Player(PLAYER_TYPE.AI, latest);
-
-        //TODO: prompt rooms to start training
-
-        for (let gen=1; gen<1000; gen++) {
-            //Run 1000 generations of training
-            latest = rooms[ROOM_NAMES[0]].winner.ai;
-            if (gen%100 == 0) {
-                AI.aiToFile(latest,'latest.h5');
-                AI.aiToFile(latest,'AI_SAVES/' + Date.now() + '.h5');
-            }
-            rooms[ROOM_NAMES[0]] = new Room({'name':ROOM_NAMES[0], 'debugRoom':true, 'logLevel':0, 'trainingRoom':true});
-            rooms[ROOM_NAMES[0]].players = [
-                new Player(PLAYER_TYPE.AI, new AI(latest)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[1]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[2]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[3]].winner.ai.seed))
-            ];
-            rooms[ROOM_NAMES[1]].players = [
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[4]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[5]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[6]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[7]].winner.ai.seed))
-            ];
-            for (let i in LEARNING_ROOMS) {
-                rooms[ROOM_NAMES[i]] = new Room({'name':ROOM_NAMES[i], 'debugRoom':true, 'logLevel':0, 'trainingRoom':true});
-                rooms[ROOM_NAMES[i]].players = [
-                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
-                        ];
-            }
-            //TODO: prompt room to start training
-        }
-    }
 }
 
 let interval = setInterval(tick, 1000 / 60.0);//60 FPS

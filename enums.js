@@ -23,7 +23,8 @@ const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA
 
 const PLAYER_TYPE = { HUMAN: 0, ROBOT: 1, AI: 2, H: 0, R: 1 };
 
-
+const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
+const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
 
 module.exports = {
@@ -36,5 +37,7 @@ module.exports = {
     DIFFICULTY,
     DIFFICULTY_TABLE,
     MESSAGE_TYPE,
-    PLAYER_TYPE
+    PLAYER_TYPE,
+    DISCONNECT_TIMEOUT,
+    SENSITIVE_ACTIONS
 }
