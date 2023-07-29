@@ -251,13 +251,13 @@ function discardClickListener() {
     if (this.classList.contains('selected')) {
         this.classList.remove('selected');
         numCardsSelected--;
-        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected) + ' more cards';
+        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
     } else {
         //Not selected. If not enough cards are already selected, select this card
         if (hand.length - numCardsSelected > 12) {
             numCardsSelected++;
             if (hand.length - numCardsSelected != 12) {
-                document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected) + ' more cards';
+                document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
             } else {
                 document.getElementById('discard_info').innerHTML = 'Press Confirm to discard';
             }
@@ -284,6 +284,7 @@ function drawHand(withGray) {
         let child = returnToDeck[i];
         if (!isInHand(child)) {child.classList.remove('drew');child.classList.remove('col-md-1');child.classList.remove('col-xs-3');child.hidden = true;divDeck.appendChild(child);}
     }
+    numCardsSelected = 0;
     for (let i in hand) {
         let card = document.getElementById(hand[i].value + hand[i].suit);
         card.suit = hand[i].suit;
@@ -1050,7 +1051,7 @@ function onLoad() {
         }
         if (typeof data.host !== 'undefined') {
             hostNumber = data.host;
-            if (playerNumber == hostNumber && data.nextAction.action == 'start') {
+            if (playerNumber == hostNumber && data.nextAction && data.nextAction.action == 'start') {
                 hostRoom(data.settings);
             }
         }
@@ -1640,7 +1641,7 @@ function createConfirmButton() {
     displayInfoSpan.id = 'discard_info';
 
     confirmButton.innerHTML = 'Confirm Discard';
-    displayInfoSpan.innerHTML = 'Select ' + (hand.length - numCardsSelected) + ' more cards';
+    displayInfoSpan.innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
 
     confirmButton.addEventListener('click',confirmButtonCallback);
 
