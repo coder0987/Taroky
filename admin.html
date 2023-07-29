@@ -41,20 +41,28 @@ TODO:
     <div id="main" class="container" hidden="hidden">
         <div class="row">
             <div class="col-12">
-                <h1>Admin Panel</h1>
-                <button onclick="socket.emit('restartServer')">Restart Server When it Empties</button>
-                <button onclick="socket.emit('restartServer',true)">Restart Server NOW</button>
-                <button onclick="socket.emit('reloadClients')">Reload All Clients</button>
-                <button onclick="socket.emit('printPlayerList')">Fetch Player List</button>
-                <button onclick="socket.emit('printRoomList')">Fetch Room List</button>
-                <p id="message"></p>
+                <div class="white card">
+                    <div class="card-body">
+                        <h1 class="card-title">Admin Panel</h1>
+                            <button class="btn btn-primary" onclick="socket.emit('restartServer')">Restart Server When it Empties</button>
+                            <button class="btn btn-primary" onclick="socket.emit('restartServer',true)">Restart Server NOW</button>
+                            <button class="btn btn-primary" onclick="socket.emit('reloadClients')">Reload All Clients</button>
+                            <button class="btn btn-primary" onclick="socket.emit('printPlayerList')">Fetch Player List</button>
+                            <button class="btn btn-primary" onclick="socket.emit('printRoomList')">Fetch Room List</button>
+                            <p id="message"></p>
+                        </div>
+                </div>
             </div>
         </div>
         <div class="row">
             <div class="col-12">
-                <table id="table" class="table table-hover table-bordered border-secondary"></table>
-                <hr>
-                <table id="roomTable" class="table table-hover table-bordered border-secondary"></table>
+                <div class="white card">
+                    <div class="card-body">
+                        <table id="table" class="table table-hover table-bordered border-secondary"></table>
+                        <hr>
+                        <table id="roomTable" class="table table-hover table-bordered border-secondary"></table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
