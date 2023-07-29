@@ -45,6 +45,7 @@ let ticker;
 let players;
 let deck;
 let hand;
+let numCardsSelected;
 let partners;
 let handChoices;
 let socket;
@@ -238,11 +239,27 @@ function clickCard() {
         this.removeEventListener('mouseenter',enter);
         this.removeEventListener('mouseleave',exit);
         this.removeEventListener('click',clickCard);
+        this.removeEventListener('click',discardClickListener);
         this.title='';
         this.classList.remove('image-hover-highlight');
         this.hidden=true;
     }
 }
+
+function discardClickListener() {
+    //If already selected, unselect
+    if (this.classList.contains('selected')) {
+        this.classList.remove('selected');
+        numCardsSelected--;
+    } else {
+        //Not selected. If not enough cards are already selected, select this card
+        if (hand.length - numCardsSelected > 12) {
+            numCardsSelected++;
+            this.classList.add('selected');
+        }
+    }
+}
+
 function discardThis(cardSuit,cardValue) {
     if (discardingOrPlaying) {
        addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
@@ -280,14 +297,20 @@ function drawHand(withGray) {
             card.removeEventListener('mouseenter',enter);//don't want to double-up on events
             card.removeEventListener('mouseleave',exit);
             card.removeEventListener('click',clickCard);
+            card.removeEventListener('click',discardClickListener);
             card.addEventListener('mouseenter', enter);
             card.addEventListener('mouseleave', exit);
-            card.addEventListener('click',clickCard);
+            if (discardingOrPlaying) {
+                card.addEventListener('click',discardClickListener);
+            } else {
+                card.addEventListener('click',clickCard);
+            }
         } else {
             card.style.filter = '';
             card.removeEventListener('mouseenter',enter);
             card.removeEventListener('mouseleave',exit);
             card.removeEventListener('click',clickCard);
+            card.removeEventListener('click',discardClickListener);
             card.title = '';
             card.classList.remove('image-hover-highlight');
         }
