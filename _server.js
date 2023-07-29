@@ -3469,7 +3469,8 @@ function disconnectPlayerTimeout(socketId) {
     }
 }
 
-function autoReconnect(socketId) {
+function oldAutoReconnect(socketId) {
+    SERVER.log('Deprecated function oldAutoReconnect called');
     SOCKET_LIST[socketId].emit('returnPlayerCount',numOnlinePlayers);
     if (rooms[players[socketId].room]) {
         if (rooms[players[socketId].room].audience[socketId]) {
@@ -3520,6 +3521,60 @@ function autoReconnect(socketId) {
             SOCKET_LIST[socketId].emit('defaultSettings',notationToObject(players[socketId].userInfo.settings));
         }
     }
+}
+
+function autoReconnect(socketId) {
+    let reconnectInfo = {};
+    reconnectInfo.playerCount = numOnlinePlayers;
+    if (rooms[players[socketId].room]) {
+        if (rooms[players[socketId].room].audience[socketId]) {
+            //Player is in the audience for the room
+            reconnectInfo.audienceConnected = players[socketId].room;
+            reconnectInfo.roundInfo = rooms[players[socketId].room]['board'].importantInfo;
+        } else {
+            //Player is playing in the room
+            reconnectInfo.roomConnected = players[socketId].room;
+            reconnectInfo.pn = players[socketId].pn;
+            reconnectInfo.host = players[rooms[players[socketId].room].host].pn;
+            if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard') {
+                grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.withGray = true;
+            } else if (rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
+                grayUnplayables(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].board.leadCard);
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.withGray = true;
+            } else {
+                unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.withGray = false;
+            }
+            rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);
+            reconnectInfo.roundInfo = structuredClone(rooms[players[socketId].room]['board'].importantInfo);
+            rooms[players[socketId].room]['board'].importantInfo.pn = null;
+            if (!isNaN(rooms[players[socketId].room].povinnost)) {
+                rooms[players[socketId].room].informPlayer(players[socketId].pn, 'Player ' + (rooms[players[socketId].room].povinnost+1) + ' is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':rooms[players[socketId].room].povinnost});
+            }
+        }
+        reconnectInfo.settings = rooms[players[socketId].room].settings;
+        if (rooms[players[socketId].room].board.nextStep.action != 'shuffle') {
+            reconnectInfo.table = rooms[players[socketId].room].board.table;
+        }
+        if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
+            reconnectInfo.nextAction = rooms[players[socketId].room]['board']['nextStep'];
+        }
+
+        reconnectInfo.povinnost = rooms[players[socketId].room].board.povinnost;
+    }
+    if (players[socketId].username != 'Guest') {
+        reconnectInfo.username = players[socketId].username;
+        if (players[socketId].userInfo) {
+            reconnectInfo.elo = players[socketId].userInfo.elo;
+            reconnectInfo.admin = players[socketId].userInfo.admin;
+            reconnectInfo.defaultSettings = notationToObject(players[socketId].userInfo.settings);
+        }
+    }
+    SOCKET_LIST[socketId].emit('autoReconnect', reconnectInfo);
 }
 
 io.sockets.on('connection', function (socket) {
