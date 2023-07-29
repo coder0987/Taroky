@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 //imports
 const Player = require('./player.js');
 const Room = require('./room.js');
@@ -15,7 +17,9 @@ const { SUIT,
     DIFFICULTY,
     DIFFICULTY_TABLE,
     MESSAGE_TYPE,
-    PLAYER_TYPE } = require('./enums.js');
+    PLAYER_TYPE,
+    DISCONNECT_TIMEOUT,
+    SENSITIVE_ACTIONS } = require('./enums.js');
 
 const http = require('http');
 const https = require('https');
@@ -70,7 +74,7 @@ const server = http.createServer((req, res) => {
     };
 
     fs.readFile(filename, function (err, data) {
-        if (err || filename.indexOf('_') != -1) {
+        if (err || filename.indexOf('_') != -1 || filename.indexOf('env') != -1) {
             res.writeHead(404, { 'Content-Type': 'text/html' });
             return res.end("404 Not Found");
         }
@@ -90,11 +94,6 @@ const io = require('socket.io')(server);
 SOCKET_LIST = {};
 players = {};
 rooms = {};
-
-//TODO: MOVE TO ENUMS
-
-const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
-const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
 //Global variable
 SERVER = {
@@ -169,7 +168,7 @@ function notate(room, notation) {
                 SERVER.debug('Notation: not a string');
                 return false;
             }
-            room = room || new Room('temporary',false,players);
+            room = room || new Room({'name':'temporary'});
             room.board.povinnost = 0;
             room.board.importantInfo.povinnost = (room.board.povinnost+1);
             //Return the room
@@ -1651,6 +1650,7 @@ function aiAction(action, room, pn) {
                         });
                     break;
                 case 'drawPreverTalon':
+                    //todo give ai choice to keep or pass prever talon cards
                 case 'drawTalon':
                     break;
                 case 'discard':
@@ -1904,8 +1904,6 @@ function aiActionCallback(action, room, pn, fakeMoneyCards, result) {
     Total: 14
     */
 
-    let ranking = 0;
-    let currentAI = room.players[pn].ai;
     let hand = room['players'][pn].hand;
 
     switch (action.action) {
@@ -2025,6 +2023,7 @@ function actionCallback(action, room, pn) {
     let actionTaken = false;
     let style;
     let shouldReturnTable = false;
+    let shouldTrainAI = room.players[pn].socket != -1 && players[room.players[pn].socket].username != 'Guest';
 
     SERVER.functionCall('actionCallback', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name}, {name:'info',value:JSON.stringify(action.info)});
 
@@ -2235,6 +2234,9 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'passPrever':
+            if (shouldTrainAI) {
+                room.players[pn].trainPersonalizedAI(room, pn, 5, 8, null, 0, true);
+            }
             action.player = (action.player + 1) % 4;
             if (action.player == room['board'].povinnost) {
                 if (room.board.prever != -1) {
@@ -2252,6 +2254,9 @@ function actionCallback(action, room, pn) {
             }
         case 'callPrever':
             if (action.action == 'callPrever') {
+                if (shouldTrainAI) {
+                    room.players[pn].trainPersonalizedAI(room, pn, 5, 8, null, 1);
+                }
                 room['board'].playingPrever = true;
                 room['board'].prever = pn;
                 room['board'].preverTalonStep = 0;
@@ -2411,6 +2416,9 @@ function actionCallback(action, room, pn) {
                 }
             }
             if (discarded) {
+                if (shouldTrainAI) {
+                    room.players[pn].trainPersonalizedAI(room, pn, 8, 0, card, 1);
+                }
                 actionTaken = true;
                 //Announce discard Trump cards
                 if (card.suit == 'Trump') {
@@ -2455,6 +2463,9 @@ function actionCallback(action, room, pn) {
             break;
         case 'povinnostBidaUniChoice':
             //player is assumed to be povinnost. This action is only taken if povinnost has bida or uni
+            if (shouldTrainAI) {
+                room.players[pn].trainPersonalizedAI(room, pn, 9, 11, null, action.info.choice ? 1 : 0);
+            }
             room.board.buc = action.info.choice;
             action.action = 'moneyCards';//Fallthrough. Go directly to moneyCards
         case 'moneyCards':
@@ -2565,6 +2576,14 @@ function actionCallback(action, room, pn) {
                 room['board'].partnerCard = "XIX";
             }
 
+            if (shouldTrainAI) {
+                if (Deck.handContainsCard(currentHand, 'XIX')) {
+                    //Player had a choice
+                    room.players[pn].trainPersonalizedAI(room, pn, 11, 12, null, room.board.partnerCard == 'XIX' ? 1 : 0);
+                    room.players[pn].trainPersonalizedAI(room, pn, 11, 13, null, room.board.partnerCard == 'XIX' ? 0 : 1);
+                }
+            }
+
 
             for (let i=0; i<4; i++) {
                 room['players'][i].isTeamPovinnost = Deck.handContainsCard(room['players'][i].hand, room['board'].partnerCard);
@@ -2588,6 +2607,9 @@ function actionCallback(action, room, pn) {
             actionTaken = true;
             break;
         case 'valat':
+            if (shouldTrainAI) {
+                room.players[pn].trainPersonalizedAI(room, pn, 12, 9, null, action.info.valat ? 1 : 0);
+            }
             if (action.info.valat) {
                 //Player called valat
                 room['board'].valat = pn;
@@ -2627,6 +2649,9 @@ function actionCallback(action, room, pn) {
             //Possible variations: IOTE may still be allowed in a valat game, contra may be disallowed
             break;
         case 'iote':
+            if (shouldTrainAI) {
+                room.players[pn].trainPersonalizedAI(room, pn, 13, 10, null, action.info.iote ? 1 : 0);
+            }
             if (action.info.iote) {
                 room.informPlayers('called the I on the end', MESSAGE_TYPE.IOTE, {pn: pn},pn);
                 room.board.iote = pn;
@@ -2648,6 +2673,13 @@ function actionCallback(action, room, pn) {
             room.board.firstContraPlayer = action.player;
             break;
         case 'preverContra':
+            /* TODO:
+                input: 17. output: 5, rhea 6, supra 7
+                AI should be trained to both call and avoid calling contra in all cases
+                if (shouldTrainAI) {
+                    room.players[pn].trainPersonalizedAI(room, pn, actionNumber, outputNumber, cardPrompt, value);
+                }
+            */
             let preverIsPovinnost = room.board.prever == room.board.povinnost;
             //If preverIsPovinnost, then isTeamPovinnost is isTeamPrever and no changes must be made
             //If !preverIsPovinnost, then isTeamPovinnost is prever and the roles must be reversed
@@ -2873,6 +2905,12 @@ function actionCallback(action, room, pn) {
                 }
             }
             if (lead) {
+                if (shouldTrainAI) {
+                    for (let i in room.players[pn].hand) {
+                        room.players[pn].trainPersonalizedAI(room, pn, 18, 1, room.players[pn].hand[i], 0);
+                    }
+                    room.players[pn].trainPersonalizedAI(room, pn, 18, 1, lead, 1);
+                }
                 actionTaken = true;
                 shouldReturnTable = true;
                 action.action = 'follow';
@@ -2912,6 +2950,12 @@ function actionCallback(action, room, pn) {
                 }
             }
             if (played) {
+                if (shouldTrainAI) {
+                    for (let i in room.players[pn].hand) {
+                        room.players[pn].trainPersonalizedAI(room, pn, 19, 1, room['players'][pn].hand[i], 0);
+                    }
+                    room.players[pn].trainPersonalizedAI(room, pn, 19, 1, played, 1);
+                }
                 actionTaken = true;
                 shouldReturnTable = true;
                 room['board'].table.push({'card':played,'pn':pn,'lead':false});
@@ -3423,49 +3467,57 @@ function disconnectPlayerTimeout(socketId) {
 }
 
 function autoReconnect(socketId) {
-    SOCKET_LIST[socketId].emit('returnPlayerCount',numOnlinePlayers);
+    let reconnectInfo = {};
+    reconnectInfo.playerCount = numOnlinePlayers;
     if (rooms[players[socketId].room]) {
         if (rooms[players[socketId].room].audience[socketId]) {
             //Player is in the audience for the room
-            SOCKET_LIST[socketId].emit('audienceConnected',players[socketId].room);
-            SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
+            reconnectInfo.audienceConnected = players[socketId].room;
+            reconnectInfo.roundInfo = rooms[players[socketId].room]['board'].importantInfo;
         } else {
             //Player is playing in the room
-            SOCKET_LIST[socketId].emit('roomConnected',players[socketId].room);
-            SOCKET_LIST[socketId].emit('returnPN', players[socketId].pn, rooms[players[socketId].room].host);
+            reconnectInfo.roomConnected = players[socketId].room;
+            reconnectInfo.pn = players[socketId].pn;
+            reconnectInfo.host = players[rooms[players[socketId].room].host].pn;
             if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard') {
                 grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
-                SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.withGray = true;
             } else if (rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
                 grayUnplayables(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].board.leadCard);
-                SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), true);
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.withGray = true;
             } else {
                 unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
-                SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.withGray = false;
             }
             rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);
-            SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
+            reconnectInfo.roundInfo = structuredClone(rooms[players[socketId].room]['board'].importantInfo);
             rooms[players[socketId].room]['board'].importantInfo.pn = null;
             if (!isNaN(rooms[players[socketId].room].povinnost)) {
                 rooms[players[socketId].room].informPlayer(players[socketId].pn, 'Player ' + (rooms[players[socketId].room].povinnost+1) + ' is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':rooms[players[socketId].room].povinnost});
             }
         }
-        SOCKET_LIST[socketId].emit('returnSettings', rooms[players[socketId].room].settings);
+        reconnectInfo.settings = rooms[players[socketId].room].settings;
         if (rooms[players[socketId].room].board.nextStep.action != 'shuffle') {
-            SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
+            reconnectInfo.table = rooms[players[socketId].room].board.table;
         }
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
-            SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
+            reconnectInfo.nextAction = rooms[players[socketId].room]['board']['nextStep'];
         }
 
-        SOCKET_LIST[socketId].emit('returnPovinnost', rooms[players[socketId].room].board.povinnost);
+        reconnectInfo.povinnost = rooms[players[socketId].room].board.povinnost;
     }
     if (players[socketId].username != 'Guest') {
-        SOCKET_LIST[socketId].emit('loginSuccess', players[socketId].username);
-        SOCKET_LIST[socketId].emit('elo',players[socketId].userInfo.elo);
-        SOCKET_LIST[socketId].emit('admin',players[socketId].userInfo.admin);
-        SOCKET_LIST[socketId].emit('defaultSettings',notationToObject(players[socketId].userInfo.settings));
+        reconnectInfo.username = players[socketId].username;
+        if (players[socketId].userInfo) {
+            reconnectInfo.elo = players[socketId].userInfo.elo;
+            reconnectInfo.admin = players[socketId].userInfo.admin;
+            reconnectInfo.defaultSettings = notationToObject(players[socketId].userInfo.settings);
+        }
     }
+    SOCKET_LIST[socketId].emit('autoReconnect', reconnectInfo);
 }
 
 io.sockets.on('connection', function (socket) {
@@ -3576,22 +3628,7 @@ io.sockets.on('connection', function (socket) {
                     players[socketId]['room'] = roomID;
                     players[socketId]['pn'] = i;
                     rooms[roomID].informPlayers('joined the game', MESSAGE_TYPE.CONNECT, {}, players[socketId].pn);
-                    if (rooms[roomID]['playerCount'] == 1) {
-                        rooms[roomID]['host'] = socketId;
-                        socket.emit('roomHost');
-                        SERVER.debug('New room host',roomID);
-                        if (rooms[players[socketId].room]['board']['nextStep'].action == 'start') {
-                            socket.emit('youStart');
-                            if (players[socketId].userInfo && players[socketId].userInfo.settings) {
-                                notationToSettings(rooms[roomID],players[socketId].userInfo.settings);
-                            }
-                        } else {
-                            autoReconnect(socketId);
-                            SERVER.error('Player joined empty room with no host that was started',roomID);
-                        }
-                    } else {
-                        autoReconnect(socketId);
-                    }
+                    autoReconnect(socketId);
                     if (rooms[roomID].debug) {
                         socket.emit('debugRoomJoin');
                     }
@@ -3617,11 +3654,39 @@ io.sockets.on('connection', function (socket) {
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
     });
+    socket.on('newRoom', function() {
+        if (players[socketId] && players[socketId].room == -1) {
+            let theSettings;
+            if (players[socketId].userInfo && players[socketId].userInfo.settings) {
+                theSettings = notationToObject(players[socketId].userInfo.settings);
+            }
+            let theRoom;
+            {
+                let i = 1;
+                for (; rooms[i]; i++) { }
+                rooms[i] = new Room({'name': i, 'settings': theSettings});
+                theRoom = rooms[i];
+            }
+            let pn = 0;
+            theRoom['players'][pn].type = PLAYER_TYPE.HUMAN;
+            theRoom['players'][pn].socket = socketId;
+            theRoom['players'][pn].messenger = socket;
+            theRoom['players'][pn].pid = players[socketId].pid;
+            theRoom['playerCount'] = 1;
+            socket.emit('roomConnected', theRoom.name);
+            players[socketId]['room'] = theRoom.name;
+            players[socketId]['pn'] = pn;
+            theRoom['host'] = socketId;
+            socket.emit('roomHost');
+            socket.emit('youStart');
+            socket.emit('timeSync', Date.now());
+        }
+    });
     socket.on('customRoom', function (tarokyNotation) {
         let connected = false;
         try {
             if (players[socketId] && players[socketId].room == -1) {
-                let tempRoom = new Room('temporary', false, players);
+                let tempRoom = new Room({'name':'temporary'});
                 //Decode TarokyNotation into the room
                 if (notate(tempRoom,tarokyNotation)) {
                     let values = tarokyNotation.split('/');
@@ -4064,6 +4129,12 @@ io.sockets.on('connection', function (socket) {
             players[id].socket.emit('broadcast',message);
         }
     });
+    socket.on('adminSignIn', function(username) {
+        //debug function
+        if (DEBUG_MODE && players[socketId]) {
+            players[socketId].username = username;
+        }
+    });
     socket.on('removeRoom', function(id) {
         if (players[socketId] && players[socketId].userInfo && players[socketId].userInfo.admin && rooms[id]) {
             SERVER.log('Admin ' + players[socketId].username + ' removed room ' + id);
@@ -4091,25 +4162,14 @@ function tick() {
         ticking = true;
         for (let i in rooms) {
             //Operations
-            if (rooms[i] && rooms[i].playerCount == 0 && rooms[i]['board']['nextStep']['action'] != 'start') {
+            if (rooms[i] && rooms[i].playerCount == 0) {
                 clearTimeout(rooms[i].autoAction);
                 rooms[i].ejectAudience();
                 delete rooms[i];
                 SERVER.log('Stopped empty game',i);
             }
         }
-        if (Object.keys(rooms).length == 0) {
-            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);}
-            rooms[1] = new Room(1,false,LOG_LEVEL,players);
-        } else if (numEmptyRooms() == 0) {
-            let i = 1;
-            for (; rooms[i]; i++) { }
-            rooms[i] = new Room(i,false,LOG_LEVEL,players);
-        } else if (DEBUG_MODE && !rooms['Debug']) {
-            rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);
-        }
 
-        //TODO: something in this code is bugged to where it always considers players "up-to-date" and does not refresh the rooms automatically
         simplifiedRooms = {};
         for (let i in rooms) {
             if (rooms[i] && !rooms[i].settings.locked) {
@@ -4178,7 +4238,6 @@ function checkAllUsers() {
     }
 }
 
-
 function playerOffset(startingPlayer, offset) {
     return (+startingPlayer + +offset)%4;
 }
@@ -4186,64 +4245,6 @@ function playerOffset(startingPlayer, offset) {
 function playerPerspective(originalPlace, viewpoint) {
     //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
     return ((+originalPlace - +viewpoint) + 4)%4;
-}
-
-function startAITraining() {
-    //Creates a table for AI to train at. Table is not publicly accessible.
-    if (TRAINING_MODE) {
-        /*The system
-        All AI are based on "latest", the winner so far
-        */
-
-        //Create the rooms filled with AI. Training goal defaults to 100
-        const ROOM_NAMES = ['AI-1','AI-2','AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
-        const LEARNING_ROOMS = ['AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
-        const LEARNING_RATE = 0.5;
-        for (let i in ROOM_NAMES) {
-            rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
-            rooms[ROOM_NAMES[i]].players = [
-                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                        new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
-                    ];
-        }
-        rooms[ROOM_NAMES[0]].players[0] = new Player(PLAYER_TYPE.AI, latest);
-
-        //TODO: prompt rooms to start training
-
-        for (let gen=1; gen<1000; gen++) {
-            //Run 1000 generations of training
-            latest = rooms[ROOM_NAMES[0]].winner.ai;
-            if (gen%100 == 0) {
-                AI.aiToFile(latest,'latest.h5');
-                AI.aiToFile(latest,'AI_SAVES/' + Date.now() + '.h5');
-            }
-            rooms[ROOM_NAMES[0]] = new Room(ROOM_NAMES[0], true, 0, players, true);
-            rooms[ROOM_NAMES[0]].players = [
-                new Player(PLAYER_TYPE.AI, new AI(latest)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[1]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[2]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[3]].winner.ai.seed))
-            ];
-            rooms[ROOM_NAMES[1]].players = [
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[4]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[5]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[6]].winner.ai.seed)),
-                new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[7]].winner.ai.seed))
-            ];
-            for (let i in LEARNING_ROOMS) {
-                rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
-                rooms[ROOM_NAMES[i]].players = [
-                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
-                            new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE))
-                        ];
-            }
-            //TODO: prompt room to start training
-        }
-    }
 }
 
 let interval = setInterval(tick, 1000 / 60.0);//60 FPS
