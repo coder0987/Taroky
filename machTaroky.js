@@ -251,10 +251,16 @@ function discardClickListener() {
     if (this.classList.contains('selected')) {
         this.classList.remove('selected');
         numCardsSelected--;
+        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected) + ' more cards';
     } else {
         //Not selected. If not enough cards are already selected, select this card
         if (hand.length - numCardsSelected > 12) {
             numCardsSelected++;
+            if (hand.length - numCardsSelected != 12) {
+                document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected) + ' more cards';
+            } else {
+                document.getElementById('discard_info').innerHTML = 'Press Confirm to discard';
+            }
             this.classList.add('selected');
         }
     }
@@ -1634,6 +1640,7 @@ function createConfirmButton() {
     displayInfoSpan.id = 'discard_info';
 
     confirmButton.innerHTML = 'Confirm Discard';
+    displayInfoSpan.innerHTML = 'Select ' + (hand.length - numCardsSelected) + ' more cards';
 
     confirmButton.addEventListener('click',confirmButtonCallback);
 
@@ -1657,6 +1664,8 @@ function confirmButtonCallback() {
             selectedCards[i].hidden=true;
             numCardsSelected--;
         }
+    } else {
+        addMessage('Please select ' + (hand.length - numCardsSelected - 12) + ' more card' + ((hand.length - numCardsSelected - 12) == 1 ? '' : 's'));
     }
 }
 
