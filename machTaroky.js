@@ -1640,6 +1640,8 @@ function createConfirmButton() {
     confirmButton.id = 'confirm_discard_button';
     displayInfoSpan.id = 'discard_info';
 
+    displayInfoSpan.classList.add('left-margin');
+
     confirmButton.innerHTML = 'Confirm Discard';
     displayInfoSpan.innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
 

@@ -250,6 +250,10 @@ h4 {
     border: 4px solid gray;
 }
 
+.left-margin {
+    margin-left: 10px;
+}
+
 .navbar-brand {
     color: var(--red);
     font-weight: bold;
