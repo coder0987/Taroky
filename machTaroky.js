@@ -333,6 +333,8 @@ function drawHand(withGray) {
             card.removeEventListener('mouseleave',exit);
             card.removeEventListener('click',clickCard);
             card.removeEventListener('click',discardClickListener);
+            card.classList.remove('grayed');
+            card.classList.remove('selected');
             card.title = '';
             card.classList.remove('image-hover-highlight');
         }
@@ -1650,19 +1652,30 @@ function createChoiceButtons(buttonType) {
 
 function createConfirmButton() {
     const confirmButton = document.createElement('button');
+    const sortButton = document.createElement('button');
     const displayInfoSpan = document.createElement('span');
     confirmButton.type = 'button';
     displayInfoSpan.type = 'span';
+    sortButton.type = 'button';
     confirmButton.id = 'confirm_discard_button';
     displayInfoSpan.id = 'discard_info';
+    sortButton.id = 'sortButton'
 
     displayInfoSpan.classList.add('left-margin');
 
     confirmButton.innerHTML = 'Confirm Discard';
+    sortButton.innerHTML = 'Sort Hand';
     displayInfoSpan.innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
 
     confirmButton.addEventListener('click',confirmButtonCallback);
-
+    sortButton.addEventListener('click',function() {
+        drawnCards = [];
+        drawHand(true);
+        this.remove();
+    });
+    if (drawnCards.length > 0) {
+        document.getElementById('center').appendChild(sortButton);
+    }
     document.getElementById('center').appendChild(confirmButton);
     document.getElementById('center').appendChild(displayInfoSpan);
 }
