@@ -1665,6 +1665,8 @@ function confirmButtonCallback() {
             selectedCards[i].hidden=true;
             numCardsSelected--;
         }
+        document.getElementById('discard_info').remove();
+        document.getElementById('confirm_discard_button').remove();
     } else {
         addMessage('Please select ' + (hand.length - numCardsSelected - 12) + ' more card' + ((hand.length - numCardsSelected - 12) == 1 ? '' : 's'));
     }
