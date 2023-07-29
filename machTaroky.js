@@ -816,24 +816,24 @@ function createSettings(tools, roomSettings) {
         submitSettings("lock");
     });
     settings.appendChild(lockButton);
-    settings.appendChild(document.createElement('br'));
 
-    //Create save button
-    let saveButtonP = document.createElement('span');
-    saveButtonP.innerHTML = 'Save Settings:\t';
-    saveButtonP.style='display:inline-block; width: 175px';
-    settings.appendChild(saveButtonP);
+    //Create save button only if user is signed in
+    if (typeof activeUsername !== 'undefined' && activeUsername != '') {
+        settings.appendChild(document.createElement('br'));
+        let saveButtonP = document.createElement('span');
+        saveButtonP.innerHTML = 'Save Settings:\t';
+        saveButtonP.style='display:inline-block; width: 175px';
+        settings.appendChild(saveButtonP);
 
-    if (activeUsername != '') {
         let saveButton = document.createElement('button');
         saveButton.innerHTML = 'Save';
         saveButton.addEventListener('click', function(){
             submitSettings("save");
         });
         settings.appendChild(saveButton);
+        settings.appendChild(document.createElement('br'));
     }
 
-    settings.appendChild(document.createElement('br'));
     settings.appendChild(document.createElement('br'));
 
     tools.appendChild(settings);
