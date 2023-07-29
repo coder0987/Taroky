@@ -4,7 +4,7 @@ This file contains a list of things we have yet TODO in no particular order
 
 ### Front End
 
-* Replace the favicon
+* Replace the favicon - DONE
 * Make it look pretty (CSS)
 * Reduce card image quality to save load time - DONE
 * fix nav display issue for sm and xs screens
