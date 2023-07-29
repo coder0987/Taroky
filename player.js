@@ -16,7 +16,7 @@ class Player {
         this._publicTeam = 0;
         this._savePoints = [];
         this._consecutiveAutos = 0;
-        this._ai = ai;
+        this._ai = ai;//AI is a string representing the AI's ID on the remote AI server
     }
 
     resetForNextRound() {
@@ -25,6 +25,41 @@ class Player {
         this.tempHand = [];
         this.isTeamPovenost = false;
         this._publicTeam = 0;
+    }
+
+    createAI() {
+        const options = {
+            hostname: 'localhost',
+            path: '/' + this._ai + '/create/',
+            method: 'GET',
+            protocol: 'http:',
+            port: 8441
+        };
+        const req = http.request(options, (res) => {
+            SERVER.debug('AI creation status: ' + res.statusCode);
+        }).on("error", (err) => {
+            SERVER.error(err);
+        });
+        req.end();
+    }
+
+    win() {
+        const options = {
+            hostname: 'localhost',
+            path: '/' + this._ai + '/win/',
+            method: 'GET',
+            protocol: 'http:',
+            port: 8441,
+            headers: {
+                ids: ['latest','1','2','3']
+            }
+        };
+        const req = http.request(options, (res) => {
+            SERVER.debug('AI win status: ' + res.statusCode);
+        }).on("error", (err) => {
+            SERVER.error(err);
+        });
+        req.end();
     }
 
     trainPersonalizedAI(room, pn, actionNumber, outputNumber, cardPrompt, value, save) {

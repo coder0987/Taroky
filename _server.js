@@ -4247,8 +4247,14 @@ function playerPerspective(originalPlace, viewpoint) {
     return ((+originalPlace - +viewpoint) + 4)%4;
 }
 
-let interval = setInterval(tick, 1000 / 60.0);//60 FPS
-let verifyUsers = setInterval(checkAllUsers, 5*60*1000);
+let interval;
+let verifyUsers;
+if (!TRAINING_MODE) {
+    //AI in training won't use normal room operations
+    interval = setInterval(tick, 1000 / 60.0);//60 FPS
+    verifyUsers = setInterval(checkAllUsers, 5*60*1000);
+}
+
 AdminPanel.reloadClients = () => {
     for (let i in SOCKET_LIST) {
         SOCKET_LIST[i].emit('reload');
