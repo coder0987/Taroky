@@ -192,6 +192,25 @@ img {
     font-size: 3rem;
 }
 
+/*PREFERENCES*/
+.btn-primary {
+    color: var(--black);
+    border-color: var(--black);
+    background-color: var(--white);
+}
+
+.btn-primary:hover {
+    color: var(--white);
+    border-color: var(--black);
+    background-color: var(--red);
+}
+
+.btn-primary:checked {
+    color: var(--white);
+    border-color: var(--black);
+    background-color: var(--red);
+}
+
 /* TEXT */
 /* see text color settings in COLOR section */
 
