@@ -252,7 +252,7 @@ function discardClickListener() {
         this.classList.remove('selected');
         numCardsSelected--;
         document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
-    } else {
+    } else if (this.style.filter == '') {
         //Not selected. If not enough cards are already selected, select this card
         if (hand.length - numCardsSelected > 12) {
             numCardsSelected++;
@@ -328,10 +328,12 @@ function drawHand(withGray) {
             }
         )) {
             card.classList.add('drew');
+            divHand.insertBefore(card, divHand.firstChild);
         } else {
             card.classList.remove('drew');
+            divHand.appendChild(card);
         }
-        divHand.appendChild(card);
+
         card.hidden = false;
     }
 }

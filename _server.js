@@ -3814,6 +3814,16 @@ io.sockets.on('connection', function (socket) {
                         rooms[players[socketId].room].informPlayers('The room has been locked. No more players may join', MESSAGE_TYPE.SETTING);
                     }
                     break;
+                case 'aceHigh':
+                    if (rule) {
+                        rooms[players[socketId].room].settings.aceHigh = true;
+                        rooms[players[socketId].room].informPlayers('Ace is high', MESSAGE_TYPE.SETTING);
+                    } else {
+                        rooms[players[socketId].room].settings.aceHigh = false;
+                        rooms[players[socketId].room].informPlayers('Ace is low', MESSAGE_TYPE.SETTING);
+                    }
+                    setSettingNotation(rooms[players[socketId].room]);
+                    break;
             }
         }
     });
