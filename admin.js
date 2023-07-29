@@ -92,6 +92,8 @@ window.onload = () => {
             message.id = playerData[i].id;
             message.addEventListener('click',msg);
             message.innerHTML = 'Message';
+            message.classList.add('btn');
+            message.classList.add('btn-primary');
             action.appendChild(message);
             tr.appendChild(action);
         }
@@ -150,6 +152,8 @@ window.onload = () => {
             remove.id = roomData[i].name;
             remove.addEventListener('click',rmv);
             remove.innerHTML = 'Remove';
+            remove.classList.add('btn');
+            remove.classList.add('btn-primary');
             action.appendChild(remove);
             tr.appendChild(action);
         }
