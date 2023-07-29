@@ -4133,6 +4133,7 @@ io.sockets.on('connection', function (socket) {
         //debug function
         if (DEBUG_MODE && players[socketId]) {
             players[socketId].username = username;
+            players[socketId].admin = true;
         }
     });
     socket.on('removeRoom', function(id) {
