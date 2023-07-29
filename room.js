@@ -4,8 +4,14 @@ const Deck = require('./deck.js');
 const {DIFFICULTY, PLAYER_TYPE} = require('./enums.js');
 
 class Room {
-    constructor(name, debugRoom, logLevel, playerList, trainingRoom) {
-        this._settings = {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'locked':false};
+    constructor(args) {
+        let name         = args.name || 'Room';
+        let settings     = args.settings || {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'locked':false};
+        let trainingRoom = args.trainingRoom || false;
+        let debugRoom    = args.debugRoom || false;
+        let logLevel     = args.logLevel || 3;
+
+        this._settings = settings;
         this._name = name;
         this._host = -1;
         this._board = new Board();
@@ -15,8 +21,7 @@ class Room {
         this._autoAction = 0;
         this._debug = debugRoom; //Either undefined or true
         this._settingsNotation = 'difficulty=2;timeout=30000;locked=false';
-        this._logLevel = logLevel || 3;//0: none, 1: errors, 2: warn, 3: info, 4: debug logs, 5: trace
-        this._playerList = playerList;
+        this._logLevel = logLevel;//0: none, 1: errors, 2: warn, 3: info, 4: debug logs, 5: trace
         this._audience = {};
         this._audienceCount = 0;
         this._trainingRoom = trainingRoom;

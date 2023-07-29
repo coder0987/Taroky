@@ -171,7 +171,7 @@ function notate(room, notation) {
                 SERVER.debug('Notation: not a string');
                 return false;
             }
-            room = room || new Room('temporary',false,players);
+            room = room || new Room({'name':'temporary'});
             room.board.povinnost = 0;
             room.board.importantInfo.povinnost = (room.board.povinnost+1);
             //Return the room
@@ -3490,9 +3490,11 @@ function autoReconnect(socketId) {
                 unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
                 SOCKET_LIST[socketId].emit('returnHand', Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand), false);
             }
-            rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);
-            SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
-            rooms[players[socketId].room]['board'].importantInfo.pn = null;
+            if (rooms[players[socketId].room]['board']['nextStep'].action != 'start') {
+                rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);
+                SOCKET_LIST[socketId].emit('returnRoundInfo',rooms[players[socketId].room]['board'].importantInfo);
+                rooms[players[socketId].room]['board'].importantInfo.pn = null;
+            }
             if (!isNaN(rooms[players[socketId].room].povinnost)) {
                 rooms[players[socketId].room].informPlayer(players[socketId].pn, 'Player ' + (rooms[players[socketId].room].povinnost+1) + ' is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':rooms[players[socketId].room].povinnost});
             }
@@ -3666,11 +3668,39 @@ io.sockets.on('connection', function (socket) {
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
     });
+    socket.on('newRoom', function() {
+        if (players[socketId] && players[socketId].room == -1) {
+            let theSettings;
+            if (players[socketId].userInfo && players[socketId].userInfo.settings) {
+                theSettings = notationToObject(players[socketId].userInfo.settings);
+            }
+            let theRoom;
+            {
+                let i = 1;
+                for (; rooms[i]; i++) { }
+                rooms[i] = new Room({'name': i, 'settings': theSettings});
+                theRoom = rooms[i];
+            }
+            let pn = 0;
+            theRoom['players'][pn].type = PLAYER_TYPE.HUMAN;
+            theRoom['players'][pn].socket = socketId;
+            theRoom['players'][pn].messenger = socket;
+            theRoom['players'][pn].pid = players[socketId].pid;
+            theRoom['playerCount'] = 1;
+            socket.emit('roomConnected', theRoom.name);
+            players[socketId]['room'] = theRoom.name;
+            players[socketId]['pn'] = pn;
+            theRoom['host'] = socketId;
+            socket.emit('roomHost');
+            socket.emit('youStart');
+            socket.emit('timeSync', Date.now());
+        }
+    });
     socket.on('customRoom', function (tarokyNotation) {
         let connected = false;
         try {
             if (players[socketId] && players[socketId].room == -1) {
-                let tempRoom = new Room('temporary', false, players);
+                let tempRoom = new Room({'name':'temporary'});
                 //Decode TarokyNotation into the room
                 if (notate(tempRoom,tarokyNotation)) {
                     let values = tarokyNotation.split('/');
@@ -4146,22 +4176,12 @@ function tick() {
         ticking = true;
         for (let i in rooms) {
             //Operations
-            if (rooms[i] && rooms[i].playerCount == 0 && rooms[i]['board']['nextStep']['action'] != 'start') {
+            if (rooms[i] && rooms[i].playerCount == 0) {
                 clearTimeout(rooms[i].autoAction);
                 rooms[i].ejectAudience();
                 delete rooms[i];
                 SERVER.log('Stopped empty game',i);
             }
-        }
-        if (Object.keys(rooms).length == 0) {
-            if (DEBUG_MODE) {rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);}
-            rooms[1] = new Room(1,false,LOG_LEVEL,players);
-        } else if (numEmptyRooms() == 0) {
-            let i = 1;
-            for (; rooms[i]; i++) { }
-            rooms[i] = new Room(i,false,LOG_LEVEL,players);
-        } else if (DEBUG_MODE && !rooms['Debug']) {
-            rooms['Debug'] = new Room('Debug',true,LOG_LEVEL,players);
         }
 
         //TODO: something in this code is bugged to where it always considers players "up-to-date" and does not refresh the rooms automatically
@@ -4255,7 +4275,7 @@ function startAITraining() {
         const LEARNING_ROOMS = ['AI-3','AI-4','AI-5','AI-6','AI-7','AI-8'];
         const LEARNING_RATE = 0.5;
         for (let i in ROOM_NAMES) {
-            rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
+            rooms[ROOM_NAMES[i]] = new Room({'name':ROOM_NAMES[i], 'debugRoom':true, 'logLevel':0,'trainingRoom':true});
             rooms[ROOM_NAMES[i]].players = [
                         new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
                         new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
@@ -4274,7 +4294,7 @@ function startAITraining() {
                 AI.aiToFile(latest,'latest.h5');
                 AI.aiToFile(latest,'AI_SAVES/' + Date.now() + '.h5');
             }
-            rooms[ROOM_NAMES[0]] = new Room(ROOM_NAMES[0], true, 0, players, true);
+            rooms[ROOM_NAMES[0]] = new Room({'name':ROOM_NAMES[0], 'debugRoom':true, 'logLevel':0, 'trainingRoom':true});
             rooms[ROOM_NAMES[0]].players = [
                 new Player(PLAYER_TYPE.AI, new AI(latest)),
                 new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[1]].winner.ai.seed)),
@@ -4288,7 +4308,7 @@ function startAITraining() {
                 new Player(PLAYER_TYPE.AI, new AI(rooms[ROOM_NAMES[7]].winner.ai.seed))
             ];
             for (let i in LEARNING_ROOMS) {
-                rooms[ROOM_NAMES[i]] = new Room(ROOM_NAMES[i], true, 0, players, true);
+                rooms[ROOM_NAMES[i]] = new Room({'name':ROOM_NAMES[i], 'debugRoom':true, 'logLevel':0, 'trainingRoom':true});
                 rooms[ROOM_NAMES[i]].players = [
                             new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),
                             new Player(PLAYER_TYPE.AI, new AI(latest.seed,LEARNING_RATE)),

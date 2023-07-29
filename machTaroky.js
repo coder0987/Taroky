@@ -425,7 +425,7 @@ function showAllCards() {
 }//Debug function
 
 function startActionTimer() {
-    if (!currentAction || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
+    if (!currentAction || currentAction == 'start' || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
         stopActionTimer();
         return;
     }
@@ -660,6 +660,9 @@ function onLoad() {
         }
     }
 
+    //Create initial room cards
+    drawRooms();
+
     socket.on('reload', function() {
        addMessage('Reloading...');
        window.location.reload();
@@ -694,13 +697,7 @@ function onLoad() {
         availableRooms = returnRooms;
         refreshing = false;
         if (!inGame && !checkRoomsEquality(availableRooms,drawnRooms)) {
-            drawnRooms = [];
-            document.getElementById('rooms').innerHTML = '';
-            for (let i in availableRooms) {
-                createRoomCard('rooms',availableRooms[i],i);
-                drawnRooms.push(availableRooms[i]);
-            }
-            createCustomRoomCard();
+            drawRooms();
         }
         if (connectingToRoom) {
             addMessage('loading...');//ADD LOADING ANIMATION
@@ -1030,14 +1027,18 @@ function onLoad() {
             return; //For when the player leaves the game
         }
         currentAction = action;
-        startActionTimer();
+        if (action.action != 'start') {
+            startActionTimer();
+            document.getElementById('currentAction').innerHTML = ACTION_TABLE[action.action];
+        }
         if (theSettings && theSettings.timeout && document.getElementById('timer').innerHTML < (theSettings.timeout/1000)-0.5) {
             //Timer is off by more than 0.5s
             socket.emit('requestTimeSync');
         }
-        document.getElementById('currentAction').innerHTML = ACTION_TABLE[action.action];
         if (action.player == playerNumber) {
-            document.getElementById('currentPlayer').innerHTML = 'Your Move';
+            if (action.action != 'start') {
+                document.getElementById('currentPlayer').innerHTML = 'Your Move';
+            }
             switch (action.action) {
                 case 'start':
                     hostRoom();
@@ -1285,6 +1286,25 @@ function customRoomClick() {
     } else {addError('Already connecting to a room!');}
 }
 
+function newRoomClick() {
+    if (!connectingToRoom) {
+        connectingToRoom=true;
+        socket.emit('newRoom');
+        addMessage('Creating new room...');
+    } else {addError('Already connecting to a room!');}
+}
+
+function drawRooms() {
+    drawnRooms = [];
+    document.getElementById('rooms').innerHTML = '';
+    createNewRoomCard();
+    for (let i in availableRooms) {
+        createRoomCard('rooms',availableRooms[i],i);
+        drawnRooms.push(availableRooms[i]);
+    }
+    createCustomRoomCard();
+}
+
 function createRoomCard(elementId, simplifiedRoom, roomId) {
     const bDiv = document.createElement('div');
     bDiv.classList.add('roomcard');
@@ -1348,6 +1368,30 @@ function createCustomRoomCard() {
     bDiv.appendChild(playerCountSpan);
     //Make it clickable
     bDiv.addEventListener('click', customRoomClick);
+    document.getElementById('rooms').appendChild(bDiv);
+}
+
+function createNewRoomCard() {
+    const bDiv = document.createElement('div');
+    bDiv.classList.add('roomcard');
+    bDiv.classList.add('col-md-3');
+    bDiv.classList.add('col-xs-6');
+    bDiv.classList.add('white');
+    bDiv.id = 'roomCardNew';
+    const numberDiv = document.createElement('div');
+    numberDiv.classList.add('roomnum');
+    numberDiv.classList.add('d-flex');
+    numberDiv.classList.add('justify-content-center');
+    numberDiv.innerHTML = 'New';
+    numberDiv.id = 'roomNumNew';
+    bDiv.appendChild(numberDiv);
+    const playerCountSpan = document.createElement('span');
+    for (let i=0; i<4; i++) {
+        playerCountSpan.innerHTML += '&#x25CB; ';
+    }
+    bDiv.appendChild(playerCountSpan);
+    //Make it clickable
+    bDiv.addEventListener('click', newRoomClick);
     document.getElementById('rooms').appendChild(bDiv);
 }
 
@@ -1549,6 +1593,7 @@ function exitCurrentRoom(value) {
         document.getElementById('currentPlayer').innerHTML = '';
         clearChat();
         document.getElementById('roundInfo').textContent = '';
+        drawRooms();
     }
 }
 
