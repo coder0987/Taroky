@@ -572,7 +572,9 @@ function hostRoom() {
     if (roomHosted) {
         document.getElementById('lockButton').removeAttribute('hidden');
         document.getElementById('lockButtonP').removeAttribute('hidden');
-        document.getElementById(DIFFICULTY_TABLE[2]).setAttribute('selected','selected');
+        document.getElementById(DIFFICULTY_TABLE[defaultSettings.difficulty]).setAttribute('selected','selected');
+        document.getElementById('timeoutButton').setAttribute('value',defaultSettings.timeout / 1000);
+        document.getElementById('timeoutButton').value = defaultSettings.timeout / 1000;
         return;
     }
     roomHosted = true;
