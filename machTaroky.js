@@ -67,7 +67,7 @@ let discardingOrPlaying = true;
 let timeOffset = 0;
 let elo;
 let admin;
-let defaultSettings = {'timeout':30,'difficulty':2};
+let defaultSettings = {'timeout':30000,'difficulty':2};
 let activeUsername;
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
@@ -519,8 +519,8 @@ function createSettings(tools) {
 
     let timeoutButton = document.createElement('input');
     timeoutButton.setAttribute('type', 'number');
-    timeoutButton.defaultValue = defaultSettings.timeout;
-    timeoutButton.setAttribute('value',defaultSettings.timeout);
+    timeoutButton.defaultValue = defaultSettings.timeout / 1000;
+    timeoutButton.setAttribute('value',defaultSettings.timeout / 1000);
     timeoutButton.min = -1;//-1 or 0 mean no timeout
     timeoutButton.id = 'timeoutButton';
     timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
