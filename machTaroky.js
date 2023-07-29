@@ -294,6 +294,7 @@ function drawHand(withGray) {
                 card.style.filter = '';
                 card.classList.remove('grayed');
             }
+            card.classList.remove('selected');
             card.removeEventListener('mouseenter',enter);//don't want to double-up on events
             card.removeEventListener('mouseleave',exit);
             card.removeEventListener('click',clickCard);
@@ -631,6 +632,7 @@ function displayNextAction(action) {
                 createConfirmButton();
                 addMessage('You are discarding. Choose a card to discard.');
                 drawHand(true);
+                numCardsSelected = 0;
                 break;
             case 'povinnostBidaUniChoice':
                 addBoldMessage('Would you like to call Bida/Uni?');
@@ -1633,9 +1635,29 @@ function createConfirmButton() {
 
     confirmButton.innerHTML = 'Confirm Discard';
 
+    confirmButton.addEventListener('click',confirmButtonCallback);
+
     document.getElementById('center').appendChild(confirmButton);
     document.getElementById('center').appendChild(displayInfoSpan);
+}
 
+function confirmButtonCallback() {
+    let selectedCards = $('.selected');
+    console.log(selectedCards);
+    if (hand.length - numCardsSelected == 12) {
+        //Working so far
+        for (let i=0; i<selectedCards.length; i++) {
+            discardThis(selectedCards[i].suit,selectedCards[i].value);
+            selectedCards[i].removeEventListener('mouseenter',enter);
+            selectedCards[i].removeEventListener('mouseleave',exit);
+            selectedCards[i].removeEventListener('click',clickCard);
+            selectedCards[i].removeEventListener('click',discardClickListener);
+            selectedCards[i].title='';
+            selectedCards[i].classList.remove('image-hover-highlight');
+            selectedCards[i].hidden=true;
+            numCardsSelected--;
+        }
+    }
 }
 
 function buttonChoiceCallback() {
@@ -1649,7 +1671,6 @@ function buttonChoiceCallback() {
     document.getElementById('center').removeChild(document.getElementById('go'+TYPE_TABLE[buttonType]));
     document.getElementById('center').removeChild(document.getElementById('no'+TYPE_TABLE[buttonType]));
 }
-
 
 function resetBoardButton() {
     let theButton = document.createElement('button');
