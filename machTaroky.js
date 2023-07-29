@@ -425,7 +425,7 @@ function showAllCards() {
 }//Debug function
 
 function startActionTimer() {
-    if (!currentAction || currentAction == 'start' || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
+    if (!currentAction || currentAction == 'start' || !document.getElementById('host').hidden || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
         stopActionTimer();
         return;
     }
@@ -484,7 +484,6 @@ function submitSettings(type) {
 }
 
 function createSettings(tools) {
-
     let settings = document.createElement('div');
     settings.id = 'settings';
 

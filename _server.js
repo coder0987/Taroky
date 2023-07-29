@@ -3503,6 +3503,9 @@ function autoReconnect(socketId) {
         if (rooms[players[socketId].room].board.nextStep.action != 'shuffle') {
             SOCKET_LIST[socketId].emit('returnTable', rooms[players[socketId].room].board.table);
         }
+        if (rooms[players[socketId].room]['board']['nextStep'].action == 'start' && rooms[players[socketId].room].host == players[socketId].pn) {
+            SOCKET_LIST[socketId].emit('defaultSettings',rooms[players[socketId].room].settings);
+        }
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             SOCKET_LIST[socketId].emit('nextAction', rooms[players[socketId].room]['board']['nextStep']);
         }
