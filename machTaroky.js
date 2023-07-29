@@ -1624,8 +1624,8 @@ function createChoiceButtons(buttonType) {
 }
 
 function createConfirmButton() {
-    const confirmButton = document.create('button');
-    const displayInfoSpan = document.create('span');
+    const confirmButton = document.createElement('button');
+    const displayInfoSpan = document.createElement('span');
     confirmButton.type = 'button';
     displayInfoSpan.type = 'span';
     confirmButton.id = 'confirm_discard_button';
@@ -1633,6 +1633,8 @@ function createConfirmButton() {
 
     confirmButton.innerHTML = 'Confirm Discard';
 
+    document.getElementById('center').appendChild(confirmButton);
+    document.getElementById('center').appendChild(displayInfoSpan);
 
 }
 
@@ -1647,6 +1649,7 @@ function buttonChoiceCallback() {
     document.getElementById('center').removeChild(document.getElementById('go'+TYPE_TABLE[buttonType]));
     document.getElementById('center').removeChild(document.getElementById('no'+TYPE_TABLE[buttonType]));
 }
+
 
 function resetBoardButton() {
     let theButton = document.createElement('button');
