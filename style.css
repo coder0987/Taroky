@@ -50,14 +50,15 @@ img {
     height: auto;
 }
 
-.grayed {
-    background-color: rgba(150,150,150,1);
-    opacity: 0.8;
+.selected {
+    transform: scale(1.05);
+    outline: none;
+    background-color: #ffc107;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
 }
 
-.selected {
-    background-color: rgba(0,0,255,1);
-    opacity: 0.8;
+.grayed {
+    background-color: rgba(150,150,150,0.2);
 }
 
 .image-hover-highlight {
