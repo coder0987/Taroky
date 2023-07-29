@@ -54,7 +54,9 @@ img {
     transform: scale(1.05);
     outline: none;
     background-color: #ffc107;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+    padding: 1px;
+    z-index: 2;
 }
 
 .grayed {
