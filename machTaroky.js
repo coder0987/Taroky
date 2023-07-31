@@ -50,6 +50,7 @@ let partners;
 let handChoices;
 let socket;
 let theSettings;
+let returnToGameAvailable = false;
 let availableRooms={};
 let drawnRooms=[];
 let connectingToRoom = false;
@@ -181,7 +182,7 @@ $(document).ready(function() {
     onLoad();
     setTimeout(function(){
         $('body').addClass('loaded');
-        var element = document.getElementById("navbar");
+        let element = document.getElementById("navbar");
         element.classList.add("fixed-top");
     }, 3000);
  
@@ -191,7 +192,7 @@ $(document).ready(function() {
 function loadButton() {
 
     $('body').addClass('loaded');
-    var element = document.getElementById("navbar");
+    let element = document.getElementById("navbar");
     element.classList.add("fixed-top");
 };
 
@@ -1109,6 +1110,10 @@ function onLoad() {
             addMessage('loading...');//ADD LOADING ANIMATION
         }
     });
+    socket.on('returnToGame', function() {
+        returnToGameAvailable = true;
+        drawRooms();
+    });
     //TODO save points and return save points
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
@@ -1424,6 +1429,15 @@ function buttonClick() {
     } else {addError('Already connecting to a room!');}
 }
 
+function returnToGameRoomClick() {
+    if (!connectingToRoom) {
+        connectingToRoom=true;
+        socket.emit('returnToGame');
+        addMessage('Connecting...');
+        returnToGameAvailable = false;
+    } else {addError('Already connecting to a room!');}
+}
+
 function customRoomClick() {
     if (!connectingToRoom) {
         let notation = prompt('Room Notation');
@@ -1453,6 +1467,9 @@ function drawRooms() {
         drawnRooms.push(availableRooms[i]);
     }
     createCustomRoomCard();
+    if (returnToGameAvailable) {
+        createReturnToGameRoomCard();
+    }
 }
 
 function createRoomCard(elementId, simplifiedRoom, roomId) {
@@ -1496,6 +1513,30 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     bDiv.addEventListener('click', buttonClick);
     document.getElementById('rooms').appendChild(bDiv);
 }
+function createReturnToGameRoomCard() {
+    const bDiv = document.createElement('div');
+    bDiv.classList.add('roomcard');
+    bDiv.classList.add('col-md-3');
+    bDiv.classList.add('col-xs-6');
+    bDiv.classList.add('white');
+    bDiv.id = 'roomCardReturnToGame';
+    const numberDiv = document.createElement('div');
+    numberDiv.classList.add('roomnum');
+    numberDiv.classList.add('d-flex');
+    numberDiv.classList.add('justify-content-center');
+    numberDiv.innerHTML = 'Continue';
+    numberDiv.id = 'roomNumReturnToGame';
+    bDiv.appendChild(numberDiv);
+    const playerCountSpan = document.createElement('span');
+    for (let i=0; i<4; i++) {
+        playerCountSpan.innerHTML += '&#x25CB; ';
+    }
+    bDiv.appendChild(playerCountSpan);
+    //Make it clickable
+    bDiv.addEventListener('click', returnToGameRoomClick);
+    document.getElementById('rooms').appendChild(bDiv);
+}
+
 
 function createCustomRoomCard() {
     const bDiv = document.createElement('div');

@@ -95,6 +95,8 @@ SOCKET_LIST = {};
 players = {};
 rooms = {};
 
+const returnToGame = {};
+
 //Global variable
 SERVER = {
     /*
@@ -2143,6 +2145,13 @@ function actionCallback(action, room, pn) {
                                     + cardsToNotation(room.board.talon) + '/';
             //Povinnost rotation is handled by the board reset function
             SERVER.log(room.board.notation);//For debug when the server crashes
+
+            for (let i in room.players) {
+                if (room.players[i].socket != -1) {
+                    returnToGame[room.players[i].socket] = {notation: room.board.notation + room.settingsNotation, povinnost: room.board.povinnost, pn: i};
+                }
+            }
+
             SERVER.debug('Povinnost is ' + room['board'].povinnost,room.name, room.name);
             room.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':room['board'].povinnost},room['board'].povinnost);
             action.action = 'prever';
@@ -3318,6 +3327,11 @@ function actionCallback(action, room, pn) {
             }
 
             room.informPlayers(room.board.notation + room.settingsNotation, MESSAGE_TYPE.NOTATION, {povinnost: room.board.povinnost});
+            for (let i in players) {
+                if (players[i].socket != -1) {
+                    returnToGame[room.players[i].socket] = false;
+                }
+            }
 
             actionTaken = true;
             action.action = 'resetBoard';
@@ -3535,6 +3549,9 @@ io.sockets.on('connection', function (socket) {
         for (let i in SOCKET_LIST) {
             SOCKET_LIST[i].emit('returnPlayerCount',numOnlinePlayers);
         }
+        if (returnToGame[socketId]) {
+            SOCKET_LIST[socketId].emit('returnToGame');
+        }
     }
     if (players[socketId] && players[socketId].tempDisconnect) {
         SOCKET_LIST[socketId] = socket;
@@ -3745,6 +3762,73 @@ io.sockets.on('connection', function (socket) {
         } catch (err) {SERVER.debug('Notation error: ' + err);}
         if (!connected) socket.emit('roomNotConnected', 'Custom');
     });
+
+    socket.on('returnToGame', function() {
+        let connected = false;
+        try {
+            if (players[socketId] && players[socketId].room == -1 && returnToGame[socketId]) {
+                let tarokyNotation = returnToGame[socketId].notation + ';pn=' + playerPerspective(returnToGame[socketId].pn, returnToGame[socketId].povinnost)
+                returnToGame[socketId] = false;
+                let tempRoom = new Room({'name':'temporary'});
+                //Decode TarokyNotation into the room
+                if (notate(tempRoom,tarokyNotation)) {
+                    let values = tarokyNotation.split('/');
+                    let theSettings = values[values.length - 1].split(';');
+                    let [setting,pn] = theSettings[theSettings.length - 1].split('=');
+                    if (u(setting) || u(pn) || setting != 'pn' || isNaN(pn) || pn < 0 || pn > 4) {
+                        SERVER.debug('Player number not declared')
+                        pn = 0;
+                    }
+                    let i = 1;
+                    for (; rooms[i]; i++) { }
+                    let roomID = i;
+                    tempRoom.name = roomID;
+                    rooms[roomID] = tempRoom;
+                    rooms[roomID]['players'][pn].type = PLAYER_TYPE.HUMAN;
+                    rooms[roomID]['players'][pn].socket = socketId;
+                    rooms[roomID]['players'][pn].messenger = socket;
+                    rooms[roomID]['players'][pn].pid = players[socketId].pid;
+                    rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
+                    socket.emit('roomConnected', roomID);
+                    connected = true;
+                    players[socketId]['room'] = roomID;
+                    players[socketId]['pn'] = pn;
+                    rooms[roomID]['host'] = socketId;
+                    autoReconnect(socketId);
+                    socket.emit('timeSync', Date.now());
+
+                    let playerType = rooms[roomID].players[0].type;
+                    let action = rooms[roomID].board.nextStep;
+                    if (playerType == PLAYER_TYPE.HUMAN) {
+                        playerAction(action, rooms[roomID], action.player);
+                    } else if (playerType == PLAYER_TYPE.ROBOT) {
+                        robotAction(action, rooms[roomID], action.player);
+                    } else if (playerType == PLAYER_TYPE.AI) {
+                        aiAction(action, rooms[roomID], action.player);
+                    }
+                } else {
+                    SERVER.debug('Notation error');
+                }
+            } else {
+                SERVER.warn('Invalid attempt to connect to room',roomID);
+                if (rooms[roomID]) {
+                    SERVER.debug('Room contains ' + rooms[roomID]['playerCount'] + ' players',roomID);
+                    if (rooms[roomID].locked) {
+                        SERVER.debug('Room is locked',roomID);
+                    }
+                } else {
+                    SERVER.debug('This room does not exist',roomID);
+                }
+                if (players[socketId]) {
+                    SERVER.debug('Player is in room ' + players[socketId].room,roomID);
+                } else {
+                    SERVER.debug('Player ' + socketId + ' does not exist',roomID);
+                }
+            }
+        } catch (err) {SERVER.debug('Notation error: ' + err);}
+        if (!connected) socket.emit('roomNotConnected', 'Return To Game');
+    });
+
     socket.on('requestTimeSync', function() {
         if (socket) {
             socket.emit('timeSync', Date.now());
