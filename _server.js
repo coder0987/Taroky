@@ -3329,7 +3329,7 @@ function actionCallback(action, room, pn) {
             room.informPlayers(room.board.notation + room.settingsNotation, MESSAGE_TYPE.NOTATION, {povinnost: room.board.povinnost});
             for (let i in players) {
                 if (players[i].socket != -1) {
-                    returnToGame[room.players[i].socket] = false;
+                    returnToGame[players[i].socket] = false;
                 }
             }
 
