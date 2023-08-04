@@ -1,0 +1,20 @@
+// Custom.scss
+// Option A: Include all of Bootstrap
+
+// Include any default variable overrides here (though functions won't be available)
+
+@import "../node_modules/bootstrap/scss/bootstrap";
+
+// Create your own map
+$custom-colors: (
+  "thm-green": #98ad99
+  "thm-red": #9D181D
+  "thm-white": #f5f3f1
+  "thm-whiteHover": #e2dfdc
+  "thm-black": #342D27
+  "thm-tan": #E3D6B2
+  "thm-navy": #1f3855
+);
+
+// Merge the maps
+$theme-colors: map-merge($theme-colors, $custom-colors);

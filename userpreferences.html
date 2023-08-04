@@ -6,6 +6,8 @@
         content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <div w3-include-html="/nav.html"></div>
+
     <title>User Preferences</title>
 
     <!-- JQuery -->
@@ -59,17 +61,20 @@
           </div>
 
           <label class="form-label">Difficulty</label>
-          <div class="btn-group container-fluid" role="group" aria-label="difficulty">
+          <div class="btn-group container-fluid flex-wrap: wrap" role="group" aria-label="difficulty">
             <input type="radio" class="btn-check" name="difficulty" id="diff1" autocomplete="off" checked>
             <label class="btn btn-primary" for="btnradio1">Beginner</label>
-          
             <input type="radio" class="btn-check" name="btnradio" id="diff2" autocomplete="off">
-            <label class="btn btn-primary" for="btnradio2">Normal</label>
+            <label class="btn btn-primary" for="btnradio2">Easy</label>
             <input type="radio" class="btn-check" name="difficulty" id="diff3" autocomplete="off">
-            <label class="btn btn-primary" for="btnradio1">Advanced</label>
-          
+            <label class="btn btn-primary" for="btnradio1">Normal</label>
             <input type="radio" class="btn-check" name="difficulty" id="diff4" autocomplete="off">
-            <label class="btn btn-primary" for="btnradio2">Expert</label>
+            <label class="btn btn-primary" for="btnradio2">Hard</label>
+            <input type="radio" class="btn-check" name="btnradio" id="diff5" autocomplete="off">
+            <label class="btn btn-primary" for="btnradio2">Ruthless</label>
+            <input type="radio" class="btn-check" name="difficulty" id="diff6" autocomplete="off">
+            <label class="btn btn-primary" for="btnradio1">AI</label>
+
           </div>
         </div>
 </div><br>
@@ -129,5 +134,7 @@
       </div>
     </div>
 </div>
+
+<div class="p-2 position-sticky bottom-0 row"><button class="btn red" id="saveUP">Save preferences</button></div>
     </body>
     </html>
