@@ -19,8 +19,6 @@ This file contains a list of things we have yet TODO in no particular order
   * Primary AI: plays against itself
   * Secondary AI: deep learning based on players in ranked play
   * Tertiary AIs: deep learning based on each individual player's play style. One per player who has an account
-  * GPU usage
-  * Separate AI server
 * Add TODOs to this list
 * Add command-line argument outline
 * Add persistent debug logs
@@ -31,7 +29,7 @@ This file contains a list of things we have yet TODO in no particular order
   * Stores default settings - DONE
   * Potential: user pfp?
   * Potential: game history?
-  * AI deep-learning bots are stored on the AI server, not the user database
+  * AI deep-learning bots are stored on the AI server, not the user database - DONE
   * Store admin usernames as well, for access to the admin panel - DONE
 * Include ELO ratings for players and bots
 * Add ranked matches for competitive play

@@ -50,8 +50,17 @@ img {
     height: auto;
 }
 
+.selected {
+    transform: scale(1.05);
+    outline: none;
+    background-color: #ffc107;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+    padding: 1px;
+    z-index: 2;
+}
+
 .grayed {
-    background-color: rgba(150,150,150);
+    background-color: rgba(150,150,150,0.2);
     opacity: 0.8;
 }
 
@@ -239,9 +248,11 @@ h4 {
 }
 
 .drew {
-    margin: 0px 10px 0px 10px;
-    border-radius: 10px;
-    border: 4px solid gray;
+    margin: 0px 15px 0px 0px;
+}
+
+.left-margin {
+    margin-left: 10px;
 }
 
 .navbar-brand {

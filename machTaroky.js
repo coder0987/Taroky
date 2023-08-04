@@ -45,10 +45,12 @@ let ticker;
 let players;
 let deck;
 let hand;
+let numCardsSelected;
 let partners;
 let handChoices;
 let socket;
 let theSettings;
+let returnToGameAvailable = false;
 let availableRooms={};
 let drawnRooms=[];
 let connectingToRoom = false;
@@ -180,7 +182,7 @@ $(document).ready(function() {
     onLoad();
     setTimeout(function(){
         $('body').addClass('loaded');
-        var element = document.getElementById("navbar");
+        let element = document.getElementById("navbar");
         element.classList.add("fixed-top");
     }, 3000);
  
@@ -190,7 +192,7 @@ $(document).ready(function() {
 function loadButton() {
 
     $('body').addClass('loaded');
-    var element = document.getElementById("navbar");
+    let element = document.getElementById("navbar");
     element.classList.add("fixed-top");
 };
 
@@ -238,11 +240,33 @@ function clickCard() {
         this.removeEventListener('mouseenter',enter);
         this.removeEventListener('mouseleave',exit);
         this.removeEventListener('click',clickCard);
+        this.removeEventListener('click',discardClickListener);
         this.title='';
         this.classList.remove('image-hover-highlight');
         this.hidden=true;
     }
 }
+
+function discardClickListener() {
+    //If already selected, unselect
+    if (this.classList.contains('selected')) {
+        this.classList.remove('selected');
+        numCardsSelected--;
+        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
+    } else if (this.style.filter == '') {
+        //Not selected. If not enough cards are already selected, select this card
+        if (hand.length - numCardsSelected > 12) {
+            numCardsSelected++;
+            if (hand.length - numCardsSelected != 12) {
+                document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
+            } else {
+                document.getElementById('discard_info').innerHTML = 'Press Confirm to discard';
+            }
+            this.classList.add('selected');
+        }
+    }
+}
+
 function discardThis(cardSuit,cardValue) {
     if (discardingOrPlaying) {
        addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
@@ -259,7 +283,25 @@ function drawHand(withGray) {
     let returnToDeck = divHand.children;
     for (let i=returnToDeck.length-1; i>=0; i--) {
         let child = returnToDeck[i];
-        if (!isInHand(child)) {child.classList.remove('drew');child.classList.remove('col-md-1');child.classList.remove('col-xs-3');child.hidden = true;divDeck.appendChild(child);}
+        if (!isInHand(child)) {
+            child.classList.remove('drew');
+            child.classList.remove('col-md-1');
+            child.classList.remove('col-xs-3');
+            child.hidden = true;
+            divDeck.appendChild(child);
+            child.removeEventListener('mouseenter',enter);
+            child.removeEventListener('mouseleave',exit);
+            child.removeEventListener('click',clickCard);
+            child.removeEventListener('click',discardClickListener);
+            child.title='';
+            child.classList.remove('image-hover-highlight');
+            child.classList.remove('selected');
+            child.classList.remove('grayed');
+        }
+    }
+    numCardsSelected = 0;
+    if (document.getElementById('discard_info')) {
+        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
     }
     for (let i in hand) {
         let card = document.getElementById(hand[i].value + hand[i].suit);
@@ -267,7 +309,7 @@ function drawHand(withGray) {
         card.value = hand[i].value;
         card.classList.add('col-md-1');
         card.classList.add('col-xs-3');
-        card.classList.remove('col-2');//If claimed from prever-talon
+        card.classList.remove('col-2'); //If claimed from prever-talon
         if (withGray) {
             if (hand[i].grayed) {
                 //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
@@ -277,17 +319,26 @@ function drawHand(withGray) {
                 card.style.filter = '';
                 card.classList.remove('grayed');
             }
+            card.classList.remove('selected');
             card.removeEventListener('mouseenter',enter);//don't want to double-up on events
             card.removeEventListener('mouseleave',exit);
             card.removeEventListener('click',clickCard);
+            card.removeEventListener('click',discardClickListener);
             card.addEventListener('mouseenter', enter);
             card.addEventListener('mouseleave', exit);
-            card.addEventListener('click',clickCard);
+            if (discardingOrPlaying) {
+                card.addEventListener('click',discardClickListener);
+            } else {
+                card.addEventListener('click',clickCard);
+            }
         } else {
             card.style.filter = '';
             card.removeEventListener('mouseenter',enter);
             card.removeEventListener('mouseleave',exit);
             card.removeEventListener('click',clickCard);
+            card.removeEventListener('click',discardClickListener);
+            card.classList.remove('grayed');
+            card.classList.remove('selected');
             card.title = '';
             card.classList.remove('image-hover-highlight');
         }
@@ -297,10 +348,12 @@ function drawHand(withGray) {
             }
         )) {
             card.classList.add('drew');
+            divHand.insertBefore(card, divHand.firstChild);
         } else {
             card.classList.remove('drew');
+            divHand.appendChild(card);
         }
-        divHand.appendChild(card);
+
         card.hidden = false;
     }
 }
@@ -605,8 +658,10 @@ function displayNextAction(action) {
                 break;
             case 'discard':
                 discardingOrPlaying = true;
+                createConfirmButton();
                 addMessage('You are discarding. Choose a card to discard.');
                 drawHand(true);
+                numCardsSelected = 0;
                 break;
             case 'povinnostBidaUniChoice':
                 addBoldMessage('Would you like to call Bida/Uni?');
@@ -1018,7 +1073,7 @@ function onLoad() {
         }
         if (typeof data.host !== 'undefined') {
             hostNumber = data.host;
-            if (playerNumber == hostNumber && data.nextAction.action == 'start') {
+            if (playerNumber == hostNumber && data.nextAction && data.nextAction.action == 'start') {
                 hostRoom(data.settings);
             }
         }
@@ -1054,6 +1109,10 @@ function onLoad() {
         if (connectingToRoom) {
             addMessage('loading...');//ADD LOADING ANIMATION
         }
+    });
+    socket.on('returnToGame', function() {
+        returnToGameAvailable = true;
+        drawRooms();
     });
     //TODO save points and return save points
     socket.on('returnPlayers', function(returnPlayers) {
@@ -1370,6 +1429,15 @@ function buttonClick() {
     } else {addError('Already connecting to a room!');}
 }
 
+function returnToGameRoomClick() {
+    if (!connectingToRoom) {
+        connectingToRoom=true;
+        socket.emit('returnToGame');
+        addMessage('Connecting...');
+        returnToGameAvailable = false;
+    } else {addError('Already connecting to a room!');}
+}
+
 function customRoomClick() {
     if (!connectingToRoom) {
         let notation = prompt('Room Notation');
@@ -1399,6 +1467,9 @@ function drawRooms() {
         drawnRooms.push(availableRooms[i]);
     }
     createCustomRoomCard();
+    if (returnToGameAvailable) {
+        createReturnToGameRoomCard();
+    }
 }
 
 function createRoomCard(elementId, simplifiedRoom, roomId) {
@@ -1442,6 +1513,30 @@ function createRoomCard(elementId, simplifiedRoom, roomId) {
     bDiv.addEventListener('click', buttonClick);
     document.getElementById('rooms').appendChild(bDiv);
 }
+function createReturnToGameRoomCard() {
+    const bDiv = document.createElement('div');
+    bDiv.classList.add('roomcard');
+    bDiv.classList.add('col-md-3');
+    bDiv.classList.add('col-xs-6');
+    bDiv.classList.add('white');
+    bDiv.id = 'roomCardReturnToGame';
+    const numberDiv = document.createElement('div');
+    numberDiv.classList.add('roomnum');
+    numberDiv.classList.add('d-flex');
+    numberDiv.classList.add('justify-content-center');
+    numberDiv.innerHTML = 'Continue';
+    numberDiv.id = 'roomNumReturnToGame';
+    bDiv.appendChild(numberDiv);
+    const playerCountSpan = document.createElement('span');
+    for (let i=0; i<4; i++) {
+        playerCountSpan.innerHTML += '&#x25CB; ';
+    }
+    bDiv.appendChild(playerCountSpan);
+    //Make it clickable
+    bDiv.addEventListener('click', returnToGameRoomClick);
+    document.getElementById('rooms').appendChild(bDiv);
+}
+
 
 function createCustomRoomCard() {
     const bDiv = document.createElement('div');
@@ -1599,6 +1694,59 @@ function createChoiceButtons(buttonType) {
     document.getElementById('center').appendChild(secondButton);
 }
 
+function createConfirmButton() {
+    const confirmButton = document.createElement('button');
+    const sortButton = document.createElement('button');
+    const displayInfoSpan = document.createElement('span');
+    confirmButton.type = 'button';
+    displayInfoSpan.type = 'span';
+    sortButton.type = 'button';
+    confirmButton.id = 'confirm_discard_button';
+    displayInfoSpan.id = 'discard_info';
+    sortButton.id = 'sortButton'
+
+    displayInfoSpan.classList.add('left-margin');
+
+    confirmButton.innerHTML = 'Confirm Discard';
+    sortButton.innerHTML = 'Sort Hand';
+    displayInfoSpan.innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
+
+    confirmButton.addEventListener('click',confirmButtonCallback);
+    sortButton.addEventListener('click',function() {
+        drawnCards = [];
+        drawHand(true);
+        this.remove();
+    });
+    if (drawnCards.length > 0) {
+        document.getElementById('center').appendChild(sortButton);
+    }
+    document.getElementById('center').appendChild(confirmButton);
+    document.getElementById('center').appendChild(displayInfoSpan);
+}
+
+function confirmButtonCallback() {
+    let selectedCards = $('.selected');
+    console.log(selectedCards);
+    if (hand.length - numCardsSelected == 12) {
+        //Working so far
+        for (let i=0; i<selectedCards.length; i++) {
+            discardThis(selectedCards[i].suit,selectedCards[i].value);
+            selectedCards[i].removeEventListener('mouseenter',enter);
+            selectedCards[i].removeEventListener('mouseleave',exit);
+            selectedCards[i].removeEventListener('click',clickCard);
+            selectedCards[i].removeEventListener('click',discardClickListener);
+            selectedCards[i].title='';
+            selectedCards[i].classList.remove('image-hover-highlight');
+            selectedCards[i].hidden=true;
+            numCardsSelected--;
+        }
+        document.getElementById('discard_info').remove();
+        document.getElementById('confirm_discard_button').remove();
+    } else {
+        addMessage('Please select ' + (hand.length - numCardsSelected - 12) + ' more card' + ((hand.length - numCardsSelected - 12) == 1 ? '' : 's'));
+    }
+}
+
 function buttonChoiceCallback() {
     let buttonType = this.buttonType;
     let goOrNo = this.go;
@@ -1625,6 +1773,9 @@ function resetBoardButton() {
 
 function clearButtons() {
     let center = document.getElementById('center');
+    if (document.getElementById('discard_info')) {
+        document.getElementById('discard_info').remove();
+    }
     for (let i=center.children.length-1; i>=0; i--) {
         if (center.children[i] && center.children[i].nodeName == 'BUTTON') {
             center.removeChild(center.children[i])
