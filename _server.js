@@ -3232,20 +3232,19 @@ function actionCallback(action, room, pn) {
                         //Multiply by 3 instead of 2
                         chipsOwed *= 3;
                         pointCountMessageTable.push({'name':'Triple It', 'value':Math.abs(chipsOwed)});
-                        if (room.players[room.board.prever].isTeamPovinnost == (chipsOwed < 0)) {
-                            //Prever lost
-                            chipsOwed *= Math.pow(2,room.board.preverTalonStep-1);//*2 for swapping down, *4 for going back up
-                            pointCountMessageTable.push({'name':'Double It For Each Prever-Talon Swap', 'value':Math.abs(chipsOwed)});
-                        }
                     } else {
                         chipsOwed *= 2;
                         pointCountMessageTable.push({'name':'Double It', 'value':Math.abs(chipsOwed)});
                     }
                     chipsOwed /= 10;
-                    chipsOwed = Math.round(chipsOwed);
+                    chipsOwed = (chipsOwed < 0) ? -Math.round(Math.abs(chipsOwed)) : Math.round(chipsOwed);
                     pointCountMessageTable.push({'name':'Round to Nearest Ten', 'value':Math.abs(chipsOwed)});
 
-
+                    if (room.board.playingPrever && room.players[room.board.prever].isTeamPovinnost == (chipsOwed < 0)) {
+                        //Prever lost
+                        chipsOwed *= Math.pow(2,room.board.preverTalonStep-1);//*2 for swapping down, *4 for going back up
+                        pointCountMessageTable.push({'name':'Double It For Each Prever-Talon Swap', 'value':Math.abs(chipsOwed)});
+                    })
 
                     if (room.board.contra[0] != -1) {
                         //*2 for one contra, *4 for two
