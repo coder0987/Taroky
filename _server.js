@@ -703,8 +703,8 @@ function trumpChain(hand) {
     //Returns the number of guaranteed tricks from a hand (trump only)
     let guarantees = 0;
     let misses = 0;
-    for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
-        if (Deck.handContainsCard(TRUMP_VALUE[i])) {
+    for (let i = Object.keys(TRUMP_VALUE).length - 1; i>=0; i--) {
+        if (Deck.handContainsCard(hand,TRUMP_VALUE[i])) {
             if (misses > 0) {
                 misses--;
             } else {
@@ -751,10 +751,11 @@ function basicHandRanking(hand) {
         }
     }
     for (let i=0; i<4; i++) {
-        if (numOfSuit(SUIT[i] == 0)) {
-            handRankingPoints++;
+        if (numOfSuit(hand,SUIT[i]) == 0) {
+            handRankingPoints+=2;
         }
     }
+    return handRankingPoints;
 }
 //ROBOT DIFFICULTY LAYOUT: go from hardest -> easiest so the more difficult algorithms fall back onto the less difficult ones while we haven't yet finished
 //RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5
@@ -797,7 +798,7 @@ function robotPartner(hand, difficulty) {
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
-            if (possiblePartners[1] && basicHandRanking(hand) >= 20) {
+            if (possiblePartners[1] && basicHandRanking(hand) >= 17) {
                 return { 'value': 'XIX', 'suit': SUIT[4] };//Play by itself
             }
         case DIFFICULTY.EASY:
@@ -813,19 +814,20 @@ function robotPartner(hand, difficulty) {
     }
 }
 function robotPrever(hand, difficulty, room) {
+    SERVER.debug('Hand ranking for hand ' + JSON.stringify(hand) + ' is ' + basicHandRanking(hand));
     switch (difficulty) {
         case DIFFICULTY.AI:
         case DIFFICULTY.RUTHLESS:
         case DIFFICULTY.HARD:
         case DIFFICULTY.NORMAL:
-            if (numOfSuit(hand, SUIT[4]) >= 8 && trumpChain(hand) >= 2 && basicHandRanking(hand) >= 10 && Deck.handContainsCard(hand, 'King')) {
-                //Must have 2 guaranteed tricks, tarocky, and a King
-                return 'goPrever';
+            if (numOfSuit(hand, SUIT[4]) >= 6 && trumpChain(hand) >= 1 && basicHandRanking(hand) >= 15 && Deck.handContainsCard(hand, 'King')) {
+                //Must have a guaranteed trick, 6 trump, and a King
+                return 'callPrever';
             }
         case DIFFICULTY.EASY:
             if (numOfSuit(hand, SUIT[4]) >= 8 && unbrokenTrumpChain(hand) >= 3 && basicHandRanking(hand) >= 15 && Deck.handContainsCard(hand, 'King')) {
                 //Must have Skyz, XXI, XX, tarocky, and a King
-                return 'goPrever';
+                return 'callPrever';
             }
         case DIFFICULTY.RUDIMENTARY:
             return 'passPrever';
@@ -938,7 +940,13 @@ function robotContra(hand, difficulty) {
                 return true;
             }
         case DIFFICULTY.NORMAL:
+            if (numOfSuit(hand, SUIT[4]) >= 7 && trumpChain(hand) >= 1 && basicHandRanking(hand) >= 17 && Deck.handContainsCard(hand, 'King')) {
+                return true;
+            }
         case DIFFICULTY.EASY:
+            if (basicHandRanking(hand) >= 21) {
+                return true;
+            }
         case DIFFICULTY.RUDIMENTARY:
             //TODO: more difficulty algos
             return false;
@@ -3244,7 +3252,7 @@ function actionCallback(action, room, pn) {
                         //Prever lost
                         chipsOwed *= Math.pow(2,room.board.preverTalonStep-1);//*2 for swapping down, *4 for going back up
                         pointCountMessageTable.push({'name':'Double It For Each Prever-Talon Swap', 'value':Math.abs(chipsOwed)});
-                    })
+                    }
 
                     if (room.board.contra[0] != -1) {
                         //*2 for one contra, *4 for two
