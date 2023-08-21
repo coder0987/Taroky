@@ -2151,6 +2151,7 @@ function actionCallback(action, room, pn) {
                                     + cardsToNotation(room.players[playerOffset(room['board'].povinnost,2)].hand) + '/'
                                     + cardsToNotation(room.players[playerOffset(room['board'].povinnost,3)].hand) + '/'
                                     + cardsToNotation(room.board.talon) + '/';
+            setSettingNotation(room);
             //Povinnost rotation is handled by the board reset function
             SERVER.log(room.board.notation);//For debug when the server crashes
 
@@ -3774,6 +3775,7 @@ io.sockets.on('connection', function (socket) {
         let connected = false;
         try {
             if (players[socketId] && players[socketId].room == -1 && returnToGame[socketId]) {
+                let tempNotation = returnToGame[socketId].notation;
                 let tarokyNotation = returnToGame[socketId].notation + ';pn=' + playerPerspective(returnToGame[socketId].pn, returnToGame[socketId].povinnost)
                 returnToGame[socketId] = false;
                 let tempRoom = new Room({'name':'temporary'});
@@ -3796,6 +3798,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['players'][pn].messenger = socket;
                     rooms[roomID]['players'][pn].pid = players[socketId].pid;
                     rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
+                    rooms[roomID].board.notation = tempNotation;//Contains both game and settings notation, whereas board.notation normally only contains game notation
                     socket.emit('roomConnected', roomID);
                     connected = true;
                     players[socketId]['room'] = roomID;

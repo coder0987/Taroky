@@ -21,22 +21,28 @@
     <script src="/machTaroky.js"></script>
 </head>-->
 <body>
-<nav id="navbar" class="navbar navbar-expand-lg navy">
+<nav id="navbar" class="navbar navbar-expand-lg navy navbar-dark">
     <div class="container-fluid">
         <img src="/assets/logo/logo-full-white.png" alt="MachTarok" class="navbar-brand">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+        <!--<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>-->
+        <button class="navbar-toggler me-2 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse">
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <div class="navbar-nav">
-                <a class="nav-link active white-txt" aria-current="page" href="/">Play</a>
+                <a class="nav-link white-txt" aria-current="page" href="/">Play</a>
                 <a class="nav-link white-txt" href="learn.html">Learn</a>
                 <a id="adminHandler" hidden="hidden" class="nav-link white-txt" href="admin">Admin</a>
-                <a id="accountHandler" style="margin-right: 0" class="nav-link navbar-brand" target="_blank" rel="opener" href="https://sso.smach.us/?redirect=https://machtarok.com/">Sign In</a>
-                <a class="nav-link white-txt right-align" href="userpreferences" target="_blank">⚙</a>
-                <span class="nav-link active white-txt right-align" onclick="fullscreen()">⛶</span>
+                <a id="accountHandler" style="margin-right: 0; color: var(--red)" class="nav-link navbar-brand" target="_blank" rel="opener" href="https://sso.smach.us/?redirect=https://machtarok.com/">Sign In</a>
+                <div class="nav-link">
+                    <a class="white-txt no-decorations" href="userpreferences" target="_blank">⚙</a>
+                    <span class="active white-txt" onclick="fullscreen()">⛶</span>
+                </div>
             </div>
         </div>
+
     </div>
 
 </nav>

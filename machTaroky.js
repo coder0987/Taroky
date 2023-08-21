@@ -1439,6 +1439,12 @@ function returnToGameRoomClick() {
 }
 
 function customRoomClick() {
+    /*TODO: instead of prompt, create a "Custom Room" page
+        At the top, include a text input for room codes
+        Add individual player adjustments (+ make available for other players to join)
+         - AI / AI Personalities / Robot on various difficulties
+        Add custom room options such as face-up cards for all players & AI input on various choices
+        */
     if (!connectingToRoom) {
         let notation = prompt('Room Notation');
         if (notation.length < 10) {
