@@ -1386,6 +1386,8 @@ function onLoad() {
         }
     });
 
+    socket.emit('reconnect');
+
     refresh();
     setInterval(tick, 200);
 }
