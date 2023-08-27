@@ -8,9 +8,8 @@
     --navy: #1f3855;
 }
 
-canvas {
-    width: 100%;
-    object-fit: contain;
+.nav-link {
+    cursor: pointer;
 }
 
 body {
@@ -23,11 +22,6 @@ body:fullscreen {
 
 :fullscreen, ::backdrop {
     background-color: var(--green);
-}
-
-.canvas {
-    width: 100%;
-    object-fit: contain;
 }
 
 .button {

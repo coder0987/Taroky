@@ -40,6 +40,7 @@ const ACTION_TABLE = {
     'resetBoard': 'Reset the Board'
 };
 const START_TIME = Date.now();
+const SHOW_TOUR = true;
 let cardBackLoaded = false;
 let ticker;
 let players;
@@ -80,7 +81,7 @@ for (let v=0;v<22;v++)
 
 /** navbar */
 function includeHTML() {
-    var z, i, elmnt, file, xhttp;
+    let z, i, elmnt, file, xhttp;
     /* Loop through a collection of all HTML elements: */
     z = document.getElementsByTagName("*");
     for (i = 0; i < z.length; i++) {
@@ -97,6 +98,7 @@ function includeHTML() {
             /* Remove the attribute, and call this function once more: */
             elmnt.removeAttribute("w3-include-html");
             includeHTML();
+            loaded();
           }
         }
         xhttp.open("GET", file, true);
@@ -106,6 +108,12 @@ function includeHTML() {
       }
     }
   }
+
+function loaded() {
+    if (SHOW_TOUR && document.getElementById('tour')) {
+        document.getElementById('tour').removeAttribute('hidden');
+    }
+}
 
 let fullscreenMode = false;
 function fullscreen() {
@@ -960,7 +968,10 @@ function hasCut() {
 window.addEventListener('message', (event) => {
     if (event.origin !== 'https://sso.smach.us' && event.origin !== 'https://sso.samts.us') {console.log(event.origin); return;}
     if (event.data != 'signOut') {
-        let [username,token] = event.data.split(':');
+        let [username,token,signUp] = event.data.split(':');
+        if (signUp == 'new') {
+            startTour();
+        }
         addMessage('Attempting to sign in as ' + username +'...');
         socket.emit('login',username,token);
         document.cookie = 'username=' + username + ';secure';
