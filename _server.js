@@ -2613,7 +2613,7 @@ function actionCallback(action, room, pn) {
             for (let i in currentHand) {
                 if (currentHand[i].suit == "Trump") { numTrumpsInHand++;}
             }
-            if (numTrumpsInHand <= 2) {
+            if (numTrumpsInHand <= 2 && room.board.prever == -1) {
                 action.action = 'povinnostBidaUniChoice';
             } else {
                 action.action = 'moneyCards';
@@ -3570,6 +3570,15 @@ io.sockets.on('connection', function (socket) {
         autoReconnect(socketId);
     }
 
+    socket.on('reconnect', function() {
+        if (players[socketId]) {
+            SOCKET_LIST[socketId] = socket;
+            players[socketId].socket = socket;
+            players[socketId].tempDisconnect = false;
+            autoReconnect(socketId);
+        }
+    });
+
     socket.on('disconnect', function() {
         if (players[socketId] && !players[socketId].tempDisconnect) {
             players[socketId].tempDisconnect = true;
@@ -3663,6 +3672,7 @@ io.sockets.on('connection', function (socket) {
             }
         } else {
             SERVER.warn('Invalid attempt to connect to room',roomID);
+            autoReconnect(socketId);
             if (rooms[roomID]) {
                 SERVER.debug('Room contains ' + rooms[roomID]['playerCount'] + ' players',roomID);
                 if (rooms[roomID].locked) {
