@@ -41,6 +41,7 @@ const ACTION_TABLE = {
 };
 const START_TIME = Date.now();
 const SHOW_TOUR = true;
+let inTour = false;
 let cardBackLoaded = false;
 let ticker;
 let players;
@@ -763,6 +764,7 @@ function showAllCards() {
 }//Debug function
 
 function startActionTimer() {
+    if (inTour) {return;}
     if (!currentAction || currentAction == 'start' || !document.getElementById('host').hidden || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
         stopActionTimer();
         return;
@@ -1482,7 +1484,7 @@ function drawRooms() {
     document.getElementById('rooms').innerHTML = '';
     createNewRoomCard();
     for (let i in availableRooms) {
-        createRoomCard('rooms',availableRooms[i],i);
+        createRoomCard(availableRooms[i],i);
         drawnRooms.push(availableRooms[i]);
     }
     createCustomRoomCard();
@@ -1491,7 +1493,7 @@ function drawRooms() {
     }
 }
 
-function createRoomCard(elementId, simplifiedRoom, roomId) {
+function createRoomCard(simplifiedRoom, roomId) {
     const bDiv = document.createElement('div');
     bDiv.classList.add('roomcard');
     bDiv.classList.add('col-md-3');
@@ -1860,6 +1862,33 @@ function exitCurrentRoom(value) {
         clearChat();
         document.getElementById('roundInfo').textContent = '';
         drawRooms();
+    }
+}
+
+function clearScreen() {
+    returnTableQueue = [[]];
+    hand = [];
+    drawHand();
+    document.getElementById('refresh').innerHTML = '&#10227; Refresh Rooms';
+    document.getElementById('refresh').setAttribute('onclick','refresh()');
+    stopActionTimer();
+    document.getElementById('rooms').innerHTML = '';
+    document.getElementById('center').innerHTML = '';
+    document.getElementById('currentAction').innerHTML = '';
+    document.getElementById('currentPlayer').innerHTML = '';
+    clearChat();
+    document.getElementById('roundInfo').textContent = '';
+    removeHostTools();
+    if (document.getElementById('cardBack')) {
+        document.getElementById('cardBack').setAttribute('hidden','hidden');
+        document.getElementById('deck').appendChild(document.getElementById('cardBack'));
+    } else {
+        let card = document.createElement('img');
+        card.hidden = true;
+        card.id = 'cardBack';
+        card.src = '/assets/mach-deck-thumb/card-back-t.png';
+        card.alt = 'The back of a card';
+        document.getElementById('deck').appendChild(card);
     }
 }
 
