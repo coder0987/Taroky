@@ -141,7 +141,7 @@ let tour = {
     },
     {
       title: "Playing a Card",
-      content: "To play a card, click on whichcever card you want to play. Note that cards which cannot be played are grayed out.",
+      content: "To play a card, click on whichever card you want to play. Note that cards which cannot be played are grayed out.",
       target: "hand",
       placement: "bottom",
       onNext: step12,
