@@ -39,6 +39,15 @@ const ACTION_TABLE = {
     'countPoints': 'Count Points',
     'resetBoard': 'Reset the Board'
 };
+const VALUE_REVERSE = {
+    Ace: 0, Two: 1, Three: 2, Four: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
+    Seven: 0, Eight: 1, Nine: 2, Ten: 3,
+    I: 0, II: 1, III: 2, IIII: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10, XII: 11, XIII: 12,
+    XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
+};
+const SUIT_SORT_ORDER = {
+    Spade: 0, Club: 2, Heart: 1, Diamond: 3, Trump: 4
+}
 const START_TIME = Date.now();
 const SHOW_TOUR = true;
 let inTour = false;
@@ -79,6 +88,26 @@ for (let s=0;s<4;s++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
+
+function moveDeckToDeck() {
+    let deckDiv = document.getElementById('deck');
+    for (let i in baseDeck) {
+        let child = document.getElementById(baseDeck[i].value + baseDeck[i].suit );
+        child.classList.remove('drew');
+        child.classList.remove('col-md-1');
+        child.classList.remove('col-xs-3');
+        child.hidden = true;
+        child.removeEventListener('mouseenter',enter);
+        child.removeEventListener('mouseleave',exit);
+        child.removeEventListener('click',clickCard);
+        child.removeEventListener('click',discardClickListener);
+        child.title='';
+        child.classList.remove('image-hover-highlight');
+        child.classList.remove('selected');
+        child.classList.remove('grayed');
+        deckDiv.appendChild(child);
+    }
+}
 
 /** navbar */
 function includeHTML() {
@@ -363,6 +392,31 @@ function drawHand(withGray) {
             divHand.appendChild(card);
         }
 
+        card.hidden = false;
+    }
+}
+
+function moveCardsToDiv(theCards, toDiv, cardClickListener) {
+    for (let i in theCards) {
+        let card = document.getElementById(theCards[i].value + theCards[i].suit);
+        card.suit = theCards[i].suit;
+        card.value = theCards[i].value;
+        card.classList.add('col-md-1');
+        card.classList.add('col-xs-3');
+        card.classList.remove('col-2'); //If claimed from prever-talon
+        card.style.filter = '';
+        card.removeEventListener('mouseenter',enter);
+        card.removeEventListener('mouseleave',exit);
+        card.removeEventListener('click',clickCard);
+        card.removeEventListener('click',discardClickListener);
+        card.classList.remove('grayed');
+        card.classList.remove('selected');
+        card.title = '';
+        card.classList.remove('image-hover-highlight');
+        if (cardClickListener) {
+            card.addEventListener('click', cardClickListener);
+        }
+        toDiv.appendChild(card);
         card.hidden = false;
     }
 }
@@ -1478,6 +1532,31 @@ function customRoomClick() {
         notationInputField.id = 'notationInputField';
         notationInputField.style.width = '90%';
         theCenter.appendChild(notationInputField);
+
+        let notationInputLoadIn = document.createElement('button');
+        notationInputLoadIn.setAttribute('type', 'button');
+        notationInputLoadIn.id = 'notationInputLoadIn';
+        notationInputLoadIn.style.width = '5%';
+        notationInputLoadIn.innerHTML = '⟳';
+        notationInputLoadIn.addEventListener('click',loadCardsFromRoomCode);
+        theCenter.appendChild(notationInputLoadIn);
+
+        theCenter.appendChild(document.createElement('br'));
+
+        for (let i=0; i<4; i++) {
+            let currentCards = document.createElement('div');
+            currentCards.id = 'customHand' + i;
+            let currentCardsInner = document.createElement('div');
+            currentCardsInner.id = 'customHandInner' + i;
+            currentCards.appendChild(currentCardsInner);
+            theCenter.appendChild(currentCards);
+        }
+        let talonCards = document.createElement('div');
+        talonCards.id = 'customTalon';
+        let talonInner = document.createElement('div');
+        talonInner.id = 'talonInner';
+        talonCards.appendChild(talonInner);
+        theCenter.appendChild(talonCards);
         theCenter.appendChild(document.createElement('br'));
 
         let notationSubmitButton = document.createElement('button');
@@ -1495,13 +1574,172 @@ function customRoomClick() {
     }
 }
 
+let currentlySelectedCard = {hand:-1,cardElement:null};
+
+function loadCardsFromRoomCode() {
+    if (!connectingToRoom) {
+        document.getElementById('notationSubmitButton').generated = true;
+        let notation = document.getElementById('notationInputField').value;
+        console.log(notation);
+        let theNotationSplit = notation.split('/');
+        let theNotationSettings = theNotationSplit[theNotationSplit.length - 1].split(';');
+        let thePN = theNotationSettings[theNotationSettings.length - 1].split('=')[1];
+        let theHands = [];
+        for (let i=0; i<4; i++) {
+            let currentDiv = document.getElementById('customHand' + i)
+            let playerDescription = document.createElement('p');
+            playerDescription.innerHTML = 'Player ' + (i + 1);
+            if (i == +thePN) {
+                playerDescription.innerHTML += ' (You)';
+            }
+            currentDiv.appendChild(document.createElement('br'));
+            currentDiv.prepend(playerDescription);
+            theHands[i] = notationToCards(theNotationSplit[i+4]);
+            theHands[i] = sortCards(theHands[i]);
+            moveCardsToDiv(theHands[i], document.getElementById('customHandInner' + i), swapCardsClickListener);
+            currentDiv.appendChild(document.createElement('br'));
+        }
+        let theTalonDiv = document.getElementById('customTalon');
+        let talonDescription = document.createElement('p');
+        talonDescription.innerHTML = 'Talon';
+        theTalonDiv.appendChild(document.createElement('br'));
+        theTalonDiv.prepend(talonDescription);
+        let theTalon = notationToCards(theNotationSplit[8]);
+        moveCardsToDiv(theTalon, document.getElementById('talonInner'), swapCardsClickListener);
+
+    }
+}
+
+function swapCardsClickListener() {
+    if (currentlySelectedCard.hand == -1) {
+        currentlySelectedCard.hand = this.parentElement;
+        currentlySelectedCard.cardElement = this;
+        this.classList.add('selected');
+    } else {
+        this.parentNode.appendChild(currentlySelectedCard.cardElement);
+        currentlySelectedCard.cardElement.classList.remove('selected');
+        currentlySelectedCard.hand.appendChild(this);
+        currentlySelectedCard = {hand:-1,cardElement:null};
+    }
+}
+
+function u(v) {
+    if (typeof v === 'undefined') {
+        return true;
+    }
+    return false;
+}
+
+function notationToCards(notatedCards) {
+    try {
+        let cards = [];
+        const SUIT_NOTATION = {S:SUIT[0],C:SUIT[1],H:SUIT[2],D:SUIT[3],T:SUIT[4]};
+        const VALUE_NOTATION = {'1':0,'2':1,'3':2,'4':3,'J':4,'R':5,'Q':6,'K':7};
+
+        while (notatedCards.length >= 2) {
+            let suit = SUIT_NOTATION[notatedCards.substring(0,1)];
+            notatedCards = notatedCards.substring(1);
+            if (u(suit)) {
+                return false;
+            }
+            if (suit === SUIT[4]) {
+                let value = TRUMP_VALUE[+notatedCards.substring(0,2)-1];
+                notatedCards = notatedCards.substring(2);
+                if (u(value)) {
+                    return false;
+                }
+                cards.push({'value':value, 'suit': SUIT[4]});
+            } else {
+                let value = VALUE_NOTATION[notatedCards.substring(0,1)];
+                notatedCards = notatedCards.substring(1);
+                value = (suit === SUIT[0] || suit === SUIT[1]) ? BLACK_VALUE[value] : RED_VALUE[value];
+                if (u(value)) {
+                    return false;
+                }
+                cards.push({ 'value': value, 'suit': suit });
+            }
+        }
+        return cards;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+function imageCollectionToNotation(divWithImgs) {
+    let theElements = divWithImgs.children;
+    let cards = [];
+    for (let i=0; i<theElements.length; i++) {
+        cards.push({suit: theElements[i].suit, value: theElements[i].value});
+    }
+    return cardsToNotation(cards);
+}
+function cardsToNotation(cards) {
+    let theNotation = '';
+    const SUIT_TO_NOTATION = {'Spade': 'S', 'Club': 'C', 'Heart': 'H', 'Diamond': 'D', 'Trump': 'T'};
+    try {
+        for (let i in cards) {
+            theNotation += SUIT_TO_NOTATION[cards[i].suit];
+            if (cards[i].suit == SUIT[4]) {
+                //Trump
+                let temp = +VALUE_REVERSE[cards[i].value] + 1;
+                if (temp < 10) {
+                    temp = '0' + temp;
+                }
+                theNotation += temp;
+            } else {
+                switch (cards[i].value) {
+                    case 'Ace':
+                    case 'Seven':
+                        theNotation += '1';
+                        break;
+                    case 'Two':
+                    case 'Eight':
+                        theNotation += '2';
+                        break;
+                    case 'Three':
+                    case 'Nine':
+                        theNotation += '3';
+                        break;
+                    case 'Four':
+                    case 'Ten':
+                        theNotation += '4';
+                        break;
+                    default:
+                        theNotation += cards[i].value.substring(0,1);
+                }
+            }
+        }
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+    return theNotation;
+}
+
 function notationSubmitButtonClickEvent() {
     if (!connectingToRoom) {
-        let notation = document.getElementById('notationInputField').value;
+        let notation;
+        if (document.getElementById('notationSubmitButton').generated) {
+            //Retrieve room code from the cards in the hands and talon
+            notation = document.getElementById('notationInputField').value;
+            let splitNotation = notation.split('/');
+            for (let i=0; i<4; i++) {
+                splitNotation[i+4] = imageCollectionToNotation(document.getElementById('customHandInner' + i));
+            }
+            splitNotation[8] = imageCollectionToNotation(document.getElementById('talonInner'));
+            notation = '';
+            for (let i in splitNotation) {
+                notation += '/' + splitNotation[i];
+            }
+            notation = notation.substring(1);
+        } else {
+            notation = document.getElementById('notationInputField').value;
+        }
         console.log(notation);
         if (notation.length < 10) {
             return;
         }
+        moveDeckToDeck();
         clearScreen();
         connectingToRoom=true;
         socket.emit('customRoom',notation);
@@ -1928,6 +2166,24 @@ function clearScreen() {
         card.alt = 'The back of a card';
         document.getElementById('deck').appendChild(card);
     }
+}
+
+function sortCards(toSort) {
+    toSort = toSort.sort((a, b) => {
+         if (SUIT_SORT_ORDER[a.suit] > SUIT_SORT_ORDER[b.suit]) {
+            return 1;
+         } else if (SUIT_SORT_ORDER[a.suit] < SUIT_SORT_ORDER[b.suit]) {
+            return -1;
+         }
+
+         if (VALUE_REVERSE[a.value] > VALUE_REVERSE[b.value]) {
+            return 1;
+         } else if (VALUE_REVERSE[a.value] < VALUE_REVERSE[b.value]) {
+            return -1;
+         }
+         return 0;
+    });
+    return toSort;
 }
 
 function displaySignIn() {
