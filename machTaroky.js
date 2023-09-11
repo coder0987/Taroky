@@ -1670,7 +1670,7 @@ function notationToCards(notatedCards) {
     }
 }
 function sortImageDiv(divWithImgs) {
-    //TODO: shouldn't sort the talon
+    if (divWithImgs.id == 'talonInner') {return;}
     let theElements = divWithImgs.children;
     let cards = [];
     for (let i=0; i<theElements.length; i++) {
