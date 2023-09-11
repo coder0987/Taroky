@@ -1620,7 +1620,9 @@ function swapCardsClickListener() {
     } else {
         this.parentNode.appendChild(currentlySelectedCard.cardElement);
         currentlySelectedCard.cardElement.classList.remove('selected');
+        sortImageDiv(this.parentElement);
         currentlySelectedCard.hand.appendChild(this);
+        sortImageDiv(currentlySelectedCard.hand);
         currentlySelectedCard = {hand:-1,cardElement:null};
     }
 }
@@ -1666,6 +1668,16 @@ function notationToCards(notatedCards) {
         console.log(err);
         return false;
     }
+}
+function sortImageDiv(divWithImgs) {
+    //TODO: shouldn't sort the talon
+    let theElements = divWithImgs.children;
+    let cards = [];
+    for (let i=0; i<theElements.length; i++) {
+        cards.push({suit: theElements[i].suit, value: theElements[i].value});
+    }
+    cards = sortCards(cards);
+    moveCardsToDiv(cards,divWithImgs);
 }
 function imageCollectionToNotation(divWithImgs) {
     let theElements = divWithImgs.children;
