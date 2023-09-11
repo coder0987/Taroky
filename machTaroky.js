@@ -1460,15 +1460,53 @@ function customRoomClick() {
          - AI / AI Personalities / Robot on various difficulties
         Add custom room options such as face-up cards for all players & AI input on various choices
         */
+
     if (!connectingToRoom) {
-        let notation = prompt('Room Notation');
+        clearScreen();
+        let theCenter = document.getElementById('center');
+
+        //Notation input
+        let notationInputFieldP = document.createElement('span');
+        notationInputFieldP.innerHTML = 'Room Notation:';
+        notationInputFieldP.style='display:inline-block; width: 175px';
+        theCenter.appendChild(notationInputFieldP);
+        theCenter.appendChild(document.createElement('br'));
+
+        let notationInputField = document.createElement('input');
+        notationInputField.setAttribute('type', 'text');
+        notationInputField.defaultValue = '';
+        notationInputField.id = 'notationInputField';
+        notationInputField.style.width = '90%';
+        theCenter.appendChild(notationInputField);
+        theCenter.appendChild(document.createElement('br'));
+
+        let notationSubmitButton = document.createElement('button');
+        notationSubmitButton.setAttribute('type', 'button');
+        notationSubmitButton.id = 'notationSubmitButton';
+        notationSubmitButton.innerHTML = 'Create Room';
+        notationSubmitButton.addEventListener('click', notationSubmitButtonClickEvent);
+        theCenter.appendChild(notationSubmitButton);
+        theCenter.appendChild(document.createElement('br'));
+        notationSubmitButton.generated = false;
+
+        let exitRoom = document.getElementById('refresh');
+        exitRoom.innerHTML = 'Leave the Room';
+        exitRoom.setAttribute('onclick','exitCurrentRoom()');
+    }
+}
+
+function notationSubmitButtonClickEvent() {
+    if (!connectingToRoom) {
+        let notation = document.getElementById('notationInputField').value;
+        console.log(notation);
         if (notation.length < 10) {
             return;
         }
+        clearScreen();
         connectingToRoom=true;
         socket.emit('customRoom',notation);
         addMessage('Creating custom room...');
-    } else {addError('Already connecting to a room!');}
+    }
 }
 
 function newRoomClick() {
