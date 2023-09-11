@@ -101,6 +101,7 @@ function moveDeckToDeck() {
         child.removeEventListener('mouseleave',exit);
         child.removeEventListener('click',clickCard);
         child.removeEventListener('click',discardClickListener);
+        child.removeEventListener('click',swapCardsClickListener);
         child.title='';
         child.classList.remove('image-hover-highlight');
         child.classList.remove('selected');
@@ -303,6 +304,7 @@ function discardClickListener() {
             this.classList.add('selected');
         }
     }
+    updateDiscardGray();
 }
 
 function discardThis(cardSuit,cardValue) {
@@ -1509,7 +1511,7 @@ function returnToGameRoomClick() {
 
 function customRoomClick() {
     /*TODO: instead of prompt, create a "Custom Room" page
-        At the top, include a text input for room codes
+        At the top, include a text input for room codes - DONE
         Add individual player adjustments (+ make available for other players to join)
          - AI / AI Personalities / Robot on various difficulties
         Add custom room options such as face-up cards for all players & AI input on various choices
@@ -1521,7 +1523,7 @@ function customRoomClick() {
 
         //Notation input
         let notationInputFieldP = document.createElement('span');
-        notationInputFieldP.innerHTML = 'Room Notation:';
+        notationInputFieldP.innerHTML = 'Room Notation (Press the ⟳ symbol to edit the hand before beginning):';
         notationInputFieldP.style='display:inline-block; width: 175px';
         theCenter.appendChild(notationInputFieldP);
         theCenter.appendChild(document.createElement('br'));
@@ -1991,6 +1993,37 @@ function createChoiceButtons(buttonType) {
     document.getElementById('center').appendChild(secondButton);
 }
 
+function updateDiscardGray() {
+    let allowTrumps = true;
+    for (let i in hand) {
+        let card = document.getElementById(hand[i].value + hand[i].suit);
+        if (hand[i].suit == 'Trump' || hand[i].value == 'King') {
+            card.style.filter = 'grayscale(1)';
+            card.classList.add('grayed');
+        } else {
+            card.style.filter = '';
+            card.classList.remove('grayed');
+        }
+        if (!card.classList.contains('selected') && hand[i].grayed == false) {
+            //This card can be selected and is not grayed out
+            allowTrumps = false;
+            break;
+        }
+    }
+    if (allowTrumps) {
+        for (let i in hand) {
+            let card = document.getElementById(hand[i].value + hand[i].suit);
+            if (hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
+                card.style.filter = 'grayscale(1)';
+                card.classList.add('grayed');
+            } else {
+                card.style.filter = '';
+                card.classList.remove('grayed');
+            }
+        }
+    }
+}
+
 function createConfirmButton() {
     const confirmButton = document.createElement('button');
     const sortButton = document.createElement('button');
@@ -2007,6 +2040,7 @@ function createConfirmButton() {
     confirmButton.innerHTML = 'Confirm Discard';
     sortButton.innerHTML = 'Sort Hand';
     displayInfoSpan.innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
+    updateDiscardGray();
 
     confirmButton.addEventListener('click',confirmButtonCallback);
     sortButton.addEventListener('click',function() {
