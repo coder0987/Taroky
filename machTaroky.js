@@ -1618,10 +1618,11 @@ function swapCardsClickListener() {
         currentlySelectedCard.cardElement = this;
         this.classList.add('selected');
     } else {
-        this.parentNode.appendChild(currentlySelectedCard.cardElement);
+        let temp = currentlySelectedCard.cardElement.nextSibling;
+        this.parentNode.insertBefore(currentlySelectedCard.cardElement, this);
         currentlySelectedCard.cardElement.classList.remove('selected');
         sortImageDiv(this.parentElement);
-        currentlySelectedCard.hand.appendChild(this);
+        currentlySelectedCard.hand.insertBefore(this, temp);//If temp is null, it will be inserted at the end
         sortImageDiv(currentlySelectedCard.hand);
         currentlySelectedCard = {hand:-1,cardElement:null};
     }
