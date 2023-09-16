@@ -1524,7 +1524,7 @@ function customRoomClick() {
         //Notation input
         let notationInputFieldP = document.createElement('span');
         notationInputFieldP.innerHTML = 'Room Notation (Press the ⟳ symbol to edit the hand before beginning):';
-        notationInputFieldP.style='display:inline-block; width: 175px';
+        notationInputFieldP.style='display:inline-block';
         theCenter.appendChild(notationInputFieldP);
         theCenter.appendChild(document.createElement('br'));
 
@@ -1544,6 +1544,12 @@ function customRoomClick() {
         theCenter.appendChild(notationInputLoadIn);
 
         theCenter.appendChild(document.createElement('br'));
+
+        let playerNumberAlert = document.createElement('p');
+        playerNumberAlert.id = 'pna';
+        playerNumberAlert.style = 'font-size:large; font-weight: bold';
+        theCenter.appendChild(playerNumberAlert);
+        //TODO: add a player number switcher so players can choose what number they want to be easily
 
         for (let i=0; i<4; i++) {
             let currentCards = document.createElement('div');
@@ -1586,6 +1592,7 @@ function loadCardsFromRoomCode() {
         let theNotationSplit = notation.split('/');
         let theNotationSettings = theNotationSplit[theNotationSplit.length - 1].split(';');
         let thePN = theNotationSettings[theNotationSettings.length - 1].split('=')[1];
+        document.getElementById('pna').innerHTML = 'You are player ' + (+thePN + 1) + '. Player 1 is Povinnost.';
         let theHands = [];
         for (let i=0; i<4; i++) {
             let currentDiv = document.getElementById('customHand' + i)
