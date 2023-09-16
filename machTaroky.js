@@ -2013,14 +2013,15 @@ function updateDiscardGray() {
         if (hand[i].suit == 'Trump' || hand[i].value == 'King') {
             card.style.filter = 'grayscale(1)';
             card.classList.add('grayed');
+            hand[i].grayed = true;
         } else {
             card.style.filter = '';
             card.classList.remove('grayed');
+            hand[i].grayed = false;
         }
         if (!card.classList.contains('selected') && hand[i].grayed == false) {
             //This card can be selected and is not grayed out
             allowTrumps = false;
-            break;
         }
     }
     if (allowTrumps) {
@@ -2029,9 +2030,11 @@ function updateDiscardGray() {
             if (hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
                 card.style.filter = 'grayscale(1)';
                 card.classList.add('grayed');
+                hand[i].grayed = true;
             } else {
                 card.style.filter = '';
                 card.classList.remove('grayed');
+                hand[i].grayed = false;
             }
         }
     }
