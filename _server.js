@@ -2484,7 +2484,7 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'povinnostBidaUniChoice':
-            //player is assumed to be povinnost. This action is only taken if povinnost has bida or uni
+            //player is assumed to be povinnost. This action is only taken if povinnost has bida or uni and no one is prever
             if (shouldTrainAI) {
                 room.players[pn].trainPersonalizedAI(room, pn, 9, 11, null, action.info.choice ? 1 : 0);
             }
@@ -2502,13 +2502,13 @@ function actionCallback(action, room, pn) {
                 if (currentHand[i].value == "King" || currentHand[i].value == "I" || currentHand[i].value == "XXI" || currentHand[i].value == "Skyz") { fiverCount++; }
             }
             if (numTrumps == 0) {
-                if (!isPovinnost || room.board.buc) {
+                if (!isPovinnost || room.board.buc || (room.board.prever != -1)) {
                     //Uni
                     owedChips += 4;
                     room['board'].moneyCards[pn].push("Uni");
                 }
             } else if (numTrumps <= 2) {
-                if (!isPovinnost || room.board.buc) {
+                if (!isPovinnost || room.board.buc || (room.board.prever != -1)) {
                     //Bida
                     owedChips += 2;
                     room['board'].moneyCards[pn].push("Bida");
