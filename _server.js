@@ -223,6 +223,9 @@ function notate(room, notation) {
             //So, encode the settings if they exist. Then, if no more is present, return the room
             let theSettings = values[values.length - 1];
             notationToSettings(room, theSettings);
+            let valuesWithoutSettings = values;
+            delete valuesWithoutSettings[valuesWithoutSettings.length - 1];
+            room.board.notation = (valuesWithoutSettings).join('/');
 
             room.board.hasTheI = findTheI(room.players);
             if (values.length === 10) {
@@ -332,6 +335,7 @@ function setSettingNotation(room) {
     room.settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
 }
 function notationToSettings(room,notation) {
+    room.settingsNotation = notation;
     let theSettings = notation.split(';')
     for (let i in theSettings) {
         let [setting,rule] = theSettings[i].split('=');
