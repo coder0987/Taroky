@@ -1521,6 +1521,41 @@ function customRoomClick() {
         clearScreen();
         let theCenter = document.getElementById('center');
 
+        //Generate notation
+        let generateNotationP = document.createElement('span');
+        generateNotationP.innerHTML = 'Generate a custom room code:';
+        theCenter.appendChild(generateNotationP);
+        theCenter.appendChild(document.createElement('br'));
+
+        let sliderContainerDiv = document.createElement('div');
+        sliderContainerDiv.classList.add('sliderContainer');
+
+        let theSliderP = document.createElement('span');
+        theSliderP.innerHTML = 'Adjust how good your hand will be:';
+        theCenter.appendChild(theSliderP);
+
+        let theSlider = document.createElement('input');
+        theSlider.type = 'range';
+        theSlider.min = 0;
+        theSlider.max = 100;
+        theSlider.value = 50;
+        theSlider.classList.add('slider');
+        theSlider.id = 'notationWeightSlider';
+        sliderContainerDiv.appendChild(theSlider);
+
+        theCenter.appendChild(sliderContainerDiv);
+        theCenter.appendChild(document.createElement('br'));
+
+        let generateNotationButton = document.createElement('button');
+        generateNotationButton.setAttribute('type', 'button');
+        generateNotationButton.id = 'generateNotationButton';
+        generateNotationButton.innerHTML = 'Generate Notation';
+        generateNotationButton.addEventListener('click', () => {
+            document.getElementById('notationInputField').value = generateRandomNotationSequence(document.getElementById('notationWeightSlider').value / 100);
+        });
+        theCenter.appendChild(generateNotationButton);
+        theCenter.appendChild(document.createElement('br'));
+
         //Notation input
         let notationInputFieldP = document.createElement('span');
         notationInputFieldP.innerHTML = 'Room Notation (Press the ⟳ symbol to edit the hand before beginning):';
@@ -1640,6 +1675,58 @@ function u(v) {
         return true;
     }
     return false;
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function generateRandomNotationSequence(goodHandWeight) {
+    goodHandWeight = u(goodHandWeight) ? 0.5 : goodHandWeight;
+    let notation = '100/100/100/100/';
+    let workingDeck = [];
+    for (let i in baseDeck) {
+        workingDeck[i] = baseDeck[i];
+    }
+    shuffleArray(workingDeck);
+    for (let i in workingDeck) {
+        workingDeck[i].weight = ((VALUE_REVERSE[workingDeck[i].value] + (workingDeck[i].value == 'I' ? 15 : 0)) * (workingDeck[i].suit == 'Trump' ? 3 : 1));
+    }
+
+
+    workingDeck.sort((a,b) => {
+        if (Math.abs(0.5 - goodHandWeight) > Math.abs(0.5 - Math.random())) {
+            return goodHandWeight < 0.5 ? a.weight - b.weight: b.weight - a.weight;
+        }
+        return 0;
+    });
+
+    for (let i in workingDeck) {
+        delete workingDeck[i].weight;
+    }
+
+    let workingPN = Math.floor(Math.random() * 4);
+
+    let mainHandNotation = cardsToNotation(workingDeck.splice(0,12)) + '/';
+    let talonNotation = cardsToNotation(workingDeck.splice(0,6)) + '/';
+
+    for (let i=0; i<4; i++) {
+        if (i != workingPN) {
+            notation += cardsToNotation(workingDeck.splice(0,12)) + '/';
+        } else {
+            notation += mainHandNotation;
+        }
+    }
+    notation += talonNotation;
+
+    for (let i in defaultSettings) {
+        notation += i + '=' + defaultSettings[i] + ';';
+    }
+    notation += 'pn=' + workingPN;
+    return notation;
 }
 
 function notationToCards(notatedCards) {
