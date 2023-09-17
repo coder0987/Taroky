@@ -1713,6 +1713,8 @@ function generateRandomNotationSequence(goodHandWeight) {
     let mainHandNotation = cardsToNotation(workingDeck.splice(0,12)) + '/';
     let talonNotation = cardsToNotation(workingDeck.splice(0,6)) + '/';
 
+    shuffleArray(workingDeck);
+
     for (let i=0; i<4; i++) {
         if (i != workingPN) {
             notation += cardsToNotation(workingDeck.splice(0,12)) + '/';
