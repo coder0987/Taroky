@@ -223,6 +223,9 @@ function notate(room, notation) {
             //So, encode the settings if they exist. Then, if no more is present, return the room
             let theSettings = values[values.length - 1];
             notationToSettings(room, theSettings);
+            let valuesWithoutSettings = values;
+            delete valuesWithoutSettings[valuesWithoutSettings.length - 1];
+            room.board.notation = (valuesWithoutSettings).join('/');
 
             room.board.hasTheI = findTheI(room.players);
             if (values.length === 10) {
@@ -332,6 +335,7 @@ function setSettingNotation(room) {
     room.settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
 }
 function notationToSettings(room,notation) {
+    room.settingsNotation = notation;
     let theSettings = notation.split(';')
     for (let i in theSettings) {
         let [setting,rule] = theSettings[i].split('=');
@@ -2494,7 +2498,7 @@ function actionCallback(action, room, pn) {
             }
             break;
         case 'povinnostBidaUniChoice':
-            //player is assumed to be povinnost. This action is only taken if povinnost has bida or uni
+            //player is assumed to be povinnost. This action is only taken if povinnost has bida or uni and no one is prever
             if (shouldTrainAI) {
                 room.players[pn].trainPersonalizedAI(room, pn, 9, 11, null, action.info.choice ? 1 : 0);
             }
@@ -2512,13 +2516,13 @@ function actionCallback(action, room, pn) {
                 if (currentHand[i].value == "King" || currentHand[i].value == "I" || currentHand[i].value == "XXI" || currentHand[i].value == "Skyz") { fiverCount++; }
             }
             if (numTrumps == 0) {
-                if (!isPovinnost || room.board.buc) {
+                if (!isPovinnost || room.board.buc || (room.board.prever != -1)) {
                     //Uni
                     owedChips += 4;
                     room['board'].moneyCards[pn].push("Uni");
                 }
             } else if (numTrumps <= 2) {
-                if (!isPovinnost || room.board.buc) {
+                if (!isPovinnost || room.board.buc || (room.board.prever != -1)) {
                     //Bida
                     owedChips += 2;
                     room['board'].moneyCards[pn].push("Bida");
