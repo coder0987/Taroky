@@ -2017,6 +2017,19 @@ function actionCallback(action, room, pn) {
     //This callback will transfer from one action to the next and inform the humans of the action to be taken
     //In the case that a robot or AI is the required player, this will directly call on the above action handlers
     //The action is presumed to be verified by its player takeAction function, not here
+
+    /*TODO:
+        This monster function needs to be split into several functions and placed in the room.js file.
+        Essentially, it'll look like room.actionCallback(action, pn)
+        this function will retain the switch statement, the starting bit, and the ending bit
+        The switch will call different functions like room.shuffle(relevantInfo)
+        This also allows the benefit of modularity, ex: from the admin panel using room.next() to force a game to the next step for debugging or testing
+        just one action in different scenarios like room.shuffle({type: 'riffle', pn: 0}) to identify bugs easier.
+        The final benefit is the ease of implementing additional actions and AI training more systematically, just by adding functions and a case to the switch
+        (Also it'll be easier to Ctrl+F function declarations)
+        */
+
+
     if (!room || !action) {
         SERVER.error('Illegal actionCallback: ' + JSON.stringify(room) + ' \n\n ' + JSON.stringify(action) + ' \n\n ' + pn);
         SERVER.errorTrace();
@@ -2307,6 +2320,7 @@ function actionCallback(action, room, pn) {
             //Fallthrough to inform the player
         case 'drawPreverTalon':
             if (room['board'].preverTalonStep == 0) {
+                room.board.preverMultiplier = 1;
                 //Show the initial 3 cards to prever
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
@@ -2419,7 +2433,7 @@ function actionCallback(action, room, pn) {
                     action.action = 'discard';
                 }
             }
-            room.board.importantInfo.preverMultiplier = Math.pow(2,room['board'].preverTalonStep - 1);
+            room.board.importantInfo.preverMultiplier = room.board.preverMultiplier;
             break;
         case 'discard':
             let card = action.info.card;
@@ -3251,7 +3265,7 @@ function actionCallback(action, room, pn) {
 
                     if (room.board.playingPrever && room.players[room.board.prever].isTeamPovinnost == (chipsOwed < 0)) {
                         //Prever lost
-                        chipsOwed *= Math.pow(2,room.board.preverTalonStep-1);//*2 for swapping down, *4 for going back up
+                        chipsOwed *= room.board.preverMultiplier;//*2 for swapping down, *4 for going back up
                         pointCountMessageTable.push({'name':'Double It For Each Prever-Talon Swap', 'value':Math.abs(chipsOwed)});
                     }
 
