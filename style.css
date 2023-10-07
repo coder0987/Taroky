@@ -382,6 +382,10 @@ h4 {
 }
 /*End w3 schools*/
 
+.container {
+    margin-bottom: 100px;
+}
+
 .box {
     border: .1rem solid var(--black);
     border-radius: .5rem;
