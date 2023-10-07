@@ -71,6 +71,7 @@
             }
         }
     </script>
+    <script src="/learn.js"></script>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body style="padding: 0px;">
@@ -79,42 +80,454 @@
     <div class="container navy-txt">
         <h1>How to Play Taroky</h1>
 
-        <p>Click or tap the sections below to open them.</p>
-        <div id="sections-accordion">
-            <div class="card-header dark-background">
-                <a class="btn" data-bs-toggle="collapse" href="#collapse-section1">
-                    <h2 class="dark-background">Origin</h2>
-                </a>
-            </div>
-            <div id="collapse-section1" class="collapse" data-bs-parent="#sections-accordion">
-                <div class="card-body white">
-                    <p>
-                        Taroky originated in the Czech Republic as a Type III <a href="https://www.pagat.com/tarot/" target="_blank" rel="noopener noreferrer" class="small-link">Tarot card game</a>.
-                        It is important to note the distinction between Tarot card games and the occult Tarot cards. The original card games have historical roots as far back as 1456, whereas occult Tarot cards did not exist until the late eighteenth century.
-                        Taroky predates Tarot cards and is associated with it only in name and has nothing to do with the occult.
-                    </p>
-                    <p>
-                        As a Type III Tarot Card game, Taroky consists of a 54 card deck which contains the 4 French suits (Spades, Clubs, Hearts, and Diamonds) along with 21 Trump cards (known as Taroks) and the Fool card, known as the Skyz, which is the highest trump/Tarok.
-                        Each of the four French suits consists of the Court (A King, Queen, Rider, and Jack) along with 4 standard cards (for the black suits, these are 7, 8, 9, and 10, whereas the red suits are ace, 2, 3, and 4).
-                        Each card has an associated point value which is standard across all Type II and Type III Tarot Card games.
-                    </p>
-                    <p>
-                        The specific variant of Taroky this website uses is <a href="https://en.wikipedia.org/wiki/Neunzehnerrufen">Neunzehnerrufen</a>, also known as "Czech Taroky"
-                        While we do not yet support other variations of Taroky, we plan to in the future
-                    </p>
-                    <p>5 Points: Kings, Skyz, XXI (Mond), and I (Pagat)</p>
-                    <p>4 Points: Queens</p>
-                    <p>3 Points: Riders</p>
-                    <p>2 Points: Jacks / Kluks</p>
-                    <p>1 Point: Everything else (other Trumps and colors)</p>
+        <div class="row" id="selection">
+            <div class="col-md-4 col-12 d-flex justify-content-center">
+                <div class="box" onclick="learnStarter()">
+                    <h2>New to Taroky?</h2>
+                    <p>Start here</p>
                 </div>
             </div>
+            <div class="col-md-4 col-12 d-flex justify-content-center">
+                <div class="box" onclick="learnSite()">
+                    <h2>New to MachTarok?</h2>
+                    <p>Learn the website</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-12 d-flex justify-content-center">
+                <div class="box" onclick="learnAdvanced()">
+                    <h2>Want to Advance?</h2>
+                    <p>See the full rules</p>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="starter" hidden="hidden">
+            <div class="box back" onclick="back()">
+                <h2>Go Back</h2>
+            </div>
+
+            <div id="starter1">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Welcome to Taroky! (1)</h2>
+                        <img src="/assets/mach-deck-thumb/trump-skyz-t.png" alt="Skyz, the largest trump">
+                        <img src="/assets/mach-deck-thumb/trump-xxi-t.png" alt="Mond, the second largest trump">
+                        <img src="/assets/mach-deck-thumb/trump-i-t.png" alt="Pagat, the smallest trump">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">Trul, the most valuable Trump cards</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>Taroky is a turn-based point-trick game like Spades.</p>
+                        <p>Ready to learn how to play? Click "Next" to get started!</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageOver(1)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter2" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>The Suits (2)</h2>
+                        <img src="/assets/mach-deck-thumb/trump-skyz-t.png" alt="Skyz, the largest trump">
+                        <img src="/assets/mach-deck-thumb/heart-king-t.png" alt="King of hearts">
+                        <img src="/assets/mach-deck-thumb/diamond-king-t.png" alt="King of diamonds">
+                        <img src="/assets/mach-deck-thumb/spade-king-t.png" alt="King of spades">
+                        <img src="/assets/mach-deck-thumb/club-king-t.png" alt="King of clubs">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">The highest card from each suit</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>Unlike in a standard 52 card deck, Taroky has 5 suits: Trumps, Hearts, Diamonds, Spades, and Clubs.</p>
+                        <p>In total, there are 22 Trumps and 8 cards of each color, making the 54 card Taroky pack slightly larger than a standard deck.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(2)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(2)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter3" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>The Trumps (3)</h2>
+                        <img src="/assets/mach-deck-thumb/trump-skyz-t.png" alt="Skyz, the largest trump">
+                        <img src="/assets/mach-deck-thumb/trump-xxi-t.png" alt="XXI, the second largest trump">
+                        <img src="/assets/mach-deck-thumb/trump-xx-t.png" alt="XX, a large trump">
+                        <img src="/assets/mach-deck-thumb/trump-xix-t.png" alt="XIX, an important and large trump">
+                        <img src="/assets/mach-deck-thumb/trump-ii-t.png" alt="II, the second smallest trump">
+                        <img src="/assets/mach-deck-thumb/trump-i-t.png" alt="I, the smallest trump">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">The 22 Trump cards range from Skyz down to the I</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>All Trump cards - besides the Skyz - have roman numerals to indicate their size.</p>
+                        <p>The Trumps are important because, when played, the largest trump always captures the trick.</p>
+                        <p>Most trumps are worth only 1 point, but the Skyz, XXI, and I are worth 5 points each.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(3)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(3)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter4" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>The Red Suits (4)</h2>
+                        <img src="/assets/mach-deck-thumb/heart-king-t.png" alt="King of hearts">
+                        <img src="/assets/mach-deck-thumb/heart-queen-t.png" alt="Queen of hearts">
+                        <img src="/assets/mach-deck-thumb/heart-rider-t.png" alt="Rider of hearts">
+                        <img src="/assets/mach-deck-thumb/heart-jack-t.png" alt="Jack of hearts">
+                        <img src="/assets/mach-deck-thumb/heart-four-t.png" alt="Four of hearts">
+                        <img src="/assets/mach-deck-thumb/heart-three-t.png" alt="Three of hearts">
+                        <img src="/assets/mach-deck-thumb/heart-two-t.png" alt="Two of hearts">
+                        <img src="/assets/mach-deck-thumb/heart-ace-t.png" alt="Ace of hearts">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">The 8 Hearts cards, arranged in order of precedence</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>Each color suit contains 8 cards: 4 court cards and 4 pip cards.</p>
+                        <p>The 4 court cards are the 5-point King, 4-point Queen, 3-point Rider, and 2-point Jack.</p>
+                        <p>Each of the pip cards are worth only 1 point.</p>
+                        <p>Unlike the trumps, the color cards are not guaranteed a win even if the highest one is played. A trump will always beat any color.</p>
+                        <p>The red suits - hearts and diamonds - have the pip cards 4, 3, 2, and Ace.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(4)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(4)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter5" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>The Black Suits (5)</h2>
+                        <img src="/assets/mach-deck-thumb/spade-king-t.png" alt="King of spades">
+                        <img src="/assets/mach-deck-thumb/spade-queen-t.png" alt="Queen of spades">
+                        <img src="/assets/mach-deck-thumb/spade-rider-t.png" alt="Rider of spades">
+                        <img src="/assets/mach-deck-thumb/spade-jack-t.png" alt="Jack of spades">
+                        <img src="/assets/mach-deck-thumb/spade-ten-t.png" alt="Ten of spades">
+                        <img src="/assets/mach-deck-thumb/spade-nine-t.png" alt="Nine of spades">
+                        <img src="/assets/mach-deck-thumb/spade-eight-t.png" alt="Eight of spades">
+                        <img src="/assets/mach-deck-thumb/spade-seven-t.png" alt="Seven of spades">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">The 8 Spades cards, arranged in order of precedence</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>The black suits also have 8 cards, but the pip cards are the 10, 9, 8, and 7 instead of 4, 3, 2, and Ace.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(5)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(5)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter6" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Your First Turn (6)</h2>
+                        <img src="/assets/mach-deck-thumb/heart-king-t.png" alt="King of hearts">
+                        <img src="/assets/mach-deck-thumb/diamond-king-t.png" alt="King of diamonds">
+                        <img src="/assets/mach-deck-thumb/spade-king-t.png" alt="King of spades">
+                        <img src="/assets/mach-deck-thumb/club-king-t.png" alt="King of clubs">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">It's a common choice to lead a king for the first trick</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>The first player, known as Povinnost, will lead the first trick.</p>
+                        <p>Each player starts the game with 12 cards, and Povinnost may choose to lead any of the 12.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(6)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(6)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter7" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Following Suit (7)</h2>
+                        <img src="/assets/mach-deck-thumb/club-king-t.png" alt="King of clubs">
+                        <img src="/assets/mach-deck-thumb/club-seven-t.png" alt="Seven of clubs">
+                        <img src="/assets/mach-deck-thumb/club-jack-t.png" alt="Jack of clubs">
+                        <img src="/assets/mach-deck-thumb/club-nine-t.png" alt="Nine of clubs">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">When a player leads a king and no other player trumps it, the king "walks"</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>After a player leads the trick, each other player must follow suit if possible.</p>
+                        <p>If Povinnost leads the King of clubs, for example, and the next player has a club, then that player must play a club.</p>
+                        <p>This is true for every suit, including Trumps.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(7)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(7)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter8" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Trumping (8)</h2>
+                        <img src="/assets/mach-deck-thumb/club-king-t.png" alt="King of clubs">
+                        <img src="/assets/mach-deck-thumb/club-seven-t.png" alt="Seven of clubs">
+                        <img src="/assets/mach-deck-thumb/club-jack-t.png" alt="Jack of clubs">
+                        <img src="/assets/mach-deck-thumb/trump-ii-t.png" alt="II, the deuce, a small trump card">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">If a player doesn't have a suit, then they are "void" in that suit and must instead play a trump</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>If it is not possible to follow suit, then a trump must instead be played.</p>
+                        <p>Sometimes, after a suit is lead, a player will have neither that suit nor a trump, and must sluff another card.</p>
+                        <p>If Povinnost leads the King of clubs, for example, and the next player has no clubs, then that player must play a trump instead.</p>
+                        <p>This is true for every suit, including Trumps. If a player leads a trump and another player is out of trumps, then that player must sluff.</p>
+                        <p>A card which is sluffed can never win the trick.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(8)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(8)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter9" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Winning the Trick (9)</h2>
+                        <img src="/assets/mach-deck-thumb/club-king-t.png" alt="King of clubs">
+                        <img src="/assets/mach-deck-thumb/club-seven-t.png" alt="Seven of clubs">
+                        <img src="/assets/mach-deck-thumb/club-jack-t.png" alt="Jack of clubs">
+                        <img src="/assets/mach-deck-thumb/trump-ii-t.png" alt="II, the deuce, a small trump card">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">The highest trump played always wins</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>Whichever player played the highest trump wins the trick.</p>
+                        <p>The winner takes all four cards and places them into the discard pile.</p>
+                        <p>Each card is worth points, which will count towards that player's team's total score.</p>
+                        <p>Whoever won the trick now leads the next trick.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(9)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(9)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter10" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Winning the Trick Without Trump (10)</h2>
+                        <img src="/assets/mach-deck-thumb/club-king-t.png" alt="King of clubs">
+                        <img src="/assets/mach-deck-thumb/club-seven-t.png" alt="Seven of clubs">
+                        <img src="/assets/mach-deck-thumb/club-jack-t.png" alt="Jack of clubs">
+                        <img src="/assets/mach-deck-thumb/club-nine-t.png" alt="Nine of clubs">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">The highest card of the lead suit wins</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>If no trumps are played, the highest card of the lead suit wins.</p>
+                        <p>A player who sluffs (plays an off-suit card that isn't a trump) can never win the trick.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(10)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(10)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter11" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Playing on a Team (11)</h2>
+                        <img src="/assets/mach-deck-thumb/trump-xix-t.png" alt="Trump XIX">
+                        <img src="/assets/mach-deck-thumb/trump-xviii-t.png" alt="Trump XVIII">
+                        <img src="/assets/mach-deck-thumb/trump-xvii-t.png" alt="Trump XVII">
+                        <img src="/assets/mach-deck-thumb/trump-xvi-t.png" alt="Trump XVI">
+                        <img src="/assets/mach-deck-thumb/trump-xv-t.png" alt="Trump XV">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">Povinnost may call any of these trump cards as a partner</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>Before the first trick, Povinnost calls a Partner Card.</p>
+                        <p>Whichever player holds the partner card plays as Povinnost's partner against the other two players.</p>
+                        <p>Games of Taroky always have 4 players.</p>
+                        <p>Normally, Povinnost calls the XIX. If, however, Povinnost has the XIX in hand, Povinnost may instead call the XVIII.</p>
+                        <p>If Povinnost has both the XIX and the XVIII, Povinnost may instead call the XVII.</p>
+                        <p>This goes on until the XV. If Povinnost has every trump from XIX through XV, then Povinnost must call the XIX and play alone.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(11)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(11)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter12" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Playing Alone (12)</h2>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>Any player who wishes to play alone may call Prever.</p>
+                        <p>This typically only happens when a player has a very strong hand with lots of trump.</p>
+                        <p>Prever must beat all other three players combined in order to win.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(12)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(12)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter13" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Deal and Draw (13)</h2>
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">6 cards are dealt face down to form the Talon</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>To begin each round, one player deals 6 cards face down in the center of the table.</p>
+                        <p>Then, each player is dealt a hand of twelve cards, usually in sets of six.</p>
+                        <p>After the players receive their hands, Povinnost declares "Povinnost" to start the bid.</p>
+                        <p>Each other player may bid "Pass" or "Prever" in turn.</p>
+                        <p>If all players pass, then the game is played normally and Povinnost draws 4 cards from the Talon.</p>
+                        <p>The player to Povinnost's right and the player across from Povinnost both draw 1 card from the Talon.</p>
+                        <p>However, if any player bids Prever, then that player draws 3 cards from the Talon.</p>
+                        <p>Prever may reject those cards and instead take the bottom 3 cards from the Talon.</p>
+                        <p>Yet again, Prever may reject those cards and return to the first set of 3.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(13)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(13)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter14" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Discard (14)</h2>
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                        <img src="/assets/mach-deck-thumb/card-back-t.png" alt="The back of a card">
+                    </div>
+                    <div class="col-12 centered">
+                        <p class="subtitle">Prever will discard 3 cards after drawing</p>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>After drawing, each player must discard down to 12 cards.</p>
+                        <p>Players may not discard any trump cards or 5 point cards like Kings.</p>
+                        <p>If a player has only trump cards and 5 point cards, that player may discard trump cards but never 5 point cards.</p>
+                        <p>Whenever a player discards a trump card, that card must be shown to all other players as it is discarded.</p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(14)">
+                            <h2>Back</h2>
+                        </div>
+                        <div class="box back" onclick="pageOver(14)">
+                            <h2>Next</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="starter15" hidden="hidden">
+                <div class="row">
+                    <div class="col-12 centered">
+                        <h2>Under Construction! (15)</h2>
+                    </div>
+                    <div class="col-12 black-txt">
+                        <p>It seems we haven't quite finished the tutorial!</p>
+                        <p>Have any suggestions? Email them to <a href="mailto:webmaster@smach.us" class="small-link">webmaster@smach.us</a></p>
+                    </div>
+                    <div class="col-12">
+                        <div class="box back" onclick="pageBack(15)">
+                            <h2>Back</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div id="site" hidden="hidden">
+            <div class="box back" onclick="back()">
+                <h2>Go Back</h2>
+            </div>
+            <br>
+            <br>
             <div class="card-header dark-background">
-                <a class="btn" data-bs-toggle="collapse" href="#collapse-section2">
+                <a data-bs-toggle="collapse">
                     <h2 class="dark-background">Using the Interface</h2>
                 </a>
             </div>
-            <div id="collapse-section2" class="collapse" data-bs-parent="#sections-accordion">
+            <div>
                 <div id="accordion-section2">
                     <div class="card-header">
                         <a class="btn" data-bs-toggle="collapse" href="#collapse1-section2">
@@ -268,6 +681,46 @@
                 </div>
 
             </div>
+        </div>
+
+
+
+        <div id="advanced" hidden="hidden">
+
+        <div class="box back" onclick="back()">
+            <h2>Go Back</h2>
+        </div>
+        <p>Click or tap the sections below to open them.</p>
+        <div id="sections-accordion">
+            <div class="card-header dark-background">
+                <a class="btn" data-bs-toggle="collapse" href="#collapse-section1">
+                    <h2 class="dark-background">Origin</h2>
+                </a>
+            </div>
+            <div id="collapse-section1" class="collapse" data-bs-parent="#sections-accordion">
+                <div class="card-body white">
+                    <p>
+                        Taroky originated in the Czech Republic as a Type III <a href="https://www.pagat.com/tarot/" target="_blank" rel="noopener noreferrer" class="small-link">Tarot card game</a>.
+                        It is important to note the distinction between Tarot card games and the occult Tarot cards. The original card games have historical roots as far back as 1456, whereas occult Tarot cards did not exist until the late eighteenth century.
+                        Taroky predates Tarot cards and is associated with it only in name and has nothing to do with the occult.
+                    </p>
+                    <p>
+                        As a Type III Tarot Card game, Taroky consists of a 54 card deck which contains the 4 French suits (Spades, Clubs, Hearts, and Diamonds) along with 21 Trump cards (known as Taroks) and the Fool card, known as the Skyz, which is the highest trump/Tarok.
+                        Each of the four French suits consists of the Court (A King, Queen, Rider, and Jack) along with 4 standard cards (for the black suits, these are 7, 8, 9, and 10, whereas the red suits are ace, 2, 3, and 4).
+                        Each card has an associated point value which is standard across all Type II and Type III Tarot Card games.
+                    </p>
+                    <p>
+                        The specific variant of Taroky this website uses is <a href="https://en.wikipedia.org/wiki/Neunzehnerrufen">Neunzehnerrufen</a>, also known as "Czech Taroky"
+                        While we do not yet support other variations of Taroky, we plan to in the future
+                    </p>
+                    <p>5 Points: Kings, Skyz, XXI (Mond), and I (Pagat)</p>
+                    <p>4 Points: Queens</p>
+                    <p>3 Points: Riders</p>
+                    <p>2 Points: Jacks / Kluks</p>
+                    <p>1 Point: Everything else (other Trumps and colors)</p>
+                </div>
+            </div>
+
             <div class="card-header dark-background">
                 <a class="btn" data-bs-toggle="collapse" href="#collapse-section3">
                     <h2 class="dark-background">Playing the Game</h2>
@@ -567,6 +1020,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <div class="row centered footer" id="footer">
         <div class="col-xs-12 col-md-2">

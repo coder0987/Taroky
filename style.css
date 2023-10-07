@@ -381,3 +381,82 @@ h4 {
   cursor: pointer; /* Cursor on hover */
 }
 /*End w3 schools*/
+
+.box {
+    border: .1rem solid var(--black);
+    border-radius: .5rem;
+    padding:1rem;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    display:inline-block;
+    width: 80%;
+
+    margin: 0 auto;
+
+    color: var(--white);
+    background-color: var(--navy);
+    cursor: pointer;
+
+    /*Disable text selection*/
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.subtitle {
+    font-style: italic;
+    color: var(--black);
+}
+
+.fadeIn {
+    opacity: 0;
+    animation: fadeIn 0.5s linear forwards;
+}
+
+.fadeOut {
+    opacity 1;
+    animation: fadeOut 0.5s linear forwards;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; display: none; }
+  100% { opacity: 1; }
+}
+@keyframes fadeOut {
+  100% { opacity: 0; display: none; visibility: collapse; }
+  0% { opacity: 1; visibility: visible; display: block; }
+}
+
+.back {
+    width: 35%;
+}
+
+@media (min-width: 576px) {
+    .back {
+        width: 30%;
+    }
+}
+
+@media (min-width: 768px) {
+    .back {
+        width: 20%;
+    }
+}
+
+@media (min-width: 992px) {
+    .back {
+        width: 15%;
+    }
+}
+
+@media (min-width: 1200px) {
+    .back {
+        width: 15%;
+    }
+}
+
+@media (min-width: 1400px) {
+    .back {
+        width: 10%;
+    }
+}
