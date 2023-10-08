@@ -1,5 +1,6 @@
 const Deck = require('./deck.js');
 const AI = require('./AI.js');
+const SERVER = require('./logger.js');
 const http = require('http');
 
 class Player {

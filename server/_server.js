@@ -39,6 +39,8 @@ const START_TIME = Date.now();
 const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
 const LOG_LEVEL = process.argv[3] || (DEBUG_MODE ? 5 : 3);//Defaults to INFO level. No traces or debugs.
 const TRAINING_MODE = process.argv[2] == 'train';
+const SERVER = require('./logger.js');
+SERVER.logLevel = LOG_LEVEL;
 
 const BASE_FOLDER = __dirname.substring(0,__dirname.length - 6);
 
@@ -56,65 +58,7 @@ rooms = {};
 const returnToGame = {};
 
 //Global variable
-SERVER = {
-    /*
-    Why use this instead of console.log()? For future additions. Eventually I want to write console logs to a file for debugging
-    This system should make that easier
-    Separating by room should also help because it will make individual "room history" logs
-    */
-    //TODO: create debug log files ^
-    error: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 1) {
-            console.warn('ERROR IN ROOM ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 1) {
-            console.warn('SERVER ERROR: ' + info);
-        }
-    },
-    errorTrace: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 1) {
-            console.trace('ERROR - STACK TRACE FOR ROOM ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 1) {
-            console.trace('ERROR - SERVER STACK TRACE: ' + info);
-        }
-    },
-    warn: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 2) {
-            console.trace('Warning - Room ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 2) {
-            console.trace('Warning - Server: ' + info);
-        }
-    },
-    log: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 3) {
-            console.log('Room ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 3) {
-            console.log('Server: ' + info);
-        }
-    },
-    debug: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 4) {
-            console.log('(Debug) Room ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 4) {
-            console.warn('(Debug) Server: ' + info);
-        }
-    },
-    trace: (info, rn) => {
-        if (typeof rn !== 'undefined' && rooms[rn] && rooms[rn].logLevel >= 5) {
-            console.trace('Trace - Room ' + rn + ': ' + info);
-        } else if (LOG_LEVEL >= 5) {
-            console.trace('Trace - Server: ' + info);
-        }
-    },
-    functionCall: (name, ...parameters) => {
-        if (LOG_LEVEL >= 4) {
-            let paramString = '';
-            parameters.map(p => {
-                if (p) {paramString += ' ' + p.name + ': ' + p.value;}
-            });
-            console.log(name + '() called | ' + paramString);
-        }
-    }
-};
+
 
 let simplifiedRooms = {};
 let ticking = false;

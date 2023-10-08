@@ -4,6 +4,7 @@ const { SUIT,
     BLACK_VALUE,
     TRUMP_VALUE,
     VALUE_REVERSE } = require('./enums.js')
+const SERVER = require('./logger.js');
 
 //To sort Spades, Hearts, Clubs, Diamonds, Trump and prevent similar colors from touching
 const SUIT_SORT_ORDER = {
