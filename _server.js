@@ -3314,8 +3314,10 @@ function actionCallback(action, room, pn) {
             for (let i in room.players) {
                 if (room.players[i].isTeamPovinnost) {
                     team1Players.push(room.players[i]);
+                    team1Players[team1Players.length - 1].pn = i;
                 } else {
                     team2Players.push(room.players[i]);
+                    team2Players[team2Players.length - 1].pn = i;
                 }
             }
             for (let i in team1Players) {
@@ -3335,14 +3337,28 @@ function actionCallback(action, room, pn) {
                 SERVER.debug( 'Player 3: ' + room.players[2].chips,room.name)
                 SERVER.debug( 'Player 4: ' + room.players[3].chips,room.name)
             }
-            if (chipsOwed < 0) {
-                /* TODO: make informing the players a bit better
-                    For example, in a prever game say "Prever paid" or "Prever lost"
-                    Also, add personalize (Your team lost / your team won) messages */
-                room.informPlayers('Povinnost\'s team paid ' + (-chipsOwed) + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
-            } else {
-                room.informPlayers('Povinnost\'s team received ' + chipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+
+            for (let i in team1Players) {
+                let tempChipsOwed = chipsOwed;
+                if (team1Players.length == 1) { tempChipsOwed *= 3; }
+                if (tempChipsOwed < 0) {
+                    room.informPlayer(team1Players[i].pn, 'Your team lost ' + (-tempChipsOwed) + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+                } else {
+                    room.informPlayer(team1Players[i].pn, 'Your team won ' + tempChipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+                }
             }
+
+            for (let i in team2Players) {
+                let tempChipsOwed = chipsOwed;
+                if (team2Players.length == 1) { tempChipsOwed *= 3; }
+                if (tempChipsOwed < 0) {
+                    room.informPlayer(team2Players[i].pn, 'Your team won ' + (-tempChipsOwed) + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+                } else {
+                    room.informPlayer(team2Players[i].pn, 'Your team lost ' + tempChipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+                }
+            }
+
+
             for (let i in room['players']) {
                 room.board.importantInfo.chips = {
                     '0': room.players[0].chips,
