@@ -1,6 +1,16 @@
 #!/usr/bin/env node
 
+
+//COMMAND-LINE ARGUMENTS
+
+//Used for non-"production" instances of the server
+const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
+const LOG_LEVEL = process.argv[3] || (DEBUG_MODE ? 5 : 3);//Defaults to INFO level. No traces or debugs.
+const TRAINING_MODE = process.argv[2] == 'train';
+
 //imports
+const SERVER = require('./logger.js');
+SERVER.logLevel = LOG_LEVEL;
 const Player = require('./player.js');
 const Room = require('./room.js');
 const Deck = require('./deck.js');
@@ -32,15 +42,6 @@ const math = require('mathjs');
 
 const app = express();
 const START_TIME = Date.now();
-
-//COMMAND-LINE ARGUMENTS
-
-//Used for non-"production" instances of the server
-const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
-const LOG_LEVEL = process.argv[3] || (DEBUG_MODE ? 5 : 3);//Defaults to INFO level. No traces or debugs.
-const TRAINING_MODE = process.argv[2] == 'train';
-const SERVER = require('./logger.js');
-SERVER.logLevel = LOG_LEVEL;
 
 const BASE_FOLDER = __dirname.substring(0,__dirname.length - 6);
 
