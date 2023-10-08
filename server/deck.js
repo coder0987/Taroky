@@ -154,9 +154,9 @@ class Deck {
         return false;
     }
     static isCardPlayable(hand, card, leadCard) {
-        if (handHasSuit(hand, leadCard.suit)) {
+        if (Deck.handHasSuit(hand, leadCard.suit)) {
             return card.suit == leadCard.suit;
-        } else if (leadCard.suit != 'Trump' && handHasSuit(hand, 'Trump')) {
+        } else if (leadCard.suit != 'Trump' && Deck.handHasSuit(hand, 'Trump')) {
             return card.suit == 'Trump';
         } else {
             return true;
@@ -165,6 +165,255 @@ class Deck {
 
     static cardId(card) {
         return VALUE_REVERSE[card.value] + SUIT_REVERSE[card.suit] * 8;
+    }
+
+
+    static possiblePartners(hand) {
+        let partners = [];
+        //can always partner with XIX
+        partners.push({ 'value': 'XIX', 'suit': SUIT[4] });
+        //if we hold XIX we can partner with the next lowest trump we don't hold, down to the XV
+        if (Deck.handContainsCard(hand, 'XIX')) {
+            for (let v = 17; v >= 14; v--) {
+                //18 is XIX and 14 is XV
+                if (!Deck.handContainsCard(hand, TRUMP_VALUE[v])) {
+                    partners.push({ 'value': TRUMP_VALUE[v], 'suit': SUIT[4] });
+                    break;
+                }
+            }
+        }
+        return partners;
+    }
+    static grayUndiscardables(hand) {
+        let hasNonTrump = false;
+        for (let i in hand) {
+            if (hand[i].suit != 'Trump') {
+                hasNonTrump = true;
+                break;
+            }
+        }
+        for (let i in hand) {
+            if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
+                hand[i].grayed = true;
+            } else {
+                hand[i].grayed = false;
+            }
+        }
+        //If everything is King and Trump, only gray 5-pointers
+        for (let i in hand) {
+            if (!hand[i].grayed) {
+                return false;
+            }
+        }
+        Deck.unGrayCards(hand);
+        for (let i in hand) {
+            if (hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
+                hand[i].grayed = true;
+            } else {
+                hand[i].grayed = false;
+            }
+        }
+        return true;
+    }
+    static grayUnplayables(hand, leadCard) {
+        if (Deck.handHasSuit(hand, leadCard.suit)) {
+            for (let i in hand) {
+                if (hand[i].suit != leadCard.suit) {
+                    hand[i].grayed = true;
+                } else {
+                    hand[i].grayed = false;
+                }
+            }
+        } else if (leadCard.suit != 'Trump' && Deck.handHasSuit(hand, 'Trump')) {
+            for (let i in hand) {
+                if (hand[i].suit != 'Trump') {
+                    hand[i].grayed = true;
+                } else {
+                    hand[i].grayed = false;
+                }
+            }
+        } else {
+            //Has neither lead suit nor trump. Can play anything
+            for (let i in hand) {
+                hand[i].grayed = false;
+            }
+        }
+    }
+    static grayTheI(hand) {
+        for (let i in hand) {
+            if (hand[i].suit == 'Trump' && hand[i].value == 'I') {
+                hand[i].grayed = true;
+            }
+        }
+        return hand;//should be linked as well
+    }
+    static grayTheXXI(hand) {
+        for (let i in hand) {
+            if (hand[i].suit == 'Trump' && hand[i].value == 'XXI') {
+                hand[i].grayed = true;
+            }
+        }
+        return hand;//should be linked as well
+    }
+    static unGrayCards(hand) {
+        //Used to un-gray cards before a player leads
+        for (let i in hand) {
+            hand[i].grayed = false;
+        }
+    }
+    static numOfSuit(hand, suit) {
+        let suitCount = 0;
+        for (let i in hand) {
+            if (hand[i].suit == suit) {
+                suitCount++;
+            }
+        }
+        return suitCount;
+    }
+    static selectCardOfSuit(hand, suit) {
+        for (let i in hand) {
+            if (hand[i].suit == suit) {
+                return hand[i];
+            }
+        }
+        SERVER.warn('Illegal card selection. No cards of suit ' + suit + ' in hand ' + hand);
+        return;
+    }
+    static handWithoutGray(hand) {
+        let newHand = [...hand];//Not linked
+        for (let i=newHand.length-1; i>=0; i--) {
+            if (newHand[i].grayed) {
+                newHand.splice(i,1);
+            }
+        }
+        return newHand;
+    }
+    static highestPointValue(hand) {
+        let pv = hand[0];
+        for (let i in hand) {
+            if (Deck.pointValue(hand[i]) > Deck.pointValue(pv)) {
+                pv = hand[i];
+            }
+        }
+        return pv;
+    }
+    static lowestPointValue(hand) {
+        let pv = hand[0];
+        for (let i in hand) {
+            if (Deck.pointValue(hand[i]) < Deck.pointValue(pv)) {
+                pv = hand[i];
+            }
+        }
+        return pv;
+    }
+    static lowestTrump(hand) {
+        //Assuming the inserted hand is all trump
+        let lowest = hand[0];
+        for (let i in hand) {
+            if (VALUE_REVERSE[lowest.value] > VALUE_REVERSE[hand[i].value]) {
+                lowest = hand[i];
+            }
+        }
+        return lowest;
+    }
+    static highestTrump(hand) {
+        //Assuming the inserted hand is all trump
+        let highest = hand[0];
+        for (let i in hand) {
+            if (VALUE_REVERSE[highest.value] < VALUE_REVERSE[hand[i].value]) {
+                highest = hand[i];
+            }
+        }
+        return highest;
+    }
+    static lowestTrumpThatBeats(hand, card) {
+        //Assuming the inserted hand is all trump
+        let lowest = Deck.highestTrump(hand);
+        if (VALUE_REVERSE[card.value] > VALUE_REVERSE[lowest.value]) {
+            //No cards can win
+            return Deck.lowestTrump(hand);
+        }
+        for (let i in hand) {
+            if (VALUE_REVERSE[lowest.value] > VALUE_REVERSE[hand[i].value] &&
+                VALUE_REVERSE[card.value] < VALUE_REVERSE[hand[i].value]) {
+                lowest = hand[i];
+            }
+        }
+        return lowest;
+    }
+    static firstSelectableCard(hand) {
+        for (let i in hand) {
+            if (!hand[i].grayed) {
+                return hand[i];
+            }
+        }
+        SERVER.trace('ERROR: No cards were ungrayed. Returning first card in hand.');
+        return hand[0];
+    }
+    static firstSelectableCardExceptPagat(hand) {
+        for (let i in hand) {
+            if (!hand[i].grayed && hand[i].value != 'I') {
+                return hand[i];
+            }
+        }
+        return {suit: 'Trump', value: 'I'};
+    }
+    static trumpChain(hand) {
+        //Returns the number of guaranteed tricks from a hand (trump only)
+        let guarantees = 0;
+        let misses = 0;
+        for (let i = Object.keys(TRUMP_VALUE).length - 1; i>=0; i--) {
+            if (Deck.handContainsCard(hand,TRUMP_VALUE[i])) {
+                if (misses > 0) {
+                    misses--;
+                } else {
+                    guarantees++;
+                }
+            } else {
+                misses++;
+            }
+        }
+        return guarantees;
+    }
+    static unbrokenTrumpChain(hand) {
+        let guarantees = 0;
+        for (let i=TRUMP_VALUE.length-1; i>=0; i++) {
+            if (Deck.handContainsCard(hand,TRUMP_VALUE[i])) {
+                guarantees++;
+            } else {
+                return guarantees;
+            }
+        }
+        return guarantees;
+    }
+    static basicHandRanking(hand) {
+        /*Returns a point-value estimate of how good a hand is
+        Points are given for:
+            -Voided suits (2pt each)
+            -Trump
+            -Trump again, if higher than XV
+            -Trump chain, for each guaranteed win trump (Skyz, then XXI, then XX, etc)
+            -Kings/5-point cards
+        */
+        let handRankingPoints = 0;
+        handRankingPoints += Deck.trumpChain(hand);
+        for (let i in hand) {
+            if (hand[i].suit == 'Trump') {
+                handRankingPoints++;
+                if (VALUE_REVERSE[hand[i].value] >= 14) {
+                    handRankingPoints++;
+                }
+            }
+            if (Deck.pointValue(hand[i]) == 5) {
+                handRankingPoints++;
+            }
+        }
+        for (let i=0; i<4; i++) {
+            if (Deck.numOfSuit(hand,SUIT[i]) == 0) {
+                handRankingPoints+=2;
+            }
+        }
+        return handRankingPoints;
     }
 
     //Getters
