@@ -40,57 +40,15 @@ const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
 const LOG_LEVEL = process.argv[3] || (DEBUG_MODE ? 5 : 3);//Defaults to INFO level. No traces or debugs.
 const TRAINING_MODE = process.argv[2] == 'train';
 
+const BASE_FOLDER = __dirname.substring(0,__dirname.length - 6);
 
 //Standard file-serving
-const server = http.createServer((req, res) => {
-    let q = url.parse(req.url, true);
-    let filename = '.' + q.pathname;
-
-    if (filename == '.') {
-        filename = './index.html';//Default to index.html
-    }
-    if (filename.lastIndexOf('/') >= filename.length - 1) {
-        filename += 'index.html';//Only a directory? Default to index.html of that directory
-    }
-    if (filename.lastIndexOf('.') < filename.lastIndexOf('/')) {
-        filename += '.html';//No file ending? Default to .html
-    }
-
-    let ext = path.parse(filename).ext;
-    // maps file extension to MIME type
-    let MIME_TYPE = {
-        '.ico': 'image/png',
-        '.html': 'text/html',
-        '.js': 'text/javascript',
-        '.json': 'application/json',
-        '.css': 'text/css',
-        '.png': 'image/png',
-        '.jpg': 'image/jpeg',
-        '.wav': 'audio/wav',
-        '.mp3': 'audio/mpeg',
-        '.svg': 'image/svg+xml',
-        '.pdf': 'application/pdf',
-        '.doc': 'application/msword'
-    };
-
-    fs.readFile(filename, function (err, data) {
-        if (err || filename.indexOf('_') != -1 || filename.indexOf('env') != -1) {
-            res.writeHead(404, { 'Content-Type': 'text/html' });
-            return res.end("404 Not Found");
-        }
-        if (MIME_TYPE[ext] == 'image/png') {
-            res.setHeader('Cache-Control', 'max-age=2592000, public');
-        }
-        res.writeHead(200, { 'Content-Type': MIME_TYPE[ext] || 'text/plain' });
-        res.write(data);
-        return res.end();
-    });
-});
+app.use(express.static(BASE_FOLDER + 'public'));
+const server = require('http').createServer(app);
 
 //SOCKETS
 const io = require('socket.io')(server);
 
-//TODO: Supposedly global variables shouldn't be used
 SOCKET_LIST = {};
 players = {};
 rooms = {};
@@ -232,7 +190,11 @@ function notate(room, notation) {
                 room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
                 return room;
             }
+
+
             //TODO: finish notation decoding. Next is prever. See TarokyNotation.md
+
+
             room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
             return room;
         } catch (err) {
