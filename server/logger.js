@@ -1,7 +1,9 @@
 const fs = require('fs');
+const path = require('path');
 
-const BASE_FOLDER = __dirname.substring(0,__dirname.length - 6);
-const LOG_FILE_NAME = BASE_FOLDER + `/logs/${Date.now()}.log`;
+const BASE_FOLDER = __dirname.substring(0, __dirname.length - 6);
+const LOGS_DIRECTORY = path.join(BASE_FOLDER, 'logs');
+const LOG_FILE_NAME = path.join(LOGS_DIRECTORY, `${Date.now()}.log`);
 
 console.log('new server');
 
@@ -20,11 +22,21 @@ const SERVER = {
     },
 
     initLogFile: () => {
-        fs.writeFile(LOG_FILE_NAME, '', (err) => {
-            if (err) {
-                console.error('Error creating log file:', err);
+        // Create the 'logs' directory if it doesn't exist
+        fs.mkdir(LOGS_DIRECTORY, { recursive: true }, (dirErr) => {
+            if (dirErr) {
+                console.error('Error creating logs directory:', dirErr);
             } else {
-                console.log('Log file created:', LOG_FILE_NAME);
+                console.log('Logs directory created:', LOGS_DIRECTORY);
+
+                // Now, create or append to the log file
+                fs.writeFile(LOG_FILE_NAME, '', { flag: 'a+' }, (fileErr) => {
+                    if (fileErr) {
+                        console.error('Error creating log file:', fileErr);
+                    } else {
+                        console.log('Log file created:', LOG_FILE_NAME);
+                    }
+                });
             }
         });
     },
