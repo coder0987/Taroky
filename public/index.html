@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-        content="width=device-width, initial-scale=1">
+          content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="google-site-verification" content="nbjYjxk3X-LYzr5IkNG2gTpM3pfo4eQnfHYJiBMZSQU" />
 
@@ -31,6 +31,7 @@
     <script src="/assets/hopscotch/hopscotch.js"></script>
     <script src="/chatbox.js"></script>
     <script src="/machTaroky.js"></script>
+
 </head>
 <body>
 
@@ -99,7 +100,7 @@
             </div>
             <div class="col-md"></div>
         </div>
-        <div id="table" class="row" hidden>
+        <div id="table" class="row table-container" hidden>
             <div id="p1" class="col"><p hidden>Player 1</p></div>
             <div id="p2" class="col"><p hidden>Player 2</p></div>
             <div id="p3" class="col"><p hidden>Player 3</p></div>
@@ -108,14 +109,14 @@
         </div>
         <div id="center"></div>
         <hr>
-        <div id="hand"></div>
+        <div id="hand" class="hand"></div>
         <div id="roundInfo" class="row">
             <!-- This will have money cards, povenost, prever, valat, contra, IOTE, etc. -->
         </div>
         <div id="host"></div>
     </div>
     <div id="rooms"></div>
-    <div id="chatbox"><p></p></div>
+    <div id="chatbox" class="chat-box"><p></p></div>
     <div id="deck">
         <img hidden="hidden" src="/assets/mach-deck-thumb/card-back-t.png" id="cardBack" onload="cardBackLoaded=true">
     </div>
