@@ -1160,7 +1160,7 @@ function onLoad() {
         }
         if (typeof data.settings !== 'undefined') {
             theSettings = data.settings;
-            addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[data.settings.difficulty] + ' with timeout ' + (data.settings.timeout/1000))  + ' with ace high ' (returnSettings.aceHigh?'enabled':'disabled');
+            addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[data.settings.difficulty] + ' with timeout ' + (data.settings.timeout/1000))  + ' with ace high ' + (data.settings.aceHigh?'enabled':'disabled');
         }
         if (typeof data.pn !== 'undefined') {
             playerNumber = data.pn;
