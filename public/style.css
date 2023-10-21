@@ -521,31 +521,35 @@ h4 {
     outline: green solid 3px;
 }
 
-.chatBox {
+.chat-box-container {
     outline: red solid 3px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-box {
     max-height: 300px;
     overflow-y: scroll;
+    overflow-x: hidden;
+}
+.chat-box-entry {
+    display: flex;
+    justify-content: space-between;
 }
 
-/*.chatBubble {
-    background-color: var(--navy);*/ /* Set the background color for sender messages */
-    /*color: var(--white);
-    border-radius: 10px;*/ /* Add rounded corners to the bubble */
-    /*padding: 10px;*/ /* Add padding to the bubble */
-    /*margin: 10px 0;*/ /* Add some spacing between messages */
-/*}
-
-.message {
-    display: inline;
-    float: left;
-    color: var(--white);
+.chat-form {
+    flex-grow: 1;
 }
 
-.timestamp {
-    display: inline;
-    float: right;
-    color: var(--white);
-}*/
+.chat-input {
+    width: 100%;
+}
+
+.send-button {
+    flex-shrink: 0;
+    margin: 2px;
+}
+
 .message-container {
     display: flex;
     flex-direction: row; /* Stack authoer and chat bubble horizontally */

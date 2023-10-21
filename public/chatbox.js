@@ -25,11 +25,12 @@ class ChatBox {
         if (!messageText) { return; }
         let lastMessage = this.getLastMessage();
         if (lastMessage && author == lastMessage.getAuthor() && currentTimestamp == lastMessage.getTimestamp()) {
-            lastMessage.addNewLineOfMessage(messageText);
+            lastMessage.addNewLineOfMessage(messageText, false);
         } else {
-            let message = new Message(author, messageText);
+            let message = new Message(author, messageText, false);
             this.messages.push(message);
         }
+        this.updateScrollHeight();
     }
 
     getLastMessage() {
