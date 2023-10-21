@@ -22,9 +22,11 @@ const { Buffer } = require('node:buffer')
 const { SUIT,
     SUIT_REVERSE,
     RED_VALUE,
+    RED_VALUE_ACE_HIGH,
     BLACK_VALUE,
     TRUMP_VALUE,
     VALUE_REVERSE,
+    VALUE_REVERSE_ACE_HIGH,
     DIFFICULTY,
     DIFFICULTY_TABLE,
     MESSAGE_TYPE,
@@ -80,6 +82,11 @@ function notate(room, notation) {
                 SERVER.debug('Notation: Illegal number of values');
                 return false;
             }
+
+            //Get the settings
+            let theSettings = values[values.length - 1];
+            notationToSettings(room, theSettings);
+
             let thePlayers = room.players;
             for (let i=0; i<4; i++) {
                 if (isNaN(+values[i])) {
@@ -89,7 +96,7 @@ function notate(room, notation) {
                 thePlayers[i].chips = +values[i];
             }
             for (let i=0; i<4; i++) {
-                let theHand = notationToCards(values[i+4]);
+                let theHand = notationToCards(values[i+4],room.settings.aceHigh);
                 if (theHand && theHand.length == 12) {
                     thePlayers[i].hand = theHand;
                 } else {
@@ -97,7 +104,7 @@ function notate(room, notation) {
                     return false;
                 }
             }
-            let theTalon = notationToCards(values[8]);
+            let theTalon = notationToCards(values[8],room.settings.aceHigh);
             if (theTalon && theTalon.length == 6) {
                 room.board.talon = theTalon;
             } else {
@@ -122,12 +129,9 @@ function notate(room, notation) {
 
             //This is the first point at which the game may reasonably be played from
             //So, encode the settings if they exist. Then, if no more is present, return the room
-            let theSettings = values[values.length - 1];
-            notationToSettings(room, theSettings);
             let valuesWithoutSettings = values;
             delete valuesWithoutSettings[valuesWithoutSettings.length - 1];
             room.board.notation = (valuesWithoutSettings).join('/');
-
             room.board.hasTheI = findTheI(room.players);
             if (values.length === 10) {
                 room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
@@ -156,7 +160,7 @@ function u(v) {
     return false;
 }
 
-function notationToCards(notatedCards) {
+function notationToCards(notatedCards, aceHigh) {
     try {
         let cards = [];
         const SUIT_NOTATION = {S:SUIT[0],C:SUIT[1],H:SUIT[2],D:SUIT[3],T:SUIT[4]};
@@ -178,7 +182,8 @@ function notationToCards(notatedCards) {
             } else {
                 let value = VALUE_NOTATION[notatedCards.substring(0,1)];
                 notatedCards = notatedCards.substring(1);
-                value = (suit === SUIT[0] || suit === SUIT[1]) ? BLACK_VALUE[value] : RED_VALUE[value];
+                let redValueEnum = aceHigh ? RED_VALUE_ACE_HIGH : RED_VALUE;
+                value = (suit === SUIT[0] || suit === SUIT[1]) ? BLACK_VALUE[value] : redValueEnum[value];
                 if (u(value)) {
                     return false;
                 }
@@ -266,6 +271,10 @@ function notationToSettings(room,notation) {
                        room.settings.timeout = rule;
                     }
                     break;
+                case 'aceHigh':
+                    if (rule != 'false') {
+                        room.settings.aceHigh = true;
+                    }
                 case 'lock':
                 case 'locked':
                     break;
@@ -344,15 +353,18 @@ function findTheI(players) {
    return -1;
 }
 
-function whoWon(table, leadPlayer) {
+function whoWon(table, leadPlayer, aceHigh) {
     //First card in the table belongs to the leadPlayer
     let trickLeadCard = table[0];
     let trickLeadSuit = trickLeadCard.suit;
     let highestTrump = -1;
     let currentWinner = 0;//LeadPlayer is assumed to be winning
+
+    let reverseEnum = aceHigh ? VALUE_REVERSE_ACE_HIGH : VALUE_REVERSE;
+
     for (let i=0; i<4; i++) {
-        if (table[i].suit == 'Trump' && VALUE_REVERSE[table[i].value] > highestTrump) {
-            highestTrump = VALUE_REVERSE[table[i].value];
+        if (table[i].suit == 'Trump' && reverseEnum[table[i].value] > highestTrump) {
+            highestTrump = reverseEnum[table[i].value];
             currentWinner = i;
         }
     }
@@ -360,39 +372,15 @@ function whoWon(table, leadPlayer) {
         //If a trump was played, then the highest trump wins
         return (leadPlayer+currentWinner)%4;
     }
-    let highestOfLeadSuit = VALUE_REVERSE[trickLeadCard.value];
+    let highestOfLeadSuit = reverseEnum[trickLeadCard.value];
     for (let i=1; i<4; i++) {
-        if (table[i].suit == trickLeadSuit && VALUE_REVERSE[table[i].value] > highestOfLeadSuit) {
-            highestOfLeadSuit = VALUE_REVERSE[table[i].value];
+        if (table[i].suit == trickLeadSuit && reverseEnum[table[i].value] > highestOfLeadSuit) {
+            highestOfLeadSuit = reverseEnum[table[i].value];
             currentWinner = i;
         }
     }
     //No trumps means that the winner is whoever played the card of the lead suit with the highest value
     return (leadPlayer+currentWinner)%4;
-}
-function whoIsWinning(table) {
-    let trickLeadCard = table[0];
-    let trickLeadSuit = trickLeadCard.suit;
-    let highestTrump = -1;
-    let currentWinner = 0;//LeadPlayer is assumed to be winning
-    for (let i=0; i<table.length; i++) {
-        if (table[i].suit == 'Trump' && VALUE_REVERSE[table[i].value] > highestTrump) {
-            highestTrump = VALUE_REVERSE[table[i].value];
-            currentWinner = i;
-        }
-    }
-    if (highestTrump != -1) {
-        //If a trump was played, then the highest trump wins
-        return table[currentWinner];
-    }
-    let highestOfLeadSuit = VALUE_REVERSE[trickLeadCard.value];
-    for (let i=1; i<table.length; i++) {
-        if (table[i].suit == trickLeadSuit && VALUE_REVERSE[table[i].value] > highestOfLeadSuit) {
-            highestOfLeadSuit = VALUE_REVERSE[table[i].value];
-            currentWinner = i;
-        }
-    }
-    return table[currentWinner];
 }
 
 //SEE Card Locations in codeNotes
@@ -678,9 +666,9 @@ function playerAction(action, room, pn) {
             SERVER.trace();
     }
     if (returnHandState == 0) {
-        players[room['players'][pn].socket].socket.emit('returnHand', Deck.sortCards(hand), false);
+        players[room['players'][pn].socket].socket.emit('returnHand', Deck.sortCards(hand, room.settings.aceHigh), false);
     } else if (returnHandState == 1) {
-        players[room['players'][pn].socket].socket.emit('returnHand', Deck.sortCards(hand), true);
+        players[room['players'][pn].socket].socket.emit('returnHand', Deck.sortCards(hand, room.settings.aceHigh), true);
     }
 
     for (let i = 0; i < 4; i++) {
@@ -1394,7 +1382,7 @@ function actionCallback(action, room, pn) {
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
                 room['players'][action.player].tempHand.push(room['board'].talon.splice(0, 1)[0]);
-                Deck.sortCards(room['players'][action.player].tempHand);
+                Deck.sortCards(room['players'][action.player].tempHand, room.settings.aceHigh);
 
                 //Inform player of cards
                 if (room.players[action.player].type == PLAYER_TYPE.HUMAN) {
@@ -1460,9 +1448,9 @@ function actionCallback(action, room, pn) {
                     room['players'][action.player].hand.push(room['players'][action.player].tempHand.splice(0, 1)[0]);
 
                     //Opposing team claims the first set of cards
-                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[0])] = true;
-                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[1])] = true;
-                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[2])] = true;
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[0], room.settings.aceHigh)] = true;
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[1], room.settings.aceHigh)] = true;
+                    room.board.cardsPlayed[Deck.cardId(room['board'].talon[2], room.settings.aceHigh)] = true;
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(room['board'].talon.splice(0, 1)[0]);
@@ -1490,9 +1478,9 @@ function actionCallback(action, room, pn) {
                     room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
 
                     //Give second set of cards to opposing team's discard
-                    room.board.cardsPlayed[Deck.cardId(temp[0])] = true;
-                    room.board.cardsPlayed[Deck.cardId(temp[1])] = true;
-                    room.board.cardsPlayed[Deck.cardId(temp[2])] = true;
+                    room.board.cardsPlayed[Deck.cardId(temp[0], room.settings.aceHigh)] = true;
+                    room.board.cardsPlayed[Deck.cardId(temp[1], room.settings.aceHigh)] = true;
+                    room.board.cardsPlayed[Deck.cardId(temp[2], room.settings.aceHigh)] = true;
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
                     room['players'][(action.player+1)%4].discard.push(temp.splice(0, 1)[0]);
@@ -1529,7 +1517,7 @@ function actionCallback(action, room, pn) {
                     } else {
                         room.board.trumpDiscarded[((+room.board.povinnost - +pn) + 4)%4].push({suit:card.suit, value:card.value});
                     }
-                    room.board.cardsPlayed[Deck.cardId(card)] = true;
+                    room.board.cardsPlayed[Deck.cardId(card, room.settings.aceHigh)] = true;
                 }
                 if (room['players'][action.player].hand.length == 12) {
                     action.player = (action.player + 1) % 4;
@@ -2018,7 +2006,7 @@ function actionCallback(action, room, pn) {
                 action.player = (action.player + 1) % 4;
                 room['board'].table.push({'card':lead,'pn':pn,'lead':true});
                 room['board'].leadCard = lead;
-                room.board.cardsPlayed[Deck.cardId(lead)] = true;
+                room.board.cardsPlayed[Deck.cardId(lead, room.settings.aceHigh)] = true;
                 room.informPlayers('lead the ' + lead.value + ' of ' + lead.suit, MESSAGE_TYPE.LEAD, {pn: pn, card: lead},pn);
                 if (lead.value == room.board.partnerCard) {
                     room.players[pn].publicTeam = 1;
@@ -2061,7 +2049,7 @@ function actionCallback(action, room, pn) {
                 shouldReturnTable = true;
                 room['board'].table.push({'card':played,'pn':pn,'lead':false});
                 action.player = (action.player + 1) % 4;
-                room.board.cardsPlayed[Deck.cardId(played)] = true;
+                room.board.cardsPlayed[Deck.cardId(played, room.settings.aceHigh)] = true;
                 room.informPlayers('played the ' + played.value + ' of ' + played.suit, MESSAGE_TYPE.PLAY, {pn: pn, card: played}, pn);
                 if (played.value == room.board.partnerCard) {
                     room.players[pn].publicTeam = 1;
@@ -2078,7 +2066,7 @@ function actionCallback(action, room, pn) {
                     for (let i in room.board.table) {
                         trickCards.push(room.board.table[i].card);
                     }
-                    let trickWinner = whoWon(trickCards, room.board.leadPlayer);
+                    let trickWinner = whoWon(trickCards, room.board.leadPlayer, room.settings.aceHigh);
                     action.player = trickWinner;
                     room.informPlayers( 'won the trick', MESSAGE_TYPE.WINNER, {pn: trickWinner},trickWinner);
                 }
@@ -2508,7 +2496,7 @@ function actionCallback(action, room, pn) {
         for (let i in room.players) {
             if (room['players'][i].type == PLAYER_TYPE.HUMAN && SOCKET_LIST[room['players'][i].socket]) {
                 //Return hands
-                SOCKET_LIST[room['players'][i].socket].emit('returnHand', Deck.sortCards(room['players'][i].hand), false);
+                SOCKET_LIST[room['players'][i].socket].emit('returnHand', Deck.sortCards(room['players'][i].hand, room.settings.aceHigh), false);
                 //Return important info
                 room.board.importantInfo.pn = (+i+1);
                 SOCKET_LIST[room['players'][i].socket].emit('returnRoundInfo',room.board.importantInfo);
@@ -2602,15 +2590,15 @@ function autoReconnect(socketId) {
             reconnectInfo.host = players[rooms[players[socketId].room].host].pn;
             if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard') {
                 Deck.grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
-                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].settings.aceHigh)];
                 reconnectInfo.withGray = true;
             } else if (rooms[players[socketId].room]['board']['nextStep'].action == 'follow') {
                 Deck.grayUnplayables(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].board.leadCard);
-                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].settings.aceHigh)];
                 reconnectInfo.withGray = true;
             } else {
                 Deck.unGrayCards(rooms[players[socketId].room].players[players[socketId].pn].hand);
-                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand)];
+                reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].settings.aceHigh)];
                 reconnectInfo.withGray = false;
             }
             rooms[players[socketId].room]['board'].importantInfo.pn = (+players[socketId].pn+1);

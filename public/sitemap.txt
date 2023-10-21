@@ -1,4 +1,4 @@
 https://machtarok.com/
-https://machtarok.com/donate
-https://machtarok.com/userpreferences
-https://machtarok.com/learn
+https://machtarok.com/donate.html
+https://machtarok.com/userpreferences.html
+https://machtarok.com/learn.html

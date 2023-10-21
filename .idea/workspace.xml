@@ -4,10 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Fixes admin visual bug">
+    <list default="true" id="c81b6119-5dc2-422a-aaa3-5032013692dd" name="Changes" comment="Moves functions into robot and deck files">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/_server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/player.js" beforeDir="false" afterPath="$PROJECT_DIR$/player.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/custom.scss" beforeDir="false" afterPath="$PROJECT_DIR$/public/custom.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/machTaroky.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/machTaroky.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/sitemap.txt" beforeDir="false" afterPath="$PROJECT_DIR$/public/sitemap.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/run.sh" beforeDir="false" afterPath="$PROJECT_DIR$/run.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/_server.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/_server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/deck.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/deck.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/enums.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/enums.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/logger.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/logger.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/robot.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/robot.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/room.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/room.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,9 +61,14 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Profe\IdeaProjects\Taroky\assets\mach-deck-thumb" />
+      <recent name="C:\Users\Profe\IdeaProjects\Taroky\assets\hopscotch" />
       <recent name="C:\Users\profe\IdeaProjects\TarokyWeb" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Profe\IdeaProjects\Taroky\public" />
+      <recent name="C:\Users\Profe\IdeaProjects\Taroky\server" />
+      <recent name="C:\Users\Profe\IdeaProjects\Taroky\assets" />
       <recent name="C:\Users\profe\IdeaProjects\TarokyWeb\assets\default-deck" />
       <recent name="C:\Users\profe\IdeaProjects\TarokyWeb" />
     </key>
@@ -412,8 +425,11 @@
       <option name="project" value="LOCAL" />
       <updated>1678657419071</updated>
     </task>
-    <option name="localTasksCounter" value="66" />
+    <option name="localTasksCounter" value="105" />
     <servers />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.log" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -428,32 +444,32 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="Lays out next steps for valat, point counting, and completing the game" />
-    <MESSAGE value="Prepares client-side for next steps" />
-    <MESSAGE value="Adds difficulty enum and prepares robots for finishing" />
-    <MESSAGE value="Fixes difficulty issue" />
-    <MESSAGE value="Fixes callbacks for moneycards and partner card" />
-    <MESSAGE value="Adds game number and completes the circular flow of play" />
-    <MESSAGE value="Implements room card design" />
-    <MESSAGE value="Updates readme to credit James and to reflect the new domain name" />
-    <MESSAGE value="Fixes room refresh" />
-    <MESSAGE value="Adds Room class and standardized informPlayers function" />
-    <MESSAGE value="Prepares valat for the next step" />
-    <MESSAGE value="Adds link to GitHub in Navbar" />
-    <MESSAGE value="Adds modular buttons and implements client-side valat, contra and I on the end" />
-    <MESSAGE value="Adjusts TODOs" />
-    <MESSAGE value="Implements lead and follow" />
-    <MESSAGE value="Adds client auto-reload on server restart" />
-    <MESSAGE value="Adds client auto reconnect" />
-    <MESSAGE value="Adds auto-play and allows settings" />
-    <MESSAGE value="Bug fixes" />
-    <MESSAGE value="Adds settings client-side and removes node_modules from git" />
-    <MESSAGE value="Re-adds bootstrap which was accidentally deleted" />
-    <MESSAGE value="Adjusts readme" />
-    <MESSAGE value="Adds client-side timer and bug fixes" />
-    <MESSAGE value="Adds AI.&#10;Untrained &amp; currently untrainable." />
-    <MESSAGE value="Fixes admin visual bug" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixes admin visual bug" />
+    <MESSAGE value="Adds discard click listener" />
+    <MESSAGE value="Finishes confirm button callback for discarding" />
+    <MESSAGE value="Uses the discard info span" />
+    <MESSAGE value="Fixes discard your whole hand prompt" />
+    <MESSAGE value="Removes discard button &amp; info on click" />
+    <MESSAGE value="Adds margin to discard text" />
+    <MESSAGE value="Fixes discard grayed card bug and adjusts drew class" />
+    <MESSAGE value="Fixes some visual bugs from the discarding system" />
+    <MESSAGE value="Adjusts class lists and adds sort button" />
+    <MESSAGE value="Fixes visual glitch when sorting hand after selecting a card" />
+    <MESSAGE value="Adds returnToGame for continuing after disconnect" />
+    <MESSAGE value="Fixes navbar on mobile" />
+    <MESSAGE value="Fixes fullscreen on Safari browsers" />
+    <MESSAGE value="Adds a minimal tour for new users" />
+    <MESSAGE value="Renames James" />
+    <MESSAGE value="Finishes the tour" />
+    <MESSAGE value="Fixes typo" />
+    <MESSAGE value="Fixes prever multiplier" />
+    <MESSAGE value="Learn page revamp" />
+    <MESSAGE value="Fixes missing scrollbar issue" />
+    <MESSAGE value="Adds personalized messages" />
+    <MESSAGE value="Organizes files into public and server directories and uses express static to make only public files accessible through the web server" />
+    <MESSAGE value="Moves logger into a separate file" />
+    <MESSAGE value="Makes logger log to files as well as console" />
+    <MESSAGE value="Moves functions into robot and deck files" />
+    <option name="LAST_COMMIT_MESSAGE" value="Moves functions into robot and deck files" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

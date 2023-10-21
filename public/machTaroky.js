@@ -1,6 +1,7 @@
 const PLAYER_TYPE = {HUMAN: 0,ROBOT: 1,AI: 2,H: 0,R: 1};
 const SUIT = {0: 'Spade',1: 'Club',2: 'Heart',3: 'Diamond',4: 'Trump'};
 const RED_VALUE = {0: 'Ace',1: 'Two',2: 'Three',3: 'Four',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
+const RED_VALUE_ACE_HIGH = { 0: 'Two', 1: 'Three', 2: 'Four', 3: 'Ace', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const BLACK_VALUE = {0: 'Seven',1: 'Eight',2: 'Nine',3: 'Ten',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz'};
 const ERR_FONT = '24px Arial';
@@ -45,6 +46,12 @@ const VALUE_REVERSE = {
     I: 0, II: 1, III: 2, IIII: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10, XII: 11, XIII: 12,
     XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
 };
+const VALUE_REVERSE_ACE_HIGH = {
+    Two: 0, Three: 1, Four: 2, Ace: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
+    Seven: 0, Eight: 1, Nine: 2, Ten: 3,
+    I: 0, II: 1, III: 2, IIII: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10, XII: 11, XIII: 12,
+    XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
+};
 const SUIT_SORT_ORDER = {
     Spade: 0, Club: 2, Heart: 1, Diamond: 3, Trump: 4
 }
@@ -80,7 +87,7 @@ let discardingOrPlaying = true;
 let timeOffset = 0;
 let elo;
 let admin;
-let defaultSettings = {'timeout':30000,'difficulty':2};
+let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false};
 let activeUsername;
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
@@ -871,6 +878,9 @@ function submitSettings(type) {
             document.getElementById('lockButton').setAttribute('hidden','hidden');
             document.getElementById('lockButtonP').setAttribute('hidden','hidden');
             break;
+        case 'aceHigh':
+            socket.emit('settings',type,document.getElementById('aceHighSelector').checked);
+            break;
         case 'save':
             socket.emit('saveSettings');
             break;
@@ -925,6 +935,21 @@ function createSettings(tools, roomSettings) {
     settings.appendChild(timeoutButton);
     settings.appendChild(document.createElement('br'));
 
+    //Create ace high switch
+    let aceHighP = document.createElement('span');
+    aceHighP.innerHTML = 'Ace High:\t';
+    aceHighP.style='display:inline-block; width: 175px';
+    settings.appendChild(aceHighP);
+
+    let aceHighSwitch = document.createElement('input');
+    aceHighSwitch.setAttribute('type', 'checkbox');
+    aceHighSwitch.checked = roomSettings.aceHigh;
+    aceHighSwitch.setAttribute('checked', roomSettings.aceHigh);
+    aceHighSwitch.id = 'aceHighSelector';
+    aceHighSwitch.setAttribute('onchange', 'submitSettings("aceHigh")');
+    settings.appendChild(aceHighSwitch);
+    settings.appendChild(document.createElement('br'));
+
     //Create lock button
     let lockSelectorP = document.createElement('span');
     lockSelectorP.innerHTML = 'Prevent Joining:\t';
@@ -976,6 +1001,7 @@ function hostRoom(roomSettings) {
         document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty]).setAttribute('selected','selected');
         document.getElementById('timeoutButton').setAttribute('value',roomSettings.timeout / 1000);
         document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
+        document.getElementById('aceHighSelector').checked = roomSettings.aceHigh;
         return;
     }
     roomHosted = true;
@@ -1089,7 +1115,7 @@ function onLoad() {
     socket.on('loginExpired', function() {
         addBoldMessage('Your login session has expired. Please sign in again.');
         activeUsername = '';
-        defaultSettings = {'timeout':30000,'difficulty':2};
+        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false};
         delete elo;
         displaySignIn();
     });
@@ -1097,7 +1123,7 @@ function onLoad() {
     socket.on('logout', function() {
         addBoldMessage('Successfully logged out');
         activeUsername = '';
-        defaultSettings = {'timeout':30000,'difficulty':2};
+        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false};
         delete elo;
         displaySignIn();
     });
@@ -1134,7 +1160,7 @@ function onLoad() {
         }
         if (typeof data.settings !== 'undefined') {
             theSettings = data.settings;
-            addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[data.settings.difficulty] + ' with timeout ' + (data.settings.timeout/1000));
+            addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[data.settings.difficulty] + ' with timeout ' + (data.settings.timeout/1000))  + ' with ace high ' (returnSettings.aceHigh?'enabled':'disabled');
         }
         if (typeof data.pn !== 'undefined') {
             playerNumber = data.pn;
@@ -1212,7 +1238,7 @@ function onLoad() {
     });
     socket.on('returnSettings', function(returnSettings) {
         theSettings = returnSettings;
-        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000));
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000)) + ' with ace high ' (returnSettings.aceHigh?'enabled':'disabled');
     });
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
@@ -1421,7 +1447,7 @@ function onLoad() {
         theSettings = returnSettings;
         addMessage('Game ' + gameNumber + ' Beginning.')
         addMessage('You are player ' + (+pN+1));
-        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's');
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's' + ' with ace high ' (returnSettings.aceHigh?'enabled':'disabled'));
     });
     socket.on('nextAction', function(action) {
         displayNextAction(action);
