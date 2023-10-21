@@ -521,10 +521,84 @@ h4 {
     outline: green solid 3px;
 }
 
-.chat-box {
+.chatBox {
     outline: red solid 3px;
     max-height: 300px;
     overflow-y: scroll;
+}
+
+/*.chatBubble {
+    background-color: var(--navy);*/ /* Set the background color for sender messages */
+    /*color: var(--white);
+    border-radius: 10px;*/ /* Add rounded corners to the bubble */
+    /*padding: 10px;*/ /* Add padding to the bubble */
+    /*margin: 10px 0;*/ /* Add some spacing between messages */
+/*}
+
+.message {
+    display: inline;
+    float: left;
+    color: var(--white);
+}
+
+.timestamp {
+    display: inline;
+    float: right;
+    color: var(--white);
+}*/
+.message-container {
+    display: flex;
+    flex-direction: row; /* Stack authoer and chat bubble horizontally */
+}
+
+.author-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+}
+
+.author-text {
+    color: var(--navy);
+}
+
+.chat-bubble {
+    display: flex;
+    margin: 8px;
+    width: 100%;
+}
+
+.message {
+    background-color: var(--navy); /* Set the background color for messages */
+    color: var(--white); /* Set the text color for messages */
+    border-radius: 10px; /* Add rounded corners to the bubble */
+    padding: 10px; /* Add padding to the bubble */
+    padding-bottom: 2px;
+    width: 100%; /* Make the chat bubble fill the horizontal space */
+    display: flex;
+    flex-direction: column; /* Stack message and timestamp vertically */
+    margin: 1px;
+}
+
+.message-text {
+    /* Style for the message text span */
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.timestamp {
+    align-self: flex-end;
+    color: var(--white); /* Adjust the color of the timestamp as needed */
+    font-size: 10px; /* Adjust the font size as needed */
+}
+
+.actionInfo {
+    outline: purple solid 3px;
+}
+
+.roundInfo {
+    outline: blue solid 3px;
 }
 
 .hand {

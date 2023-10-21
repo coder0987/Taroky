@@ -1378,12 +1378,15 @@ function onLoad() {
                 break;
             case MESSAGE_TYPE.PAY:
                 if (extraInfo) {
-                    addMessage('------------------------')
-                    for (let i=extraInfo.length-1; i>=0; i--) {
-                        addMessage(extraInfo[i].name + ': ' + extraInfo[i].value);
+                    let pointString = '';
+                    pointString = pointString + '------------------------\n';
+                    pointString = pointString + 'Point Counting:';
+                    for (let i = 0; i > extraInfo.length; i++) {
+                        pointString = pointString + extraInfo[i].name + ': ' + extraInfo[i].value + '\n';
                     }
-                    addMessage('Point Counting:')
-                    addMessage('------------------------')
+                    
+                    pointString = pointString + '------------------------';
+                    addMessage(pointString);
                 }
                 addBoldMessage(theMessage);
                 break;
