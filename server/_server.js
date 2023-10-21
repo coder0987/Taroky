@@ -3259,7 +3259,7 @@ io.sockets.on('connection', function (socket) {
                             SERVER.warn('Database error:' + err);
                         });
                     } else {
-                        SERVER.log('Player ' + socketId + ' send an invalid token or username');
+                        SERVER.log('Player ' + socketId + ' sent an invalid token or username');
                         socket.emit('loginFail');
                     }
                 }).on("error", (err) => {
