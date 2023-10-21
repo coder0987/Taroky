@@ -56,4 +56,6 @@ function loaded() {
     if (SHOW_TOUR) {
         document.getElementById('tour').removeAttribute('hidden');
     }
+    let element = document.getElementById("navbar");
+    element.classList.add("fixed-top");
 }

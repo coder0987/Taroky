@@ -17,9 +17,19 @@
   <link rel="stylesheet" href="/style.css">
   <script>SHOW_TOUR=false;</script>
   <script src="nav.js"></script>
+  <script>
+    function submitSettings(){}
+    function invite() {
+      document.getElementById('inviteScreen').removeAttribute('hidden');
+    }
+  </script>
 </head>
 <body>
 <div w3-include-html="/nav.html"></div>
+
+<div id="invite" class="container invite" hidden="hidden">
+  <!-- TODO Create invite screen -->
+</div>
 
 <div class="container">
 
@@ -35,7 +45,6 @@
       </div>
     </div>
   </div>
-
 
 
   <div id="outer">
@@ -72,27 +81,40 @@
         <div class="col-md-6 col-12">
           <div>
             <span>1.</span>
-            <span>Username</span>
+            <span>Username (You)</span>
           </div>
           <div>
             <span>2.</span>
-            <span>Username</span>
+            <select id="player2Select" onchange="submitSettings('p2')">
+              <option value="0">Open</option>
+              <option value="1">Robot</option>
+              <option value="2">AI</option>
+            </select>
           </div>
           <div>
             <span>3.</span>
-            <span>Username</span>
+            <select id="player3Select" onchange="submitSettings('p3')">
+              <option value="0">Open</option>
+              <option value="1">Robot</option>
+              <option value="2">AI</option>
+            </select>
           </div>
           <div>
             <span>4.</span>
-            <span>Username</span>
+            <select id="player4Select" onchange="submitSettings('p4')">
+              <option value="0">Open</option>
+              <option value="1">Robot</option>
+              <option value="2">AI</option>
+            </select>
           </div>
-          <button>Invite</button>
+          <br>
+          <button onclick="invite()">Invite</button>
         </div>
       <div class="col-md-6 col-12">
         <div id="settings">
           <span style="display: inline-block; width: 175px;">Select the difficulty:	</span>
           <select id="difficultySelector" name="Select Difficulty:" onchange="submitSettings(&quot;difficulty&quot;)">
-            <option value="0" id="Rudimentary">Rudimentary</option>
+            <option value="0" id="Beginner">Beginner</option>
             <option value="1" id="Easy">Easy</option>
             <option value="2" id="Normal">Normal</option>
             <option value="3" id="Hard">Hard</option>
@@ -106,12 +128,13 @@
           <span style="display: inline-block; width: 175px;">Ace High:	</span>
           <input type="checkbox" checked="false" id="aceHighSelector" onchange="submitSettings(&quot;aceHigh&quot;)">
           <br>
-          <span style="display: inline-block; width: 175px;" id="lockButtonP">Prevent Joining:	</span>
-          <button id="lockButton">Lock Room</button>
+          <span style="display: inline-block; width: 175px;" id="lockButtonP">Visibility:	</span>
+          <button id="lockButton" onclick="if (this.innerHTML=='Public'){this.innerHTML='Private';}else{this.innerHTML='Public';}submitSettings('visibility')">Private</button>
           <br>
         </div>
       </div>
       <div class="col-12">
+        <br>
         <input type="checkbox"><span>Ready</span>
         <button>Start Game</button>
       </div>
