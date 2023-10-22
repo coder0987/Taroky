@@ -1015,7 +1015,7 @@ function aiActionCallback(action, room, pn, fakeMoneyCards, result) {
                     action.info.partner = {suit:'Trump',value:'XIX'};
                 }  else {
                     //Rudimentary always plays with a partner
-                    action.info.partner = robotPartner(hand, DIFFICULTY.RUDIMENTARY);
+                    action.info.partner = robotPartner(hand, DIFFICULTY.BEGINNER);
                 }
             }
             break;

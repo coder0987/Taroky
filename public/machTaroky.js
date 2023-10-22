@@ -1288,6 +1288,7 @@ function onLoad() {
         addMessage('You are the room host');
     });
     socket.on('youStart', function(roomName, joinCode) {
+        console.log('You start');
         playerNumber = 0;
         hostRoom(defaultSettings, roomName, joinCode);
     });
