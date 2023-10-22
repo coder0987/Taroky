@@ -2766,7 +2766,7 @@ io.sockets.on('connection', function (socket) {
         }
         if (players[socketId] && rooms[roomID] && rooms[roomID]['playerCount'] < 4 && (!rooms[roomID].settings.locked || idIsCode) && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
-                if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
+                if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT || rooms[roomID]['players'][i].type == PLAYER_TYPE.AI) {
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
                     rooms[roomID]['players'][i].socket = socketId;
                     rooms[roomID]['players'][i].messenger = socket;
