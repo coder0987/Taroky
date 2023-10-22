@@ -323,7 +323,7 @@ function notationToObject(notation) {
                     settingsObject.lock = rule;
                     break;
                 case 'aceHigh':
-                    settingsObject = setting == 'true';
+                    settingsObject.aceHigh = rule == 'true';
                     break;
                 case 'pn':
                     //Handled later
@@ -3321,6 +3321,7 @@ io.sockets.on('connection', function (socket) {
                         SERVER.log('Player ' + socketId + ' has signed in as ' + username);
 
                         Database.promiseCreateOrRetrieveUser(username).then((info) => {
+                            SERVER.log('Loaded settings for user ' + username + ': ' + info);
                             players[socketId].userInfo = info;
                             socket.emit('elo',info.elo);
                             socket.emit('admin',info.admin);
