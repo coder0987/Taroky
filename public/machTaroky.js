@@ -198,6 +198,9 @@ function keyListener(e) {
                 fullscreen();
             }
             break;
+        case 'Enter':
+            sendMessage();
+            break;
     }
 }
 
@@ -855,6 +858,16 @@ function refresh() {
         drawnRooms = {};
         socket.emit('getRooms');
     }
+}
+
+function sendMessage() {
+    let input = document.getElementById('chat-input')
+    let messageText = input.value;
+    input.value = '';
+
+    let playerName = !activeUsername ? "Guest" : activeUsername
+
+    playerSentMessage(playerName,messageText);
 }
 
 function submitSettings(type) {

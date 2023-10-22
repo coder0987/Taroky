@@ -29,6 +29,7 @@ class ChatBox {
         } else {
             let message = new Message(author, messageText, false);
             this.messages.push(message);
+            this.container.appendChild(message.getHTMLElement());
         }
         this.updateScrollHeight();
     }
@@ -166,12 +167,8 @@ function addError(theString) {
     clearAllButXMessages(maxMessages);
 }
 function playerSentMessage(thePlayer,theMessage) {
-    console.log(thePlayer + ': ' + theMessage)
-    let container = document.getElementById('chatbox');
-    let toInsert = document.createElement("p");
-    toInsert.innerHTML = thePlayer + ': ' + theMessage;
-    container.insertBefore(toInsert, container.firstChild);
-    clearAllButXMessages(maxMessages);
+    console.log(thePlayer + ': ' + theMessage);
+    chatBox.addPlayerMessage(thePlayer, theMessage);
 }
 function clearChat() {
     //For when we have an actual chatbox
