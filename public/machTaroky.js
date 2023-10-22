@@ -898,12 +898,8 @@ function sendMessage() {
     let input = document.getElementById('chat-input')
     let messageText = input.value;
     input.value = '';
-
-    if (activeUsername) {
-        playerSentMessage(activeUsername, messageText);
-
-        socket.emit('broadcastMessage', playerName, messageText);
-    }
+    playerSentMessage(activeUsername, messageText);
+    socket.emit('broadcastMessage', activeUsername, messageText);
 }
 
 function submitSettings(type) {

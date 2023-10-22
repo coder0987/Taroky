@@ -3422,6 +3422,12 @@ io.sockets.on('connection', function (socket) {
     socket.on('broadcastMessage', function (playerName, messageText) {
         SERVER.log(playerName + ': ' + messageText);
         let room = players[socketId].room;
+
+        playerName = players[socketId].username;
+        if (playerName == 'Guest') {
+            return;
+        }
+
         if (rooms[room]) {
             for (playerToReceive in rooms[room].players) {
                 if (rooms[room].players[playerToReceive].type == PLAYER_TYPE.HUMAN && rooms[room].players[playerToReceive].socket != socketId && rooms[room].players[playerToReceive].socket != -1) {
