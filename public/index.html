@@ -152,37 +152,25 @@
                 <div class="col-md-6 col-12">
                     <div>
                         <span>1.</span>
-                        <span>Username (You)</span>
+                        <span id="settingsScreenPn1">Username (You)</span>
                     </div>
                     <div>
                         <span>2.</span>
-                        <select id="player2Select" onchange="submitSettings('p2')">
-                            <option value="0">Open</option>
-                            <option value="1">Robot</option>
-                            <option value="2">AI</option>
-                        </select>
+                        <span id="settingsScreenPn2">Robot</span>
                     </div>
                     <div>
                         <span>3.</span>
-                        <select id="player3Select" onchange="submitSettings('p3')">
-                            <option value="0">Open</option>
-                            <option value="1">Robot</option>
-                            <option value="2">AI</option>
-                        </select>
+                        <span id="settingsScreenPn3">Robot</span>
                     </div>
                     <div>
                         <span>4.</span>
-                        <select id="player4Select" onchange="submitSettings('p4')">
-                            <option value="0">Open</option>
-                            <option value="1">Robot</option>
-                            <option value="2">AI</option>
-                        </select>
+                        <span id="settingsScreenPn4">Robot</span>
                     </div>
                     <br>
                     <button onclick="invite()">Invite</button>
                 </div>
                 <div class="col-md-6 col-12">
-                    <div id="settings">
+                    <div id="settings" hidden="hidden">
                         <span style="display: inline-block; width: 175px;">Select the difficulty:	</span>
                         <select id="difficultySelector" name="Select Difficulty:" onchange="submitSettings(&quot;difficulty&quot;)">
                             <option value="0" id="Beginner">Beginner</option>
@@ -203,11 +191,21 @@
                         <button id="lockButton" onclick="if (this.innerHTML=='Public'){this.innerHTML='Private';}else{this.innerHTML='Public';}submitSettings('visibility')">Private</button>
                         <br>
                     </div>
+                    <div id="display-settings" hidden="hidden">
+                            <span style="display: inline-block; width: 175px;">Select the difficulty:	</span><span id="display-difficulty"></span>
+                            <br>
+                            <span style="display: inline-block; width: 175px;">Timeout (in seconds):	</span><span id="display-timeout"></span>
+                            <br>
+                            <span style="display: inline-block; width: 175px;">Ace High:	</span><span id="display-ace"></span>
+                            <br>
+                            <span style="display: inline-block; width: 175px;">Visibility:	</span><span id="display-visibility"></span>
+                            <br>
+                    </div>
                 </div>
                 <div class="col-12">
                     <br>
                     <input type="checkbox"><span>Ready</span>
-                    <button onclick="removeHostTools();addMessage('Starting...');socket.emit('startGame');">Start Game</button>
+                    <button hidden id="startGame" onclick="removeHostTools();addMessage('Starting...');socket.emit('startGame');">Start Game</button>
                 </div>
         </div>
     </div>

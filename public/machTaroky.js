@@ -10,8 +10,8 @@ const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16};
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5, DRAW_TALON: 6};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon',6:'Talon'};
-const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
+const DIFFICULTY = {BEGINNER: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
+const DIFFICULTY_TABLE = {0: 'Beginner', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
 const ACTION_TABLE = {
     'start': 'Start the Game',
     'play': 'Start the Next Round',
@@ -1039,13 +1039,31 @@ function hostRoom(roomSettings, roomName, joinCode) {
     roomCode = joinCode;
     roomSettings = roomSettings || defaultSettings;
     document.getElementById('settingsRoomName').innerHTML = 'Room ' + romanize(roomName) + ' (Join Code ' + joinCode + ')';
-    document.getElementById('lockButton').removeAttribute('hidden');
-    document.getElementById('lockButtonP').removeAttribute('hidden');
+    updateRoomSettings(roomSettings);
+    document.getElementById('host').hidden = false;
+    document.getElementById('startGame').hidden = false;
+    document.getElementById('settings').hidden = false;
+}
+
+function showRoomInfo(roomSettings, roomName, joinCode) {
+    roomCode = joinCode;
+    document.getElementById('settingsRoomName').innerHTML = 'Room ' + romanize(roomName) + ' (Join Code ' + joinCode + ')';
+    updateRoomSettings(roomSettings);
+    document.getElementById('host').hidden = false;
+    document.getElementById('display-settings').hidden = false;
+}
+
+function updateRoomSettings(roomSettings) {
+    document.getElementById('display-difficulty').innerHTML = DIFFICULTY_TABLE[roomSettings.difficulty];
+    document.getElementById('display-timeout').innerHTML = (+roomSettings.timeout / 1000);
+    document.getElementById('display-ace').innerHTML = roomSettings.aceHigh ? 'Yes' : 'No';
+    document.getElementById('display-visibility').innerHTML = roomSettings.visibility ? 'Private' : 'Public';
+
     document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty]).setAttribute('selected','selected');
     document.getElementById('timeoutButton').setAttribute('value',roomSettings.timeout / 1000);
     document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
     document.getElementById('aceHighSelector').checked = roomSettings.aceHigh;
-    document.getElementById('host').hidden = false;
+    document.getElementById('lockButton').innerHTML = roomSettings.visibility ? 'Private' : 'Public';
 }
 
 function removeHostTools() {
@@ -1138,6 +1156,7 @@ function onLoad() {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
         displaySignOut(username);
+
     });
 
     socket.on('loginFail', function() {
@@ -1195,7 +1214,7 @@ function onLoad() {
         }
         if (typeof data.settings !== 'undefined') {
             theSettings = data.settings;
-            addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[data.settings.difficulty] + ' with timeout ' + (data.settings.timeout/1000))  + ' with ace high ' + (data.settings.aceHigh?'enabled':'disabled');
+            addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[data.settings.difficulty] + ' with timeout ' + (data.settings.timeout/1000)  + ' with ace high ' + (data.settings.aceHigh?'enabled':'disabled'));
         }
         if (typeof data.pn !== 'undefined') {
             playerNumber = data.pn;
@@ -1205,6 +1224,8 @@ function onLoad() {
             hostNumber = data.host.number;
             if (playerNumber == hostNumber && data.nextAction && data.nextAction.action == 'start') {
                 hostRoom(data.settings, data.host.name, data.host.joinCode);
+            } else if (data.nextAction && data.nextAction.action == 'start') {
+                showRoomInfo(data.settings, data.host.name, data.host.joinCode);
             }
         }
         if (typeof data.roundInfo !== 'undefined') {
@@ -1304,7 +1325,8 @@ function onLoad() {
     });
     socket.on('returnSettings', function(returnSettings) {
         theSettings = returnSettings;
-        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000)) + ' with ace high ' (returnSettings.aceHigh?'enabled':'disabled');
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + ' with ace high ' + (returnSettings.aceHigh?'enabled':'disabled'));
+        updateRoomSettings(theSettings);
     });
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
@@ -1514,9 +1536,10 @@ function onLoad() {
         hostNumber = hostPN;
         playerNumber = pN;
         theSettings = returnSettings;
+        updateRoomSettings(theSettings)
         addMessage('Game ' + gameNumber + ' Beginning.')
         addMessage('You are player ' + (+pN+1));
-        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's' + ' with ace high ' (returnSettings.aceHigh?'enabled':'disabled'));
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's' + ' with ace high ' + (returnSettings.aceHigh?'enabled':'disabled'));
     });
     socket.on('nextAction', function(action) {
         displayNextAction(action);

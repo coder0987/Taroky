@@ -3035,12 +3035,17 @@ io.sockets.on('connection', function (socket) {
                     setSettingNotation(rooms[players[socketId].room]);
                     break;
             }
+            for (let i in rooms[players[socketId].room].players) {
+                if (rooms[players[socketId].room].players[i].messenger) {
+                    rooms[players[socketId].room].players[i].messenger.emit('returnSettings', rooms[players[socketId].room].settings);
+                }
+            }
         }
     });
     socket.on('getPlayerList', function() {
         let playerListToSend = [];
         for (let i in players) {
-            if (i != socketId) {
+            if (i != socketId && players[i].room != players[socketId].room) {
                 playerListToSend.push({
                     username: players[i].username,
                     status: (players[i].disconnecting ? 'Idle' : players[i].room == -1 ? 'Online' : 'In Game'),
