@@ -2690,7 +2690,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[players[socketId].room].audienceCount--;
                 } else {
                     SERVER.log('Player ' + socketId + ' left the room',players[socketId].room);
-                    rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
+                    rooms[players[socketId].room]['players'][players[socketId].pn].type = rooms[players[socketId].room].settings.difficulty != DIFFICULTY_TABLE.AI ? PLAYER_TYPE.ROBOT : PLAYER_TYPE.AI;
                     rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
                     rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
                     rooms[players[socketId].room]['playerCount'] = rooms[players[socketId].room]['playerCount'] - 1;
@@ -3022,7 +3022,11 @@ io.sockets.on('connection', function (socket) {
                                 }
                             }
                         }
-
+                        for (let i in rooms[players[socketId].room].players) {
+                            if (rooms[players[socketId].room].players[i].messenger) {
+                                rooms[players[socketId].room].players[i].messenger.emit('returnPlayersInGame', rooms[players[socketId].room].playersInGame);
+                            }
+                        }
                     }
                     break;
                 case 'timeout':
