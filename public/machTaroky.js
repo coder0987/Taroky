@@ -959,7 +959,10 @@ function updateRoomSettings(roomSettings) {
     document.getElementById('display-ace').innerHTML = roomSettings.aceHigh ? 'Yes' : 'No';
     document.getElementById('display-visibility').innerHTML = roomSettings.locked ? 'Private' : 'Public';
 
-    document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty]).setAttribute('selected','selected');
+
+    if (document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty])) {
+        document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty]).setAttribute('selected','selected');
+    }
     document.getElementById('timeoutButton').setAttribute('value',roomSettings.timeout / 1000);
     document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
     document.getElementById('aceHighSelector').checked = roomSettings.aceHigh;
@@ -1498,6 +1501,7 @@ function onLoad() {
     });
     socket.on('defaultSettings', function(returnSettings) {
         if (defaultSettings) {
+            console.log(defaultSettings);
             defaultSettings = returnSettings;
             addBoldMessage('Settings loaded');
         }
