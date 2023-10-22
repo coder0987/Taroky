@@ -190,6 +190,8 @@
                         <span style="display: inline-block; width: 175px;" id="lockButtonP">Visibility:	</span>
                         <button id="lockButton" onclick="if (this.innerHTML=='Public'){this.innerHTML='Private';}else{this.innerHTML='Public';}submitSettings('visibility')">Private</button>
                         <br>
+                        <button id="saveButton" onclick="submitSettings('save');" hidden="hidden">Save</button>
+                        <br>
                     </div>
                     <div id="display-settings" hidden="hidden">
                             <span style="display: inline-block; width: 175px;">Select the difficulty:	</span><span id="display-difficulty"></span>
