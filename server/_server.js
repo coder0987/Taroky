@@ -3361,20 +3361,26 @@ io.sockets.on('connection', function (socket) {
         }
     });
     socket.on('broadcastMessage', function (playerName, messageText) {
+        SERVER.log(playerName + ': ' + messageText);
         let room = players[socketId].room;
         if (rooms[room]) {
-            for (player in rooms[room].players) {
-                if (player.type == PLAYER_TYPE.HUMAN && player.socketId != socketId) {
-                    player.socket.emit('chatMessage', playerName, messageText);
+            for (playerToReceive in rooms[room].players) {
+                if (rooms[room].players[playerToReceive].type == PLAYER_TYPE.HUMAN && rooms[room].players[playerToReceive].socket != socketId && rooms[room].players[playerToReceive].socket != -1) {
+                    SERVER.log(playerToReceive);
+                    SOCKET_LIST[rooms[room].players[playerToReceive].socket].emit('chatMessage', playerName, messageText);
                 }
             }
-            for (member in rooms[room].audience && member.socketId != socketId) {
-                member.messenger.emit('chatMessage', playerName, messageText);
+            for (member in rooms[room].audience) {
+                if (rooms[room].audience[member].socketId != socketId) {
+                    rooms[room].audience[member].messenger.emit('chatMessage', playerName, messageText);
+                }
+                
             }
         } else {
-            for (player in players) {
-                if (player.room != -1 && player.socketId != socketId) {
-                    player.socket.emit('chatMessage', playerName, messageText);
+            for (playerToReceive in players) {
+                if (players[playerToReceive].room == -1 && playerToReceive != socketId && SOCKET_LIST[playerToReceive]) {
+                    SERVER.log(playerToReceive);
+                    SOCKET_LIST[playerToReceive].emit('chatMessage', playerName, messageText);
                 }
             }
         }
