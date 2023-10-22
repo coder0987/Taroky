@@ -204,7 +204,7 @@
                 </div>
                 <div class="col-12">
                     <br>
-                    <input type="checkbox"><span>Ready</span>
+                    <!--<input type="checkbox"><span>Ready</span>-->
                     <button hidden id="startGame" onclick="removeHostTools();addMessage('Starting...');socket.emit('startGame');">Start Game</button>
                 </div>
         </div>
@@ -212,7 +212,7 @@
     <div id="rooms"></div>
     <div id="chat-box-container" class="chat-box-container">
         <div id="chatbox" class="chat-box"><p></p></div>
-        <div id="chat-entry" class="chat-box-entry">
+        <div id="chat-entry" class="chat-box-entry" hidden="hidden">
             <form id="chat-form" class="chat-form" novalidate onsubmit="return false;">
                 <input id="chat-input" class="chat-input" maxlength="1000" type="text" required="" placeholder="Your Message (press Enter to submit)" value="">
             </form>

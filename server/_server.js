@@ -2618,7 +2618,7 @@ function autoReconnect(socketId) {
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             reconnectInfo.nextAction = rooms[players[socketId].room]['board']['nextStep'];
         }
-
+        reconnectInfo.playersInGame = rooms[players[socketId].room].playersInGame;
         reconnectInfo.povinnost = rooms[players[socketId].room].board.povinnost;
     }
     if (players[socketId].username != 'Guest') {
@@ -2707,6 +2707,11 @@ io.sockets.on('connection', function (socket) {
                         SERVER.log('Stopped empty game',players[socketId].room);
                     } else {
                         rooms[players[socketId].room].informPlayers('left the room',MESSAGE_TYPE.DISCONNECT,{},players[socketId].pn);
+                        for (let i in rooms[players[socketId].room].players) {
+                            if (rooms[players[socketId].room].players[i].messenger) {
+                                rooms[players[socketId].room].players[i].messenger.emit('returnPlayersInGame', rooms[players[socketId].room].playersInGame);
+                            }
+                        }
                         if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
                             //Player was supposed to take an action
                             autoAction(rooms[players[socketId].room].board.nextStep, rooms[players[socketId].room], players[socketId].pn)
@@ -2774,6 +2779,11 @@ io.sockets.on('connection', function (socket) {
                         socket.emit('debugRoomJoin');
                     }
                     socket.emit('timeSync', Date.now());
+                    for (let i in rooms[roomID].players) {
+                        if (rooms[roomID].players[i].messenger) {
+                            rooms[roomID].players[i].messenger.emit('returnPlayersInGame', rooms[roomID].playersInGame);
+                        }
+                    }
                     break;
                 }
             }
@@ -2822,6 +2832,11 @@ io.sockets.on('connection', function (socket) {
             socket.emit('roomHost');
             socket.emit('youStart', theRoom.name, theRoom.joinCode);
             socket.emit('timeSync', Date.now());
+            for (let i in theRoom.players) {
+                if (theRoom.players[i].messenger) {
+                    theRoom.players[i].messenger.emit('returnPlayersInGame', theRoom.playersInGame);
+                }
+            }
         }
     });
     socket.on('customRoom', function (tarokyNotation) {
@@ -2855,6 +2870,12 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['host'] = socketId;
                     autoReconnect(socketId);
                     socket.emit('timeSync', Date.now());
+
+                    for (let i in rooms[roomID].players) {
+                        if (rooms[roomID].players[i].messenger) {
+                            rooms[roomID].players[i].messenger.emit('returnPlayersInGame', rooms[roomID].playersInGame);
+                        }
+                    }
 
                     let playerType = rooms[roomID].players[0].type;
                     let action = rooms[roomID].board.nextStep;

@@ -88,7 +88,7 @@ let discardingOrPlaying = true;
 let timeOffset = 0;
 let elo;
 let admin;
-let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false};
+let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
 let activeUsername;
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
@@ -237,24 +237,22 @@ $(document).ready(function() {
     }, 3000);
     $('.copy-text').click(function (e) {
           //First: try to share it
+          e.preventDefault();
           if (navigator.share) {
             navigator.share(
               {title: 'Mach Tarok Invite',text: 'Let\'s Play Taroky!',url: 'machtarok.com/?join=CODE'}
             ).then(() => console.log('Successful share')
             ).catch(error => console.log('Error sharing:', error));
-          } else {
-             //Otherwise, copy the link
+          }
+
+          let copyText = $(this).attr('href');
+          document.addEventListener('copy', function(e) {
+             e.clipboardData.setData('text/plain', copyText);
              e.preventDefault();
-             let copyText = $(this).attr('href');
+          }, true);
+          document.execCommand('copy');
 
-             document.addEventListener('copy', function(e) {
-                e.clipboardData.setData('text/plain', copyText);
-                e.preventDefault();
-             }, true);
-
-             document.execCommand('copy');
-           }
-           document.getElementById('copied').removeAttribute('hidden');
+          document.getElementById('copied').removeAttribute('hidden');
          });
 
     let params = new URLSearchParams(document.location.search);
@@ -1057,17 +1055,27 @@ function updateRoomSettings(roomSettings) {
     document.getElementById('display-difficulty').innerHTML = DIFFICULTY_TABLE[roomSettings.difficulty];
     document.getElementById('display-timeout').innerHTML = (+roomSettings.timeout / 1000);
     document.getElementById('display-ace').innerHTML = roomSettings.aceHigh ? 'Yes' : 'No';
-    document.getElementById('display-visibility').innerHTML = roomSettings.visibility ? 'Private' : 'Public';
+    document.getElementById('display-visibility').innerHTML = roomSettings.locked ? 'Private' : 'Public';
 
     document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty]).setAttribute('selected','selected');
     document.getElementById('timeoutButton').setAttribute('value',roomSettings.timeout / 1000);
     document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
     document.getElementById('aceHighSelector').checked = roomSettings.aceHigh;
-    document.getElementById('lockButton').innerHTML = roomSettings.visibility ? 'Private' : 'Public';
+    document.getElementById('lockButton').innerHTML = roomSettings.locked ? 'Private' : 'Public';
+}
+
+function updatePlayersInGame(playersInGame) {
+    let pn = playerNumber;
+    for (let i in playersInGame) {
+        document.getElementById('settingsScreenPn' + (+i+1)).innerHTML = playersInGame[i] + (i == pn ? ' (You)': '');
+    }
 }
 
 function removeHostTools() {
     document.getElementById('host').hidden = true;
+    document.getElementById('startGame').hidden = true;
+    document.getElementById('settings').hidden = true;
+    document.getElementById('display-settings').hidden = true;
 }
 
 function cut() {
@@ -1156,7 +1164,7 @@ function onLoad() {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
         displaySignOut(username);
-
+        document.getElementById('chat-entry').removeAttribute('hidden');
     });
 
     socket.on('loginFail', function() {
@@ -1164,21 +1172,25 @@ function onLoad() {
         displaySignIn();
         document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.getElementById('chat-entry').setAttribute('hidden','hidden');
+
     });
 
     socket.on('loginExpired', function() {
         addBoldMessage('Your login session has expired. Please sign in again.');
         activeUsername = '';
-        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false};
+        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
         delete elo;
+        document.getElementById('chat-entry').setAttribute('hidden','hidden');
         displaySignIn();
     });
 
     socket.on('logout', function() {
         addBoldMessage('Successfully logged out');
         activeUsername = '';
-        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false};
+        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
         delete elo;
+        document.getElementById('chat-entry').setAttribute('hidden','hidden');
         displaySignIn();
     });
 
@@ -1241,6 +1253,9 @@ function onLoad() {
         }
         if (typeof data.nextAction !== 'undefined' && data.nextAction.action != 'start') {
             displayNextAction(data.nextAction);
+        }
+        if (typeof data.playersInGame !== 'undefined') {
+            updatePlayersInGame(data.playersInGame);
         }
         if (typeof data.elo !== 'undefined') {
             elo = data.elo;
@@ -1328,6 +1343,9 @@ function onLoad() {
         addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + ' with ace high ' + (returnSettings.aceHigh?'enabled':'disabled'));
         updateRoomSettings(theSettings);
     });
+    socket.on('returnPlayersInGame', function(returnPlayersInGame) {
+        updatePlayersInGame(returnPlayersInGame);
+    });
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
         playerNumber = returnPN;
@@ -1365,6 +1383,7 @@ function onLoad() {
         addMessage('You are the room host');
     });
     socket.on('youStart', function(roomName, joinCode) {
+        playerNumber = 0;
         hostRoom(defaultSettings, roomName, joinCode);
     });
     socket.on('12choice', function(theChoices) {
@@ -1537,9 +1556,14 @@ function onLoad() {
         playerNumber = pN;
         theSettings = returnSettings;
         updateRoomSettings(theSettings)
-        addMessage('Game ' + gameNumber + ' Beginning.')
+        addMessage('Game ' + gameNumber + ' Beginning.');
         addMessage('You are player ' + (+pN+1));
         addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's' + ' with ace high ' + (returnSettings.aceHigh?'enabled':'disabled'));
+
+        document.getElementById('host').hidden = true;
+        document.getElementById('startGame').hidden = true;
+        document.getElementById('settings').hidden = true;
+        document.getElementById('display-settings').hidden = true;
     });
     socket.on('nextAction', function(action) {
         displayNextAction(action);

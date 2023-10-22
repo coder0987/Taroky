@@ -40,7 +40,7 @@ class Room {
     }
 
     informPlayers(message, messageType, extraInfo, pn) {
-        for (let i in this.players) {
+        for (let i in this._players) {
             if (this._players[i].type == PLAYER_TYPE.HUMAN) {
                 if (typeof pn != 'undefined') {
                     if (pn == i) {
@@ -190,6 +190,14 @@ class Room {
             }
         }
         return this._players[highestChipsCount];
+    }
+
+    get playersInGame() {
+        let playersInGameArr = [];
+        for (let i in this._players) {
+            playersInGameArr[i] = this._players[i].socket == -1 ? (this._players[i].type == PLAYER_TYPE.ROBOT ? 'Robot' : 'AI') : players[this._players[i].socket].username;
+        }
+        return playersInGameArr;
     }
 
     // Setters
