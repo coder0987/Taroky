@@ -930,104 +930,6 @@ function submitSettings(type) {
     }
 }
 
-function createSettings(tools, roomSettings) {
-    let settings = document.createElement('div');
-    settings.id = 'settings';
-
-    roomSettings = roomSettings || defaultSettings;
-
-    let difficultySelectorP = document.createElement('span');
-    difficultySelectorP.innerHTML = 'Select the difficulty:\t';
-    difficultySelectorP.style='display:inline-block; width: 175px';
-    settings.appendChild(difficultySelectorP);
-
-    let difficultySelector = document.createElement('select');
-    difficultySelector.id ='difficultySelector';
-    difficultySelector.name = 'Select Difficulty:';
-    for (let i in DIFFICULTY_TABLE) {
-        let difficultySelectOption = document.createElement('option');
-        difficultySelectOption.selected = false;
-        difficultySelectOption.value = i;
-        difficultySelectOption.id = DIFFICULTY_TABLE[i];
-        if (i==roomSettings.difficulty) {
-            difficultySelectOption.selected = 'selected';
-        }
-        difficultySelectOption.innerHTML = DIFFICULTY_TABLE[i];
-        difficultySelector.appendChild(difficultySelectOption);
-    }
-    difficultySelector.setAttribute('onchange', 'submitSettings("difficulty")');
-    settings.appendChild(difficultySelector);
-    settings.appendChild(document.createElement('br'));
-
-    //Create numerical input for timeout (in s, must convert to ms)
-
-    let timeoutSelectorP = document.createElement('span');
-    timeoutSelectorP.innerHTML = 'Timeout (in seconds):\t';
-    timeoutSelectorP.style='display:inline-block; width: 175px';
-    settings.appendChild(timeoutSelectorP);
-
-    let timeoutButton = document.createElement('input');
-    timeoutButton.setAttribute('type', 'number');
-    timeoutButton.defaultValue = roomSettings.timeout / 1000;
-    timeoutButton.setAttribute('value',roomSettings.timeout / 1000);
-    timeoutButton.min = -1;//-1 or 0 mean no timeout
-    timeoutButton.id = 'timeoutButton';
-    timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
-    settings.appendChild(timeoutButton);
-    settings.appendChild(document.createElement('br'));
-
-    //Create ace high switch
-    let aceHighP = document.createElement('span');
-    aceHighP.innerHTML = 'Ace High:\t';
-    aceHighP.style='display:inline-block; width: 175px';
-    settings.appendChild(aceHighP);
-
-    let aceHighSwitch = document.createElement('input');
-    aceHighSwitch.setAttribute('type', 'checkbox');
-    aceHighSwitch.checked = roomSettings.aceHigh;
-    aceHighSwitch.setAttribute('checked', roomSettings.aceHigh);
-    aceHighSwitch.id = 'aceHighSelector';
-    aceHighSwitch.setAttribute('onchange', 'submitSettings("aceHigh")');
-    settings.appendChild(aceHighSwitch);
-    settings.appendChild(document.createElement('br'));
-
-    //Create lock button
-    let lockSelectorP = document.createElement('span');
-    lockSelectorP.innerHTML = 'Prevent Joining:\t';
-    lockSelectorP.style='display:inline-block; width: 175px';
-    lockSelectorP.id = 'lockButtonP';//For hiding when button is clicked
-    settings.appendChild(lockSelectorP);
-
-    let lockButton = document.createElement('button');
-    lockButton.innerHTML = 'Lock Room';
-    lockButton.id = 'lockButton';
-    lockButton.addEventListener('click', function(){
-        submitSettings("lock");
-    });
-    settings.appendChild(lockButton);
-
-    //Create save button only if user is signed in
-    if (typeof activeUsername !== 'undefined' && activeUsername != '') {
-        settings.appendChild(document.createElement('br'));
-        let saveButtonP = document.createElement('span');
-        saveButtonP.innerHTML = 'Save Settings:\t';
-        saveButtonP.style='display:inline-block; width: 175px';
-        settings.appendChild(saveButtonP);
-
-        let saveButton = document.createElement('button');
-        saveButton.innerHTML = 'Save';
-        saveButton.addEventListener('click', function(){
-            submitSettings("save");
-        });
-        settings.appendChild(saveButton);
-        settings.appendChild(document.createElement('br'));
-    }
-
-    settings.appendChild(document.createElement('br'));
-
-    tools.appendChild(settings);
-}
-
 function debugTools() {
     //TODO: add debug tools
 }
@@ -1165,6 +1067,7 @@ function onLoad() {
         activeUsername = username;
         displaySignOut(username);
         document.getElementById('chat-entry').removeAttribute('hidden');
+        document.getElementById('saveButton').removeAttribute('hidden');
     });
 
     socket.on('loginFail', function() {
@@ -1173,7 +1076,7 @@ function onLoad() {
         document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
-
+        document.getElementById('saveButton').setAttribute('hidden','hidden');
     });
 
     socket.on('loginExpired', function() {
@@ -1182,6 +1085,7 @@ function onLoad() {
         defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
         delete elo;
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
+        document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
     });
 
@@ -1191,6 +1095,7 @@ function onLoad() {
         defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
         delete elo;
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
+        document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
     });
 
