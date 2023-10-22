@@ -323,7 +323,7 @@ function notationToObject(notation) {
                     settingsObject.lock = rule;
                     break;
                 case 'aceHigh':
-                    settingsObject = aceHigh == 'true';
+                    settingsObject = setting == 'true';
                     break;
                 case 'pn':
                     //Handled later
