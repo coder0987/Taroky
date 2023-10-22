@@ -435,9 +435,83 @@ h4 {
     width: 35%;
 }
 
+
+
+/* Settings and Invite Screen */
+#inviteScreen {
+    position: fixed;
+    width: 80%;
+    height: 80%;
+    z-index:98;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background-color: white;
+    border-radius: 30px;
+    padding: 30px;
+}
+
+.close {
+    color: gray;
+    border-radius: 3rem;
+    font-size: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+    text-align: center;
+}
+
+.share-link {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--navy);
+    text-decoration: none;
+}
+
+.invite-card {
+    position: fixed;
+    width: 100%;
+    height: 10%;
+    min-height: 6rem;
+    z-index:99;
+    top: 80%;
+    left: 0;
+    transform: translate(0, -50%);
+    text-align: center;
+
+    background-color: var(--navy);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.invite-card-header {
+    color: var(--white);
+    text-align: left;
+}
+
+.invite-card-button {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--red);
+    text-decoration: none;
+}
+
+.invite-card-spacer {
+    margin: 10px;
+    color: black;
+}
+
+
+
 @media (min-width: 576px) {
     .back {
         width: 30%;
+    }
+    .invite-card {
+        width: 60%;
+        left: 40%;
     }
 }
 
@@ -445,11 +519,19 @@ h4 {
     .back {
         width: 20%;
     }
+    .invite-card {
+        width: 50%;
+        left: 50%;
+    }
 }
 
 @media (min-width: 992px) {
     .back {
         width: 15%;
+    }
+    .invite-card {
+        width: 20%;
+        left: 80%;
     }
 }
 

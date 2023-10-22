@@ -3,16 +3,19 @@ const Player = require('./player.js');
 const Deck = require('./deck.js');
 const {DIFFICULTY, PLAYER_TYPE} = require('./enums.js');
 
+let iterator = 100000;
+
 class Room {
     constructor(args) {
         let name         = args.name || 'Room';
-        let settings     = args.settings || {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'aceHigh':false, 'locked':false};
+        let settings     = args.settings || {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'aceHigh':false, 'locked':true};
         let trainingRoom = args.trainingRoom || false;
         let debugRoom    = args.debugRoom || false;
         let logLevel     = args.logLevel || 3;
 
         this._settings = settings;
         this._name = name;
+        this._joinCode = Room.createJoinCode();
         this._host = -1;
         this._board = new Board();
         this._playerCount = 0;
@@ -101,6 +104,18 @@ class Room {
         this._settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
     }
 
+    static createJoinCode() {
+        iterator += Math.ceil(Math.random() * 100000);
+        let newCode = '';
+        let tempIterator = iterator;
+        while (tempIterator > 0) {
+            newCode += String.fromCharCode(tempIterator % 26 + 65);
+            tempIterator /= 26;
+            tempIterator = Math.floor(tempIterator);
+        }
+        return newCode;
+    }
+
     // Getters
     get settings() {
         return this._settings;
@@ -108,6 +123,10 @@ class Room {
 
     get name() {
         return this._name;
+    }
+
+    get joinCode() {
+        return this._joinCode;
     }
 
     get host() {

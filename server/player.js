@@ -338,6 +338,10 @@ class Player {
         this._ai = ai;
     }
 
+    set messenger(messenger) {
+        this._messenger = messenger;
+    }
+
     //Getters
     get type() {
         return this._type;
@@ -377,6 +381,10 @@ class Player {
 
     get ai() {
         return this._ai;
+    }
+
+    get messenger() {
+        return this._messenger;
     }
 }
 

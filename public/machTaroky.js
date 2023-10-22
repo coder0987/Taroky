@@ -68,6 +68,7 @@ let partners;
 let handChoices;
 let socket;
 let theSettings;
+let roomCode;
 let returnToGameAvailable = false;
 let availableRooms={};
 let drawnRooms=[];
@@ -231,7 +232,33 @@ $(document).ready(function() {
         let element = document.getElementById("navbar");
         element.classList.add("fixed-top");
     }, 3000);
- 
+    $('.copy-text').click(function (e) {
+          //First: try to share it
+          if (navigator.share) {
+            navigator.share(
+              {title: 'Mach Tarok Invite',text: 'Let\'s Play Taroky!',url: 'machtarok.com/?join=CODE'}
+            ).then(() => console.log('Successful share')
+            ).catch(error => console.log('Error sharing:', error));
+          } else {
+             //Otherwise, copy the link
+             e.preventDefault();
+             let copyText = $(this).attr('href');
+
+             document.addEventListener('copy', function(e) {
+                e.clipboardData.setData('text/plain', copyText);
+                e.preventDefault();
+             }, true);
+
+             document.execCommand('copy');
+           }
+           document.getElementById('copied').removeAttribute('hidden');
+         });
+
+    let params = new URLSearchParams(document.location.search);
+    let inviteLink = params.get('join');
+    if (inviteLink) {
+        joinFromInvite(inviteLink);
+    }
 });
 
 /**load button */
@@ -636,7 +663,9 @@ function displayNextAction(action) {
         }
         switch (action.action) {
             case 'start':
-                hostRoom();
+                //Something has gone wrong. This should never be called
+                console.error('Start case has been called from displayNextAction');
+                console.trace();
                 break;
             case 'play':
                 addMessage('A new game is beginning');
@@ -874,9 +903,8 @@ function submitSettings(type) {
             socket.emit('settings',type,document.getElementById('timeoutButton').value*1000);
             break;
         case 'lock':
-            socket.emit('settings',type,true);
-            document.getElementById('lockButton').setAttribute('hidden','hidden');
-            document.getElementById('lockButtonP').setAttribute('hidden','hidden');
+        case 'visibility':
+            socket.emit('settings','lock',document.getElementById('lockButton').innerHTML == 'Private');
             break;
         case 'aceHigh':
             socket.emit('settings',type,document.getElementById('aceHighSelector').checked);
@@ -992,25 +1020,17 @@ function debugTools() {
 }
 
 let roomHosted = false;
-function hostRoom(roomSettings) {
+function hostRoom(roomSettings, roomName, joinCode) {
+    roomCode = joinCode;
     roomSettings = roomSettings || defaultSettings;
+    document.getElementById('settingsRoomName').innerHTML = 'Room ' + romanize(roomName) + ' (Join Code ' + joinCode + ')';
+    document.getElementById('lockButton').removeAttribute('hidden');
+    document.getElementById('lockButtonP').removeAttribute('hidden');
+    document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty]).setAttribute('selected','selected');
+    document.getElementById('timeoutButton').setAttribute('value',roomSettings.timeout / 1000);
+    document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
+    document.getElementById('aceHighSelector').checked = roomSettings.aceHigh;
     document.getElementById('host').hidden = false;
-    if (roomHosted) {
-        document.getElementById('lockButton').removeAttribute('hidden');
-        document.getElementById('lockButtonP').removeAttribute('hidden');
-        document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty]).setAttribute('selected','selected');
-        document.getElementById('timeoutButton').setAttribute('value',roomSettings.timeout / 1000);
-        document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
-        document.getElementById('aceHighSelector').checked = roomSettings.aceHigh;
-        return;
-    }
-    roomHosted = true;
-    let tools = document.getElementById('host');
-    let startGame = document.createElement('button');
-    startGame.innerHTML = 'Start Game';
-    startGame.addEventListener('click',function(){removeHostTools();addMessage('Starting...');socket.emit('startGame');});
-    createSettings(tools, roomSettings);
-    tools.appendChild(startGame);
 }
 
 function removeHostTools() {
@@ -1167,9 +1187,9 @@ function onLoad() {
             addMessage('You are player ' + (+data.pn+1));
         }
         if (typeof data.host !== 'undefined') {
-            hostNumber = data.host;
+            hostNumber = data.host.number;
             if (playerNumber == hostNumber && data.nextAction && data.nextAction.action == 'start') {
-                hostRoom(data.settings);
+                hostRoom(data.settings, data.host.name, data.host.joinCode);
             }
         }
         if (typeof data.roundInfo !== 'undefined') {
@@ -1212,6 +1232,37 @@ function onLoad() {
     //TODO save points and return save points
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
+    });
+    socket.on('returnPlayerList', function(returnPlayerList) {
+        console.log('Received player list: ' + returnPlayerList);
+        let inviteTable = document.getElementById('inviteTable');
+        inviteTable.innerHTML = '<thead><tr><th scope="col">Username</th><th scope="col">Status</th><th scope="col">Invite</th></tr></thead>';
+        let inviteBody = document.createElement('tbody');
+        for (let i in returnPlayerList) {
+            let inviteRow = document.createElement('tr');
+            let inviteRowUsername = document.createElement('td');
+            inviteRowUsername.innerHTML = returnPlayerList[i].username;
+            inviteRow.appendChild(inviteRowUsername);
+
+            let inviteRowStatus = document.createElement('td');
+            inviteRowStatus.innerHTML = returnPlayerList[i].status;
+            inviteRow.appendChild(inviteRowStatus);
+
+            let inviteRowSend = document.createElement('td');
+            let inviteButton = document.createElement('button');
+            inviteButton.innerHTML = 'Invite';
+            inviteButton.addEventListener('click', () => {
+                socket.emit('invite', returnPlayerList[i].socket);
+            })
+            inviteRowSend.appendChild(inviteButton);
+            inviteRow.appendChild(inviteRowSend);
+
+            inviteBody.appendChild(inviteRow);
+        }
+        inviteTable.appendChild(inviteBody);
+    })
+    socket.on('invite', function(roomName, joinCode, playerName) {
+        createInviteCard(roomName, joinCode, playerName);
     });
     socket.on('returnPovinnost', function(returnPovinnost) {
         povinnostNumber = returnPovinnost;
@@ -1276,8 +1327,8 @@ function onLoad() {
     socket.on('roomHost', function() {
         addMessage('You are the room host');
     });
-    socket.on('youStart', function() {
-        hostRoom();
+    socket.on('youStart', function(roomName, joinCode) {
+        hostRoom(defaultSettings, roomName, joinCode);
     });
     socket.on('12choice', function(theChoices) {
         addBoldMessage('Please choose a hand to keep');
@@ -1892,10 +1943,29 @@ function newRoomClick() {
     } else {addError('Already connecting to a room!');}
 }
 
+function joinFromInvite(roomCode) {
+    if (!connectingToRoom) {
+        connectingToRoom=true;
+        socket.emit('roomConnect',roomCode,true);
+        addMessage('Joining room...');
+    } else {addError('Already connecting to a room!');}
+}
+
+function joinRoomClick() {
+    if (!connectingToRoom) {
+        let code = prompt('Room code:');
+        if (!code) {return;}
+        connectingToRoom=true;
+        socket.emit('roomConnect',code,true);
+        addMessage('Joining room...');
+    } else {addError('Already connecting to a room!');}
+}
+
 function drawRooms() {
     drawnRooms = [];
     document.getElementById('rooms').innerHTML = '';
     createNewRoomCard();
+    createJoinRoomCard();
     for (let i in availableRooms) {
         createRoomCard(availableRooms[i],i);
         drawnRooms.push(availableRooms[i]);
@@ -2017,6 +2087,30 @@ function createNewRoomCard() {
     bDiv.appendChild(playerCountSpan);
     //Make it clickable
     bDiv.addEventListener('click', newRoomClick);
+    document.getElementById('rooms').appendChild(bDiv);
+}
+
+function createJoinRoomCard() {
+    const bDiv = document.createElement('div');
+    bDiv.classList.add('roomcard');
+    bDiv.classList.add('col-md-3');
+    bDiv.classList.add('col-xs-6');
+    bDiv.classList.add('white');
+    bDiv.id = 'roomCardJoin';
+    const numberDiv = document.createElement('div');
+    numberDiv.classList.add('roomnum');
+    numberDiv.classList.add('d-flex');
+    numberDiv.classList.add('justify-content-center');
+    numberDiv.innerHTML = 'Join Room';
+    numberDiv.id = 'roomNumJoin';
+    bDiv.appendChild(numberDiv);
+    const playerCountSpan = document.createElement('span');
+    for (let i=0; i<4; i++) {
+        playerCountSpan.innerHTML += '&#x25CB; ';
+    }
+    bDiv.appendChild(playerCountSpan);
+    //Make it clickable
+    bDiv.addEventListener('click', joinRoomClick);
     document.getElementById('rooms').appendChild(bDiv);
 }
 
@@ -2251,6 +2345,52 @@ function clearButtons() {
         }
     }
 }
+
+function invite() {
+        document.getElementById('inviteJoinCode').href = 'https://machtarok.com/?join=' + roomCode;
+        document.getElementById('inviteJoinCode').innerHTML = 'https://machtarok.com/?join=' + roomCode;
+        document.getElementById('inviteScreen').removeAttribute('hidden');
+        socket.emit('getPlayerList');
+    }
+    function closeInvite() {
+      document.getElementById('inviteScreen').setAttribute('hidden','hidden');
+      document.getElementById('copied').setAttribute('hidden','hidden');
+    }
+    function createInviteCard(roomName,roomCode, username) {
+        let card = document.createElement('div');
+        card.classList.add('invite-card');
+        let cardRemoveTimeout = setTimeout(() => {document.body.removeChild(card)},10000);
+
+        let nameElem = document.createElement('h3');
+        nameElem.classList.add('invite-card-header');
+        nameElem.innerHTML = 'New Invite From ' + username + ' to room ' + roomName + '!';
+        card.appendChild(nameElem);
+
+        let joinButton = document.createElement('a');
+        joinButton.classList.add('invite-card-button');
+        joinButton.innerHTML = 'Join';
+        joinButton.addEventListener('click', () => {
+        exitCurrentRoom(true);
+           document.body.removeChild(card);
+           clearTimeout(cardRemoveTimeout);joinFromInvite(roomCode)
+        }, {once:true});
+        card.appendChild(joinButton);
+
+        let spacerSpan = document.createElement('span');
+        spacerSpan.classList.add('invite-card-spacer');
+        spacerSpan.innerHTML = '-';
+        card.appendChild(spacerSpan);
+
+        let ignoreButton = document.createElement('a');
+        ignoreButton.classList.add('invite-card-button');
+        ignoreButton.innerHTML = 'Ignore';
+        ignoreButton.addEventListener('click', () => {document.body.removeChild(card); clearTimeout(cardRemoveTimeout)}, {once:true});
+        card.appendChild(ignoreButton);
+
+        document.body.appendChild(card);
+
+    }
+
 
 function alive() {
     socket.emit('alive', (callback) => {

@@ -283,7 +283,7 @@ class Robot {
                 if (room.board.iote == pn) {
                     //I called IOTE
                     //2 scenarios: 1, I can bulldoze. 2, I have a lot of trump
-                    if (trumpCount > 0 && VALUE_REVERSE[Deck.highestTrump(trumpCards).value] >= VALUE_REVERSE[highestUnplayedTrump(room.board.playedCards)]) {
+                    if (trumpCount > 0 && VALUE_REVERSE[Deck.highestTrump(trumpCards).value] >= VALUE_REVERSE[highestUnplayedTrump(room.board.cardsPlayed)]) {
                         //I have the biggest trump
                         return Deck.highestTrump(trumpCards);
                     }

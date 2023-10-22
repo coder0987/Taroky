@@ -20,15 +20,93 @@
   <script>
     function submitSettings(){}
     function invite() {
-      document.getElementById('inviteScreen').removeAttribute('hidden');
+        //document.getElementById('inviteCode').innerHTML = 'CODE';
+        document.getElementById('inviteScreen').removeAttribute('hidden');
+    }
+    function closeInvite() {
+      document.getElementById('inviteScreen').setAttribute('hidden','hidden');
+      document.getElementById('copied').setAttribute('hidden','hidden');
+    }
+    function createInviteCard(username,roomCode) {
+      let card = document.createElement('div');
+      card.classList.add('invite-card');
+      let cardRemoveTimeout = setTimeout(() => {document.body.removeChild(card)},10000);
+
+      let nameElem = document.createElement('h3');
+      nameElem.classList.add('invite-card-header');
+      nameElem.innerHTML = 'New Invite From ' + username + '!';
+      card.appendChild(nameElem);
+
+      let joinButton = document.createElement('a');
+      joinButton.classList.add('invite-card-button');
+      joinButton.innerHTML = 'Join';
+      joinButton.addEventListener('click', () => {joinFromInvite(roomCode)}, {once:true});
+      card.appendChild(joinButton);
+
+      let spacerSpan = document.createElement('span');
+      spacerSpan.classList.add('invite-card-spacer');
+      spacerSpan.innerHTML = '-';
+      card.appendChild(spacerSpan);
+
+      let ignoreButton = document.createElement('a');
+      ignoreButton.classList.add('invite-card-button');
+      ignoreButton.innerHTML = 'Ignore';
+      ignoreButton.addEventListener('click', () => {document.body.removeChild(card); clearTimeout(cardRemoveTimeout)}, {once:true});
+      card.appendChild(ignoreButton);
+
+      document.body.appendChild(card);
+
     }
   </script>
 </head>
 <body>
 <div w3-include-html="/nav.html"></div>
 
-<div id="invite" class="container invite" hidden="hidden">
-  <!-- TODO Create invite screen -->
+<div id="inviteScreen" class="container invite" hidden="hidden">
+  <div class="row flex-nowrap">
+    <div class="col-md-11 col-10">
+      <h2>Invite</h2>
+    </div>
+    <div class="col-md col-2">
+      <button onclick="closeInvite()" class="close">X</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      <p>Click the link below to copy it and end it to your friends:</p>
+      <a href="https://machtarok.com/?join=CODE" class="share-link copy-text">machtarok.com/?join=CODE</a><span hidden="hidden" id="copied">  Copied!</span>
+    </div>
+    <div class="col-12">
+      <br>
+      <h3>Online Players:</h3>
+      <table class="table">
+        <thead>
+        <tr>
+          <th scope="col">Username</th>
+          <th scope="col">Status</th>
+          <th scope="col">Invite</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td>Username</td>
+          <td>Online</td>
+          <td><button>Invite</button></td>
+        </tr>
+        <tr>
+          <td>Username</td>
+          <td>Idle</td>
+          <td><button>Invite</button></td>
+        </tr>
+        <tr>
+          <td>Username</td>
+          <td>In Game</td>
+          <td><button>Invite</button></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <div class="container">
@@ -74,71 +152,7 @@
     <div id="roundInfo" class="row">
       <!-- This will have money cards, povenost, prever, valat, contra, IOTE, etc. -->
     </div>
-    <div id="host" class="row">
-        <div class="col-12">
-          <h2 class="centered">Room I</h2>
-        </div>
-        <div class="col-md-6 col-12">
-          <div>
-            <span>1.</span>
-            <span>Username (You)</span>
-          </div>
-          <div>
-            <span>2.</span>
-            <select id="player2Select" onchange="submitSettings('p2')">
-              <option value="0">Open</option>
-              <option value="1">Robot</option>
-              <option value="2">AI</option>
-            </select>
-          </div>
-          <div>
-            <span>3.</span>
-            <select id="player3Select" onchange="submitSettings('p3')">
-              <option value="0">Open</option>
-              <option value="1">Robot</option>
-              <option value="2">AI</option>
-            </select>
-          </div>
-          <div>
-            <span>4.</span>
-            <select id="player4Select" onchange="submitSettings('p4')">
-              <option value="0">Open</option>
-              <option value="1">Robot</option>
-              <option value="2">AI</option>
-            </select>
-          </div>
-          <br>
-          <button onclick="invite()">Invite</button>
-        </div>
-      <div class="col-md-6 col-12">
-        <div id="settings">
-          <span style="display: inline-block; width: 175px;">Select the difficulty:	</span>
-          <select id="difficultySelector" name="Select Difficulty:" onchange="submitSettings(&quot;difficulty&quot;)">
-            <option value="0" id="Beginner">Beginner</option>
-            <option value="1" id="Easy">Easy</option>
-            <option value="2" id="Normal">Normal</option>
-            <option value="3" id="Hard">Hard</option>
-            <option value="4" id="Ruthless">Ruthless</option>
-            <option value="5" id="AI">AI</option>
-          </select>
-          <br>
-          <span style="display: inline-block; width: 175px;">Timeout (in seconds):	</span>
-          <input type="number" value="30" min="-1" id="timeoutButton" onchange="submitSettings(&quot;timeout&quot;)">
-          <br>
-          <span style="display: inline-block; width: 175px;">Ace High:	</span>
-          <input type="checkbox" checked="false" id="aceHighSelector" onchange="submitSettings(&quot;aceHigh&quot;)">
-          <br>
-          <span style="display: inline-block; width: 175px;" id="lockButtonP">Visibility:	</span>
-          <button id="lockButton" onclick="if (this.innerHTML=='Public'){this.innerHTML='Private';}else{this.innerHTML='Public';}submitSettings('visibility')">Private</button>
-          <br>
-        </div>
-      </div>
-      <div class="col-12">
-        <br>
-        <input type="checkbox"><span>Ready</span>
-        <button>Start Game</button>
-      </div>
-    </div>
+
   </div>
 
 
@@ -164,6 +178,29 @@
   </div>
 </div>
 
-<script>includeHTML();</script>
+<script>
+  includeHTML();
+  $('.copy-text').click(function (e) {
+      //First: try to share it
+      if (navigator.share) {
+        navigator.share(
+          {title: 'Mach Tarok Invite',text: 'Let\'s Play Taroky!',url: 'machtarok.com/?join=CODE'}
+        ).then(() => console.log('Successful share')
+        ).catch(error => console.log('Error sharing:', error));
+      } else {
+         //Otherwise, copy the link
+         e.preventDefault();
+         let copyText = $(this).attr('href');
+
+         document.addEventListener('copy', function(e) {
+            e.clipboardData.setData('text/plain', copyText);
+            e.preventDefault();
+         }, true);
+
+         document.execCommand('copy');
+       }
+       document.getElementById('copied').removeAttribute('hidden');
+     });
+</script>
 </body>
 </html>

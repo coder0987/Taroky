@@ -421,11 +421,9 @@ class Deck {
     }
 
     //Getters
-
     get deck() {
         return this._deck
     }
-
 
 }
 

@@ -277,6 +277,7 @@ function notationToSettings(room,notation) {
                     }
                 case 'lock':
                 case 'locked':
+                    room.settings.lock = rule == 'true';
                     break;
                 case 'pn':
                     //Handled later
@@ -319,6 +320,8 @@ function notationToObject(notation) {
                     break;
                 case 'lock':
                 case 'locked':
+                    settingsObject.lock = rule;
+                    break;
                 case 'pn':
                     //Handled later
                     break;
@@ -2587,7 +2590,7 @@ function autoReconnect(socketId) {
             //Player is playing in the room
             reconnectInfo.roomConnected = players[socketId].room;
             reconnectInfo.pn = players[socketId].pn;
-            reconnectInfo.host = players[rooms[players[socketId].room].host].pn;
+            reconnectInfo.host = {number: players[rooms[players[socketId].room].host].pn, name: rooms[players[socketId].room].name, joinCode: rooms[players[socketId].room].joinCode};
             if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard') {
                 Deck.grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
                 reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].settings.aceHigh)];
@@ -2734,9 +2737,26 @@ io.sockets.on('connection', function (socket) {
         }
         if (!connected) socket.emit('audienceNotConnected', roomID);
     });
-    socket.on('roomConnect', function (roomID) {
+    socket.on('roomConnect', function (roomID, idIsCode) {
         let connected = false;
-        if (players[socketId] && rooms[roomID] && rooms[roomID]['playerCount'] < 4 && !rooms[roomID].settings.locked && players[socketId] && players[socketId].room == -1) {
+        if (idIsCode) {
+            let codeWorked = false;
+            SERVER.log('Joining by room code ' + roomID);
+            roomID = roomID.toUpperCase();
+            for (let i in rooms) {
+                if (rooms[i].joinCode == roomID) {
+                    roomID = i;
+                    codeWorked = true;
+                    break;
+                }
+            }
+            if (!codeWorked) {
+                SERVER.debug('This room does not exist',roomID);
+                socket.emit('roomNotConnected', roomID);
+                return;
+            }
+        }
+        if (players[socketId] && rooms[roomID] && rooms[roomID]['playerCount'] < 4 && (!rooms[roomID].settings.locked || idIsCode) && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
@@ -2800,7 +2820,7 @@ io.sockets.on('connection', function (socket) {
             players[socketId]['pn'] = pn;
             theRoom['host'] = socketId;
             socket.emit('roomHost');
-            socket.emit('youStart');
+            socket.emit('youStart', theRoom.name, theRoom.joinCode);
             socket.emit('timeSync', Date.now());
         }
     });
@@ -2997,13 +3017,12 @@ io.sockets.on('connection', function (socket) {
                     }
                     break;
                 case 'lock':
-                    if (rule) {
-                        //Room may be locked but not unlocked
-                        rooms[players[socketId].room].settings.locked = true;
-                        setSettingNotation(rooms[players[socketId].room]);
-                        SERVER.log('This room has been locked by the host', players[socketId].room);
-                        rooms[players[socketId].room].informPlayers('The room has been locked. No more players may join', MESSAGE_TYPE.SETTING);
-                    }
+                    //Room may be locked or unlocked
+                    rooms[players[socketId].room].settings.locked = !(!rule);
+                    setSettingNotation(rooms[players[socketId].room]);
+                    let toSend = rooms[players[socketId].room].settings.locked ? 'This room is now private' : 'This room is now public';
+                    SERVER.log(toSend, players[socketId].room);
+                    rooms[players[socketId].room].informPlayers(toSend, MESSAGE_TYPE.SETTING);
                     break;
                 case 'aceHigh':
                     if (rule) {
@@ -3015,6 +3034,28 @@ io.sockets.on('connection', function (socket) {
                     }
                     setSettingNotation(rooms[players[socketId].room]);
                     break;
+            }
+        }
+    });
+    socket.on('getPlayerList', function() {
+        let playerListToSend = [];
+        for (let i in players) {
+            if (i != socketId) {
+                playerListToSend.push({
+                    username: players[i].username,
+                    status: (players[i].disconnecting ? 'Idle' : players[i].room == -1 ? 'Online' : 'In Game'),
+                    socket: i
+                });
+            }
+        }
+        socket.emit('returnPlayerList', playerListToSend);
+    });
+    socket.on('invite', function(toInvite) {
+        SERVER.log(socketId + ' sent an invite to ' + toInvite);
+        if (players[socketId].room != -1 && rooms[players[socketId].room] && rooms[players[socketId].room].board.nextStep.action == 'start') {
+            if (players[toInvite]) {
+                SERVER.debug('Invite was sent');
+                players[toInvite].socket.emit('invite', players[socketId].room, rooms[players[socketId].room].joinCode, players[socketId].username);
             }
         }
     });
