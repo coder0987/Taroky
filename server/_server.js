@@ -3360,6 +3360,25 @@ io.sockets.on('connection', function (socket) {
             delete rooms[id];
         }
     });
+    socket.on('broadcastMessage', function (playerName, messageText) {
+        let room = players[socketId].room;
+        if (rooms[room]) {
+            for (player in rooms[room].players) {
+                if (player.type == PLAYER_TYPE.HUMAN && player.socketId != socketId) {
+                    player.socket.emit('chatMessage', playerName, messageText);
+                }
+            }
+            for (member in rooms[room].audience && member.socketId != socketId) {
+                member.messenger.emit('chatMessage', playerName, messageText);
+            }
+        } else {
+            for (player in players) {
+                if (player.room != -1 && player.socketId != socketId) {
+                    player.socket.emit('chatMessage', playerName, messageText);
+                }
+            }
+        }
+    })
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }

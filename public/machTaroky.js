@@ -867,7 +867,9 @@ function sendMessage() {
 
     let playerName = !activeUsername ? "Guest" : activeUsername
 
-    playerSentMessage(playerName,messageText);
+    playerSentMessage(playerName, messageText);
+
+    socket.emit('broadcastMessage',playerName,messageText);
 }
 
 function submitSettings(type) {
