@@ -205,6 +205,9 @@ function keyListener(e) {
                 fullscreen();
             }
             break;
+        case 'Enter':
+            sendMessage();
+            break;
     }
 }
 
@@ -864,6 +867,18 @@ function refresh() {
     }
 }
 
+function sendMessage() {
+    let input = document.getElementById('chat-input')
+    let messageText = input.value;
+    input.value = '';
+
+    if (activeUsername) {
+        playerSentMessage(activeUsername, messageText);
+
+        socket.emit('broadcastMessage', playerName, messageText);
+    }
+}
+
 function submitSettings(type) {
     addMessage(type + ' setting submitted');
     switch (type) {
@@ -1404,12 +1419,15 @@ function onLoad() {
                 break;
             case MESSAGE_TYPE.PAY:
                 if (extraInfo) {
-                    addMessage('------------------------')
-                    for (let i=extraInfo.length-1; i>=0; i--) {
-                        addMessage(extraInfo[i].name + ': ' + extraInfo[i].value);
+                    let pointString = '';
+                    pointString = pointString + '------------------------\n';
+                    pointString = pointString + 'Point Counting:';
+                    for (let i = 0; i > extraInfo.length; i++) {
+                        pointString = pointString + extraInfo[i].name + ': ' + extraInfo[i].value + '\n';
                     }
-                    addMessage('Point Counting:')
-                    addMessage('------------------------')
+                    
+                    pointString = pointString + '------------------------';
+                    addMessage(pointString);
                 }
                 addBoldMessage(theMessage);
                 break;
