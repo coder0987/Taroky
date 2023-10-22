@@ -3389,6 +3389,31 @@ io.sockets.on('connection', function (socket) {
             delete rooms[id];
         }
     });
+    socket.on('broadcastMessage', function (playerName, messageText) {
+        SERVER.log(playerName + ': ' + messageText);
+        let room = players[socketId].room;
+        if (rooms[room]) {
+            for (playerToReceive in rooms[room].players) {
+                if (rooms[room].players[playerToReceive].type == PLAYER_TYPE.HUMAN && rooms[room].players[playerToReceive].socket != socketId && rooms[room].players[playerToReceive].socket != -1) {
+                    SERVER.log(playerToReceive);
+                    SOCKET_LIST[rooms[room].players[playerToReceive].socket].emit('chatMessage', playerName, messageText);
+                }
+            }
+            for (member in rooms[room].audience) {
+                if (rooms[room].audience[member].socketId != socketId) {
+                    rooms[room].audience[member].messenger.emit('chatMessage', playerName, messageText);
+                }
+                
+            }
+        } else {
+            for (playerToReceive in players) {
+                if (players[playerToReceive].room == -1 && playerToReceive != socketId && SOCKET_LIST[playerToReceive]) {
+                    SERVER.log(playerToReceive);
+                    SOCKET_LIST[playerToReceive].emit('chatMessage', playerName, messageText);
+                }
+            }
+        }
+    })
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
