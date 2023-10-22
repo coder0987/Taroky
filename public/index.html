@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport"
-        content="width=device-width, initial-scale=1">
+          content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="google-site-verification" content="nbjYjxk3X-LYzr5IkNG2gTpM3pfo4eQnfHYJiBMZSQU" />
 
@@ -31,6 +31,7 @@
     <script src="/assets/hopscotch/hopscotch.js"></script>
     <script src="/chatbox.js"></script>
     <script src="/machTaroky.js"></script>
+
 </head>
 <body>
 
@@ -61,6 +62,38 @@
 -->
 <div w3-include-html="/nav.html"></div>
 
+<div id="inviteScreen" class="container invite" hidden="hidden">
+    <div class="row flex-nowrap">
+        <div class="col-md-11 col-10">
+            <h2>Invite</h2>
+        </div>
+        <div class="col-md col-2">
+            <button onclick="closeInvite()" class="close">X</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <p>Click the link below to copy it and end it to your friends:</p>
+            <a id="inviteJoinCode" href="https://machtarok.com/?join=CODE" class="share-link copy-text">machtarok.com/?join=CODE</a><span hidden="hidden" id="copied">  Copied!</span>
+        </div>
+        <div class="col-12">
+            <br>
+            <h3>Online Players:</h3>
+            <table class="table" id="inviteTable">
+                <thead>
+                <tr>
+                    <th scope="col">Username</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Invite</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <div class="container">
 
     <!--
@@ -86,7 +119,7 @@
     
 
     <div id="outer">
-        <div id="actionInfo" class="row">
+        <div id="actionInfo" class="row actionInfo">
             <div class="col-md"></div>
             <div class="col">
                 <div id="timer"></div>
@@ -99,7 +132,7 @@
             </div>
             <div class="col-md"></div>
         </div>
-        <div id="table" class="row" hidden>
+        <div id="table" class="row table-container" hidden>
             <div id="p1" class="col"><p hidden>Player 1</p></div>
             <div id="p2" class="col"><p hidden>Player 2</p></div>
             <div id="p3" class="col"><p hidden>Player 3</p></div>
@@ -108,14 +141,84 @@
         </div>
         <div id="center"></div>
         <hr>
-        <div id="hand"></div>
-        <div id="roundInfo" class="row">
+        <div id="hand" class="hand"></div>
+        <div id="roundInfo" class="row roundInfo">
             <!-- This will have money cards, povenost, prever, valat, contra, IOTE, etc. -->
         </div>
-        <div id="host"></div>
+        <div id="host" hidden="hidden" class="row">
+                <div class="col-12">
+                    <h2 class="centered" id="settingsRoomName">Room I (Join code OWGVN)</h2>
+                </div>
+                <div class="col-md-6 col-12">
+                    <div>
+                        <span>1.</span>
+                        <span id="settingsScreenPn1">Username (You)</span>
+                    </div>
+                    <div>
+                        <span>2.</span>
+                        <span id="settingsScreenPn2">Robot</span>
+                    </div>
+                    <div>
+                        <span>3.</span>
+                        <span id="settingsScreenPn3">Robot</span>
+                    </div>
+                    <div>
+                        <span>4.</span>
+                        <span id="settingsScreenPn4">Robot</span>
+                    </div>
+                    <br>
+                    <button onclick="invite()">Invite</button>
+                </div>
+                <div class="col-md-6 col-12">
+                    <div id="settings" hidden="hidden">
+                        <span style="display: inline-block; width: 175px;">Select the difficulty:	</span>
+                        <select id="difficultySelector" name="Select Difficulty:" onchange="submitSettings(&quot;difficulty&quot;)">
+                            <option value="0" id="Beginner">Beginner</option>
+                            <option value="1" id="Easy">Easy</option>
+                            <option value="2" id="Normal">Normal</option>
+                            <option value="3" id="Hard">Hard</option>
+                            <option value="4" id="Ruthless">Ruthless</option>
+                            <option value="5" id="AI">AI</option>
+                        </select>
+                        <br>
+                        <span style="display: inline-block; width: 175px;">Timeout (in seconds):	</span>
+                        <input type="number" value="30" min="-1" id="timeoutButton" onchange="submitSettings(&quot;timeout&quot;)">
+                        <br>
+                        <span style="display: inline-block; width: 175px;">Ace High:	</span>
+                        <input type="checkbox" checked="false" id="aceHighSelector" onchange="submitSettings(&quot;aceHigh&quot;)">
+                        <br>
+                        <span style="display: inline-block; width: 175px;" id="lockButtonP">Visibility:	</span>
+                        <button id="lockButton" onclick="if (this.innerHTML=='Public'){this.innerHTML='Private';}else{this.innerHTML='Public';}submitSettings('visibility')">Private</button>
+                        <br>
+                    </div>
+                    <div id="display-settings" hidden="hidden">
+                            <span style="display: inline-block; width: 175px;">Select the difficulty:	</span><span id="display-difficulty"></span>
+                            <br>
+                            <span style="display: inline-block; width: 175px;">Timeout (in seconds):	</span><span id="display-timeout"></span>
+                            <br>
+                            <span style="display: inline-block; width: 175px;">Ace High:	</span><span id="display-ace"></span>
+                            <br>
+                            <span style="display: inline-block; width: 175px;">Visibility:	</span><span id="display-visibility"></span>
+                            <br>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <br>
+                    <!--<input type="checkbox"><span>Ready</span>-->
+                    <button hidden id="startGame" onclick="removeHostTools();addMessage('Starting...');socket.emit('startGame');">Start Game</button>
+                </div>
+        </div>
     </div>
     <div id="rooms"></div>
-    <div id="chatbox"><p></p></div>
+    <div id="chat-box-container" class="chat-box-container">
+        <div id="chatbox" class="chat-box"><p></p></div>
+        <div id="chat-entry" class="chat-box-entry" hidden="hidden">
+            <form id="chat-form" class="chat-form" novalidate onsubmit="return false;">
+                <input id="chat-input" class="chat-input" maxlength="1000" type="text" required="" placeholder="Your Message (press Enter to submit)" value="">
+            </form>
+            <button id="chat-send-button" class="button btn red sticky-bottom send-button" onclick="sendMessage()">&#10148; Send</button>
+        </div>
+    </div>
     <div id="deck">
         <img hidden="hidden" src="/assets/mach-deck-thumb/card-back-t.png" id="cardBack" onload="cardBackLoaded=true">
     </div>

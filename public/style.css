@@ -435,9 +435,83 @@ h4 {
     width: 35%;
 }
 
+
+
+/* Settings and Invite Screen */
+#inviteScreen {
+    position: fixed;
+    width: 80%;
+    height: 80%;
+    z-index:98;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background-color: white;
+    border-radius: 30px;
+    padding: 30px;
+}
+
+.close {
+    color: gray;
+    border-radius: 3rem;
+    font-size: 1.5rem;
+    width: 3rem;
+    height: 3rem;
+    text-align: center;
+}
+
+.share-link {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--navy);
+    text-decoration: none;
+}
+
+.invite-card {
+    position: fixed;
+    width: 100%;
+    height: 10%;
+    min-height: 6rem;
+    z-index:99;
+    top: 80%;
+    left: 0;
+    transform: translate(0, -50%);
+    text-align: center;
+
+    background-color: var(--navy);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.invite-card-header {
+    color: var(--white);
+    text-align: left;
+}
+
+.invite-card-button {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--red);
+    text-decoration: none;
+}
+
+.invite-card-spacer {
+    margin: 10px;
+    color: black;
+}
+
+
+
 @media (min-width: 576px) {
     .back {
         width: 30%;
+    }
+    .invite-card {
+        width: 60%;
+        left: 40%;
     }
 }
 
@@ -445,11 +519,19 @@ h4 {
     .back {
         width: 20%;
     }
+    .invite-card {
+        width: 50%;
+        left: 50%;
+    }
 }
 
 @media (min-width: 992px) {
     .back {
         width: 15%;
+    }
+    .invite-card {
+        width: 20%;
+        left: 80%;
     }
 }
 
@@ -463,4 +545,164 @@ h4 {
     .back {
         width: 10%;
     }
+}
+
+.board-container {
+    display: grid;
+    gap: 1px;
+    height: 100%;
+    width: 100%;
+    grid-template-columns: [cols-start col1-start] 1fr [col1-end col2-start] 5fr [col2-end col3-start] 1fr [col3-end cols-end];
+    grid-template-rows: [rows-start row1-start] 1fr [row1-end row2-start] 5fr [row2-end row3-start] 1fr [row3-end rows-end];
+    outline: green solid 3px;
+}
+
+.player-1-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    grid-column: col2-start / col2-end;
+    grid-row: row3-start / row3-end;
+    outline: red solid 1px;
+}
+
+.player-2-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    grid-column: col3-start / col3-end;
+    grid-row: row2-start / row2-end;
+    outline: red solid 1px;
+}
+
+.player-3-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    grid-column: col2-start / col2-end;
+    grid-row: row1-start / row1-end;
+    outline: red solid 1px;
+}
+
+.player-4-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    grid-column: col1-start / col1-end;
+    grid-row: row2-start / row2-end;
+    outline: red solid 1px;
+}
+
+.table-container {
+    /*outline: green solid 3px;*/
+}
+
+.chat-box-container {
+    /*outline: red solid 3px;*/
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-box {
+    max-height: 300px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.chat-box-entry {
+    display: flex;
+    justify-content: space-between;
+}
+
+.chat-form {
+    flex-grow: 1;
+}
+
+.chat-input {
+    width: 100%;
+}
+
+.send-button {
+    flex-shrink: 0;
+    margin: 2px;
+}
+
+.message-container {
+    display: flex;
+    flex-direction: row; /* Stack authoer and chat bubble horizontally */
+}
+
+.author-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+}
+
+.author-text {
+    color: var(--navy);
+}
+
+.chat-bubble {
+    display: flex;
+    margin: 8px;
+    width: 100%;
+}
+
+.message {
+    background-color: var(--navy); /* Set the background color for messages */
+    color: var(--white); /* Set the text color for messages */
+    border-radius: 10px; /* Add rounded corners to the bubble */
+    padding: 10px; /* Add padding to the bubble */
+    padding-bottom: 2px;
+    width: 100%; /* Make the chat bubble fill the horizontal space */
+    display: flex;
+    flex-direction: column; /* Stack message and timestamp vertically */
+    margin: 1px;
+}
+
+.message-text {
+    /* Style for the message text span */
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.timestamp {
+    align-self: flex-end;
+    color: var(--white); /* Adjust the color of the timestamp as needed */
+    font-size: 10px; /* Adjust the font size as needed */
+}
+
+.actionInfo {
+    /*outline: purple solid 3px;*/
+}
+
+.roundInfo {
+    /*outline: blue solid 3px;*/
+}
+
+.hand {
+    /*outline: orange solid 3px;*/
+}
+
+.p1 {
+    transform: rotate(0deg);
+}
+
+.p2 {
+    transform: rotate(270deg);
+}
+
+.p3 {
+    transform: rotate(180deg);
+}
+
+.p4 {
+    transform: rotate(90deg);
 }

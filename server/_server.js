@@ -277,6 +277,7 @@ function notationToSettings(room,notation) {
                     }
                 case 'lock':
                 case 'locked':
+                    room.settings.lock = rule == 'true';
                     break;
                 case 'pn':
                     //Handled later
@@ -319,6 +320,8 @@ function notationToObject(notation) {
                     break;
                 case 'lock':
                 case 'locked':
+                    settingsObject.lock = rule;
+                    break;
                 case 'pn':
                     //Handled later
                     break;
@@ -2587,7 +2590,7 @@ function autoReconnect(socketId) {
             //Player is playing in the room
             reconnectInfo.roomConnected = players[socketId].room;
             reconnectInfo.pn = players[socketId].pn;
-            reconnectInfo.host = players[rooms[players[socketId].room].host].pn;
+            reconnectInfo.host = {number: players[rooms[players[socketId].room].host].pn, name: rooms[players[socketId].room].name, joinCode: rooms[players[socketId].room].joinCode};
             if (rooms[players[socketId].room]['board']['nextStep'].action == 'discard') {
                 Deck.grayUndiscardables(rooms[players[socketId].room].players[players[socketId].pn].hand);
                 reconnectInfo.hand = [...Deck.sortCards(rooms[players[socketId].room].players[players[socketId].pn].hand, rooms[players[socketId].room].settings.aceHigh)];
@@ -2615,7 +2618,7 @@ function autoReconnect(socketId) {
         if (!SENSITIVE_ACTIONS[rooms[players[socketId].room]['board']['nextStep'].action]) {
             reconnectInfo.nextAction = rooms[players[socketId].room]['board']['nextStep'];
         }
-
+        reconnectInfo.playersInGame = rooms[players[socketId].room].playersInGame;
         reconnectInfo.povinnost = rooms[players[socketId].room].board.povinnost;
     }
     if (players[socketId].username != 'Guest') {
@@ -2704,6 +2707,11 @@ io.sockets.on('connection', function (socket) {
                         SERVER.log('Stopped empty game',players[socketId].room);
                     } else {
                         rooms[players[socketId].room].informPlayers('left the room',MESSAGE_TYPE.DISCONNECT,{},players[socketId].pn);
+                        for (let i in rooms[players[socketId].room].players) {
+                            if (rooms[players[socketId].room].players[i].messenger) {
+                                rooms[players[socketId].room].players[i].messenger.emit('returnPlayersInGame', rooms[players[socketId].room].playersInGame);
+                            }
+                        }
                         if (rooms[players[socketId].room].board.nextStep.player == players[socketId].pn) {
                             //Player was supposed to take an action
                             autoAction(rooms[players[socketId].room].board.nextStep, rooms[players[socketId].room], players[socketId].pn)
@@ -2734,9 +2742,26 @@ io.sockets.on('connection', function (socket) {
         }
         if (!connected) socket.emit('audienceNotConnected', roomID);
     });
-    socket.on('roomConnect', function (roomID) {
+    socket.on('roomConnect', function (roomID, idIsCode) {
         let connected = false;
-        if (players[socketId] && rooms[roomID] && rooms[roomID]['playerCount'] < 4 && !rooms[roomID].settings.locked && players[socketId] && players[socketId].room == -1) {
+        if (idIsCode) {
+            let codeWorked = false;
+            SERVER.log('Joining by room code ' + roomID);
+            roomID = roomID.toUpperCase();
+            for (let i in rooms) {
+                if (rooms[i].joinCode == roomID) {
+                    roomID = i;
+                    codeWorked = true;
+                    break;
+                }
+            }
+            if (!codeWorked) {
+                SERVER.debug('This room does not exist',roomID);
+                socket.emit('roomNotConnected', roomID);
+                return;
+            }
+        }
+        if (players[socketId] && rooms[roomID] && rooms[roomID]['playerCount'] < 4 && (!rooms[roomID].settings.locked || idIsCode) && players[socketId] && players[socketId].room == -1) {
             for (let i = 0; i < 4; i++) {
                 if (rooms[roomID]['players'][i].type == PLAYER_TYPE.ROBOT) {
                     rooms[roomID]['players'][i].type = PLAYER_TYPE.HUMAN;
@@ -2754,6 +2779,11 @@ io.sockets.on('connection', function (socket) {
                         socket.emit('debugRoomJoin');
                     }
                     socket.emit('timeSync', Date.now());
+                    for (let i in rooms[roomID].players) {
+                        if (rooms[roomID].players[i].messenger) {
+                            rooms[roomID].players[i].messenger.emit('returnPlayersInGame', rooms[roomID].playersInGame);
+                        }
+                    }
                     break;
                 }
             }
@@ -2800,8 +2830,13 @@ io.sockets.on('connection', function (socket) {
             players[socketId]['pn'] = pn;
             theRoom['host'] = socketId;
             socket.emit('roomHost');
-            socket.emit('youStart');
+            socket.emit('youStart', theRoom.name, theRoom.joinCode);
             socket.emit('timeSync', Date.now());
+            for (let i in theRoom.players) {
+                if (theRoom.players[i].messenger) {
+                    theRoom.players[i].messenger.emit('returnPlayersInGame', theRoom.playersInGame);
+                }
+            }
         }
     });
     socket.on('customRoom', function (tarokyNotation) {
@@ -2835,6 +2870,12 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['host'] = socketId;
                     autoReconnect(socketId);
                     socket.emit('timeSync', Date.now());
+
+                    for (let i in rooms[roomID].players) {
+                        if (rooms[roomID].players[i].messenger) {
+                            rooms[roomID].players[i].messenger.emit('returnPlayersInGame', rooms[roomID].playersInGame);
+                        }
+                    }
 
                     let playerType = rooms[roomID].players[0].type;
                     let action = rooms[roomID].board.nextStep;
@@ -2997,13 +3038,12 @@ io.sockets.on('connection', function (socket) {
                     }
                     break;
                 case 'lock':
-                    if (rule) {
-                        //Room may be locked but not unlocked
-                        rooms[players[socketId].room].settings.locked = true;
-                        setSettingNotation(rooms[players[socketId].room]);
-                        SERVER.log('This room has been locked by the host', players[socketId].room);
-                        rooms[players[socketId].room].informPlayers('The room has been locked. No more players may join', MESSAGE_TYPE.SETTING);
-                    }
+                    //Room may be locked or unlocked
+                    rooms[players[socketId].room].settings.locked = !(!rule);
+                    setSettingNotation(rooms[players[socketId].room]);
+                    let toSend = rooms[players[socketId].room].settings.locked ? 'This room is now private' : 'This room is now public';
+                    SERVER.log(toSend, players[socketId].room);
+                    rooms[players[socketId].room].informPlayers(toSend, MESSAGE_TYPE.SETTING);
                     break;
                 case 'aceHigh':
                     if (rule) {
@@ -3015,6 +3055,33 @@ io.sockets.on('connection', function (socket) {
                     }
                     setSettingNotation(rooms[players[socketId].room]);
                     break;
+            }
+            for (let i in rooms[players[socketId].room].players) {
+                if (rooms[players[socketId].room].players[i].messenger) {
+                    rooms[players[socketId].room].players[i].messenger.emit('returnSettings', rooms[players[socketId].room].settings);
+                }
+            }
+        }
+    });
+    socket.on('getPlayerList', function() {
+        let playerListToSend = [];
+        for (let i in players) {
+            if (i != socketId && players[i].room != players[socketId].room) {
+                playerListToSend.push({
+                    username: players[i].username,
+                    status: (players[i].disconnecting ? 'Idle' : players[i].room == -1 ? 'Online' : 'In Game'),
+                    socket: i
+                });
+            }
+        }
+        socket.emit('returnPlayerList', playerListToSend);
+    });
+    socket.on('invite', function(toInvite) {
+        SERVER.log(socketId + ' sent an invite to ' + toInvite);
+        if (players[socketId].room != -1 && rooms[players[socketId].room] && rooms[players[socketId].room].board.nextStep.action == 'start') {
+            if (players[toInvite]) {
+                SERVER.debug('Invite was sent');
+                players[toInvite].socket.emit('invite', players[socketId].room, rooms[players[socketId].room].joinCode, players[socketId].username);
             }
         }
     });
@@ -3348,6 +3415,31 @@ io.sockets.on('connection', function (socket) {
             delete rooms[id];
         }
     });
+    socket.on('broadcastMessage', function (playerName, messageText) {
+        SERVER.log(playerName + ': ' + messageText);
+        let room = players[socketId].room;
+        if (rooms[room]) {
+            for (playerToReceive in rooms[room].players) {
+                if (rooms[room].players[playerToReceive].type == PLAYER_TYPE.HUMAN && rooms[room].players[playerToReceive].socket != socketId && rooms[room].players[playerToReceive].socket != -1) {
+                    SERVER.log(playerToReceive);
+                    SOCKET_LIST[rooms[room].players[playerToReceive].socket].emit('chatMessage', playerName, messageText);
+                }
+            }
+            for (member in rooms[room].audience) {
+                if (rooms[room].audience[member].socketId != socketId) {
+                    rooms[room].audience[member].messenger.emit('chatMessage', playerName, messageText);
+                }
+                
+            }
+        } else {
+            for (playerToReceive in players) {
+                if (players[playerToReceive].room == -1 && playerToReceive != socketId && SOCKET_LIST[playerToReceive]) {
+                    SERVER.log(playerToReceive);
+                    SOCKET_LIST[playerToReceive].emit('chatMessage', playerName, messageText);
+                }
+            }
+        }
+    })
 });
 
 function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
