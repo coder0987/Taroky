@@ -1,8 +1,7 @@
-//Classes to try and organize a little
 class ChatBox {
     constructor() {
         this.container = document.getElementById('chatbox');
-        this.messages = [];
+        this.chatMessages = [];
     }
 
     addServerMessage(messageText,bold=false) {
@@ -13,8 +12,8 @@ class ChatBox {
         if (lastMessage && author == lastMessage.getAuthor() && currentTimestamp == lastMessage.getTimestamp()) {
             lastMessage.addNewLineOfMessage(messageText,bold);
         } else {
-            let message = new Message(author, messageText, bold);
-            this.messages.push(message);
+            let message = new ChatMessage(author, messageText, bold);
+            this.chatMessages.push(message);
             this.container.appendChild(message.getHTMLElement());
         }
         this.updateScrollHeight();
@@ -27,16 +26,16 @@ class ChatBox {
         if (lastMessage && author == lastMessage.getAuthor() && currentTimestamp == lastMessage.getTimestamp()) {
             lastMessage.addNewLineOfMessage(messageText, false);
         } else {
-            let message = new Message(author, messageText, false);
-            this.messages.push(message);
+            let message = new ChatMessage(author, messageText, false);
+            this.chatMessages.push(message);
             this.container.appendChild(message.getHTMLElement());
         }
         this.updateScrollHeight();
     }
 
     getLastMessage() {
-        if (this.messages.length > 0) {
-            return this.messages[this.messages.length - 1];
+        if (this.chatMessages.length > 0) {
+            return this.chatMessages[this.messages.length - 1];
         } else {
             return null; // Return null if there are no messages
         }
@@ -46,7 +45,7 @@ class ChatBox {
     }
 }
 
-class Message {
+class ChatMessage {
     constructor(author, message, bold) {
         this.author = author;
         this.timestamp = getFormattedTime();
@@ -133,6 +132,20 @@ class Message {
     }
 }
 
+class GameLog {
+    constructor() {
+        this.container = document.getElementById('gamelog');
+        this.logMessages = [];
+    }
+}
+
+class GameLogMessage {
+
+}
+
+class Ledger {
+
+}
 
 //These functions will all need to be changed
 //Feel free to do whatever with them, so long as they get the messages to the players
