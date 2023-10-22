@@ -1113,7 +1113,7 @@ function onLoad() {
         } else {
             activeUsername = '';
         }
-        if (typeof data.defaultSettings !== 'undefined') {
+        if (typeof data.defaultSettings !== 'undefined' && data.defaultSettings != 'false') {
             defaultSettings = data.defaultSettings;
         }
         if (typeof data.playerCount !== 'undefined') {
@@ -1500,7 +1500,7 @@ function onLoad() {
         }
     });
     socket.on('defaultSettings', function(returnSettings) {
-        if (defaultSettings) {
+        if (defaultSettings != 'false') {
             console.log(defaultSettings);
             defaultSettings = returnSettings;
             addBoldMessage('Settings loaded');
