@@ -522,7 +522,7 @@ h4 {
 }
 
 .chat-box-container {
-    outline: red solid 3px;
+    /*outline: red solid 3px;*/
     display: flex;
     flex-direction: column;
 }
@@ -598,15 +598,15 @@ h4 {
 }
 
 .actionInfo {
-    outline: purple solid 3px;
+    /*outline: purple solid 3px;*/
 }
 
 .roundInfo {
-    outline: blue solid 3px;
+    /*outline: blue solid 3px;*/
 }
 
 .hand {
-    outline: orange solid 3px;
+    /*outline: orange solid 3px;*/
 }
 
 .p1 {

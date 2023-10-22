@@ -865,11 +865,11 @@ function sendMessage() {
     let messageText = input.value;
     input.value = '';
 
-    let playerName = !activeUsername ? "Guest" : activeUsername
+    if (activeUsername) {
+        playerSentMessage(activeUsername, messageText);
 
-    playerSentMessage(playerName, messageText);
-
-    socket.emit('broadcastMessage',playerName,messageText);
+        socket.emit('broadcastMessage', playerName, messageText);
+    }
 }
 
 function submitSettings(type) {
