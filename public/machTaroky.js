@@ -632,6 +632,7 @@ function displayRoomConnected(roomConnected) {
     let exitRoom = document.getElementById('refresh');
     exitRoom.innerHTML = 'Leave the Room';
     exitRoom.setAttribute('onclick','exitCurrentRoom()');
+    document.getElementById('joinRoomDiv').hidden = 'hidden';
 }
 
 function displayAudienceConnected(audienceConnected) {
@@ -691,6 +692,7 @@ function displayNextAction(action) {
                 } catch (ignore) {}
                 if (!shuffleButton) {
                     shuffleButton = document.createElement('button');
+                    shuffleButton.classList.add('choice-button');
                     shuffleButton.id = 'shuffleButton';
                     shuffleButton.innerHTML = 'Shuffle';
                     shuffleButton.addEventListener('click',function() {
@@ -1416,15 +1418,12 @@ function onLoad() {
                 break;
             case MESSAGE_TYPE.PAY:
                 if (extraInfo) {
-                    let pointString = '';
-                    pointString = pointString + '------------------------\n';
-                    pointString = pointString + 'Point Counting:';
+                    addMessage('------------------------');
+                    addMessage('Point Counting:');
                     for (let i = 0; i > extraInfo.length; i++) {
-                        pointString = pointString + extraInfo[i].name + ': ' + extraInfo[i].value + '\n';
+                        addMessage(extraInfo[i].name + ': ' + extraInfo[i].value);
                     }
-                    
-                    pointString = pointString + '------------------------';
-                    addMessage(pointString);
+                    addMessage('------------------------');
                 }
                 addBoldMessage(theMessage);
                 break;
@@ -1465,10 +1464,10 @@ function onLoad() {
         addMessage('You are player ' + (+pN+1));
         addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's' + ' with ace high ' + (returnSettings.aceHigh?'enabled':'disabled'));
 
-        document.getElementById('host').hidden = true;
-        document.getElementById('startGame').hidden = true;
-        document.getElementById('settings').hidden = true;
-        document.getElementById('display-settings').hidden = true;
+        document.getElementById('host').setAttribute('hidden','hidden');
+        document.getElementById('startGame').setAttribute('hidden','hidden');
+        document.getElementById('settings').setAttribute('hidden','hidden');
+        document.getElementById('display-settings').setAttribute('hidden','hidden');
     });
     socket.on('nextAction', function(action) {
         displayNextAction(action);
@@ -1915,6 +1914,10 @@ function newRoomClick() {
 }
 
 function joinFromInvite(roomCode) {
+    if (roomCode.length < 2) {
+        addError('Please enter a room code');
+        return;
+    }
     if (!connectingToRoom) {
         connectingToRoom=true;
         socket.emit('roomConnect',roomCode,true);
@@ -1922,21 +1925,13 @@ function joinFromInvite(roomCode) {
     } else {addError('Already connecting to a room!');}
 }
 
-function joinRoomClick() {
-    if (!connectingToRoom) {
-        let code = prompt('Room code:');
-        if (!code) {return;}
-        connectingToRoom=true;
-        socket.emit('roomConnect',code,true);
-        addMessage('Joining room...');
-    } else {addError('Already connecting to a room!');}
-}
-
 function drawRooms() {
+    if (connectingToRoom) {
+        return;
+    }
     drawnRooms = [];
     document.getElementById('rooms').innerHTML = '';
     createNewRoomCard();
-    createJoinRoomCard();
     for (let i in availableRooms) {
         createRoomCard(availableRooms[i],i);
         drawnRooms.push(availableRooms[i]);
@@ -2061,30 +2056,6 @@ function createNewRoomCard() {
     document.getElementById('rooms').appendChild(bDiv);
 }
 
-function createJoinRoomCard() {
-    const bDiv = document.createElement('div');
-    bDiv.classList.add('roomcard');
-    bDiv.classList.add('col-md-3');
-    bDiv.classList.add('col-xs-6');
-    bDiv.classList.add('white');
-    bDiv.id = 'roomCardJoin';
-    const numberDiv = document.createElement('div');
-    numberDiv.classList.add('roomnum');
-    numberDiv.classList.add('d-flex');
-    numberDiv.classList.add('justify-content-center');
-    numberDiv.innerHTML = 'Join Room';
-    numberDiv.id = 'roomNumJoin';
-    bDiv.appendChild(numberDiv);
-    const playerCountSpan = document.createElement('span');
-    for (let i=0; i<4; i++) {
-        playerCountSpan.innerHTML += '&#x25CB; ';
-    }
-    bDiv.appendChild(playerCountSpan);
-    //Make it clickable
-    bDiv.addEventListener('click', joinRoomClick);
-    document.getElementById('rooms').appendChild(bDiv);
-}
-
 function ping() {socket.emit('currentAction');}//Debug function
 
 function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (!b[i] || (a[i].count != b[i].count)) {return false;}}return true;}
@@ -2114,7 +2085,8 @@ function createPartnerButtons(possiblePartners) {
     for (let i in possiblePartners) {
         const button = document.createElement('button')
         button.type = 'button';
-        button.innerHTML = possiblePartners[i].value;
+        button.classList.add('choice-button');
+        button.innerHTML = possiblePartners.length > 1 && possiblePartners[i].value == 'XIX' ? 'Alone (XIX)' : 'With Partner (' + possiblePartners[i].value + ')';
         button.id = possiblePartners[i].value;
         button.addEventListener('click', () => {
             partnerButtonsOnClickListenerTasks(possiblePartners[i].value, possiblePartners);
@@ -2147,6 +2119,8 @@ function createChoiceButtons(buttonType) {
     const secondButton = document.createElement('button');
     firstButton.type = 'button';
     secondButton.type = 'button';
+    firstButton.classList.add('choice-button');
+    secondButton.classList.add('choice-button');
     firstButton.id = 'go'+TYPE_TABLE[buttonType];
     secondButton.id = 'no'+TYPE_TABLE[buttonType];
     firstButton.buttonType = buttonType;
@@ -2232,6 +2206,7 @@ function createConfirmButton() {
     const sortButton = document.createElement('button');
     const displayInfoSpan = document.createElement('span');
     confirmButton.type = 'button';
+    confirmButton.classList.add('choice-button');
     displayInfoSpan.type = 'span';
     sortButton.type = 'button';
     confirmButton.id = 'confirm_discard_button';
@@ -2390,6 +2365,7 @@ function exitCurrentRoom(value) {
         drawTable();
         document.getElementById('refresh').innerHTML = '&#10227; Refresh Rooms';
         document.getElementById('refresh').setAttribute('onclick','refresh()');
+        document.getElementById('joinRoomDiv').removeAttribute('hidden');
         theSettings={};
         availableRooms={};
         drawnRooms=[];
