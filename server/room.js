@@ -105,7 +105,7 @@ class Room {
     }
 
     static createJoinCode() {
-        iterator += Math.ceil(Math.random() * 100000);
+        iterator += Math.floor(Math.random() * 100000)+1;
         let newCode = '';
         let tempIterator = iterator;
         while (tempIterator > 0) {

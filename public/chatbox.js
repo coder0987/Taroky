@@ -144,10 +144,12 @@ $(document).ready(function () {
 function addMessage(theString) {
     console.log(theString);
     chatBox.addServerMessage(theString);
+    show();
 }
 function addBoldMessage(theString) {
     console.log('BOLD: ' + theString);
-    chatBox.addServerMessage(theString, true)
+    chatBox.addServerMessage(theString, true);
+    show();
     /*let container = document.getElementById('chatbox');
     let toInsert = document.createElement("p");
     let bold = document.createElement('strong');
@@ -164,18 +166,18 @@ function addError(theString) {
     let toInsert = document.createElement("p");
     toInsert.innerHTML = theString;
     container.insertBefore(toInsert, container.firstChild);
-    clearAllButXMessages(maxMessages);
+    show();
 }
 function playerSentMessage(thePlayer,theMessage) {
     console.log(thePlayer + ': ' + theMessage);
     chatBox.addPlayerMessage(thePlayer, theMessage);
+    show();
 }
 function clearChat() {
-    //For when we have an actual chatbox
     document.getElementById('chatbox').innerHTML = '<p></p>';
+    hide()
 }
 function clearLastXMessages(x) {
-    //For when we have an actual chatbox
     let messagesToClear = document.getElementById('chatbox').children;
     for (let i = messagesToClear.length - 1; i >= 0 && i>= messagesToClear.length - x - 1; i--) {
         document.getElementById('chatbox').removeChild(document.getElementById('chatbox').children[i]);
@@ -207,4 +209,9 @@ function getTimestampSpan(time) {
     return timestamp;
 }
 
-
+function show() {
+    document.getElementById('chat-box-container').removeAttribute('hidden');
+}
+function hide() {
+    document.getElementById('chat-box-container').setAttribute('hidden','hidden');
+}

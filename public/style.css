@@ -14,7 +14,8 @@
 
 body {
     background-color: var(--green);
-    padding: 4rem;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
 }
 body:fullscreen {
    padding: 1rem;
@@ -37,6 +38,40 @@ body:fullscreen {
 .button:hover{
     opacity: 1;
 }
+
+.choice-button {
+    margin: 10px;
+    display: inline-block;
+
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    background-color: var(--white);
+    border: 1px solid transparent;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    border-radius: .25rem;
+
+    transition-duration: 0.4s;
+    opacity: 0.8;
+    /*Disable text selection*/
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.choice-button:hover{
+    opacity: 1;
+}
+
 
 img {
     border-radius: 8px;
@@ -177,13 +212,20 @@ img {
 }
 
 /* ROOM CARD */
+#rooms {
+    display: flex;
+}
+
 .roomcard {
+    flex: 1;
+
     border: .1rem solid var(--black);
     border-radius: .5rem;
     padding:1rem;
     font-family: Georgia, 'Times New Roman', Times, serif;
     display:inline-block;
     margin: 10px;
+    max-width: 300px;
 
     /*Disable text selection*/
     -webkit-user-select: none;
@@ -382,9 +424,11 @@ h4 {
 }
 /*End w3 schools*/
 
+/*
 .container {
     margin-bottom: 100px;
 }
+*/
 
 .box {
     border: .1rem solid var(--black);
@@ -503,7 +547,16 @@ h4 {
     color: black;
 }
 
+#refresh {
+    margin-bottom: 25px;
+}
 
+.auto-shrink {
+    -webkit-transform:scale(0.75);
+    -moz-transform:scale(0.75);
+    -ms-transform:scale(0.75);
+    transform:scale(0.75);
+}
 
 @media (min-width: 576px) {
     .back {
@@ -532,6 +585,18 @@ h4 {
     .invite-card {
         width: 20%;
         left: 80%;
+    }
+    body {
+        padding: 4rem;
+    }
+    #refresh {
+        margin-bottom: 0;
+    }
+    .auto-shrink {
+        -webkit-transform:scale(1);
+        -moz-transform:scale(1);
+        -ms-transform:scale(1);
+        transform:scale(1);
     }
 }
 
@@ -634,7 +699,7 @@ h4 {
 
 .message-container {
     display: flex;
-    flex-direction: row; /* Stack authoer and chat bubble horizontally */
+    flex-direction: row; /* Stack author and chat bubble horizontally */
 }
 
 .author-container {
@@ -705,4 +770,10 @@ h4 {
 
 .p4 {
     transform: rotate(90deg);
+}
+
+.clearfix {
+  content: "";
+  clear: both;
+  display: table;
 }
