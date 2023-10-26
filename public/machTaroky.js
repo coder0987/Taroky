@@ -459,7 +459,11 @@ function moveCardsToDiv(theCards, toDiv, cardClickListener) {
 }
 
 let tableDrawnTime = Date.now();//ms since START_TIME
-function drawTable() {
+function drawTable(shouldHide) {
+    if (shouldHide) {
+        document.getElementById('table').setAttribute('hidden','hidden');;
+        return;
+    }
     if (!returnTableQueue[0]) {
         //Wait min 3s before redrawing the table
         //TODO: prevent user from taking an action while the table is still being drawn
@@ -479,17 +483,18 @@ function drawTable() {
     }
     if (Date.now() - tableDrawnTime < 3000 && currentNumberOfCardsOnTable >= 4) {
         //Timeout only matters if the table is at full capacity
-        console.log('full');
+        //Timeout only matters if the table is at full capacity
         return;
     } else if (Date.now() - tableDrawnTime < 1000) {
-        console.log('partial');
         return;
     }
     tableDrawnTime = Date.now();
     table = returnTableQueue.splice(0,1)[0];
-    if (table == [] || table == {} || !table[0]) {
+    if (table == [] || table == {} || !table[0] || table == 'hide') {
         //hide the table
-        document.getElementById('table').setAttribute('hidden','hidden');
+        if (shouldHide || table == 'hide') {
+            document.getElementById('table').setAttribute('hidden','hidden');
+        }
     } else {
         //Table layout: [{'card':data,'pn':num,'lead':boolean},{'card'...}]
         //Table layout for prever talon: [{'suit':SUIT,'value':VALUE},{'suit'...}]
@@ -818,6 +823,7 @@ function displayNextAction(action) {
             case 'resetBoard':
                 addMessage('You are resetting the board');
                 resetBoardButton();
+                returnTableQueue.push('hide');
                 break;
             default:
                 addMessage('Unknown action: ' + JSON.stringify(action));
@@ -1418,9 +1424,10 @@ function onLoad() {
                 break;
             case MESSAGE_TYPE.PAY:
                 if (extraInfo) {
+                    console.log(extraInfo);
                     addMessage('------------------------');
                     addMessage('Point Counting:');
-                    for (let i = 0; i > extraInfo.length; i++) {
+                    for (let i = 0; i < extraInfo.length; i++) {
                         addMessage(extraInfo[i].name + ': ' + extraInfo[i].value);
                     }
                     addMessage('------------------------');
@@ -2207,6 +2214,7 @@ function createConfirmButton() {
     const displayInfoSpan = document.createElement('span');
     confirmButton.type = 'button';
     confirmButton.classList.add('choice-button');
+    sortButton.classList.add('choice-button');
     displayInfoSpan.type = 'span';
     sortButton.type = 'button';
     confirmButton.id = 'confirm_discard_button';
@@ -2270,12 +2278,15 @@ function buttonChoiceCallback() {
 
 function resetBoardButton() {
     let theButton = document.createElement('button');
+    theButton.classList.add('choice-button');
     theButton.innerHTML = 'Reset Board';
     theButton.id = 'resetBoard';
     theButton.type = 'button';
     theButton.addEventListener('click', () => {
         document.getElementById('center').removeChild(document.getElementById('resetBoard'));
         socket.emit('resetBoard');
+        returnTableQueue = [['hidden']];
+        drawTable(true);
     });
     document.getElementById('center').appendChild(theButton);
 }
@@ -2361,8 +2372,8 @@ function exitCurrentRoom(value) {
         socket.emit('exitRoom');
         hand = [];
         drawHand();
-        returnTableQueue = [[]];
-        drawTable();
+        returnTableQueue = [['hide']];
+        drawTable(true);
         document.getElementById('refresh').innerHTML = '&#10227; Refresh Rooms';
         document.getElementById('refresh').setAttribute('onclick','refresh()');
         document.getElementById('joinRoomDiv').removeAttribute('hidden');
@@ -2401,7 +2412,8 @@ function exitCurrentRoom(value) {
 }
 
 function clearScreen() {
-    returnTableQueue = [[]];
+    returnTableQueue = [['hide']];
+    drawTable(true);
     hand = [];
     drawHand();
     document.getElementById('refresh').innerHTML = '&#10227; Refresh Rooms';

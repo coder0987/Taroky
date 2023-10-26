@@ -551,6 +551,13 @@ h4 {
     margin-bottom: 25px;
 }
 
+.auto-shrink {
+    -webkit-transform:scale(0.75);
+    -moz-transform:scale(0.75);
+    -ms-transform:scale(0.75);
+    transform:scale(0.75);
+}
+
 @media (min-width: 576px) {
     .back {
         width: 30%;
@@ -579,11 +586,17 @@ h4 {
         width: 20%;
         left: 80%;
     }
-    body: {
+    body {
         padding: 4rem;
     }
     #refresh {
         margin-bottom: 0;
+    }
+    .auto-shrink {
+        -webkit-transform:scale(1);
+        -moz-transform:scale(1);
+        -ms-transform:scale(1);
+        transform:scale(1);
     }
 }
 
@@ -686,7 +699,7 @@ h4 {
 
 .message-container {
     display: flex;
-    flex-direction: row; /* Stack authoer and chat bubble horizontally */
+    flex-direction: row; /* Stack author and chat bubble horizontally */
 }
 
 .author-container {
