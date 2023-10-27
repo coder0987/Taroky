@@ -15,9 +15,14 @@ function step4() {}
 function step5() {}
 function step6() {
     clearScreen();
-    hostRoom();
+    hostRoom(null, "I", "OWGVN");
+}
+function step6Back() {
+    step6();
+    invite();
 }
 function step7() {
+    closeInvite();
     clearScreen();
     if (cardBackLoaded) {
         document.getElementById('center').appendChild(document.getElementById('cardBack'));
@@ -104,8 +109,22 @@ let tour = {
       content: "After clicking 'New' you can adjust the room settings and wait for other players to join.",
       target: "outer",
       placement: "bottom",
-      onNext: step7,
       onPrev: initialize
+    },
+    {
+        title: "Sharing a Join Code",
+        content: "Share the join code with whoever you wish to play with for them to join your game.",
+        target: "settingsRoomName",
+        placement: "bottom",
+        onNext: invite
+    },
+    {
+        title: "Invite",
+        content: "Click Invite to open the invite screen, where you can send invitations to anyone online.",
+        target: "settingsRoomName",
+        placement: "bottom",
+        onNext: step7,
+        onPrev: closeInvite
     },
     {
       title: "Shuffling the Deck",
@@ -113,7 +132,7 @@ let tour = {
       target: "outer",
       placement: "bottom",
       onNext: step8,
-      onPrev: step6
+      onPrev: step6Back
     },
     {
       title: "Checking the Round Info",
@@ -148,8 +167,8 @@ let tour = {
       onPrev: step8
     },
     {
-      title: "Pinging the Server and Leaving the Room",
-      content: "Having issues? Try pressing Ping Server. If that fails, reload the page. Done playing? Double-click on Leave Room to return to the main menu.",
+      title: "Leaving the Room",
+      content: "Done playing? Double-click on Leave Room to return to the main menu.",
       target: "refresh",
       placement: "bottom",
       onNext: step13,
@@ -157,7 +176,7 @@ let tour = {
     },
     {
       title: "Accounts",
-      content: "Enjoy more features like User Preferences and Room Settings Saves by creating a free account and signing in.",
+      content: "Enjoy more features like Chat, User Preferences and Room Settings Saves by creating a free account and signing in.",
       target: "accountHandler",
       placement: "bottom",
       onNext: step14,

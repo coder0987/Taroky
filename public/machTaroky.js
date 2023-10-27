@@ -344,10 +344,10 @@ function discardClickListener() {
 
 function discardThis(cardSuit,cardValue) {
     if (discardingOrPlaying) {
-       addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
+       //addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
        socket.emit('discard',{'suit':cardSuit,'value':cardValue});
     } else {
-        addMessage('Playing the ' + cardValue + ' of ' + cardSuit);
+        //addMessage('Playing the ' + cardValue + ' of ' + cardSuit);
         socket.emit('lead',{'suit':cardSuit,'value':cardValue});
     }
 }
@@ -1367,16 +1367,16 @@ function onLoad() {
                 break;
             case MESSAGE_TYPE.LEAD:
                 if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
-                    addBoldMessage(extraInfo.youMessage);
+                    //addBoldMessage(extraInfo.youMessage);
                 } else {
-                    addBoldMessage(theMessage);
+                    //addBoldMessage(theMessage);
                 }
                 break;
             case MESSAGE_TYPE.PLAY:
                 if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
-                    addBoldMessage(extraInfo.youMessage);
+                    //addBoldMessage(extraInfo.youMessage);
                 } else {
-                    addBoldMessage(theMessage);
+                    //addBoldMessage(theMessage);
                 }
                 break;
             case MESSAGE_TYPE.WINNER:
@@ -1933,9 +1933,6 @@ function joinFromInvite(roomCode) {
 }
 
 function drawRooms() {
-    if (connectingToRoom) {
-        return;
-    }
     drawnRooms = [];
     document.getElementById('rooms').innerHTML = '';
     createNewRoomCard();

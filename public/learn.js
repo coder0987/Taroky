@@ -1,9 +1,12 @@
 function learnStarter() {
     document.getElementById('selection').classList.remove('fadeIn');
     document.getElementById('selection').classList.add('fadeOut');
+    document.getElementById('tournamentRules').classList.remove('fadeIn');
+    document.getElementById('tournamentRules').classList.add('fadeOut');
 
     setTimeout(() => {
         document.getElementById('selection').setAttribute('hidden','hidden');
+        document.getElementById('tournamentRules').setAttribute('hidden','hidden');
         document.getElementById('starter').classList.add('fadeIn');
         document.getElementById('starter').classList.remove('fadeOut');
         document.getElementById('starter').removeAttribute('hidden');
@@ -12,9 +15,12 @@ function learnStarter() {
 function learnAdvanced() {
     document.getElementById('selection').classList.remove('fadeIn');
     document.getElementById('selection').classList.add('fadeOut');
+    document.getElementById('tournamentRules').classList.remove('fadeIn');
+    document.getElementById('tournamentRules').classList.add('fadeOut');
 
     setTimeout(() => {
         document.getElementById('selection').setAttribute('hidden','hidden');
+        document.getElementById('tournamentRules').setAttribute('hidden','hidden');
         document.getElementById('advanced').classList.add('fadeIn');
         document.getElementById('advanced').classList.remove('fadeOut');
         document.getElementById('advanced').removeAttribute('hidden');
@@ -24,9 +30,12 @@ function learnAdvanced() {
 function learnSite() {
     document.getElementById('selection').classList.remove('fadeIn');
     document.getElementById('selection').classList.add('fadeOut');
+    document.getElementById('tournamentRules').classList.remove('fadeIn');
+    document.getElementById('tournamentRules').classList.add('fadeOut');
 
     setTimeout(() => {
         document.getElementById('selection').setAttribute('hidden','hidden');
+        document.getElementById('tournamentRules').setAttribute('hidden','hidden');
         document.getElementById('site').classList.add('fadeIn');
         document.getElementById('site').classList.remove('fadeOut');
         document.getElementById('site').removeAttribute('hidden');
@@ -44,7 +53,6 @@ function back() {
     document.getElementById('starter1').classList.add('fadeIn');
     document.getElementById('starter1').classList.remove('fadeOut');
 
-
     setTimeout(() => {
         for (let i=2; i<16; i++) {
             document.getElementById('starter' + i).setAttribute('hidden','hidden');
@@ -56,6 +64,9 @@ function back() {
         document.getElementById('advanced').setAttribute('hidden','hidden');
         document.getElementById('starter1').removeAttribute('hidden');
 
+        document.getElementById('tournamentRules').classList.remove('fadeOut');
+        document.getElementById('tournamentRules').classList.add('fadeIn');
+        document.getElementById('tournamentRules').removeAttribute('hidden');
         document.getElementById('selection').classList.remove('fadeOut');
         document.getElementById('selection').classList.add('fadeIn');
         document.getElementById('selection').removeAttribute('hidden');
