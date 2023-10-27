@@ -1122,6 +1122,7 @@ function onLoad() {
         }
         if (typeof data.playerCount !== 'undefined') {
             document.getElementById('online').innerHTML = data.playerCount;
+            document.getElementById('online-s').innerHTML = data.playerCount == 1 ? '' : 's';
         }
         if (typeof data.povinnost !== 'undefined') {
             povinnostNumber = data.povinnost;
@@ -1232,6 +1233,7 @@ function onLoad() {
     });
     socket.on('returnPlayerCount', function(playerCount) {
         document.getElementById('online').innerHTML = playerCount;
+        document.getElementById('online-s').innerHTML = data.playerCount == 1 ? '' : 's';
     });
     socket.on('returnHand', function(returnHand,withGray) {
         hand = returnHand;
