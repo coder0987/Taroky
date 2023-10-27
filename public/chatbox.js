@@ -144,12 +144,10 @@ $(document).ready(function () {
 function addMessage(theString) {
     console.log(theString);
     chatBox.addServerMessage(theString);
-    show();
 }
 function addBoldMessage(theString) {
     console.log('BOLD: ' + theString);
     chatBox.addServerMessage(theString, true);
-    show();
     /*let container = document.getElementById('chatbox');
     let toInsert = document.createElement("p");
     let bold = document.createElement('strong');
@@ -166,16 +164,13 @@ function addError(theString) {
     let toInsert = document.createElement("p");
     toInsert.innerHTML = theString;
     container.insertBefore(toInsert, container.firstChild);
-    show();
 }
 function playerSentMessage(thePlayer,theMessage) {
     console.log(thePlayer + ': ' + theMessage);
     chatBox.addPlayerMessage(thePlayer, theMessage);
-    show();
 }
 function clearChat() {
     document.getElementById('chatbox').innerHTML = '<p></p>';
-    hide()
 }
 function clearLastXMessages(x) {
     let messagesToClear = document.getElementById('chatbox').children;
@@ -209,9 +204,13 @@ function getTimestampSpan(time) {
     return timestamp;
 }
 
-function show() {
-    document.getElementById('chat-box-container').removeAttribute('hidden');
+function enableChat() {
+    document.getElementById('chat-send-button').classList.remove('disabled');
+    document.getElementById('chat-input').placeholder = 'Your Message (press Enter to submit)';
+    document.getElementById('chat-input').removeAttribute('readonly')
 }
-function hide() {
-    document.getElementById('chat-box-container').setAttribute('hidden','hidden');
+function disableChat() {
+    document.getElementById('chat-send-button').classList.add('disabled');
+    document.getElementById('chat-input').placeholder = 'Sign in to send chat messages';
+    document.getElementById('chat-input').setAttribute('readonly','true');
 }

@@ -667,6 +667,9 @@ function displayNextAction(action) {
     if (action.player == playerNumber) {
         if (action.action != 'start') {
             document.getElementById('currentPlayer').innerHTML = 'Your Move';
+            document.getElementById('currentPlayer').classList.add('your-move');
+        } else {
+            document.getElementById('currentPlayer').classList.remove('your-move');
         }
         switch (action.action) {
             case 'start':
@@ -1073,7 +1076,7 @@ function onLoad() {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
         displaySignOut(username);
-        document.getElementById('chat-entry').removeAttribute('hidden');
+        enableChat();
         document.getElementById('saveButton').removeAttribute('hidden');
     });
 
@@ -1094,6 +1097,7 @@ function onLoad() {
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
+        disableChat();
     });
 
     socket.on('logout', function() {
@@ -1104,6 +1108,7 @@ function onLoad() {
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
+        disableChat();
     });
 
     socket.on('autoReconnect', function(data) {
@@ -1209,21 +1214,32 @@ function onLoad() {
             inviteRow.appendChild(inviteRowUsername);
 
             let inviteRowStatus = document.createElement('td');
+            inviteRowStatus.id = i + 'status';
             inviteRowStatus.innerHTML = returnPlayerList[i].status;
             inviteRow.appendChild(inviteRowStatus);
 
             let inviteRowSend = document.createElement('td');
             let inviteButton = document.createElement('button');
+            inviteButton.classList.add('choice-button');
+            inviteButton.style = 'margin: 0px;';
             inviteButton.innerHTML = 'Invite';
-            inviteButton.addEventListener('click', () => {
+            inviteButton.id = i + 'invite';
+            inviteButton.addEventListener('click', function () {
                 socket.emit('invite', returnPlayerList[i].socket);
-            })
+                document.getElementById(this.id.split('i')[0] + 'status').innerHTML = 'Invited';
+                this.parentElement.innerHTML = 'Sent!';
+            }, {'once':true});
             inviteRowSend.appendChild(inviteButton);
             inviteRow.appendChild(inviteRowSend);
 
             inviteBody.appendChild(inviteRow);
         }
         inviteTable.appendChild(inviteBody);
+        if (returnPlayerList.length == 0) {
+            document.getElementById('inviteNoOneOnline').removeAttribute('hidden');
+        } else {
+            document.getElementById('inviteNoOneOnline').setAttribute('hidden', 'hidden');
+        }
     })
     socket.on('invite', function(roomName, joinCode, playerName) {
         createInviteCard(roomName, joinCode, playerName);
@@ -2319,7 +2335,7 @@ function invite() {
 
         let nameElem = document.createElement('h3');
         nameElem.classList.add('invite-card-header');
-        nameElem.innerHTML = 'New Invite From ' + username + ' to room ' + roomName + '!';
+        nameElem.innerHTML = 'New Invite From ' + username + ' to Room ' + roomName + '!';
         card.appendChild(nameElem);
 
         let joinButton = document.createElement('a');

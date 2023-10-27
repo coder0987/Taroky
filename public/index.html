@@ -52,14 +52,6 @@
     </div>
 </div>
 
-<!--
-<div id="navbar" class="navbar navy">
-    <div class="container-fluid">
-        <img src="/assets/logo/logo-full-white.png" alt="MachTarok" class="navbar-brand">
-        <a id="accountHandler" class="navbar-brand" target="_blank" rel="opener" href="https://sso.smach.us/?redirect=https://machtarok.com/">Sign In</a>
-    </div>
-</div>
--->
 <div w3-include-html="/nav.html"></div>
 
 <div id="inviteScreen" class="container invite" hidden="hidden">
@@ -73,7 +65,7 @@
     </div>
     <div class="row">
         <div class="col-12">
-            <p>Click the link below to copy it and end it to your friends:</p>
+            <p>Click the link below to copy it and send it to your friends:</p>
             <a id="inviteJoinCode" href="https://machtarok.com/?join=CODE" class="share-link copy-text">machtarok.com/?join=CODE</a><span hidden="hidden" id="copied">  Copied!</span>
         </div>
         <div class="col-12">
@@ -90,6 +82,7 @@
                 <tbody>
                 </tbody>
             </table>
+            <p id="inviteNoOneOnline" hidden="hidden">Looks like no one else is online, try sending the link to them directly</p>
         </div>
     </div>
 </div>
@@ -218,13 +211,13 @@
         </div>
     </div>
     <div id="rooms"></div>
-    <div id="chat-box-container" class="chat-box-container" hidden="hidden">
+    <div id="chat-box-container" class="chat-box-container">
         <div id="chatbox" class="chat-box"><p></p></div>
-        <div id="chat-entry" class="chat-box-entry" hidden="hidden">
+        <div id="chat-entry" class="chat-box-entry">
             <form id="chat-form" class="chat-form" novalidate onsubmit="return false;">
-                <input id="chat-input" class="chat-input" maxlength="1000" type="text" required="" placeholder="Your Message (press Enter to submit)" value="">
+                <input id="chat-input" class="chat-input" maxlength="1000" type="text" required="" placeholder="Sign in to send chat messages" value="" readonly="true">
             </form>
-            <button id="chat-send-button" class="button btn red sticky-bottom send-button" onclick="sendMessage()">&#10148; Send</button>
+            <button id="chat-send-button" class="button btn red sticky-bottom send-button disabled" onclick="sendMessage()">&#10148; Send</button>
         </div>
     </div>
     <div id="deck">
