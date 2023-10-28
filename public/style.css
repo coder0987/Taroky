@@ -971,4 +971,5 @@ div.hand.twelve-cards img {
 
 .disabled {
     background-color: var(--gray);
+    cursor: not-allowed;
 }

@@ -18,6 +18,9 @@ class Player {
         this._savePoints = [];
         this._consecutiveAutos = 0;
         this._ai = ai;//AI is a string representing the AI's ID on the remote AI server
+
+        // non-game related
+        this._timeLastMessageSent = 0;
     }
 
     resetForNextRound() {
@@ -297,6 +300,10 @@ class Player {
         return handRankingPoints;
     }
 
+    get canSendMessage() {
+        return Math.floor(this.timeLastMessageSent / 1000) != Math.floor(Date.now() / 1000);
+    }
+
     //Setters
     set type(type) {
         this._type = type;
@@ -342,6 +349,10 @@ class Player {
         this._messenger = messenger;
     }
 
+    updateLastMessageSentTime() {
+        this._timeLastMessageSent = Date.now();
+    }
+
     //Getters
     get type() {
         return this._type;
@@ -385,6 +396,10 @@ class Player {
 
     get messenger() {
         return this._messenger;
+    }
+
+    get timeLastMessageSent() {
+        return this._timeLastMessageSent;
     }
 }
 
