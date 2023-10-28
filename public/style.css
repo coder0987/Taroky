@@ -855,6 +855,9 @@ div.hand.twelve-cards img {
     /*outline: red solid 3px;*/
     display: flex;
     flex-direction: column;
+    border: 2px solid var(--navy); /* Add a border */
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15); /* Add a box shadow */
+    background-color: var(--tan);
 }
 
 .chat-box {
@@ -870,6 +873,10 @@ div.hand.twelve-cards img {
 
 .chat-form {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .chat-input {
