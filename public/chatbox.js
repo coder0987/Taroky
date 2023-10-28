@@ -1,7 +1,8 @@
 class ChatBox {
-    constructor() {
+    constructor(maxChatMessages) {
         this.container = document.getElementById('chatbox');
         this.chatMessages = [];
+        this.maxChatMessages = maxChatMessages;
     }
 
     addServerMessage(messageText,bold=false) {
@@ -9,12 +10,39 @@ class ChatBox {
         let currentTimestamp = getFormattedTime();
         if (!messageText) { return; }
         let lastMessage = this.getLastMessage();
-        if (lastMessage && author == lastMessage.getAuthor() && currentTimestamp == lastMessage.getTimestamp()) {
+        if (this.shouldAppend(lastMessage, author, currentTimestamp, false)) {
             lastMessage.addNewLineOfMessage(messageText,bold);
         } else {
-            let message = new ChatMessage(author, messageText, bold);
+            let message = new ChatMessage(author, messageText, bold, false);
             this.chatMessages.push(message);
-            this.container.appendChild(message.getHTMLElement());
+            this.container.appendChild(message.getHtmlElement());
+            if (this.chatMessages.length > this.maxChatMessages) {
+                // remove oldest chat message til we are under the maximum
+                while (this.chatMessages.length > this.maxChatMessages) {
+                    this.removeOldestMessage()
+                }
+            }
+        }
+        this.updateScrollHeight();
+    }
+
+    addErrorMessage(messageText, bold=false) {
+        let author = 'MachTarok';
+        let currentTimestamp = getFormattedTime();
+        if (!messageText) { return; }
+        let lastMessage = this.getLastMessage();
+        if (this.shouldAppend(lastMessage,author, currentTimestamp, true)) {
+            lastMessage.addNewLineOfMessage(messageText, bold);
+        } else {
+            let message = new ChatMessage(author, messageText, bold, true);
+            this.chatMessages.push(message);
+            this.container.appendChild(message.getHtmlElement());
+            if (this.chatMessages.length > this.maxChatMessages) {
+                // remove oldest chat message til we are under the maximum
+                while (this.chatMessages.length > this.maxChatMessages) {
+                    this.removeOldestMessage()
+                }
+            }
         }
         this.updateScrollHeight();
     }
@@ -23,33 +51,68 @@ class ChatBox {
         let currentTimestamp = getFormattedTime();
         if (!messageText) { return; }
         let lastMessage = this.getLastMessage();
-        if (lastMessage && author == lastMessage.getAuthor() && currentTimestamp == lastMessage.getTimestamp()) {
+        if (this.shouldAppend(lastMessage, author, currentTimestamp, false)) {
             lastMessage.addNewLineOfMessage(messageText, false);
         } else {
-            let message = new ChatMessage(author, messageText, false);
+            let message = new ChatMessage(author, messageText, false, false);
             this.chatMessages.push(message);
-            this.container.appendChild(message.getHTMLElement());
+            this.container.appendChild(message.getHtmlElement());
+            if (this.chatMessages.length > this.maxChatMessages) {
+                // remove oldest chat message til we are under the maximum
+                while (this.chatMessages.length > this.maxChatMessages) {
+                    this.removeOldestMessage()
+                }
+            }
         }
         this.updateScrollHeight();
     }
 
+    shouldAppend(lastMessage, author, currentTimestamp, isError) {
+        return lastMessage && author == lastMessage.getAuthor() && currentTimestamp == lastMessage.getTimestamp() && isError == lastMessage.getIsError();
+    }
+
     getLastMessage() {
         if (this.chatMessages.length > 0) {
-            return this.chatMessages[this.messages.length - 1];
+            return this.chatMessages[this.chatMessages.length - 1];
         } else {
             return null; // Return null if there are no messages
         }
     }
+
+    getNumMessages() {
+        return this.chatMessages.length;
+    }
+
+    removeOldestMessage() {
+        let oldestMessage = this.getLastMessage();
+        oldestMessage.getHtmlElement().parentNode.removeChild(oldestMessage.getHtmlElement());
+    }
+
+    removeMessage(message) {
+        if (message) {
+            message.getHtmlElement().parentNode.removeChild(message.getHtmlElement());
+        }
+    }
+
     updateScrollHeight() {
         this.container.scrollTop = this.container.scrollHeight;
+    }
+
+    clearAllMessages() {
+        for (let message in this.chatMessages) {
+            if (message) {
+                this.removeMessage(message);
+            }
+        }
     }
 }
 
 class ChatMessage {
-    constructor(author, message, bold) {
+    constructor(author, message, bold, isError) {
         this.author = author;
         this.timestamp = getFormattedTime();
         this.text = [message];
+        this.isError = isError
         //this.messageHtml = this.createMessageHtml(message); //this is done in createHtml
         this.htmlElement = this.createHtml(message, bold);
     }
@@ -87,9 +150,13 @@ class ChatMessage {
     createMessageHtml(messageString, bold) {
         let message = document.createElement('p');
         message.classList.add('message');
+        if (this.isError) {
+            message.classList.add('error-message');
+        } else {
+            message.classList.add('regular-message');
+        }
 
-        let messageText;
-        messageText = document.createElement('span');
+        let messageText = document.createElement('span');
         messageText.innerHTML = messageString;
         messageText.classList.add('message-text');
         if (bold) { messageText.classList.add('bold'); }
@@ -110,12 +177,16 @@ class ChatMessage {
         return this.timestamp;
     }
 
-    getHTMLElement() {
+    getHtmlElement() {
         return this.htmlElement;
     }
 
     getMessageHtml() {
         return this.messageHtml;
+    }
+
+    getIsError() {
+        return this.isError;
     }
 
     addNewLineOfMessage(newMessageText,bold) {
@@ -137,14 +208,70 @@ class GameLog {
         this.container = document.getElementById('gamelog');
         this.logMessages = [];
     }
+
+    addGameLogMessage(subject,messageText) {
+        let currentTimestamp = getFormattedTime();
+        if (!messageText) { return; }
+        let message = new GameLogMessage(subject,messageText);
+        //TODO: implement
+    }
 }
 
 class GameLogMessage {
+    //unlike chat messages each message is on 1 line
+    constructor(subject, message, bold) {
+        this.subject = subject;
+        this.timestamp = getFormattedTime();
+        this.text = message;
+        //this.messageHtml = this.createMessageHtml(message); //this is done in createHtml
+        this.htmlElement = this.createHtml(message, bold);
+    }
 
+    createHtml(subject, messageString) {
+        let messageContainer = document.createElement('div');
+        return messageContainer;
+    }
+
+    createMessageHtml(subject, messageString, bold) {
+        let message = document.createElement('p');
+        message.classList.add('game-log-message');
+
+        let subjectText = document.createElement('span');
+        subjectText.innerHTML = subject;
+
+
+        let messageText = document.createElement('span');
+        messageText.innerHTML = messageString;
+        messageText.classList.add('game-log-message-text');
+        if (bold) { messageText.classList.add('bold'); }
+        message.appendChild(messageText);
+
+        let timestamp = getTimestampSpan(this.timestamp);
+        message.appendChild(timestamp);
+
+        return message;
+    }
+
+    getSubject() {
+        return this.subject;
+    }
+
+    getTimestamp() {
+        return this.timestamp;
+    }
+
+    getHtmlElement() {
+        return this.htmlElement;
+    }
+
+    getMessageHtml() {
+        return this.messageHtml;
+    }
 }
 
 class Ledger {
-
+    //class for logic for showing overall chip change of the session
+    //TODO implement
 }
 
 //These functions will all need to be changed
@@ -152,56 +279,43 @@ class Ledger {
 const maxMessages = 256;
 let chatBox;
 $(document).ready(function () {
-    chatBox = new ChatBox();
+    chatBox = new ChatBox(maxMessages);
 });
 function addMessage(theString) {
     console.log(theString);
     chatBox.addServerMessage(theString);
 }
 function addBoldMessage(theString) {
-    console.log('BOLD: ' + theString);
+    console.log('Bold: ' + theString);
     chatBox.addServerMessage(theString, true)
-    /*let container = document.getElementById('chatbox');
-    let toInsert = document.createElement("p");
-    let bold = document.createElement('strong');
-    let text = document.createTextNode(theString);
-    bold.appendChild(text);
-    toInsert.appendChild(bold);
-    container.insertBefore(toInsert, container.firstChild);
-    clearAllButXMessages(maxMessages);*/
 }
 function addError(theString) {
-    //Maybe make it red or something?
-    console.error(theString);
-    let container = document.getElementById('chatbox');
-    let toInsert = document.createElement("p");
-    toInsert.innerHTML = theString;
-    container.insertBefore(toInsert, container.firstChild);
-    clearAllButXMessages(maxMessages);
+    console.error('ERROR: ' + theString);
+    chatBox.addErrorMessage(theString);
 }
 function playerSentMessage(thePlayer,theMessage) {
     console.log(thePlayer + ': ' + theMessage);
     chatBox.addPlayerMessage(thePlayer, theMessage);
 }
 function clearChat() {
-    //For when we have an actual chatbox
-    document.getElementById('chatbox').innerHTML = '<p></p>';
+    console.log('Clearing Chat');
+    chatBox.clearAllMessages();
 }
 function clearLastXMessages(x) {
-    //For when we have an actual chatbox
-    let messagesToClear = document.getElementById('chatbox').children;
-    for (let i = messagesToClear.length - 1; i >= 0 && i>= messagesToClear.length - x - 1; i--) {
-        document.getElementById('chatbox').removeChild(document.getElementById('chatbox').children[i]);
+    for (let i = 0; i < x; i++) {
+        chatBox.removeOldestMessage();
     }
 }
 
 function clearAllButXMessages(x) {
-    let messagesToClear = document.getElementById('chatbox').children;
-    for (let i = messagesToClear.length - 1; i >= x; i--) {
-        document.getElementById('chatbox').removeChild(document.getElementById('chatbox').children[i]);
+    let numToDelete = chatBox.getNumMessages() - x;
+    while (numToDelete > 0) {
+        chatBox.removeOldestMessage();
     }
 }
 
+
+//UTIL funcs
 function getFormattedTime() {
     const date = new Date(Date.now());
     const hours = date.getHours();
