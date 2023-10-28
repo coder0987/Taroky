@@ -852,15 +852,22 @@ div.hand.twelve-cards img {
 }
 
 .chat-box-container {
-    /*outline: red solid 3px;*/
     display: flex;
     flex-direction: column;
+    border: 2px solid var(--navy);
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
+    background-color: var(--tan);
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .chat-box {
     max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
+    border: 2px solid var(--navy);
+    border-left : 0px;
+    border-right: 0px;
 }
 .chat-box-entry {
     display: flex;
@@ -870,6 +877,10 @@ div.hand.twelve-cards img {
 
 .chat-form {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .chat-input {
@@ -971,4 +982,5 @@ div.hand.twelve-cards img {
 
 .disabled {
     background-color: var(--gray);
+    cursor: not-allowed;
 }

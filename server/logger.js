@@ -1,9 +1,63 @@
 const fs = require('fs');
 const path = require('path');
 
+//Set up dates
+const startedDate = new Date();
+let now = startedDate;
+
+let year = now.getFullYear();
+let month = String(now.getMonth() + 1).padStart(2, '0');
+let day = String(now.getDate()).padStart(2, '0');
+let hours = now.getHours();
+let minutes = now.getMinutes().toString().padStart(2, '0');
+let seconds = now.getSeconds().toString().padStart(2, '0');
+let ampm = hours >= 12 ? "PM" : "AM";
+
+let formattedDate = `${year}-${month}-${day}`;
+let formattedTime = `[${hours % 12 || 12};${minutes};${seconds} ${ampm}]`;
+
+//Initialize File Path
 const BASE_FOLDER = __dirname.substring(0, __dirname.length - 6);
-const LOGS_DIRECTORY = path.join(BASE_FOLDER, 'logs');
-const LOG_FILE_NAME = path.join(LOGS_DIRECTORY, `${Date.now()}.log`);
+let logsDirectory = path.join(BASE_FOLDER, `logs/${formattedDate}`);
+let logFileName = path.join(logsDirectory, `${ now.getTime() }${formattedTime}.log`);
+
+let previousDay = day;
+function updateDateAndDirectory() {
+    now = new Date();
+    year = now.getFullYear();
+    month = String(now.getMonth() + 1).padStart(2, '0');
+    day = String(now.getDate()).padStart(2, '0');
+    hours = now.getHours();
+    minutes = now.getMinutes().toString().padStart(2, '0');
+    seconds = now.getSeconds().toString().padStart(2, '0');
+    ampm = hours >= 12 ? "PM" : "AM";
+    formattedDate = `${year}-${month}-${day}`;
+    formattedTime = `[${hours % 12 || 12};${minutes};${seconds} ${ampm}]`;
+
+    if (day != previousDay) { // new day new folder
+        logsDirectory = path.join(BASE_FOLDER, `logs/${formattedDate}`);
+        logFileName = path.join(logsDirectory, `${now.getTime()}${formattedTime}.log`);
+        fs.mkdir(logsDirectory, { recursive: true }, (dirErr) => {
+            if (dirErr) {
+                console.error('Error creating logs directory:', dirErr);
+            } else {
+                console.log('Logs directory created:', logsDirectory);
+
+                // Now, create or append to the log file
+                fs.writeFile(logFileName, '', { flag: 'a+' }, (fileErr) => {
+                    if (fileErr) {
+                        console.error('Error creating log file:', fileErr);
+                    } else {
+                        console.log('Log file created:', logFileName);
+                    }
+                });
+            }
+        });
+    }
+    previousDay = day;
+}
+
+
 
 const SERVER = {
     /*
@@ -12,7 +66,9 @@ const SERVER = {
     Separating by room should also help because it will make individual "room history" logs
     */
     logToFile: (info) => {
-        fs.appendFile(LOG_FILE_NAME, info + '\n', (err) => {
+        updateDateAndDirectory();
+
+        fs.appendFile(logFileName, info + '\n', (err) => {
             if (err) {
                 console.error('Error writing to log file:', err);
             }
@@ -21,18 +77,18 @@ const SERVER = {
 
     initLogFile: () => {
         // Create the 'logs' directory if it doesn't exist
-        fs.mkdir(LOGS_DIRECTORY, { recursive: true }, (dirErr) => {
+        fs.mkdir(logsDirectory, { recursive: true }, (dirErr) => {
             if (dirErr) {
                 console.error('Error creating logs directory:', dirErr);
             } else {
-                console.log('Logs directory created:', LOGS_DIRECTORY);
+                console.log('Logs directory created:', logsDirectory);
 
                 // Now, create or append to the log file
-                fs.writeFile(LOG_FILE_NAME, '', { flag: 'a+' }, (fileErr) => {
+                fs.writeFile(logFileName, '', { flag: 'a+' }, (fileErr) => {
                     if (fileErr) {
                         console.error('Error creating log file:', fileErr);
                     } else {
-                        console.log('Log file created:', LOG_FILE_NAME);
+                        console.log('Log file created:', logFileName);
                     }
                 });
             }

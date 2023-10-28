@@ -936,6 +936,23 @@ function sendMessage() {
     socket.emit('broadcastMessage', activeUsername, messageText);
 }
 
+let canClick = true;
+function handleSendMessageClick() {
+    const n = 1.33; //Can adjust rate limit client side here
+    if (canClick) {
+
+        sendMessage();
+
+        // Disable the button for n seconds
+        canClick = false;
+        document.getElementById('chat-send-button').classList.add('disabled');
+        setTimeout(() => {
+            canClick = true;
+            document.getElementById('chat-send-button').classList.remove('disabled');
+        }, n *1000);
+    }
+}
+
 function submitSettings(type) {
     addMessage(type + ' setting submitted');
     switch (type) {
