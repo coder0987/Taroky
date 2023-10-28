@@ -903,7 +903,6 @@ div.hand.twelve-cards img {
 }
 
 .message {
-    background-color: var(--navy); /* Set the background color for messages */
     color: var(--white); /* Set the text color for messages */
     border-radius: 10px; /* Add rounded corners to the bubble */
     padding: 10px; /* Add padding to the bubble */
@@ -912,6 +911,14 @@ div.hand.twelve-cards img {
     display: flex;
     flex-direction: column; /* Stack message and timestamp vertically */
     margin: 1px;
+}
+
+.error-message {
+    background-color: var(--red);
+}
+
+.regular-message {
+    background-color: var(--navy);
 }
 
 .message-text {
