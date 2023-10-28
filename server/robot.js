@@ -1,5 +1,5 @@
 const Deck = require('./deck.js');
-const { SUIT, DIFFICULTY, DIFFICULTY_TABLE, VALUE_REVERSE, TRUMP_VALUE } = require('./enums.js');
+const { SUIT, DIFFICULTY, DIFFICULTY_TABLE, VALUE_REVERSE, VALUE_REVERSE_ACE_HIGH, TRUMP_VALUE } = require('./enums.js');
 const SERVER = require('./logger.js');
 
 class Robot {
@@ -283,7 +283,7 @@ class Robot {
                 if (room.board.iote == pn) {
                     //I called IOTE
                     //2 scenarios: 1, I can bulldoze. 2, I have a lot of trump
-                    if (trumpCount > 0 && VALUE_REVERSE[Deck.highestTrump(trumpCards).value] >= VALUE_REVERSE[highestUnplayedTrump(room.board.playedCards)]) {
+                    if (trumpCount > 0 && VALUE_REVERSE[Deck.highestTrump(trumpCards).value] >= VALUE_REVERSE[highestUnplayedTrump(room.board.cardsPlayed)]) {
                         //I have the biggest trump
                         return Deck.highestTrump(trumpCards);
                     }
@@ -355,7 +355,7 @@ class Robot {
         for (let i in table) {
             orderedTable[orderedTable.length] = table[i].card;
         }
-        let winningCard = whoIsWinning(orderedTable);
+        let winningCard = whoIsWinning(orderedTable, room.settings.aceHigh);
         let winningPlayer = 0;
         for (let i in table) {
             if (table[i].card == winningCard) {
@@ -589,14 +589,17 @@ function highestUnplayedTrump(booleanArray) {
     }
     return {suit:'Trump', value:'I'};
 }
-function whoIsWinning(table) {
+function whoIsWinning(table, aceHigh) {
     let trickLeadCard = table[0];
     let trickLeadSuit = trickLeadCard.suit;
     let highestTrump = -1;
     let currentWinner = 0;//LeadPlayer is assumed to be winning
+
+    let reverseEnum = aceHigh ? VALUE_REVERSE_ACE_HIGH : VALUE_REVERSE;
+
     for (let i=0; i<table.length; i++) {
-        if (table[i].suit == 'Trump' && VALUE_REVERSE[table[i].value] > highestTrump) {
-            highestTrump = VALUE_REVERSE[table[i].value];
+        if (table[i].suit == 'Trump' && reverseEnum[table[i].value] > highestTrump) {
+            highestTrump = reverseEnum[table[i].value];
             currentWinner = i;
         }
     }
@@ -604,14 +607,15 @@ function whoIsWinning(table) {
         //If a trump was played, then the highest trump wins
         return table[currentWinner];
     }
-    let highestOfLeadSuit = VALUE_REVERSE[trickLeadCard.value];
+    let highestOfLeadSuit = reverseEnum[trickLeadCard.value];
     for (let i=1; i<table.length; i++) {
-        if (table[i].suit == trickLeadSuit && VALUE_REVERSE[table[i].value] > highestOfLeadSuit) {
-            highestOfLeadSuit = VALUE_REVERSE[table[i].value];
+        if (table[i].suit == trickLeadSuit && reverseEnum[table[i].value] > highestOfLeadSuit) {
+            highestOfLeadSuit = reverseEnum[table[i].value];
             currentWinner = i;
         }
     }
     return table[currentWinner];
 }
+
 
 module.exports = Robot;

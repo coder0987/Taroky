@@ -1,9 +1,11 @@
 const { SUIT,
     SUIT_REVERSE,
     RED_VALUE,
+    RED_VALUE_ACE_HIGH,
     BLACK_VALUE,
     TRUMP_VALUE,
-    VALUE_REVERSE } = require('./enums.js')
+    VALUE_REVERSE,
+    VALUE_REVERSE_ACE_HIGH } = require('./enums.js')
 const SERVER = require('./logger.js');
 
 //To sort Spades, Hearts, Clubs, Diamonds, Trump and prevent similar colors from touching
@@ -70,7 +72,8 @@ class Deck {
         return this._deck.splice(start, end);
     }
 
-    static sortCards(toSort) {
+    static sortCards(toSort, aceHigh) {
+        let valueEnum = aceHigh ? VALUE_REVERSE_ACE_HIGH : VALUE_REVERSE;
         toSort = toSort.sort((a, b) => {
              if (SUIT_SORT_ORDER[a.suit] > SUIT_SORT_ORDER[b.suit]) {
                 return 1;
@@ -78,9 +81,9 @@ class Deck {
                 return -1;
              }
 
-             if (VALUE_REVERSE[a.value] > VALUE_REVERSE[b.value]) {
+             if (valueEnum[a.value] > valueEnum[b.value]) {
                 return 1;
-             } else if (VALUE_REVERSE[a.value] < VALUE_REVERSE[b.value]) {
+             } else if (valueEnum[a.value] < valueEnum[b.value]) {
                 return -1;
              }
              SERVER.debug('Cards are the same: ' + JSON.stringify(a) + ' ' + JSON.stringify(b));
@@ -163,7 +166,8 @@ class Deck {
         }
     }
 
-    static cardId(card) {
+    static cardId(card, aceHigh) {
+        let valueEnum = aceHigh ? VALUE_REVERSE_ACE_HIGH : VALUE_REVERSE;
         return VALUE_REVERSE[card.value] + SUIT_REVERSE[card.suit] * 8;
     }
 
@@ -417,11 +421,9 @@ class Deck {
     }
 
     //Getters
-
     get deck() {
         return this._deck
     }
-
 
 }
 

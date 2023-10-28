@@ -3,16 +3,19 @@ const Player = require('./player.js');
 const Deck = require('./deck.js');
 const {DIFFICULTY, PLAYER_TYPE} = require('./enums.js');
 
+let iterator = 100000;
+
 class Room {
     constructor(args) {
         let name         = args.name || 'Room';
-        let settings     = args.settings || {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'locked':false};
+        let settings     = args.settings || {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'aceHigh':false, 'locked':true};
         let trainingRoom = args.trainingRoom || false;
         let debugRoom    = args.debugRoom || false;
         let logLevel     = args.logLevel || 3;
 
         this._settings = settings;
         this._name = name;
+        this._joinCode = Room.createJoinCode();
         this._host = -1;
         this._board = new Board();
         this._playerCount = 0;
@@ -20,7 +23,7 @@ class Room {
         this._players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
         this._autoAction = 0;
         this._debug = debugRoom; //Either undefined or true
-        this._settingsNotation = 'difficulty=2;timeout=30000;locked=false';
+        this._settingsNotation = 'difficulty=2;timeout=30000;aceHigh=false;locked=false';
         this._logLevel = logLevel;//0: none, 1: errors, 2: warn, 3: info, 4: debug logs, 5: trace
         this._audience = {};
         this._audienceCount = 0;
@@ -37,7 +40,7 @@ class Room {
     }
 
     informPlayers(message, messageType, extraInfo, pn) {
-        for (let i in this.players) {
+        for (let i in this._players) {
             if (this._players[i].type == PLAYER_TYPE.HUMAN) {
                 if (typeof pn != 'undefined') {
                     if (pn == i) {
@@ -101,6 +104,18 @@ class Room {
         this._settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
     }
 
+    static createJoinCode() {
+        iterator += Math.ceil(Math.random() * 100000);
+        let newCode = '';
+        let tempIterator = iterator;
+        while (tempIterator > 0) {
+            newCode += String.fromCharCode(tempIterator % 26 + 65);
+            tempIterator /= 26;
+            tempIterator = Math.floor(tempIterator);
+        }
+        return newCode;
+    }
+
     // Getters
     get settings() {
         return this._settings;
@@ -108,6 +123,10 @@ class Room {
 
     get name() {
         return this._name;
+    }
+
+    get joinCode() {
+        return this._joinCode;
     }
 
     get host() {
@@ -171,6 +190,14 @@ class Room {
             }
         }
         return this._players[highestChipsCount];
+    }
+
+    get playersInGame() {
+        let playersInGameArr = [];
+        for (let i in this._players) {
+            playersInGameArr[i] = this._players[i].socket == -1 ? (this._players[i].type == PLAYER_TYPE.ROBOT ? 'Robot' : 'AI') : players[this._players[i].socket].username;
+        }
+        return playersInGameArr;
     }
 
     // Setters

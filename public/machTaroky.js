@@ -1,6 +1,7 @@
 const PLAYER_TYPE = {HUMAN: 0,ROBOT: 1,AI: 2,H: 0,R: 1};
 const SUIT = {0: 'Spade',1: 'Club',2: 'Heart',3: 'Diamond',4: 'Trump'};
 const RED_VALUE = {0: 'Ace',1: 'Two',2: 'Three',3: 'Four',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
+const RED_VALUE_ACE_HIGH = { 0: 'Two', 1: 'Three', 2: 'Four', 3: 'Ace', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const BLACK_VALUE = {0: 'Seven',1: 'Eight',2: 'Nine',3: 'Ten',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
 const TRUMP_VALUE = {0: 'I', 1: 'II', 2: 'III', 3: 'IIII', 4: 'V', 5: 'VI', 6: 'VII', 7: 'VIII', 8: 'IX', 9: 'X', 10: 'XI', 11: 'XII', 12: 'XIII', 13: 'XIV', 14: 'XV', 15: 'XVI', 16: 'XVII', 17: 'XVIII', 18: 'XIX', 19: 'XX', 20: 'XXI', 21: 'Skyz'};
 const ERR_FONT = '24px Arial';
@@ -9,8 +10,8 @@ const cutTypes = ['Cut','1','2','3','4','6','12 Straight','12','345'];
 const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16};
 const BUTTON_TYPE = {PREVER: 0, VALAT: 1, CONTRA: 2, IOTE: 3, BUC: 4, PREVER_TALON: 5, DRAW_TALON: 6};
 const TYPE_TABLE = {0:'Prever',1:'Valat',2:'Contra',3:'IOTE',4:'Bida or Uni',5:'Prever Talon',6:'Talon'};
-const DIFFICULTY = {RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
-const DIFFICULTY_TABLE = {0: 'Rudimentary', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
+const DIFFICULTY = {BEGINNER: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5};
+const DIFFICULTY_TABLE = {0: 'Beginner', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
 const ACTION_TABLE = {
     'start': 'Start the Game',
     'play': 'Start the Next Round',
@@ -45,6 +46,12 @@ const VALUE_REVERSE = {
     I: 0, II: 1, III: 2, IIII: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10, XII: 11, XIII: 12,
     XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
 };
+const VALUE_REVERSE_ACE_HIGH = {
+    Two: 0, Three: 1, Four: 2, Ace: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
+    Seven: 0, Eight: 1, Nine: 2, Ten: 3,
+    I: 0, II: 1, III: 2, IIII: 3, V: 4, VI: 5, VII: 6, VIII: 7, IX: 8, X: 9, XI: 10, XII: 11, XIII: 12,
+    XIV: 13, XV: 14, XVI: 15, XVII: 16, XVIII: 17, XIX: 18, XX: 19, XXI: 20, Skyz: 21
+};
 const SUIT_SORT_ORDER = {
     Spade: 0, Club: 2, Heart: 1, Diamond: 3, Trump: 4
 }
@@ -61,6 +68,7 @@ let partners;
 let handChoices;
 let socket;
 let theSettings;
+let roomCode;
 let returnToGameAvailable = false;
 let availableRooms={};
 let drawnRooms=[];
@@ -80,7 +88,7 @@ let discardingOrPlaying = true;
 let timeOffset = 0;
 let elo;
 let admin;
-let defaultSettings = {'timeout':30000,'difficulty':2};
+let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
 let activeUsername;
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 for (let s=0;s<4;s++)
@@ -227,7 +235,31 @@ $(document).ready(function() {
         let element = document.getElementById("navbar");
         element.classList.add("fixed-top");
     }, 3000);
- 
+    $('.copy-text').click(function (e) {
+          //First: try to share it
+          e.preventDefault();
+          if (navigator.share) {
+            navigator.share(
+              {title: 'Mach Tarok Invite',text: 'Let\'s Play Taroky!',url: 'machtarok.com/?join=CODE'}
+            ).then(() => console.log('Successful share')
+            ).catch(error => console.log('Error sharing:', error));
+          }
+
+          let copyText = $(this).attr('href');
+          document.addEventListener('copy', function(e) {
+             e.clipboardData.setData('text/plain', copyText);
+             e.preventDefault();
+          }, true);
+          document.execCommand('copy');
+
+          document.getElementById('copied').removeAttribute('hidden');
+         });
+
+    let params = new URLSearchParams(document.location.search);
+    let inviteLink = params.get('join');
+    if (inviteLink) {
+        joinFromInvite(inviteLink);
+    }
 });
 
 /**load button */
@@ -632,7 +664,9 @@ function displayNextAction(action) {
         }
         switch (action.action) {
             case 'start':
-                hostRoom();
+                //Something has gone wrong. This should never be called
+                console.error('Start case has been called from displayNextAction');
+                console.trace();
                 break;
             case 'play':
                 addMessage('A new game is beginning');
@@ -864,12 +898,8 @@ function sendMessage() {
     let input = document.getElementById('chat-input')
     let messageText = input.value;
     input.value = '';
-
-    if (activeUsername) {
-        playerSentMessage(activeUsername, messageText);
-
-        socket.emit('broadcastMessage', playerName, messageText);
-    }
+    playerSentMessage(activeUsername, messageText);
+    socket.emit('broadcastMessage', activeUsername, messageText);
 }
 
 function submitSettings(type) {
@@ -882,9 +912,11 @@ function submitSettings(type) {
             socket.emit('settings',type,document.getElementById('timeoutButton').value*1000);
             break;
         case 'lock':
-            socket.emit('settings',type,true);
-            document.getElementById('lockButton').setAttribute('hidden','hidden');
-            document.getElementById('lockButtonP').setAttribute('hidden','hidden');
+        case 'visibility':
+            socket.emit('settings','lock',document.getElementById('lockButton').innerHTML == 'Private');
+            break;
+        case 'aceHigh':
+            socket.emit('settings',type,document.getElementById('aceHighSelector').checked);
             break;
         case 'save':
             socket.emit('saveSettings');
@@ -894,116 +926,57 @@ function submitSettings(type) {
     }
 }
 
-function createSettings(tools, roomSettings) {
-    let settings = document.createElement('div');
-    settings.id = 'settings';
-
-    roomSettings = roomSettings || defaultSettings;
-
-    let difficultySelectorP = document.createElement('span');
-    difficultySelectorP.innerHTML = 'Select the difficulty:\t';
-    difficultySelectorP.style='display:inline-block; width: 175px';
-    settings.appendChild(difficultySelectorP);
-
-    let difficultySelector = document.createElement('select');
-    difficultySelector.id ='difficultySelector';
-    difficultySelector.name = 'Select Difficulty:';
-    for (let i in DIFFICULTY_TABLE) {
-        let difficultySelectOption = document.createElement('option');
-        difficultySelectOption.selected = false;
-        difficultySelectOption.value = i;
-        difficultySelectOption.id = DIFFICULTY_TABLE[i];
-        if (i==roomSettings.difficulty) {
-            difficultySelectOption.selected = 'selected';
-        }
-        difficultySelectOption.innerHTML = DIFFICULTY_TABLE[i];
-        difficultySelector.appendChild(difficultySelectOption);
-    }
-    difficultySelector.setAttribute('onchange', 'submitSettings("difficulty")');
-    settings.appendChild(difficultySelector);
-    settings.appendChild(document.createElement('br'));
-
-    //Create numerical input for timeout (in s, must convert to ms)
-
-    let timeoutSelectorP = document.createElement('span');
-    timeoutSelectorP.innerHTML = 'Timeout (in seconds):\t';
-    timeoutSelectorP.style='display:inline-block; width: 175px';
-    settings.appendChild(timeoutSelectorP);
-
-    let timeoutButton = document.createElement('input');
-    timeoutButton.setAttribute('type', 'number');
-    timeoutButton.defaultValue = roomSettings.timeout / 1000;
-    timeoutButton.setAttribute('value',roomSettings.timeout / 1000);
-    timeoutButton.min = -1;//-1 or 0 mean no timeout
-    timeoutButton.id = 'timeoutButton';
-    timeoutButton.setAttribute('onchange', 'submitSettings("timeout")');
-    settings.appendChild(timeoutButton);
-    settings.appendChild(document.createElement('br'));
-
-    //Create lock button
-    let lockSelectorP = document.createElement('span');
-    lockSelectorP.innerHTML = 'Prevent Joining:\t';
-    lockSelectorP.style='display:inline-block; width: 175px';
-    lockSelectorP.id = 'lockButtonP';//For hiding when button is clicked
-    settings.appendChild(lockSelectorP);
-
-    let lockButton = document.createElement('button');
-    lockButton.innerHTML = 'Lock Room';
-    lockButton.id = 'lockButton';
-    lockButton.addEventListener('click', function(){
-        submitSettings("lock");
-    });
-    settings.appendChild(lockButton);
-
-    //Create save button only if user is signed in
-    if (typeof activeUsername !== 'undefined' && activeUsername != '') {
-        settings.appendChild(document.createElement('br'));
-        let saveButtonP = document.createElement('span');
-        saveButtonP.innerHTML = 'Save Settings:\t';
-        saveButtonP.style='display:inline-block; width: 175px';
-        settings.appendChild(saveButtonP);
-
-        let saveButton = document.createElement('button');
-        saveButton.innerHTML = 'Save';
-        saveButton.addEventListener('click', function(){
-            submitSettings("save");
-        });
-        settings.appendChild(saveButton);
-        settings.appendChild(document.createElement('br'));
-    }
-
-    settings.appendChild(document.createElement('br'));
-
-    tools.appendChild(settings);
-}
-
 function debugTools() {
     //TODO: add debug tools
 }
 
 let roomHosted = false;
-function hostRoom(roomSettings) {
+function hostRoom(roomSettings, roomName, joinCode) {
+    roomCode = joinCode;
     roomSettings = roomSettings || defaultSettings;
+    document.getElementById('settingsRoomName').innerHTML = 'Room ' + romanize(roomName) + ' (Join Code ' + joinCode + ')';
+    updateRoomSettings(roomSettings);
     document.getElementById('host').hidden = false;
-    if (roomHosted) {
-        document.getElementById('lockButton').removeAttribute('hidden');
-        document.getElementById('lockButtonP').removeAttribute('hidden');
+    document.getElementById('startGame').hidden = false;
+    document.getElementById('settings').hidden = false;
+}
+
+function showRoomInfo(roomSettings, roomName, joinCode) {
+    roomCode = joinCode;
+    document.getElementById('settingsRoomName').innerHTML = 'Room ' + romanize(roomName) + ' (Join Code ' + joinCode + ')';
+    updateRoomSettings(roomSettings);
+    document.getElementById('host').hidden = false;
+    document.getElementById('display-settings').hidden = false;
+}
+
+function updateRoomSettings(roomSettings) {
+    document.getElementById('display-difficulty').innerHTML = DIFFICULTY_TABLE[roomSettings.difficulty];
+    document.getElementById('display-timeout').innerHTML = (+roomSettings.timeout / 1000);
+    document.getElementById('display-ace').innerHTML = roomSettings.aceHigh ? 'Yes' : 'No';
+    document.getElementById('display-visibility').innerHTML = roomSettings.locked ? 'Private' : 'Public';
+
+
+    if (document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty])) {
         document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty]).setAttribute('selected','selected');
-        document.getElementById('timeoutButton').setAttribute('value',roomSettings.timeout / 1000);
-        document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
-        return;
     }
-    roomHosted = true;
-    let tools = document.getElementById('host');
-    let startGame = document.createElement('button');
-    startGame.innerHTML = 'Start Game';
-    startGame.addEventListener('click',function(){removeHostTools();addMessage('Starting...');socket.emit('startGame');});
-    createSettings(tools, roomSettings);
-    tools.appendChild(startGame);
+    document.getElementById('timeoutButton').setAttribute('value',roomSettings.timeout / 1000);
+    document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
+    document.getElementById('aceHighSelector').checked = roomSettings.aceHigh;
+    document.getElementById('lockButton').innerHTML = roomSettings.locked ? 'Private' : 'Public';
+}
+
+function updatePlayersInGame(playersInGame) {
+    let pn = playerNumber;
+    for (let i in playersInGame) {
+        document.getElementById('settingsScreenPn' + (+i+1)).innerHTML = playersInGame[i] + (i == pn ? ' (You)': '');
+    }
 }
 
 function removeHostTools() {
     document.getElementById('host').hidden = true;
+    document.getElementById('startGame').hidden = true;
+    document.getElementById('settings').hidden = true;
+    document.getElementById('display-settings').hidden = true;
 }
 
 function cut() {
@@ -1092,6 +1065,8 @@ function onLoad() {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
         displaySignOut(username);
+        document.getElementById('chat-entry').removeAttribute('hidden');
+        document.getElementById('saveButton').removeAttribute('hidden');
     });
 
     socket.on('loginFail', function() {
@@ -1099,21 +1074,27 @@ function onLoad() {
         displaySignIn();
         document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.getElementById('chat-entry').setAttribute('hidden','hidden');
+        document.getElementById('saveButton').setAttribute('hidden','hidden');
     });
 
     socket.on('loginExpired', function() {
         addBoldMessage('Your login session has expired. Please sign in again.');
         activeUsername = '';
-        defaultSettings = {'timeout':30000,'difficulty':2};
+        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
         delete elo;
+        document.getElementById('chat-entry').setAttribute('hidden','hidden');
+        document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
     });
 
     socket.on('logout', function() {
         addBoldMessage('Successfully logged out');
         activeUsername = '';
-        defaultSettings = {'timeout':30000,'difficulty':2};
+        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
         delete elo;
+        document.getElementById('chat-entry').setAttribute('hidden','hidden');
+        document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
     });
 
@@ -1128,7 +1109,7 @@ function onLoad() {
         } else {
             activeUsername = '';
         }
-        if (typeof data.defaultSettings !== 'undefined') {
+        if (typeof data.defaultSettings !== 'undefined' && data.defaultSettings) {
             defaultSettings = data.defaultSettings;
         }
         if (typeof data.playerCount !== 'undefined') {
@@ -1149,16 +1130,18 @@ function onLoad() {
         }
         if (typeof data.settings !== 'undefined') {
             theSettings = data.settings;
-            addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[data.settings.difficulty] + ' with timeout ' + (data.settings.timeout/1000));
+            addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[data.settings.difficulty] + ' with timeout ' + (data.settings.timeout/1000)  + ' with ace high ' + (data.settings.aceHigh?'enabled':'disabled'));
         }
         if (typeof data.pn !== 'undefined') {
             playerNumber = data.pn;
             addMessage('You are player ' + (+data.pn+1));
         }
         if (typeof data.host !== 'undefined') {
-            hostNumber = data.host;
+            hostNumber = data.host.number;
             if (playerNumber == hostNumber && data.nextAction && data.nextAction.action == 'start') {
-                hostRoom(data.settings);
+                hostRoom(data.settings, data.host.name, data.host.joinCode);
+            } else if (data.nextAction && data.nextAction.action == 'start') {
+                showRoomInfo(data.settings, data.host.name, data.host.joinCode);
             }
         }
         if (typeof data.roundInfo !== 'undefined') {
@@ -1174,6 +1157,9 @@ function onLoad() {
         }
         if (typeof data.nextAction !== 'undefined' && data.nextAction.action != 'start') {
             displayNextAction(data.nextAction);
+        }
+        if (typeof data.playersInGame !== 'undefined') {
+            updatePlayersInGame(data.playersInGame);
         }
         if (typeof data.elo !== 'undefined') {
             elo = data.elo;
@@ -1202,6 +1188,37 @@ function onLoad() {
     socket.on('returnPlayers', function(returnPlayers) {
         players = returnPlayers;
     });
+    socket.on('returnPlayerList', function(returnPlayerList) {
+        console.log('Received player list: ' + returnPlayerList);
+        let inviteTable = document.getElementById('inviteTable');
+        inviteTable.innerHTML = '<thead><tr><th scope="col">Username</th><th scope="col">Status</th><th scope="col">Invite</th></tr></thead>';
+        let inviteBody = document.createElement('tbody');
+        for (let i in returnPlayerList) {
+            let inviteRow = document.createElement('tr');
+            let inviteRowUsername = document.createElement('td');
+            inviteRowUsername.innerHTML = returnPlayerList[i].username;
+            inviteRow.appendChild(inviteRowUsername);
+
+            let inviteRowStatus = document.createElement('td');
+            inviteRowStatus.innerHTML = returnPlayerList[i].status;
+            inviteRow.appendChild(inviteRowStatus);
+
+            let inviteRowSend = document.createElement('td');
+            let inviteButton = document.createElement('button');
+            inviteButton.innerHTML = 'Invite';
+            inviteButton.addEventListener('click', () => {
+                socket.emit('invite', returnPlayerList[i].socket);
+            })
+            inviteRowSend.appendChild(inviteButton);
+            inviteRow.appendChild(inviteRowSend);
+
+            inviteBody.appendChild(inviteRow);
+        }
+        inviteTable.appendChild(inviteBody);
+    })
+    socket.on('invite', function(roomName, joinCode, playerName) {
+        createInviteCard(roomName, joinCode, playerName);
+    });
     socket.on('returnPovinnost', function(returnPovinnost) {
         povinnostNumber = returnPovinnost;
     });
@@ -1227,7 +1244,11 @@ function onLoad() {
     });
     socket.on('returnSettings', function(returnSettings) {
         theSettings = returnSettings;
-        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000));
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + ' with ace high ' + (returnSettings.aceHigh?'enabled':'disabled'));
+        updateRoomSettings(theSettings);
+    });
+    socket.on('returnPlayersInGame', function(returnPlayersInGame) {
+        updatePlayersInGame(returnPlayersInGame);
     });
     socket.on('returnPN', function(returnPN, returnHostPN) {
         hostNumber = returnHostPN;
@@ -1265,8 +1286,10 @@ function onLoad() {
     socket.on('roomHost', function() {
         addMessage('You are the room host');
     });
-    socket.on('youStart', function() {
-        hostRoom();
+    socket.on('youStart', function(roomName, joinCode) {
+        console.log('You start');
+        playerNumber = 0;
+        hostRoom(defaultSettings, roomName, joinCode);
     });
     socket.on('12choice', function(theChoices) {
         addBoldMessage('Please choose a hand to keep');
@@ -1437,9 +1460,15 @@ function onLoad() {
         hostNumber = hostPN;
         playerNumber = pN;
         theSettings = returnSettings;
-        addMessage('Game ' + gameNumber + ' Beginning.')
+        updateRoomSettings(theSettings)
+        addMessage('Game ' + gameNumber + ' Beginning.');
         addMessage('You are player ' + (+pN+1));
-        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's');
+        addBoldMessage('Playing on difficulty ' + DIFFICULTY_TABLE[returnSettings.difficulty] + ' with timeout ' + (returnSettings.timeout/1000) + 's' + ' with ace high ' + (returnSettings.aceHigh?'enabled':'disabled'));
+
+        document.getElementById('host').hidden = true;
+        document.getElementById('startGame').hidden = true;
+        document.getElementById('settings').hidden = true;
+        document.getElementById('display-settings').hidden = true;
     });
     socket.on('nextAction', function(action) {
         displayNextAction(action);
@@ -1467,7 +1496,8 @@ function onLoad() {
         }
     });
     socket.on('defaultSettings', function(returnSettings) {
-        if (defaultSettings) {
+        if (returnSettings) {
+            console.log(returnSettings);
             defaultSettings = returnSettings;
             addBoldMessage('Settings loaded');
         }
@@ -1884,10 +1914,29 @@ function newRoomClick() {
     } else {addError('Already connecting to a room!');}
 }
 
+function joinFromInvite(roomCode) {
+    if (!connectingToRoom) {
+        connectingToRoom=true;
+        socket.emit('roomConnect',roomCode,true);
+        addMessage('Joining room...');
+    } else {addError('Already connecting to a room!');}
+}
+
+function joinRoomClick() {
+    if (!connectingToRoom) {
+        let code = prompt('Room code:');
+        if (!code) {return;}
+        connectingToRoom=true;
+        socket.emit('roomConnect',code,true);
+        addMessage('Joining room...');
+    } else {addError('Already connecting to a room!');}
+}
+
 function drawRooms() {
     drawnRooms = [];
     document.getElementById('rooms').innerHTML = '';
     createNewRoomCard();
+    createJoinRoomCard();
     for (let i in availableRooms) {
         createRoomCard(availableRooms[i],i);
         drawnRooms.push(availableRooms[i]);
@@ -2009,6 +2058,30 @@ function createNewRoomCard() {
     bDiv.appendChild(playerCountSpan);
     //Make it clickable
     bDiv.addEventListener('click', newRoomClick);
+    document.getElementById('rooms').appendChild(bDiv);
+}
+
+function createJoinRoomCard() {
+    const bDiv = document.createElement('div');
+    bDiv.classList.add('roomcard');
+    bDiv.classList.add('col-md-3');
+    bDiv.classList.add('col-xs-6');
+    bDiv.classList.add('white');
+    bDiv.id = 'roomCardJoin';
+    const numberDiv = document.createElement('div');
+    numberDiv.classList.add('roomnum');
+    numberDiv.classList.add('d-flex');
+    numberDiv.classList.add('justify-content-center');
+    numberDiv.innerHTML = 'Join Room';
+    numberDiv.id = 'roomNumJoin';
+    bDiv.appendChild(numberDiv);
+    const playerCountSpan = document.createElement('span');
+    for (let i=0; i<4; i++) {
+        playerCountSpan.innerHTML += '&#x25CB; ';
+    }
+    bDiv.appendChild(playerCountSpan);
+    //Make it clickable
+    bDiv.addEventListener('click', joinRoomClick);
     document.getElementById('rooms').appendChild(bDiv);
 }
 
@@ -2243,6 +2316,52 @@ function clearButtons() {
         }
     }
 }
+
+function invite() {
+        document.getElementById('inviteJoinCode').href = 'https://machtarok.com/?join=' + roomCode;
+        document.getElementById('inviteJoinCode').innerHTML = 'https://machtarok.com/?join=' + roomCode;
+        document.getElementById('inviteScreen').removeAttribute('hidden');
+        socket.emit('getPlayerList');
+    }
+    function closeInvite() {
+      document.getElementById('inviteScreen').setAttribute('hidden','hidden');
+      document.getElementById('copied').setAttribute('hidden','hidden');
+    }
+    function createInviteCard(roomName,roomCode, username) {
+        let card = document.createElement('div');
+        card.classList.add('invite-card');
+        let cardRemoveTimeout = setTimeout(() => {document.body.removeChild(card)},10000);
+
+        let nameElem = document.createElement('h3');
+        nameElem.classList.add('invite-card-header');
+        nameElem.innerHTML = 'New Invite From ' + username + ' to room ' + roomName + '!';
+        card.appendChild(nameElem);
+
+        let joinButton = document.createElement('a');
+        joinButton.classList.add('invite-card-button');
+        joinButton.innerHTML = 'Join';
+        joinButton.addEventListener('click', () => {
+        exitCurrentRoom(true);
+           document.body.removeChild(card);
+           clearTimeout(cardRemoveTimeout);joinFromInvite(roomCode)
+        }, {once:true});
+        card.appendChild(joinButton);
+
+        let spacerSpan = document.createElement('span');
+        spacerSpan.classList.add('invite-card-spacer');
+        spacerSpan.innerHTML = '-';
+        card.appendChild(spacerSpan);
+
+        let ignoreButton = document.createElement('a');
+        ignoreButton.classList.add('invite-card-button');
+        ignoreButton.innerHTML = 'Ignore';
+        ignoreButton.addEventListener('click', () => {document.body.removeChild(card); clearTimeout(cardRemoveTimeout)}, {once:true});
+        card.appendChild(ignoreButton);
+
+        document.body.appendChild(card);
+
+    }
+
 
 function alive() {
     socket.emit('alive', (callback) => {

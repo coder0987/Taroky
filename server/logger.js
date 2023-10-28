@@ -5,8 +5,6 @@ const BASE_FOLDER = __dirname.substring(0, __dirname.length - 6);
 const LOGS_DIRECTORY = path.join(BASE_FOLDER, 'logs');
 const LOG_FILE_NAME = path.join(LOGS_DIRECTORY, `${Date.now()}.log`);
 
-console.log('new server');
-
 const SERVER = {
     /*
     Why use SERVER instead of console.log()? For future additions. Eventually I want to write console logs to a file for debugging
