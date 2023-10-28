@@ -26,7 +26,7 @@ class ChatBox {
         this.updateScrollHeight();
     }
 
-    addErrorMessage(messageText, bold=false) {
+    addErrorMessage(messageText, bold=true) {
         let author = 'MachTarok';
         let currentTimestamp = getFormattedTime();
         if (!messageText) { return; }
