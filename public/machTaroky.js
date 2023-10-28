@@ -15,7 +15,7 @@ const DIFFICULTY_TABLE = {0: 'Beginner', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: '
 const ACTION_TABLE = {
     'start': 'Start the Game',
     'play': 'Start the Next Round',
-    'shuffle': 'Shuffle the Deck',
+    'shuffle': 'Shuffle',
     'cut': 'Cut the Deck',
     'deal': 'Deal',
     '12choice': 'Choose a hand',
@@ -116,6 +116,23 @@ function moveDeckToDeck() {
         child.classList.remove('grayed');
         deckDiv.appendChild(child);
     }
+}
+
+let in_chat = false;
+function chat_toggle() {
+  let chat_box_container = document.getElementById('chat-box-container');
+  let hand_div = document.getElementById('hand');
+  if (in_chat) {
+    hand_div.classList.remove('d-none');
+    chat_box_container.classList.remove('d-flex');
+    chat_box_container.classList.add('d-none');
+    in_chat = false;
+  } else {
+    hand_div.classList.add('d-none');
+    chat_box_container.classList.add('d-flex');
+    chat_box_container.classList.remove('d-none');
+    in_chat = true;
+  }
 }
 
 /** navbar */
@@ -306,10 +323,10 @@ function numTrumpInHand() {
     return num;
 }
 
-function enter() {if (this.style.filter == '') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
+function enter() {if (this.style.filter != 'grayscale(1)') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
 function exit() {this.classList.remove('image-hover-highlight');this.title='';}
 function clickCard() {
-    if (this.style.filter == '') {
+    if (this.style.filter != 'grayscale(1)') {
         discardThis(this.suit,this.value);
         this.removeEventListener('mouseenter',enter);
         this.removeEventListener('mouseleave',exit);
@@ -327,7 +344,7 @@ function discardClickListener() {
         this.classList.remove('selected');
         numCardsSelected--;
         document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
-    } else if (this.style.filter == '') {
+    } else if (this.style.filter != 'grayscale(1)') {
         //Not selected. If not enough cards are already selected, select this card
         if (hand.length - numCardsSelected > 12) {
             numCardsSelected++;
@@ -391,7 +408,7 @@ function drawHand(withGray) {
                 card.style.filter = 'grayscale(1)';
                 card.classList.add('grayed');
             } else {
-                card.style.filter = '';
+                card.style.filter = 'grayscale(0)';
                 card.classList.remove('grayed');
             }
             card.classList.remove('selected');
@@ -430,6 +447,16 @@ function drawHand(withGray) {
         }
 
         card.hidden = false;
+    }
+    divHand.classList.remove('sixteen-cards');
+    divHand.classList.remove('thirteen-cards');
+    divHand.classList.remove('twelve-cards');
+    if (hand.length > 14) {
+        divHand.classList.add('sixteen-cards');
+    } else if (hand.length > 12) {
+        divHand.classList.add('thirteen-cards');
+    } else {
+        divHand.classList.add('twelve-cards');
     }
 }
 
@@ -483,7 +510,6 @@ function drawTable(shouldHide) {
     }
     if (Date.now() - tableDrawnTime < 3000 && currentNumberOfCardsOnTable >= 4) {
         //Timeout only matters if the table is at full capacity
-        //Timeout only matters if the table is at full capacity
         return;
     } else if (Date.now() - tableDrawnTime < 1000) {
         return;
@@ -494,6 +520,7 @@ function drawTable(shouldHide) {
         //hide the table
         if (shouldHide || table == 'hide') {
             document.getElementById('table').setAttribute('hidden','hidden');
+            return;
         }
     } else {
         //Table layout: [{'card':data,'pn':num,'lead':boolean},{'card'...}]
@@ -522,14 +549,13 @@ function drawTable(shouldHide) {
                         child.children[j].setAttribute('hidden','hidden');
                         divDeck.appendChild(child.children[j]);
                     }
-                    if (child.children[j] && child.children[j].nodeName == 'P') {
-                        //"Player N" or "Trick Leader"
+                    if (child.children[j] && child.children[j].nodeName == 'SPAN') {
+                        //"Trick Leader"
                         child.children[j].setAttribute('hidden','hidden');
                     }
                 }
             }
         }
-        document.getElementById('leader').setAttribute('hidden','hidden');
         if (table[0].suit) {
             //Prever talon
             for (let i in table) {
@@ -545,11 +571,10 @@ function drawTable(shouldHide) {
                 card.style.filter = '';
                 document.getElementById('p' + (+table[i].pn+1)).appendChild(card);
                 let playerName = activeUsernames[+table[i].pn] ? activeUsernames[+table[i].pn] : 'Player ' + (+table[i].pn+1);
-                document.getElementById('p' + (+table[i].pn+1)).firstChild.innerHTML = playerName;
+                document.getElementById('p' + (+table[i].pn+1)).firstChild.innerHTML = '<br>';
                 document.getElementById('p' + (+table[i].pn+1)).firstChild.removeAttribute('hidden');
                 if (table[i].lead) {
-                    document.getElementById('p' + (+table[i].pn+1)).appendChild(document.getElementById('leader'));
-                    document.getElementById('leader').removeAttribute('hidden');
+                    document.getElementById('p' + (+table[i].pn+1)).firstChild.innerHTML = 'Leader<br>';
                 }
                 card.removeAttribute('hidden');
             }
@@ -563,33 +588,32 @@ function displayRoundInfo(theRoundInfo) {
     //{pn,povinnost,prever,preverMultiplier,valat,contra,iote,moneyCards,partnerCard}
     //null if not existent yet
     let roundInfoElement = document.getElementById('roundInfo');
-    roundInfoElement.textContent = '';
+    let genericRoundInfoElement = document.getElementById('genericRoundInfo');
+    genericRoundInfoElement.textContent = '';
+
     const possibleInfo = {'contra':'Contra Multiplier: ','preverMultiplier':'Prever Multiplier: '};
     const possiblePlayerNumbers = {'povinnost':'Povinnost','prever':'Prever','valat':'Called Valat','iote':'Called I on the End'};
     let playerDivs = [];
     for (let i=0; i<4; i++) {
-        playerDivs[i] = document.createElement('div');
-        playerDivs[i].classList.add('col');
-        roundInfoElement.appendChild(playerDivs[i]);
+        playerDivs[i] = document.getElementById('roundInfo' + (i+1));
+        playerDivs[i].textContent = '';
         let theInfo = document.createElement('p');
+        theInfo.classList.add('no-margin-below');
+        theInfo.classList.add('bold');
         theInfo.innerHTML = 'Player ' + (+i + 1);
         if (theRoundInfo.pn - 1 == i) {theInfo.innerHTML += ' (You)';}
+        if (theRoundInfo.chips && theRoundInfo.chips[i]) {
+            theInfo.innerHTML += ' - ' + theRoundInfo.chips[i];
+        }
         playerDivs[i].appendChild(theInfo);
     }
-    if (theRoundInfo.chips) {
-        for (let i in theRoundInfo.chips) {
-            if (theRoundInfo.chips[i]) {
-                let theInfo = document.createElement('p');
-                theInfo.innerHTML = theRoundInfo.chips[i];
-                playerDivs[i].appendChild(theInfo);
-            }
-        }
-    }
+
     if (theRoundInfo.usernames) {
         for (let i in theRoundInfo.usernames) {
             activeUsernames[i] = theRoundInfo.usernames[i];//null values are set as well
             if (theRoundInfo.usernames[i]) {
                 let theInfo = document.createElement('p');
+                theInfo.classList.add('no-margin-below');
                 theInfo.innerHTML = theRoundInfo.usernames[i];
                 playerDivs[i].appendChild(theInfo);
             }
@@ -598,19 +622,21 @@ function displayRoundInfo(theRoundInfo) {
     for (let i in possibleInfo) {
         if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
             let theInfo = document.createElement('p');
+            theInfo.classList.add('no-margin-below');
             theInfo.innerHTML = possibleInfo[i] + (isNaN(+theRoundInfo[i]) ? theRoundInfo[i] : +theRoundInfo[i]);
-            theInfo.classList.add('col');
-            roundInfoElement.appendChild(theInfo);
+            genericRoundInfoElement.appendChild(theInfo);
         }
     }
     for (let i in possiblePlayerNumbers) {
         if (theRoundInfo[i] && (i != 'contra' || theRoundInfo[i] != 1) && (i != 'preverMultiplier' || theRoundInfo[i] != 1)) {
             let theInfo = document.createElement('p');
             theInfo.innerHTML = possiblePlayerNumbers[i];
+            theInfo.classList.add('no-margin-below');
             playerDivs[theRoundInfo[i] - 1].appendChild(theInfo);
         }
         if (i == 'povinnost' && theRoundInfo[i] && theRoundInfo['partnerCard']) {
             let theInfo = document.createElement('p');
+            theInfo.classList.add('no-margin-below');
             theInfo.innerHTML = 'Playing with the ' + theRoundInfo['partnerCard'];
             playerDivs[theRoundInfo[i] - 1].appendChild(theInfo);
         }
@@ -619,10 +645,10 @@ function displayRoundInfo(theRoundInfo) {
         for (let i in theRoundInfo.moneyCards) {
             if (theRoundInfo.moneyCards[i].length > 0) {
                 let theInfo = document.createElement('p');
+                theInfo.classList.add('no-margin-below');
                 for (let j in theRoundInfo.moneyCards[i]) {
                     theInfo.innerHTML += theRoundInfo.moneyCards[i][j] + ' ';
                 }
-                theInfo.classList.add('col');
                 playerDivs[i].appendChild(theInfo);
             }
         }
@@ -634,10 +660,8 @@ function displayRoomConnected(roomConnected) {
     document.getElementById('rooms').innerHTML = '';
     connectingToRoom = false;
     addMessage('Connected to room ' + (roomConnected));
-    let exitRoom = document.getElementById('refresh');
-    exitRoom.innerHTML = 'Leave the Room';
-    exitRoom.setAttribute('onclick','exitCurrentRoom()');
-    document.getElementById('joinRoomDiv').hidden = 'hidden';
+    document.getElementById('lobby-controls').setAttribute('hidden','hidden');
+    document.getElementById('actionInfo').removeAttribute('hidden');
 }
 
 function displayAudienceConnected(audienceConnected) {
@@ -645,9 +669,8 @@ function displayAudienceConnected(audienceConnected) {
     document.getElementById('rooms').innerHTML = '';
     connectingToRoom = false;
     addMessage('Joined audience in room ' + (audienceConnected));
-    let exitRoom = document.getElementById('refresh');
-    exitRoom.innerHTML = 'Leave the Room';
-    exitRoom.setAttribute('onclick','exitCurrentRoom()');
+    document.getElementById('lobby-controls').setAttribute('hidden','hidden');
+    document.getElementById('actionInfo').removeAttribute('hidden');
 }
 
 function displayNextAction(action) {
@@ -667,6 +690,9 @@ function displayNextAction(action) {
     if (action.player == playerNumber) {
         if (action.action != 'start') {
             document.getElementById('currentPlayer').innerHTML = 'Your Move';
+            document.getElementById('currentPlayer').classList.add('your-move');
+        } else {
+            document.getElementById('currentPlayer').classList.remove('your-move');
         }
         switch (action.action) {
             case 'start':
@@ -991,9 +1017,9 @@ function cut() {
     let div = document.getElementById('center');
     div.removeAttribute('hidden');
     for (let i in cutTypes) {
-        console.log('Cut type: ' + cutTypes[i]);
         let cutButton = document.createElement('button');
         cutButton.innerHTML = cutTypes[i];
+        cutButton.classList.add('choice-button');
         cutButton.id = 'cutB' + cutTypes[i];
         cutButton.addEventListener('click', function(){
             if (this.innerHTML == 'Cut') {
@@ -1073,7 +1099,7 @@ function onLoad() {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
         displaySignOut(username);
-        document.getElementById('chat-entry').removeAttribute('hidden');
+        enableChat();
         document.getElementById('saveButton').removeAttribute('hidden');
     });
 
@@ -1087,13 +1113,14 @@ function onLoad() {
     });
 
     socket.on('loginExpired', function() {
-        addBoldMessage('Your login session has expired. Please sign in again.');
+        addError('Your login session has expired. Please sign in again.');
         activeUsername = '';
         defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
         delete elo;
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
+        disableChat();
     });
 
     socket.on('logout', function() {
@@ -1104,6 +1131,7 @@ function onLoad() {
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
+        disableChat();
     });
 
     socket.on('autoReconnect', function(data) {
@@ -1122,6 +1150,7 @@ function onLoad() {
         }
         if (typeof data.playerCount !== 'undefined') {
             document.getElementById('online').innerHTML = data.playerCount;
+            document.getElementById('online-s').innerHTML = data.playerCount == 1 ? '' : 's';
         }
         if (typeof data.povinnost !== 'undefined') {
             povinnostNumber = data.povinnost;
@@ -1153,7 +1182,7 @@ function onLoad() {
             }
         }
         if (typeof data.roundInfo !== 'undefined') {
-            if (data.nextAction.action != 'start') {
+            if (data.nextAction && data.nextAction.action != 'start') {
                 displayRoundInfo(data.roundInfo);
             }
         }
@@ -1208,21 +1237,32 @@ function onLoad() {
             inviteRow.appendChild(inviteRowUsername);
 
             let inviteRowStatus = document.createElement('td');
+            inviteRowStatus.id = i + 'status';
             inviteRowStatus.innerHTML = returnPlayerList[i].status;
             inviteRow.appendChild(inviteRowStatus);
 
             let inviteRowSend = document.createElement('td');
             let inviteButton = document.createElement('button');
+            inviteButton.classList.add('choice-button');
+            inviteButton.style = 'margin: 0px;';
             inviteButton.innerHTML = 'Invite';
-            inviteButton.addEventListener('click', () => {
+            inviteButton.id = i + 'invite';
+            inviteButton.addEventListener('click', function () {
                 socket.emit('invite', returnPlayerList[i].socket);
-            })
+                document.getElementById(this.id.split('i')[0] + 'status').innerHTML = 'Invited';
+                this.parentElement.innerHTML = 'Sent!';
+            }, {'once':true});
             inviteRowSend.appendChild(inviteButton);
             inviteRow.appendChild(inviteRowSend);
 
             inviteBody.appendChild(inviteRow);
         }
         inviteTable.appendChild(inviteBody);
+        if (returnPlayerList.length == 0) {
+            document.getElementById('inviteNoOneOnline').removeAttribute('hidden');
+        } else {
+            document.getElementById('inviteNoOneOnline').setAttribute('hidden', 'hidden');
+        }
     })
     socket.on('invite', function(roomName, joinCode, playerName) {
         createInviteCard(roomName, joinCode, playerName);
@@ -1232,6 +1272,7 @@ function onLoad() {
     });
     socket.on('returnPlayerCount', function(playerCount) {
         document.getElementById('online').innerHTML = playerCount;
+        document.getElementById('online-s').innerHTML = playerCount == 1 ? '' : 's';
     });
     socket.on('returnHand', function(returnHand,withGray) {
         hand = returnHand;
@@ -1286,10 +1327,6 @@ function onLoad() {
         addMessage('Failed to join audience in room ' + (audienceNotConnected));
         connectingToRoom = false;
         refresh();
-    });
-    socket.on('debugRoomJoin', function() {
-        addBoldMessage('WARNING: You have joined a debug room. This room is not meant for regular players.\nIf you did not mean to join a debug room, click "Leave the Room" then "Are You Sure?"');
-        debugTools();
     });
     socket.on('roomHost', function() {
         addMessage('You are the room host');
@@ -1665,9 +1702,7 @@ function customRoomClick() {
         theCenter.appendChild(document.createElement('br'));
         notationSubmitButton.generated = false;
 
-        let exitRoom = document.getElementById('refresh');
-        exitRoom.innerHTML = 'Leave the Room';
-        exitRoom.setAttribute('onclick','exitCurrentRoom()');
+        document.getElementById('lobby-controls').hidden = 'hidden';
     }
 }
 
@@ -2068,6 +2103,7 @@ function createTwelvesChoiceButton(choices) {
     for (let i in choices) {
         if (typeof choices[i] !== 'undefined') {
             const button = document.createElement('button');
+            button.classList.add('choice-button');
             button.type = 'button';
             button.innerHTML = choices[i];
             button.id = 'twelvesChoice'+choices[i];
@@ -2180,7 +2216,7 @@ function updateDiscardGray() {
             card.classList.add('grayed');
             hand[i].grayed = true;
         } else {
-            card.style.filter = '';
+            card.style.filter = 'grayscale(0)';
             card.classList.remove('grayed');
             hand[i].grayed = false;
         }
@@ -2197,7 +2233,7 @@ function updateDiscardGray() {
                 card.classList.add('grayed');
                 hand[i].grayed = true;
             } else {
-                card.style.filter = '';
+                card.style.filter = 'grayscale(0)';
                 card.classList.remove('grayed');
                 hand[i].grayed = false;
             }
@@ -2257,7 +2293,7 @@ function confirmButtonCallback() {
         document.getElementById('discard_info').remove();
         document.getElementById('confirm_discard_button').remove();
     } else {
-        addMessage('Please select ' + (hand.length - numCardsSelected - 12) + ' more card' + ((hand.length - numCardsSelected - 12) == 1 ? '' : 's'));
+        addError('Please select ' + (hand.length - numCardsSelected - 12) + ' more card' + ((hand.length - numCardsSelected - 12) == 1 ? '' : 's'));
     }
 }
 
@@ -2317,7 +2353,7 @@ function invite() {
 
         let nameElem = document.createElement('h3');
         nameElem.classList.add('invite-card-header');
-        nameElem.innerHTML = 'New Invite From ' + username + ' to room ' + roomName + '!';
+        nameElem.innerHTML = 'New Invite From ' + username + ' to Room ' + roomName + '!';
         card.appendChild(nameElem);
 
         let joinButton = document.createElement('a');
@@ -2358,11 +2394,11 @@ function alive() {
 let exitTimeout;
 function exitCurrentRoom(value) {
     if (!value) {
-        document.getElementById('refresh').innerHTML = 'Are you sure?';
-        document.getElementById('refresh').setAttribute('onclick','exitCurrentRoom(true)');
+        document.getElementById('exit').innerHTML = '↠';
+        document.getElementById('exit').setAttribute('onclick','exitCurrentRoom(true)');
         exitTimeout = setTimeout(() => {
-            document.getElementById('refresh').innerHTML = 'Leave the Room';
-            document.getElementById('refresh').setAttribute('onclick','exitCurrentRoom()');
+            document.getElementById('exit').innerHTML = '➤';
+            document.getElementById('exit').setAttribute('onclick','exitCurrentRoom()');
         }, 10000);
     } else {
         clearTimeout(exitTimeout);
@@ -2371,8 +2407,11 @@ function exitCurrentRoom(value) {
         drawHand();
         returnTableQueue = [['hide']];
         drawTable(true);
-        document.getElementById('refresh').innerHTML = '&#10227; Refresh Rooms';
-        document.getElementById('refresh').setAttribute('onclick','refresh()');
+        document.getElementById('lobby-controls').removeAttribute('hidden');
+        document.getElementById('exit').innerHTML = '➤';
+        document.getElementById('exit').setAttribute('onclick','exitCurrentRoom()');
+        document.getElementById('exit').setAttribute('onclick','exitCurrentRoom()');
+        document.getElementById('actionInfo').setAttribute('hidden','hidden');
         document.getElementById('joinRoomDiv').removeAttribute('hidden');
         theSettings={};
         availableRooms={};
@@ -2403,7 +2442,10 @@ function exitCurrentRoom(value) {
         document.getElementById('currentAction').innerHTML = '';
         document.getElementById('currentPlayer').innerHTML = '';
         clearChat();
-        document.getElementById('roundInfo').textContent = '';
+        document.getElementById('genericRoundInfo').textContent = '';
+        for (let i=0; i<4; i++) {
+            document.getElementById('roundInfo' + (i+1)).textContent = '';
+        }
         drawRooms();
     }
 }
@@ -2413,15 +2455,18 @@ function clearScreen() {
     drawTable(true);
     hand = [];
     drawHand();
-    document.getElementById('refresh').innerHTML = '&#10227; Refresh Rooms';
-    document.getElementById('refresh').setAttribute('onclick','refresh()');
+    document.getElementById('exit').innerHTML = '➤';
+    document.getElementById('exit').setAttribute('onclick','exitCurrentRoom()');
     stopActionTimer();
     document.getElementById('rooms').innerHTML = '';
     document.getElementById('center').innerHTML = '';
     document.getElementById('currentAction').innerHTML = '';
     document.getElementById('currentPlayer').innerHTML = '';
     clearChat();
-    document.getElementById('roundInfo').textContent = '';
+    document.getElementById('genericRoundInfo').textContent = '';
+    for (let i=0; i<4; i++) {
+        document.getElementById('roundInfo' + (i+1)).textContent = '';
+    }
     removeHostTools();
     if (document.getElementById('cardBack')) {
         document.getElementById('cardBack').setAttribute('hidden','hidden');
