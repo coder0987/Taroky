@@ -4,7 +4,7 @@ const SERVER = require('./logger.js');
 
 class Robot {
     //ROBOT DIFFICULTY LAYOUT: go from hardest -> easiest so the more difficult algorithms fall back onto the less difficult ones while we haven't yet finished
-    //RUDIMENTARY: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5
+    //BEGINNER: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5
     static robotDiscard(hand, difficulty) {
         switch (difficulty) {
             case DIFFICULTY.AI:
@@ -29,7 +29,7 @@ class Robot {
                 //Return highest point value card (most likely a queen)
                 return Deck.highestPointValue(Deck.handWithoutGray(hand));
                 break;
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 return Deck.firstSelectableCard(hand);
             default:
                 //select first discard-able
@@ -48,7 +48,7 @@ class Robot {
                     return { 'value': 'XIX', 'suit': SUIT[4] };//Play by itself
                 }
             case DIFFICULTY.EASY:
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 if (Deck.possiblePartners[1]) {
                     return Deck.possiblePartners[1];//Play with a partner
                 }
@@ -75,7 +75,7 @@ class Robot {
                     //Must have Skyz, XXI, XX, tarocky, and a King
                     return 'callPrever';
                 }
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 return 'passPrever';
             default:
                 SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
@@ -133,7 +133,7 @@ class Robot {
                     }
                 }
             case DIFFICULTY.EASY:
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 return true;
             default:
                 SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
@@ -151,7 +151,7 @@ class Robot {
                     return true;
                 }
             case DIFFICULTY.EASY:
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 //TODO: more difficulty algos
                 return false;
             default:
@@ -169,7 +169,7 @@ class Robot {
                     return true;//Call IOTE if have tarocky or big ones
                 }
             case DIFFICULTY.EASY:
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 //TODO: more difficulty algos
                 return false;
             default:
@@ -193,7 +193,7 @@ class Robot {
                 if (Deck.basicHandRanking(hand) >= 21) {
                     return true;
                 }
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 //TODO: more difficulty algos
                 return false;
             default:
@@ -209,7 +209,7 @@ class Robot {
             case DIFFICULTY.NORMAL:
                 return false;//Conceal so it doesn't get flecked
             case DIFFICULTY.EASY:
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 //TODO: more difficulty algos
                 return true;
             default:
@@ -331,7 +331,7 @@ class Robot {
                     return Deck.lowestPointValue(colorCards);
                 }
                 return Deck.lowestTrump(playableCards);
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 return Deck.firstSelectableCardExceptPagat(hand);
             default:
                 SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
@@ -563,7 +563,7 @@ class Robot {
                         return Deck.highestPointValue(playableCards);
                     }
                 }
-            case DIFFICULTY.RUDIMENTARY:
+            case DIFFICULTY.BEGINNER:
                 return Deck.firstSelectableCardExceptPagat(hand);
             default:
                 SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
