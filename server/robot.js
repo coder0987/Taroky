@@ -336,7 +336,7 @@ class Robot {
             default:
                 SERVER.warn('Unknown difficulty: ' + difficulty + ', ' + DIFFICULTY_TABLE[difficulty]);
                 //select first playable
-                return firstSelectableCard(hand);
+                return Deck.firstSelectableCard(hand);
     
         }
     }
