@@ -35,6 +35,7 @@ function step7() {
     if (!shuffleButton) {
         shuffleButton = document.createElement('button');
         shuffleButton.id = 'shuffleButton';
+        shuffleButton.classList.add('choice-button');
         shuffleButton.innerHTML = 'Shuffle';
         document.getElementById('center').appendChild(document.createElement('br'));
         document.getElementById('center').appendChild(shuffleButton);
@@ -50,6 +51,7 @@ function step8() {
     document.getElementById('timer').innerHTML = 15;
     document.getElementById('timer').hidden = false;
     document.getElementById('timer').removeAttribute('hidden');
+    document.getElementById('roundInfo').removeAttribute('hidden');
     hand = [{"value":"Nine","suit":"Spade","grayed":false},{"value":"Jack","suit":"Heart","grayed":false},{"value":"Queen","suit":"Heart","grayed":false},{"value":"Jack","suit":"Club","grayed":false},{"value":"Rider","suit":"Club","grayed":false},{"value":"Ace","suit":"Diamond","grayed":false},{"value":"King","suit":"Diamond","grayed":true},{"value":"I","suit":"Trump","grayed":true},{"value":"II","suit":"Trump","grayed":true},{"value":"III","suit":"Trump","grayed":true},{"value":"V","suit":"Trump","grayed":true},{"value":"VI","suit":"Trump","grayed":true},{"value":"VII","suit":"Trump","grayed":true},{"value":"XIV","suit":"Trump","grayed":true},{"value":"XX","suit":"Trump","grayed":true},{"value":"XXI","suit":"Trump","grayed":true}];
     drawHand(true);
     numCardsSelected = 0;
@@ -138,7 +140,7 @@ let tour = {
       title: "Checking the Round Info",
       content: "Information about the current game is shown here, including who Povinnost is, any money card, who called prever, and more.",
       target: "roundInfo",
-      placement: "top",
+      placement: "bottom",
       onNext: step9,
       onPrev: step7
     },
