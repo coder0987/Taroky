@@ -66,7 +66,7 @@ const SERVER = {
     Separating by room should also help because it will make individual "room history" logs
     */
     logToFile: (info) => {
-        updateDate();
+        updateDateAndDirectory();
 
         fs.appendFile(logFileName, info + '\n', (err) => {
             if (err) {
