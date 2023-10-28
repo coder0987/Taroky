@@ -86,12 +86,14 @@ class ChatBox {
     removeOldestMessage() {
         let oldestMessage = this.getLastMessage();
         oldestMessage.htmlElement.parentNode.removeChild(oldestMessage.htmlElement);
+        this.chatMessages.pop();
     }
 
     removeMessage(message) {
         if (message && message.htmlElement) {
             message.htmlElement.parentNode.removeChild(message.htmlElement);
         }
+        this.chatMessages.splice(this.chatMessages.indexOf(message),1);
     }
 
     updateScrollHeight() {
@@ -104,6 +106,7 @@ class ChatBox {
                 this.removeMessage(this.chatMessages[message]);
             }
         }
+        this.chatMessages = [];
     }
 }
 
