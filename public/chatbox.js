@@ -15,7 +15,7 @@ class ChatBox {
         } else {
             let message = new ChatMessage(author, messageText, bold, false);
             this.chatMessages.push(message);
-            this.container.appendChild(message.getHtmlElement());
+            this.container.appendChild(message.htmlElement);
             if (this.chatMessages.length > this.maxChatMessages) {
                 // remove oldest chat message til we are under the maximum
                 while (this.chatMessages.length > this.maxChatMessages) {
@@ -36,7 +36,7 @@ class ChatBox {
         } else {
             let message = new ChatMessage(author, messageText, bold, true);
             this.chatMessages.push(message);
-            this.container.appendChild(message.getHtmlElement());
+            this.container.appendChild(message.htmlElement);
             if (this.chatMessages.length > this.maxChatMessages) {
                 // remove oldest chat message til we are under the maximum
                 while (this.chatMessages.length > this.maxChatMessages) {
@@ -56,7 +56,7 @@ class ChatBox {
         } else {
             let message = new ChatMessage(author, messageText, false, false);
             this.chatMessages.push(message);
-            this.container.appendChild(message.getHtmlElement());
+            this.container.appendChild(message.htmlElement);
             if (this.chatMessages.length > this.maxChatMessages) {
                 // remove oldest chat message til we are under the maximum
                 while (this.chatMessages.length > this.maxChatMessages) {
@@ -85,12 +85,12 @@ class ChatBox {
 
     removeOldestMessage() {
         let oldestMessage = this.getLastMessage();
-        oldestMessage.getHtmlElement().parentNode.removeChild(oldestMessage.getHtmlElement());
+        oldestMessage.htmlElement.parentNode.removeChild(oldestMessage.htmlElement);
     }
 
     removeMessage(message) {
-        if (message) {
-            message.getHtmlElement().parentNode.removeChild(message.getHtmlElement());
+        if (message && message.htmlElement) {
+            message.htmlElement.parentNode.removeChild(message.htmlElement);
         }
     }
 
@@ -100,8 +100,8 @@ class ChatBox {
 
     clearAllMessages() {
         for (let message in this.chatMessages) {
-            if (message) {
-                this.removeMessage(message);
+            if (this.chatMessages[message]) {
+                this.removeMessage(this.chatMessages[message]);
             }
         }
     }
@@ -114,7 +114,7 @@ class ChatMessage {
         this.text = [message];
         this.isError = isError
         //this.messageHtml = this.createMessageHtml(message); //this is done in createHtml
-        this.htmlElement = this.createHtml(message, bold);
+        this._htmlElement = this.createHtml(message, bold);
     }
 
     createHtml(messageString, bold) {
@@ -177,8 +177,8 @@ class ChatMessage {
         return this.timestamp;
     }
 
-    getHtmlElement() {
-        return this.htmlElement;
+    get htmlElement() {
+        return this._htmlElement;
     }
 
     getMessageHtml() {
@@ -187,6 +187,10 @@ class ChatMessage {
 
     getIsError() {
         return this.isError;
+    }
+
+    set htmlElement(htmlElement) {
+        this._htmlElement = htmlElement;
     }
 
     addNewLineOfMessage(newMessageText,bold) {
@@ -260,12 +264,16 @@ class GameLogMessage {
         return this.timestamp;
     }
 
-    getHtmlElement() {
+    get htmlElement() {
         return this.htmlElement;
     }
 
     getMessageHtml() {
         return this.messageHtml;
+    }
+
+    set htmlElement(htmlElement) {
+        this.htmlElement = htmlElement;
     }
 }
 
@@ -290,8 +298,8 @@ function addBoldMessage(theString) {
     chatBox.addServerMessage(theString, true)
 }
 function addError(theString) {
-    console.error('ERROR: ' + theString);
     chatBox.addErrorMessage(theString);
+    console.error('ERROR: ' + theString);
 }
 function playerSentMessage(thePlayer,theMessage) {
     console.log(thePlayer + ': ' + theMessage);
@@ -311,6 +319,7 @@ function clearAllButXMessages(x) {
     let numToDelete = chatBox.getNumMessages() - x;
     while (numToDelete > 0) {
         chatBox.removeOldestMessage();
+        numToDelete--;
     }
 }
 
