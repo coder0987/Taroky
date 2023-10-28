@@ -48,6 +48,7 @@ class ChatBox {
     }
 
     addPlayerMessage(author, messageText) {
+        messageText = sanitizeInput(messageText);
         let currentTimestamp = getFormattedTime();
         if (!messageText) { return; }
         let lastMessage = this.getLastMessage();
@@ -344,6 +345,10 @@ function getTimestampSpan(time) {
     timestamp.innerHTML = time
     timestamp.classList.add("timestamp");
     return timestamp;
+}
+
+function sanitizeInput(text) {
+    return text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function enableChat() {
