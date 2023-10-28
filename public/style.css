@@ -16,7 +16,8 @@
 body {
     background-color: var(--green);
     padding-top: 4rem;
-    padding-bottom: 4rem;
+    overflow-x: hidden;
+    padding-bottom: 34px;
 }
 body:fullscreen {
    padding: 1rem;
@@ -91,7 +92,6 @@ img {
 
 .grayed {
     background-color: rgba(150,150,150,0.2);
-    opacity: 0.8;
 }
 
 .image-hover-highlight {
@@ -303,10 +303,12 @@ h4 {
     position: fixed;
     bottom: 0;
     left: 0;
+    height: 34px;
     width: 100%;
     background-color: var(--navy);
     margin: 0;
     padding: 0;
+    padding-bottom: 10px;
     color: white;
 }
 
@@ -363,6 +365,25 @@ h4 {
     100% {
         opacity: 1;
     }
+}
+
+.exit {
+    font-size: 1.25rem;
+    margin-bottom: 0px;
+    padding-top: 0px;
+    -moz-transform: scale(-1, -1);
+    -webkit-transform: scale(-1, -1);
+    -o-transform: scale(-1, -1);
+    -ms-transform: scale(-1, -1);
+    transform: scale(-1, -1);
+}
+
+.no-margin-below {
+    margin-bottom: 0px;
+}
+
+.no-padding {
+    padding: 0px;
 }
 
 .notification {
@@ -550,15 +571,66 @@ h4 {
     color: black;
 }
 
-#refresh {
-    margin-bottom: 25px;
-}
-
 .auto-shrink {
     -webkit-transform:scale(0.75);
     -moz-transform:scale(0.75);
     -ms-transform:scale(0.75);
     transform:scale(0.75);
+}
+
+div.hand.sixteen-cards img {
+    /*2 rows, 8 cards each. For 15 and 16 card hands*/
+    width: 20%;
+    margin-right: -9%;
+    margin-bottom: -80px;
+}
+
+.sixteen-cards {
+    /* Offset margin-right applied to cards */
+    padding-right: 6%;
+    padding-bottom: 80px;
+    padding-left: 0;
+}
+
+div.hand.thirteen-cards img {
+    /*2 rows, 7 cards each. For 14 and 13 card hands*/
+    width: 23%;
+    margin-right: -10%;
+    margin-bottom: -70px;
+}
+
+.thirteen-cards {
+    padding-right: 4%;
+    padding-bottom: 70px;
+    padding-left: 0;
+}
+
+div.hand.twelve-cards img {
+    /*2 rows, 6 cards each. For 12 and fewer card hands*/
+    width: 26%;
+    margin-right: -11%;
+    margin-bottom: -70px;
+}
+
+.twelve-cards {
+    padding-right: 6%;
+    padding-bottom: 70px;
+    padding-left: 0;
+}
+/*
+#outer {
+    height: 50%;
+}
+*/
+#chat-and-hand {
+    height: 40%;
+}
+#chat-box-container {
+    height: 100%;
+}
+
+#chatbox {
+    height: calc(100% - 50px);
 }
 
 @media (min-width: 576px) {
@@ -569,6 +641,29 @@ h4 {
         width: 60%;
         left: 40%;
     }
+    div.hand.sixteen-cards img {
+        margin-bottom: -180px;
+    }
+
+    .sixteen-cards {
+        padding-bottom: 180px;
+    }
+
+    div.hand.thirteen-cards img {
+        margin-bottom: -170px;
+    }
+
+    .thirteen-cards {
+        padding-bottom: 170px;
+    }
+
+    div.hand.twelve-cards img {
+        margin-bottom: -170px;
+    }
+
+    .twelve-cards {
+        padding-bottom: 170px;
+    }
 }
 
 @media (min-width: 768px) {
@@ -578,6 +673,29 @@ h4 {
     .invite-card {
         width: 50%;
         left: 50%;
+    }
+    div.hand.sixteen-cards img {
+        margin-bottom: -120px;
+    }
+
+    .sixteen-cards {
+        padding-bottom: 120px;
+    }
+
+    div.hand.thirteen-cards img {
+        margin-bottom: -110px;
+    }
+
+    .thirteen-cards {
+        padding-bottom: 110px;
+    }
+
+    div.hand.twelve-cards img {
+        margin-bottom: -110px;
+    }
+
+    .twelve-cards {
+        padding-bottom: 110px;
     }
 }
 
@@ -590,7 +708,9 @@ h4 {
         left: 80%;
     }
     body {
-        padding: 4rem;
+        padding-left: 4rem;
+        padding-right: 4rem;
+        padding-bottom: 0;
     }
     #refresh {
         margin-bottom: 0;
@@ -601,11 +721,71 @@ h4 {
         -ms-transform:scale(1);
         transform:scale(1);
     }
+    div.hand.sixteen-cards img {
+        /*2 rows, 8 cards each. 100% / 8 cards = 12.5% per card*/
+        width: 16%;
+        margin-right: -5%;
+        margin-bottom: 5px;
+    }
+    .sixteen-cards {
+        padding-right: 4%;
+        padding-bottom: 0;
+    }
+    div.hand.thirteen-cards img {
+        /*2 rows, 7 cards each. For 14 and 13 card hands*/
+        width: 18%;
+        margin-right: -5%;
+        margin-bottom: 5px;
+    }
+    .thirteen-cards {
+        padding-right: 4%;
+        padding-bottom: 0;
+    }
+
+    div.hand.twelve-cards img {
+        /*2 rows, 6 cards each. For 12 and fewer card hands*/
+        width: 20%;
+        margin-right: -5%;
+        margin-bottom: 5px;
+    }
+
+    .twelve-cards {
+        padding-right: 4%;
+        padding-bottom: 0;
+    }
 }
 
 @media (min-width: 1200px) {
     .back {
         width: 15%;
+    }
+    div.hand.sixteen-cards img {
+        /*2 rows, 8 cards each. 100% / 8 cards = 12.5% per card*/
+        width: 11%;
+        margin-right: 0;
+    }
+    .sixteen-cards {
+        padding-right: 0;
+    }
+    div.hand.thirteen-cards img {
+        /*2 rows, 7 cards each. For 14 and 13 card hands*/
+        width: 13%;
+        margin-right: 0;
+    }
+    .thirteen-cards {
+        padding-right: 0;
+    }
+    div.hand.twelve-cards img {
+        /*2 rows, 6 cards each. For 12 and fewer card hands*/
+        width: 15%;
+        margin-right: 0;
+    }
+
+    .twelve-cards {
+        padding-right: 0;
+    }
+    .grayed {
+        display: inline-flex;
     }
 }
 
@@ -685,6 +865,7 @@ h4 {
 .chat-box-entry {
     display: flex;
     justify-content: space-between;
+    height: 50px;
 }
 
 .chat-form {
