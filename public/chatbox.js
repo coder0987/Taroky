@@ -334,4 +334,13 @@ function getTimestampSpan(time) {
     return timestamp;
 }
 
-
+function enableChat() {
+    document.getElementById('chat-send-button').classList.remove('disabled');
+    document.getElementById('chat-input').placeholder = 'Your Message (press Enter to submit)';
+    document.getElementById('chat-input').removeAttribute('readonly')
+}
+function disableChat() {
+    document.getElementById('chat-send-button').classList.add('disabled');
+    document.getElementById('chat-input').placeholder = 'Sign in to send chat messages';
+    document.getElementById('chat-input').setAttribute('readonly','true');
+}

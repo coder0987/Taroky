@@ -25,18 +25,18 @@
     <h2 class="card-title">General</h2>
 
     <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="chatSwitch">
-        <label class="form-check-label" for="flexSwitchCheckDefault">Chat</label>
+        <input class="form-check-input" type="checkbox" role="switch" id="chatSwitch" checked="checked">
+        <label class="form-check-label" for="chatSwitch">Chat</label>
       </div>
 
       <label class="form-label">Color scheme </label>
       <div class="btn-group container-fluid" role="group" aria-label="Color scheme">
         <input type="radio" class="btn-check" name="colorScheme" id="colorNormal" autocomplete="off" checked>
-        <label class="btn btn-primary" for="btnradio1">Normal</label>
-        <input type="radio " class="btn-check" name="colorScheme" id="colorDark" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio2">High contrast</label>
+        <label class="btn btn-primary" for="colorNormal">Normal</label>
+        <input type="radio" class="btn-check" name="colorScheme" id="colorDark" autocomplete="off">
+        <label class="btn btn-primary" for="colorDark">High contrast</label>
         <input type="radio" class="btn-check" name="colorScheme" id="colorContrast" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio1">Dark</label>
+        <label class="btn btn-primary" for="colorContrast">Dark</label>
       </div>
 
       <label for="textSize" class="form-label">Text size</label>
@@ -52,28 +52,30 @@
         
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" role="switch" id="aceHighLow">
-            <label class="form-check-label" for="flexSwitchCheckDefault">Ace high</label>
+            <label class="form-check-label" for="aceHighLow">Ace high</label>
           </div>
-
+         <!--TODO ADD TIMEOUT takes integer seconds - minimum 20 but 0 is also allowed
          <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" role="switch" id="knocking">
-            <label class="form-check-label" for="flexSwitchCheckDefault">Knocking</label>
+            <label class="form-check-label" for="knocking">Knocking</label>
           </div>
+          -->
+
 
           <label class="form-label">Difficulty</label>
           <div class="btn-group container-fluid flex-wrap: wrap" role="group" aria-label="difficulty">
-            <input type="radio" class="btn-check" name="difficulty" id="diff1" autocomplete="off" checked>
-            <label class="btn btn-primary" for="btnradio1">Beginner</label>
-            <input type="radio" class="btn-check" name="btnradio" id="diff2" autocomplete="off">
-            <label class="btn btn-primary" for="btnradio2">Easy</label>
-            <input type="radio" class="btn-check" name="difficulty" id="diff3" autocomplete="off">
-            <label class="btn btn-primary" for="btnradio1">Normal</label>
+            <input type="radio" class="btn-check" name="difficulty" id="diff1" autocomplete="off">
+            <label class="btn btn-primary" for="diff1">Beginner</label>
+            <input type="radio" class="btn-check" name="difficulty" id="diff2" autocomplete="off">
+            <label class="btn btn-primary" for="diff2">Easy</label>
+            <input type="radio" class="btn-check" name="difficulty" id="diff3" autocomplete="off" checked>
+            <label class="btn btn-primary" for="diff3">Normal</label>
             <input type="radio" class="btn-check" name="difficulty" id="diff4" autocomplete="off">
-            <label class="btn btn-primary" for="btnradio2">Hard</label>
-            <input type="radio" class="btn-check" name="btnradio" id="diff5" autocomplete="off">
-            <label class="btn btn-primary" for="btnradio2">Ruthless</label>
+            <label class="btn btn-primary" for="diff4">Hard</label>
+            <input type="radio" class="btn-check" name="difficulty" id="diff5" autocomplete="off">
+            <label class="btn btn-primary" for="diff5">Ruthless</label>
             <input type="radio" class="btn-check" name="difficulty" id="diff6" autocomplete="off">
-            <label class="btn btn-primary" for="btnradio1">AI</label>
+            <label class="btn btn-primary" for="diff6">AI</label>
 
           </div>
         </div>
@@ -83,54 +85,66 @@
   <div class="card-body">
     <h2 class="card-title">Spelling & Terminology</h2>
     <p><em>Select your preferred term from each button group.</em></p>
-    <div class="btn-group" role="group" aria-label="trojka spelling">
-        <input type="radio" class="btn-check" name="trojkasp" id="trojkasp1" autocomplete="off" checked>
-        <label class="btn btn-primary" for="btnradio1">trojka</label>
+    <div class="btn-group" role="group" aria-label="pane spelling">
+        <input type="radio" class="btn-check" name="panesp" id="panesp1" autocomplete="off" checked>
+        <label class="btn btn-primary" for="panesp1">Pane</label>
       
-        <input type="radio" class="btn-check" name="trojkasp" id="trojkasp2" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio2">preferanc</label>
+        <input type="radio" class="btn-check" name="panesp" id="panesp2" autocomplete="off">
+        <label class="btn btn-primary" for="panesp2">Honery</label>
       </div>
     <div class="btn-group" role="group" aria-label="povinnost spelling">
         <input type="radio" class="btn-check" name="povinnostsp" id="povinnostsp1" autocomplete="off" checked>
-        <label class="btn btn-primary" for="btnradio1">povinnost</label>
+        <label class="btn btn-primary" for="povinnostsp1">Povinnost</label>
       
         <input type="radio" class="btn-check" name="povinnostsp" id="povinnostsp2" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio2">základni povinnost</label>
+        <label class="btn btn-primary" for="povinnostsp2">Povenost</label>
+        <input type="radio" class="btn-check" name="povinnostsp" id="povinnostsp3" autocomplete="off">
+        <label class="btn btn-primary" for="povinnostsp3">Povionst</label>
       </div>
-    <div class="btn-group" role="group" aria-label="XIX spelling">
-        <input type="radio" class="btn-check" name="xixsp" id="povinnostsp1" autocomplete="off" checked>
-        <label class="btn btn-primary" for="btnradio1">stará</label>
+    <div class="btn-group" role="group" aria-label="Trul spelling">
+        <input type="radio" class="btn-check" name="trulsp" id="trulsp1" autocomplete="off" checked>
+        <label class="btn btn-primary" for="trulsp1">Trul</label>
       
-        <input type="radio" class="btn-check" name="xixsp" id="povinnostsp2" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio2">XIX</label>
+        <input type="radio" class="btn-check" name="trulsp" id="trulsp2" autocomplete="off">
+        <label class="btn btn-primary" for="trulsp2">Trull</label>
+      </div>
+    <div class="btn-group" role="group" aria-label="rosannesp">
+        <input type="radio" class="btn-check" name="rosannesp" id="rosannesp1" autocomplete="off" checked>
+        <label class="btn btn-primary" for="rosannesp1">Rosanne-Pane</label>
+      
+        <input type="radio" class="btn-check" name="rosannesp" id="rosannesp2" autocomplete="off">
+        <label class="btn btn-primary" for="rosannesp2">Krale</label>
+      </div>
+    <div class="btn-group" role="group" aria-label="tarocky">
+        <input type="radio" class="btn-check" name="tarockysp" id="tarocky1" autocomplete="off" checked>
+        <label class="btn btn-primary" for="tarocky1">Tarocky</label>
+      
+        <input type="radio" class="btn-check" name="tarockysp" id="tarocky2" autocomplete="off">
+        <label class="btn btn-primary" for="tarocky2">Little Ones</label>
+      </div>
+      <div class="btn-group" role="group" aria-label="taroky">
+          <input type="radio" class="btn-check" name="tarokysp" id="taroky1" autocomplete="off" checked>
+          <label class="btn btn-primary" for="taroky1">Taroky</label>
+
+          <input type="radio" class="btn-check" name="tarokysp" id="taroky2" autocomplete="off">
+          <label class="btn btn-primary" for="taroky2">Big Ones</label>
+
+          <input type="radio" class="btn-check" name="tarokysp" id="taroky3" autocomplete="off">
+          <label class="btn btn-primary" for="taroky3">Rhuba</label>
       </div>
     <div class="btn-group" role="group" aria-label="povinnostsp">
-        <input type="radio" class="btn-check" name="xviiisp" id="povinnostsp1" autocomplete="off" checked>
-        <label class="btn btn-primary" for="btnradio1">mladá</label>
+        <input type="radio" class="btn-check" name="rosahonerysp" id="rosa-honery1" autocomplete="off" checked>
+        <label class="btn btn-primary" for="rosa-honery1">rosa-honery</label>
       
-        <input type="radio" class="btn-check" name="xviiisp" id="povinnostsp2" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio2">XVIII</label>
-      </div>
-    <div class="btn-group" role="group" aria-label="povinnostsp">
-        <input type="radio" class="btn-check" name="tarokysp" id="povinnostsp1" autocomplete="off" checked>
-        <label class="btn btn-primary" for="btnradio1">taroky</label>
-      
-        <input type="radio" class="btn-check" name="tarokysp" id="povinnostsp2" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio2">taroki</label>
-      </div>
-    <div class="btn-group" role="group" aria-label="povinnostsp">
-        <input type="radio" class="btn-check" name="rosahonerysp" id="povinnostsp1" autocomplete="off" checked>
-        <label class="btn btn-primary" for="btnradio1">rosa-honery</label>
-      
-        <input type="radio" class="btn-check" name="rosahonerysp" id="povinnostsp2" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio2">kralovski-honery</label>
+        <input type="radio" class="btn-check" name="rosahonerysp" id="rosa-honery2" autocomplete="off">
+        <label class="btn btn-primary" for="rosa-honery2">kralovski-honery</label>
       </div>
     <div class="btn-group" role="group" aria-label="jacksp">
-        <input type="radio" class="btn-check" name="btnradio" id="povinnostsp1" autocomplete="off" checked>
-        <label class="btn btn-primary" for="btnradio1">walker</label>
+        <input type="radio" class="btn-check" name="jacksp" id="walker1" autocomplete="off" checked>
+        <label class="btn btn-primary" for="walker1">walker</label>
       
-        <input type="radio" class="btn-check" name="btnradio" id="povinnostsp2" autocomplete="off">
-        <label class="btn btn-primary" for="btnradio2">jack</label>
+        <input type="radio" class="btn-check" name="jacksp" id="walker2" autocomplete="off">
+        <label class="btn btn-primary" for="walker2">jack</label>
       </div>
     </div>
 </div>

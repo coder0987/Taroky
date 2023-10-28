@@ -1,6 +1,7 @@
 const Board = require('./board.js');
 const Player = require('./player.js');
 const Deck = require('./deck.js');
+const SERVER = require('./logger.js');
 const {DIFFICULTY, PLAYER_TYPE} = require('./enums.js');
 
 let iterator = 100000;
@@ -40,6 +41,7 @@ class Room {
     }
 
     informPlayers(message, messageType, extraInfo, pn) {
+        SERVER.debug('informPlayers() called with message | ' + message + ' | messageType | ' + messageType + ' | extraInfo | ' + JSON.stringify(extraInfo) + ' | pn | ' + pn);
         for (let i in this._players) {
             if (this._players[i].type == PLAYER_TYPE.HUMAN) {
                 if (typeof pn != 'undefined') {
@@ -74,6 +76,7 @@ class Room {
     }
 
     informPlayer(pn, message, messageType, extraInfo) {
+        SERVER.debug('informPlayer() called with message | ' + message + ' | messageType | ' + messageType + ' | extraInfo | ' + JSON.stringify(extraInfo) + ' | pn | ' + pn);
         if (this._players[pn].type == PLAYER_TYPE.HUMAN) {
             this._players[pn].messenger.emit('gameMessage', message, messageType, extraInfo);
         }
@@ -105,7 +108,7 @@ class Room {
     }
 
     static createJoinCode() {
-        iterator += Math.ceil(Math.random() * 100000);
+        iterator += Math.floor(Math.random() * 100000)+1;
         let newCode = '';
         let tempIterator = iterator;
         while (tempIterator > 0) {
