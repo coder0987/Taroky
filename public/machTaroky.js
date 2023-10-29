@@ -224,7 +224,7 @@ function keyListener(e) {
             }
             break;
         case 'Enter':
-            sendMessage();
+            handleSendMessageClick();
             break;
     }
 }
