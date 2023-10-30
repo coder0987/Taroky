@@ -302,6 +302,7 @@ class Player {
 
     get canSendMessage() {
         const n = 1; //Can adjust rate limit server side here
+        SERVER.debug('Date: ' + Date.now() + ' - ' + this._timeLastMessageSent);
         return ((Date.now() - this._timeLastMessageSent) > n * 1000);
     }
 

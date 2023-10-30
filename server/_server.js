@@ -3423,15 +3423,17 @@ io.sockets.on('connection', function (socket) {
             delete rooms[id];
         }
     });
-    socket.on('broadcastMessage', function (playerName, messageText) {
+    socket.on('broadcastMessage', function(playerName, messageText) {
         let player = players[socketId];
         let room = player.room;
+        SERVER.debug(player.username + ' is trying to send a message ' + messageText);
 
         playerName = player.username;
         if (playerName == 'Guest') {
             return;
         }
         if (player.canSendMessage) {
+            SERVER.debug('Player is allowed to send message');
             if (rooms[room]) {
                 for (playerToReceive in rooms[room].players) {
                     if (rooms[room].players[playerToReceive].type == PLAYER_TYPE.HUMAN && rooms[room].players[playerToReceive].socket != socketId && rooms[room].players[playerToReceive].socket != -1) {
