@@ -2635,7 +2635,7 @@ function autoReconnect(socketId) {
     SOCKET_LIST[socketId].emit('autoReconnect', reconnectInfo);
 }
 
-playerCanSendMessage(player) {
+function playerCanSendMessage(player) {
     const n = 1; //Can adjust rate limit server side here
     return ((Date.now() - player.timeLastMessageSent) > n * 1000);
 }
@@ -3436,7 +3436,7 @@ io.sockets.on('connection', function (socket) {
         if (playerName == 'Guest') {
             return;
         }
-        if (player.canSendMessage) {
+        if (playerCanSendMessage(player)) {
             if (rooms[room]) {
                 for (playerToReceive in rooms[room].players) {
                     if (rooms[room].players[playerToReceive].type == PLAYER_TYPE.HUMAN && rooms[room].players[playerToReceive].socket != socketId && rooms[room].players[playerToReceive].socket != -1) {
