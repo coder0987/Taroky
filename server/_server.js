@@ -3454,7 +3454,7 @@ io.sockets.on('connection', function (socket) {
                 }
             }
             player.updateLastMessageSentTime();
-            SERVER.log(playerName + ': ' + messageText);
+            SERVER.log('Player ' + playerName + ' sent a chat message: ' + messageText);
         }
         
         
