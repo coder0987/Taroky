@@ -890,6 +890,13 @@ div.hand.twelve-cards img {
 .send-button {
     flex-shrink: 0;
     margin: 2px;
+    margin-top: 10px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 0px 15px 15px 0px;
+    text-align: center;
+    vertical-align: center;
+    padding-top: 0px;
 }
 
 .message-container {
