@@ -2635,6 +2635,11 @@ function autoReconnect(socketId) {
     SOCKET_LIST[socketId].emit('autoReconnect', reconnectInfo);
 }
 
+function playerCanSendMessage(player) {
+    const n = 1; //Can adjust rate limit server side here
+    return ((Date.now() - player.timeLastMessageSent) > n * 1000);
+}
+
 io.sockets.on('connection', function (socket) {
     let socketId = socket.handshake.auth.token;
     if (socketId === undefined || isNaN(socketId) || socketId == 0 || socketId == null) {
@@ -2643,7 +2648,7 @@ io.sockets.on('connection', function (socket) {
     }
     if (!SOCKET_LIST[socketId]) {
         SOCKET_LIST[socketId] = socket;
-        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null };
+        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null, timeLastMessageSent: 0 };
         SERVER.log('Player joined with socketID ' + socketId);
         SERVER.debug('Join time: ' + Date.now());
         numOnlinePlayers++;
@@ -3430,9 +3435,10 @@ io.sockets.on('connection', function (socket) {
 
         playerName = player.username;
         if (playerName == 'Guest') {
+            SERVER.debug('Guests may not send messages.');
             return;
         }
-        if (player.canSendMessage) {
+        if (playerCanSendMessage(player)) {
             SERVER.debug('Player is allowed to send message');
             if (rooms[room]) {
                 for (playerToReceive in rooms[room].players) {
@@ -3455,7 +3461,7 @@ io.sockets.on('connection', function (socket) {
                     }
                 }
             }
-            player.updateLastMessageSentTime();
+            player.timeLastMessageSent = Date.now();
             SERVER.log('Player ' + playerName + ' sent a chat message: ' + messageText);
         }
         

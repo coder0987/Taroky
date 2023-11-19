@@ -18,9 +18,6 @@ class Player {
         this._savePoints = [];
         this._consecutiveAutos = 0;
         this._ai = ai;//AI is a string representing the AI's ID on the remote AI server
-
-        // non-game related
-        this._timeLastMessageSent = 0;
     }
 
     resetForNextRound() {
@@ -298,12 +295,6 @@ class Player {
             }
         }
         return handRankingPoints;
-    }
-
-    get canSendMessage() {
-        const n = 1; //Can adjust rate limit server side here
-        SERVER.debug('Date: ' + Date.now() + ' - ' + this._timeLastMessageSent);
-        return ((Date.now() - this._timeLastMessageSent) > n * 1000);
     }
 
     //Setters
