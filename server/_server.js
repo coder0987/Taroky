@@ -1065,13 +1065,22 @@ function aiActionCallback(action, room, pn, fakeMoneyCards, result) {
             }
             break;
     }
-    aiActionComplete(action, room, pn, fakeMoneyCards);
+    try {
+        aiActionComplete(action, room, pn, fakeMoneyCards);
+    } catch (e) {
+        SERVER.error(e);
+    }
 }
 function aiActionComplete(action, room, pn, fakeMoneyCards) {
     //actionCallback() -> aiAction() -> aiActionCallback() -> ai server -> response -> aiActionComplete -> actionCallback
     //if no ai is needed: actionCallback() -> aiAction() -> robot action -> aiActionComplete() -> actionCallback()
 
-    actionCallback(action, room, pn);
+    if (room.board.nextStep.action == action.action) {
+        actionCallback(action, room, pn);
+    } else {
+        throw "Game moved on without me :(";
+    }
+
 }
 
 function actionCallback(action, room, pn) {

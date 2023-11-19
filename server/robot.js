@@ -343,6 +343,8 @@ class Robot {
     static robotPlay(hand, difficulty, room) {
         //TODO: add context. Robots need to know: money cards, povinnost
         let playableCards = Deck.handWithoutGray(hand);
+
+        SERVER.debug('player can play cards ' + JSON.stringify(hand), room.name);
     
         if (playableCards.length == 1) {
             return playableCards[0];
@@ -383,7 +385,7 @@ class Robot {
         let notPartnerFollowsLater = false;
         let numPlayerRemaining = 3 - orderedTable.length;
         for (let i in numPlayerRemaining) {
-            let thisPlayersTeam = room.players[(pn+i)%4].publicTeam
+            let thisPlayersTeam = room.players[(pn+i)%4].publicTeam;
             if (thisPlayersTeam && ((!myTeam && thisPlayersTeam == -1) || (myTeam && thisPlayersTeam == 1))) {
                 partnerFollowsLater = true;
             } else {
