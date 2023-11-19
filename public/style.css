@@ -885,11 +885,14 @@ div.hand.twelve-cards img {
 
 .chat-input {
     width: 100%;
+    margin-right: 0px;
+    border-radius: 5px 0px 0px 5px;
 }
 
 .send-button {
     flex-shrink: 0;
     margin: 2px;
+    margin-left: 0px;
     margin-top: 10px;
     height: 30px;
     border-radius: 0px 15px 15px 0px;
