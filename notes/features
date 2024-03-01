@@ -24,7 +24,7 @@ Design features to add
     Hidden deck
         1. create deck automatically on page load, using prestored constants as image names
         2. unhide images on server reveal using client-side coordinates
-        3. use generic card back for unkown cards such as opponents' hands
+        3. use generic card back for unknown cards such as opponents' hands
     
     Username/Nickname
         1. usernames are stored via Mach SSO

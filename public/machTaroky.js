@@ -1,3 +1,12 @@
+/*  TODO: Currently, a lot of the UI and game logic are intertwined and it makes adding or changing things complicated.
+        I want to separate the client code into two main parts:
+        1) Renderer
+        2) Game Logic
+        Where the renderer and game logic don't have access to each other directly but only through functions
+        ex. right now the way to play a card (game logic) checks if the card is grayed out (UI), where it should check if the card is playable then let the Renderer know
+        What this will probably end up looking like is a Renderer class and a Game Logic class that call functions from each other
+        Another added benefit is it will be easier to make an integrated tutorial as we can have predefined game logic and just call the renderer */
+
 const PLAYER_TYPE = {HUMAN: 0,ROBOT: 1,AI: 2,H: 0,R: 1};
 const SUIT = {0: 'Spade',1: 'Club',2: 'Heart',3: 'Diamond',4: 'Trump'};
 const RED_VALUE = {0: 'Ace',1: 'Two',2: 'Three',3: 'Four',4: 'Jack',5: 'Rider',6: 'Queen',7: 'King'};
@@ -57,6 +66,9 @@ const SUIT_SORT_ORDER = {
 }
 const START_TIME = Date.now();
 const SHOW_TOUR = true;
+
+let navRenderer = null;
+
 let inTour = false;
 let cardBackLoaded = false;
 let ticker;
@@ -96,6 +108,20 @@ for (let s=0;s<4;s++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
 for (let v=0;v<22;v++)
     baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
+
+//UI (No game elements)
+
+function generateDeck() {
+    for (let i in baseDeck) {
+        let card = document.createElement('img');
+        card.hidden = true;
+        card.id = baseDeck[i].value + baseDeck[i].suit;
+        //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
+        card.src = '/assets/mach-deck-thumb/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '-t.png';
+        card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
+        document.getElementById('deck').appendChild(card);
+    }
+}
 
 function moveDeckToDeck() {
     let deckDiv = document.getElementById('deck');
@@ -165,6 +191,14 @@ function includeHTML() {
     }
   }
 
+/**load button */
+function loadButton() {
+
+    $('body').addClass('loaded');
+    let element = document.getElementById("navbar");
+    element.classList.add("fixed-top");
+};
+
 function loaded() {
     if (SHOW_TOUR && document.getElementById('tour')) {
         document.getElementById('tour').removeAttribute('hidden');
@@ -215,20 +249,6 @@ function closeFullscreen() {
   }
 }
 
-function keyListener(e) {
-    //TODO add hotkeys
-    switch (e.code) {
-        case 'Escape':
-            if (fullscreenMode) {
-                fullscreen();
-            }
-            break;
-        case 'Enter':
-            handleSendMessageClick();
-            break;
-    }
-}
-
 function fullscreenChangeEvent(e) {
     if (fullscreenMode) {
         //should be in fullscreen
@@ -243,247 +263,6 @@ function fullscreenChangeEvent(e) {
     }
 }
 
-    /**loader */
-$(document).ready(function() {
-
-    onLoad();
-    setTimeout(function(){
-        $('body').addClass('loaded');
-        let element = document.getElementById("navbar");
-        element.classList.add("fixed-top");
-    }, 3000);
-    $('.copy-text').click(function (e) {
-          //First: try to share it
-          e.preventDefault();
-          if (navigator.share) {
-            navigator.share(
-              {title: 'Mach Tarok Invite',text: 'Let\'s Play Taroky!',url: 'machtarok.com/?join=CODE'}
-            ).then(() => console.log('Successful share')
-            ).catch(error => console.log('Error sharing:', error));
-          }
-
-          let copyText = $(this).attr('href');
-          document.addEventListener('copy', function(e) {
-             e.clipboardData.setData('text/plain', copyText);
-             e.preventDefault();
-          }, true);
-          document.execCommand('copy');
-
-          document.getElementById('copied').removeAttribute('hidden');
-         });
-
-    let params = new URLSearchParams(document.location.search);
-    let inviteLink = params.get('join');
-    if (inviteLink) {
-        joinFromInvite(inviteLink);
-    }
-});
-
-/**load button */
-function loadButton() {
-
-    $('body').addClass('loaded');
-    let element = document.getElementById("navbar");
-    element.classList.add("fixed-top");
-};
-
-function playerPerspective(originalPlace, viewpoint) {
-    //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
-    return ((+originalPlace - +viewpoint) + 4)%4;
-}
-
-function generateDeck() {
-    for (let i in baseDeck) {
-        let card = document.createElement('img');
-        card.hidden = true;
-        card.id = baseDeck[i].value + baseDeck[i].suit;
-        //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
-        card.src = '/assets/mach-deck-thumb/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '-t.png';
-        card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
-        document.getElementById('deck').appendChild(card);
-    }
-}
-
-function isInHand(element) {
-    if (element) {
-        for (let i in hand) {
-            if (element.id == hand[i].value + hand[i].suit) return true;
-        }
-    }
-    return false;
-}
-
-function numTrumpInHand() {
-    let num = 0;
-    for (let i in hand) {
-        if (hand[i].suit == 'Trump') {
-            num++;
-        }
-    }
-    return num;
-}
-
-function enter() {if (this.style.filter != 'grayscale(1)') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
-function exit() {this.classList.remove('image-hover-highlight');this.title='';}
-function clickCard() {
-    if (this.style.filter != 'grayscale(1)') {
-        discardThis(this.suit,this.value);
-        this.removeEventListener('mouseenter',enter);
-        this.removeEventListener('mouseleave',exit);
-        this.removeEventListener('click',clickCard);
-        this.removeEventListener('click',discardClickListener);
-        this.title='';
-        this.classList.remove('image-hover-highlight');
-        this.hidden=true;
-    }
-}
-
-function discardClickListener() {
-    //If already selected, unselect
-    if (this.classList.contains('selected')) {
-        this.classList.remove('selected');
-        numCardsSelected--;
-        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
-    } else if (this.style.filter != 'grayscale(1)') {
-        //Not selected. If not enough cards are already selected, select this card
-        if (hand.length - numCardsSelected > 12) {
-            numCardsSelected++;
-            if (hand.length - numCardsSelected != 12) {
-                document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
-            } else {
-                document.getElementById('discard_info').innerHTML = 'Press Confirm to discard';
-            }
-            this.classList.add('selected');
-        }
-    }
-    updateDiscardGray();
-}
-
-function discardThis(cardSuit,cardValue) {
-    if (discardingOrPlaying) {
-       //addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
-       socket.emit('discard',{'suit':cardSuit,'value':cardValue});
-    } else {
-        //addMessage('Playing the ' + cardValue + ' of ' + cardSuit);
-        socket.emit('lead',{'suit':cardSuit,'value':cardValue});
-    }
-}
-
-function drawHand(withGray) {
-    let divHand = document.getElementById('hand');
-    let divDeck = document.getElementById('deck');
-    let returnToDeck = divHand.children;
-    for (let i=returnToDeck.length-1; i>=0; i--) {
-        let child = returnToDeck[i];
-        if (!isInHand(child)) {
-            child.classList.remove('drew');
-            child.classList.remove('col-md-1');
-            child.classList.remove('col-xs-3');
-            child.hidden = true;
-            divDeck.appendChild(child);
-            child.removeEventListener('mouseenter',enter);
-            child.removeEventListener('mouseleave',exit);
-            child.removeEventListener('click',clickCard);
-            child.removeEventListener('click',discardClickListener);
-            child.title='';
-            child.classList.remove('image-hover-highlight');
-            child.classList.remove('selected');
-            child.classList.remove('grayed');
-        }
-    }
-    numCardsSelected = 0;
-    if (document.getElementById('discard_info')) {
-        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
-    }
-    for (let i in hand) {
-        let card = document.getElementById(hand[i].value + hand[i].suit);
-        card.suit = hand[i].suit;
-        card.value = hand[i].value;
-        card.classList.add('col-md-1');
-        card.classList.add('col-xs-3');
-        card.classList.remove('col-2'); //If claimed from prever-talon
-        if (withGray) {
-            if (hand[i].grayed) {
-                //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
-                card.style.filter = 'grayscale(1)';
-                card.classList.add('grayed');
-            } else {
-                card.style.filter = 'grayscale(0)';
-                card.classList.remove('grayed');
-            }
-            card.classList.remove('selected');
-            card.removeEventListener('mouseenter',enter);//don't want to double-up on events
-            card.removeEventListener('mouseleave',exit);
-            card.removeEventListener('click',clickCard);
-            card.removeEventListener('click',discardClickListener);
-            card.addEventListener('mouseenter', enter);
-            card.addEventListener('mouseleave', exit);
-            if (discardingOrPlaying) {
-                card.addEventListener('click',discardClickListener);
-            } else {
-                card.addEventListener('click',clickCard);
-            }
-        } else {
-            card.style.filter = '';
-            card.removeEventListener('mouseenter',enter);
-            card.removeEventListener('mouseleave',exit);
-            card.removeEventListener('click',clickCard);
-            card.removeEventListener('click',discardClickListener);
-            card.classList.remove('grayed');
-            card.classList.remove('selected');
-            card.title = '';
-            card.classList.remove('image-hover-highlight');
-        }
-        if (drawnCards.some(
-            (theCard) => {
-                return theCard.suit == hand[i].suit && theCard.value == hand[i].value;
-            }
-        )) {
-            card.classList.add('drew');
-            divHand.insertBefore(card, divHand.firstChild);
-        } else {
-            card.classList.remove('drew');
-            divHand.appendChild(card);
-        }
-
-        card.hidden = false;
-    }
-    divHand.classList.remove('sixteen-cards');
-    divHand.classList.remove('thirteen-cards');
-    divHand.classList.remove('twelve-cards');
-    if (hand.length > 14) {
-        divHand.classList.add('sixteen-cards');
-    } else if (hand.length > 12) {
-        divHand.classList.add('thirteen-cards');
-    } else {
-        divHand.classList.add('twelve-cards');
-    }
-}
-
-function moveCardsToDiv(theCards, toDiv, cardClickListener) {
-    for (let i in theCards) {
-        let card = document.getElementById(theCards[i].value + theCards[i].suit);
-        card.suit = theCards[i].suit;
-        card.value = theCards[i].value;
-        card.classList.add('col-md-1');
-        card.classList.add('col-xs-3');
-        card.classList.remove('col-2'); //If claimed from prever-talon
-        card.style.filter = '';
-        card.removeEventListener('mouseenter',enter);
-        card.removeEventListener('mouseleave',exit);
-        card.removeEventListener('click',clickCard);
-        card.removeEventListener('click',discardClickListener);
-        card.classList.remove('grayed');
-        card.classList.remove('selected');
-        card.title = '';
-        card.classList.remove('image-hover-highlight');
-        if (cardClickListener) {
-            card.addEventListener('click', cardClickListener);
-        }
-        toDiv.appendChild(card);
-        card.hidden = false;
-    }
-}
 
 let tableDrawnTime = Date.now();//ms since START_TIME
 function drawTable(shouldHide) {
@@ -672,6 +451,252 @@ function displayAudienceConnected(audienceConnected) {
     document.getElementById('lobby-controls').setAttribute('hidden','hidden');
     document.getElementById('actionInfo').removeAttribute('hidden');
 }
+
+
+//Event Handlers (Calls UI and Game Logic)
+
+function keyListener(e) {
+    //TODO add hotkeys
+    switch (e.code) {
+        case 'Escape':
+            if (fullscreenMode) {
+                fullscreen();
+            }
+            break;
+        case 'Enter':
+            handleSendMessageClick();
+            break;
+    }
+}
+
+    /**loader */
+$(document).ready(function() {
+
+    onLoad();
+    setTimeout(function(){
+        $('body').addClass('loaded');
+        let element = document.getElementById("navbar");
+        element.classList.add("fixed-top");
+        navRenderer = new NavBarRenderer();
+    }, 3000);
+    $('.copy-text').click(function (e) {
+          //First: try to share it
+          e.preventDefault();
+          if (navigator.share) {
+            navigator.share(
+              {title: 'Mach Tarok Invite',text: 'Let\'s Play Taroky!',url: 'machtarok.com/?join=CODE'}
+            ).then(() => console.log('Successful share')
+            ).catch(error => console.log('Error sharing:', error));
+          }
+
+          let copyText = $(this).attr('href');
+          document.addEventListener('copy', function(e) {
+             e.clipboardData.setData('text/plain', copyText);
+             e.preventDefault();
+          }, true);
+          document.execCommand('copy');
+
+          document.getElementById('copied').removeAttribute('hidden');
+         });
+
+    let params = new URLSearchParams(document.location.search);
+    let inviteLink = params.get('join');
+    if (inviteLink) {
+        joinFromInvite(inviteLink);
+    }
+});
+
+
+//Game Logic (No UI or event handlers)
+
+function playerPerspective(originalPlace, viewpoint) {
+    //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
+    return ((+originalPlace - +viewpoint) + 4)%4;
+}
+
+
+function isInHand(element) {
+    if (element) {
+        for (let i in hand) {
+            if (element.id == hand[i].value + hand[i].suit) return true;
+        }
+    }
+    return false;
+}
+
+function numTrumpInHand() {
+    let num = 0;
+    for (let i in hand) {
+        if (hand[i].suit == 'Trump') {
+            num++;
+        }
+    }
+    return num;
+}
+
+
+//TODO: These functions include game logic using UI components. While this works, I'd rather separate out the game logic from the UI components and then update the UI afterwards.
+function enter() {if (this.style.filter != 'grayscale(1)') {this.classList.add('image-hover-highlight');this.title='Click to choose';} else {this.title='You cannot choose this card.';}}
+function exit() {this.classList.remove('image-hover-highlight');this.title='';}
+function clickCard() {
+    if (this.style.filter != 'grayscale(1)') {
+        discardThis(this.suit,this.value);
+        this.removeEventListener('mouseenter',enter);
+        this.removeEventListener('mouseleave',exit);
+        this.removeEventListener('click',clickCard);
+        this.removeEventListener('click',discardClickListener);
+        this.title='';
+        this.classList.remove('image-hover-highlight');
+        this.hidden=true;
+    }
+}
+function discardClickListener() {
+    //If already selected, unselect
+    if (this.classList.contains('selected')) {
+        this.classList.remove('selected');
+        numCardsSelected--;
+        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
+    } else if (this.style.filter != 'grayscale(1)') {
+        //Not selected. If not enough cards are already selected, select this card
+        if (hand.length - numCardsSelected > 12) {
+            numCardsSelected++;
+            if (hand.length - numCardsSelected != 12) {
+                document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
+            } else {
+                document.getElementById('discard_info').innerHTML = 'Press Confirm to discard';
+            }
+            this.classList.add('selected');
+        }
+    }
+    updateDiscardGray();
+}
+
+function discardThis(cardSuit,cardValue) {
+    if (discardingOrPlaying) {
+       //addMessage('Discarding the ' + cardValue + ' of ' + cardSuit);
+       socket.emit('discard',{'suit':cardSuit,'value':cardValue});
+    } else {
+        //addMessage('Playing the ' + cardValue + ' of ' + cardSuit);
+        socket.emit('lead',{'suit':cardSuit,'value':cardValue});
+    }
+}
+
+function drawHand(withGray) {
+    let divHand = document.getElementById('hand');
+    let divDeck = document.getElementById('deck');
+    let returnToDeck = divHand.children;
+    for (let i=returnToDeck.length-1; i>=0; i--) {
+        let child = returnToDeck[i];
+        if (!isInHand(child)) {
+            child.classList.remove('drew');
+            child.classList.remove('col-md-1');
+            child.classList.remove('col-xs-3');
+            child.hidden = true;
+            divDeck.appendChild(child);
+            child.removeEventListener('mouseenter',enter);
+            child.removeEventListener('mouseleave',exit);
+            child.removeEventListener('click',clickCard);
+            child.removeEventListener('click',discardClickListener);
+            child.title='';
+            child.classList.remove('image-hover-highlight');
+            child.classList.remove('selected');
+            child.classList.remove('grayed');
+        }
+    }
+    numCardsSelected = 0;
+    if (document.getElementById('discard_info')) {
+        document.getElementById('discard_info').innerHTML = 'Select ' + (hand.length - numCardsSelected - 12) + ' more cards';
+    }
+    for (let i in hand) {
+        let card = document.getElementById(hand[i].value + hand[i].suit);
+        card.suit = hand[i].suit;
+        card.value = hand[i].value;
+        card.classList.add('col-md-1');
+        card.classList.add('col-xs-3');
+        card.classList.remove('col-2'); //If claimed from prever-talon
+        if (withGray) {
+            if (hand[i].grayed) {
+                //addMessage('You cannot play the ' + hand[i].value + ' of ' + hand[i].suit);
+                card.style.filter = 'grayscale(1)';
+                card.classList.add('grayed');
+            } else {
+                card.style.filter = 'grayscale(0)';
+                card.classList.remove('grayed');
+            }
+            card.classList.remove('selected');
+            card.removeEventListener('mouseenter',enter);//don't want to double-up on events
+            card.removeEventListener('mouseleave',exit);
+            card.removeEventListener('click',clickCard);
+            card.removeEventListener('click',discardClickListener);
+            card.addEventListener('mouseenter', enter);
+            card.addEventListener('mouseleave', exit);
+            if (discardingOrPlaying) {
+                card.addEventListener('click',discardClickListener);
+            } else {
+                card.addEventListener('click',clickCard);
+            }
+        } else {
+            card.style.filter = '';
+            card.removeEventListener('mouseenter',enter);
+            card.removeEventListener('mouseleave',exit);
+            card.removeEventListener('click',clickCard);
+            card.removeEventListener('click',discardClickListener);
+            card.classList.remove('grayed');
+            card.classList.remove('selected');
+            card.title = '';
+            card.classList.remove('image-hover-highlight');
+        }
+        if (drawnCards.some(
+            (theCard) => {
+                return theCard.suit == hand[i].suit && theCard.value == hand[i].value;
+            }
+        )) {
+            card.classList.add('drew');
+            divHand.insertBefore(card, divHand.firstChild);
+        } else {
+            card.classList.remove('drew');
+            divHand.appendChild(card);
+        }
+
+        card.hidden = false;
+    }
+    divHand.classList.remove('sixteen-cards');
+    divHand.classList.remove('thirteen-cards');
+    divHand.classList.remove('twelve-cards');
+    if (hand.length > 14) {
+        divHand.classList.add('sixteen-cards');
+    } else if (hand.length > 12) {
+        divHand.classList.add('thirteen-cards');
+    } else {
+        divHand.classList.add('twelve-cards');
+    }
+}
+
+function moveCardsToDiv(theCards, toDiv, cardClickListener) {
+    for (let i in theCards) {
+        let card = document.getElementById(theCards[i].value + theCards[i].suit);
+        card.suit = theCards[i].suit;
+        card.value = theCards[i].value;
+        card.classList.add('col-md-1');
+        card.classList.add('col-xs-3');
+        card.classList.remove('col-2'); //If claimed from prever-talon
+        card.style.filter = '';
+        card.removeEventListener('mouseenter',enter);
+        card.removeEventListener('mouseleave',exit);
+        card.removeEventListener('click',clickCard);
+        card.removeEventListener('click',discardClickListener);
+        card.classList.remove('grayed');
+        card.classList.remove('selected');
+        card.title = '';
+        card.classList.remove('image-hover-highlight');
+        if (cardClickListener) {
+            card.addEventListener('click', cardClickListener);
+        }
+        toDiv.appendChild(card);
+        card.hidden = false;
+    }
+}
+
 
 function displayNextAction(action) {
     clearButtons();
@@ -2517,27 +2542,17 @@ function sortCards(toSort) {
 }
 
 function displaySignIn() {
-    let accHandler = document.getElementById('accountHandler');
-    accHandler.innerHTML = 'Sign In';
-    accHandler.href = 'https://sso.smach.us/?redirect=https://machtarok.com/';
+    navRenderer.renderSignIn('https://sso.smach.us/?redirect=https://machtarok.com/');
 }
 
 function displaySignOut(withName) {
-    let accHandler = document.getElementById('accountHandler');
-    if (!withName) {
-        accHandler.innerHTML = 'Sign Out';
-    } else {
-        accHandler.innerHTML = 'Sign Out (' + withName + ')';
-    }
-    accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
-    accHandler.addEventListener('click',signOut);
+    navRenderer.renderSignOut('https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/',withName).addEventListener('click',signOut);
 }
 
 function signOut() {
-    let accHandler = document.getElementById('accountHandler');
    document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-   accHandler.removeEventListener('click',signOut);
+   navRenderer.accountHandler.removeEventListener('click',signOut);
 }
 
 //thanks w3 schools

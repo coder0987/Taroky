@@ -21,7 +21,7 @@ This file contains a list of things we have yet TODO in no particular order
   * Tertiary AIs: deep learning based on each individual player's play style. One per player who has an account
 * Add TODOs to this list
 * Add command-line argument outline
-* Add persistent debug logs
+* Add persistent debug logs - DONE
 * Add variations and variation requests
 * Expand available room settings
 * Connect a database (likely MariaDB) for player info - DONE

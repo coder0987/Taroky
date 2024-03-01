@@ -854,9 +854,6 @@ div.hand.twelve-cards img {
 .chat-box-container {
     display: flex;
     flex-direction: column;
-    border: 2px solid var(--navy);
-    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
-    background-color: var(--tan);
     padding-left: 0px;
     padding-right: 0px;
 }
@@ -865,7 +862,6 @@ div.hand.twelve-cards img {
     max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
-    border: 2px solid var(--navy);
     border-left : 0px;
     border-right: 0px;
 }

@@ -2106,6 +2106,7 @@ function actionCallback(action, room, pn) {
             shouldReturnTable = true;
 
             if (room.players[pn].hand.length == 0 || (room.board.trickWinCount[0] + room.board.trickWinCount[1] == 11)) {
+                SERVER.debug('Last trick');
                 //Last trick. Check if the I is present
                 let I = false;
                 let otherTrump = false;
