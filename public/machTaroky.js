@@ -66,9 +66,6 @@ const SUIT_SORT_ORDER = {
 }
 const START_TIME = Date.now();
 const SHOW_TOUR = true;
-
-let navRenderer = null;
-
 let inTour = false;
 let cardBackLoaded = false;
 let ticker;
@@ -477,7 +474,7 @@ $(document).ready(function() {
         $('body').addClass('loaded');
         let element = document.getElementById("navbar");
         element.classList.add("fixed-top");
-        navRenderer = new NavBarRenderer();
+        renderer = new Renderer({})
     }, 3000);
     $('.copy-text').click(function (e) {
           //First: try to share it
@@ -2542,17 +2539,17 @@ function sortCards(toSort) {
 }
 
 function displaySignIn() {
-    navRenderer.renderSignIn('https://sso.smach.us/?redirect=https://machtarok.com/');
+    renderer.hud.nav.renderSignIn('https://sso.smach.us/?redirect=https://machtarok.com/');
 }
 
 function displaySignOut(withName) {
-    navRenderer.renderSignOut('https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/',withName).addEventListener('click',signOut);
+    renderer.hud.nav.renderSignOut('https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/',withName).addEventListener('click',signOut);
 }
 
 function signOut() {
    document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-   navRenderer.accountHandler.removeEventListener('click',signOut);
+   renderer.hud.nav.accountHandler.removeEventListener('click',signOut);
 }
 
 //thanks w3 schools
