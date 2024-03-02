@@ -100,9 +100,13 @@ class HUDRenderer {
 }
 
 class NavBarRenderer {
-    constructor() {
+    constructor(loaded) {
         this._navbar = document.getElementById("navbar");
         this._accountHandler = document.getElementById("accountHandler");
+        if (loaded) {
+            $('body').addClass('loaded');
+            this._navbar.classList.add("fixed-top");
+        }
     }
     render() {}
     clear() {}
@@ -181,6 +185,9 @@ class InviteRenderer {
         this._inviteCode.href = 'https://machtarok.com/?join=' + roomCode;
         this._inviteCode.innerHTML = 'https://machtarok.com/?join=' + roomCode;
         this._inviteScreen.removeAttribute('hidden');
+    }
+    renderCopied() {
+        this._inviteCopied.removeAttribute('hidden');
     }
     clear() {
         this._inviteScreen.setAttribute('hidden','hidden');

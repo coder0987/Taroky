@@ -190,10 +190,7 @@ function includeHTML() {
 
 /**load button */
 function loadButton() {
-
-    $('body').addClass('loaded');
-    let element = document.getElementById("navbar");
-    element.classList.add("fixed-top");
+    renderer.hud.nav = new NavBarRenderer(true);
 };
 
 function loaded() {
@@ -479,30 +476,28 @@ $(document).ready(function() {
     renderer = new Renderer({});
     onLoad();
     setTimeout(function(){
-        $('body').addClass('loaded');
-        let element = document.getElementById("navbar");
-        element.classList.add("fixed-top");
-        renderer.hud.nav = new NavBarRenderer();
+        renderer.hud.nav = new NavBarRenderer(true);
     }, 3000);
     $('.copy-text').click(function (e) {
-          //First: try to share it
-          e.preventDefault();
-          if (navigator.share) {
+        //First: try to share it
+        e.preventDefault();
+        if (navigator.share) {
             navigator.share(
-              {title: 'Mach Tarok Invite',text: 'Let\'s Play Taroky!',url: 'machtarok.com/?join=CODE'}
-            ).then(() => console.log('Successful share')
-            ).catch(error => console.log('Error sharing:', error));
-          }
+                {title: 'Mach Tarok Invite',text: 'Let\'s Play Taroky!',url: 'machtarok.com/?join=CODE'}
+            )
+            .then(() => console.log('Successful share'))
+            .catch(error => console.log('Error sharing:', error));
+        }
 
-          let copyText = $(this).attr('href');
-          document.addEventListener('copy', function(e) {
-             e.clipboardData.setData('text/plain', copyText);
-             e.preventDefault();
-          }, true);
-          document.execCommand('copy');
+        let copyText = $(this).attr('href');
+        document.addEventListener('copy', function(e) {
+            e.clipboardData.setData('text/plain', copyText);
+            e.preventDefault();
+        }, true);
+        document.execCommand('copy');
 
-          document.getElementById('copied').removeAttribute('hidden');
-         });
+        renderer.hud.invite.renderCopied();
+     });
 
     let params = new URLSearchParams(document.location.search);
     let inviteLink = params.get('join');
