@@ -97,6 +97,7 @@ class NavBarRenderer {
         this._accountHandler = document.getElementById("accountHandler");
     }
     render() {}
+    clear() {}
     renderSignIn(href) {
         this._accountHandler.innerHTML = 'Sign In';
         this._accountHandler.href = href;
@@ -168,17 +169,153 @@ class InviteRenderer {
 }
 
 class RoomsRenderer {
-    render() {}
+    constructor() {
+        this._rooms = document.getElementById('rooms');
+        this._drawnRooms = [];
+    }
+
+    render() {
+        if (!renderer.gamestate.inGame) {
+            this._drawnRooms = [];
+            this._rooms.innerHTML = '';
+            this.createNewRoomCard();
+            for (let i in availableRooms) {
+                this.createRoomCard(availableRooms[i],i);
+                this._drawnRooms.push(availableRooms[i]);
+            }
+            this.createCustomRoomCard();
+            if (returnToGameAvailable) {
+                this.createReturnToGameRoomCard();
+            }
+        }
+    }
+    clear() {}
+    createRoomCard(simplifiedRoom, roomId) {
+        const bDiv = document.createElement('div');
+        bDiv.classList.add('roomcard');
+        bDiv.classList.add('col-md-3');
+        bDiv.classList.add('col-xs-6');
+        bDiv.classList.add('white');
+        bDiv.id = 'roomCard' + roomId;
+        let theTitle = '';
+        for (let i in simplifiedRoom.usernames) {
+            theTitle += simplifiedRoom.usernames[i] + '\n';
+        }
+        if (simplifiedRoom.audienceCount > 0) {
+            theTitle += simplifiedRoom.audienceCount + ' Audience member' + (simplifiedRoom.audienceCount == 1 ? 's\n': '\n');
+        }
+        theTitle += 'Click to play\nRight click to join audience';
+        bDiv.title = theTitle;
+        const numberDiv = document.createElement('div');
+        numberDiv.classList.add('roomnum');
+        numberDiv.classList.add('d-flex');
+        numberDiv.classList.add('justify-content-center');
+        numberDiv.innerHTML = romanize(roomId);
+        numberDiv.id = 'roomNum' + roomId;
+        bDiv.appendChild(numberDiv);
+        const playerCountSpan = document.createElement('span');
+        playerCountSpan.alt = simplifiedRoom.count + ' player' + (simplifiedRoom.count == 1 ? '' : 's');
+        for (let i=0; i<4; i++) {
+            if (i<simplifiedRoom.count) {
+                playerCountSpan.innerHTML += '&#x25CF; ';
+            } else {
+                playerCountSpan.innerHTML += '&#x25CB; ';
+            }
+        }
+        bDiv.appendChild(playerCountSpan);
+        //Make it clickable
+        bDiv.roomID = roomId;
+        if (simplifiedRoom.count > 0) {
+            bDiv.addEventListener('contextmenu',joinAudience);
+        }
+        bDiv.addEventListener('click', buttonClick);
+        this._rooms.appendChild(bDiv);
+    }
+    createReturnToGameRoomCard() {
+        const bDiv = document.createElement('div');
+        bDiv.classList.add('roomcard');
+        bDiv.classList.add('col-md-3');
+        bDiv.classList.add('col-xs-6');
+        bDiv.classList.add('white');
+        bDiv.id = 'roomCardReturnToGame';
+        const numberDiv = document.createElement('div');
+        numberDiv.classList.add('roomnum');
+        numberDiv.classList.add('d-flex');
+        numberDiv.classList.add('justify-content-center');
+        numberDiv.innerHTML = 'Continue';
+        numberDiv.id = 'roomNumReturnToGame';
+        bDiv.appendChild(numberDiv);
+        const playerCountSpan = document.createElement('span');
+        for (let i=0; i<4; i++) {
+            playerCountSpan.innerHTML += '&#x25CB; ';
+        }
+        bDiv.appendChild(playerCountSpan);
+        //Make it clickable
+        bDiv.addEventListener('click', returnToGameRoomClick);
+        this._rooms.appendChild(bDiv);
+    }
+
+    createCustomRoomCard() {
+        const bDiv = document.createElement('div');
+        bDiv.classList.add('roomcard');
+        bDiv.classList.add('col-md-3');
+        bDiv.classList.add('col-xs-6');
+        bDiv.classList.add('white');
+        bDiv.id = 'roomCardCustom';
+        const numberDiv = document.createElement('div');
+        numberDiv.classList.add('roomnum');
+        numberDiv.classList.add('d-flex');
+        numberDiv.classList.add('justify-content-center');
+        numberDiv.innerHTML = 'Custom';
+        numberDiv.id = 'roomNumCustom';
+        bDiv.appendChild(numberDiv);
+        const playerCountSpan = document.createElement('span');
+        for (let i=0; i<4; i++) {
+            playerCountSpan.innerHTML += '&#x25CB; ';
+        }
+        bDiv.appendChild(playerCountSpan);
+        //Make it clickable
+        bDiv.addEventListener('click', customRoomClick);
+        this._rooms.appendChild(bDiv);
+    }
+
+    createNewRoomCard() {
+        const bDiv = document.createElement('div');
+        bDiv.classList.add('roomcard');
+        bDiv.classList.add('col-md-3');
+        bDiv.classList.add('col-xs-6');
+        bDiv.classList.add('white');
+        bDiv.id = 'roomCardNew';
+        const numberDiv = document.createElement('div');
+        numberDiv.classList.add('roomnum');
+        numberDiv.classList.add('d-flex');
+        numberDiv.classList.add('justify-content-center');
+        numberDiv.innerHTML = 'New';
+        numberDiv.id = 'roomNumNew';
+        bDiv.appendChild(numberDiv);
+        const playerCountSpan = document.createElement('span');
+        for (let i=0; i<4; i++) {
+            playerCountSpan.innerHTML += '&#x25CB; ';
+        }
+        bDiv.appendChild(playerCountSpan);
+        //Make it clickable
+        bDiv.addEventListener('click', newRoomClick);
+        this._rooms.appendChild(bDiv);
+    }
+
 }
 
 class SettingsRenderer {
     render() {}
+    clear() {}
 }
 
 class HandRenderer {
     render() {}
+    clear() {}
 }
 
 class TableRenderer {
     render() {}
+    clear() {}
 }

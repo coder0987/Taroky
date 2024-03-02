@@ -433,6 +433,7 @@ function displayRoundInfo(theRoundInfo) {
 
 function displayRoomConnected(roomConnected) {
     inGame = true;
+    renderer.gamestate.inGame = true;
     document.getElementById('rooms').innerHTML = '';
     connectingToRoom = false;
     addMessage('Connected to room ' + (roomConnected));
@@ -442,6 +443,7 @@ function displayRoomConnected(roomConnected) {
 
 function displayAudienceConnected(audienceConnected) {
     inGame = true;
+    renderer.gamestate.inGame = true;
     document.getElementById('rooms').innerHTML = '';
     connectingToRoom = false;
     addMessage('Joined audience in room ' + (audienceConnected));
@@ -468,13 +470,13 @@ function keyListener(e) {
 
     /**loader */
 $(document).ready(function() {
-
+    renderer = new Renderer({});
     onLoad();
     setTimeout(function(){
         $('body').addClass('loaded');
         let element = document.getElementById("navbar");
         element.classList.add("fixed-top");
-        renderer = new Renderer({})
+        renderer.hud.nav = new NavBarRenderer();
     }, 3000);
     $('.copy-text').click(function (e) {
           //First: try to share it
@@ -2007,131 +2009,7 @@ function joinFromInvite(roomCode) {
 }
 
 function drawRooms() {
-    drawnRooms = [];
-    document.getElementById('rooms').innerHTML = '';
-    createNewRoomCard();
-    for (let i in availableRooms) {
-        createRoomCard(availableRooms[i],i);
-        drawnRooms.push(availableRooms[i]);
-    }
-    createCustomRoomCard();
-    if (returnToGameAvailable) {
-        createReturnToGameRoomCard();
-    }
-}
-
-function createRoomCard(simplifiedRoom, roomId) {
-    const bDiv = document.createElement('div');
-    bDiv.classList.add('roomcard');
-    bDiv.classList.add('col-md-3');
-    bDiv.classList.add('col-xs-6');
-    bDiv.classList.add('white');
-    bDiv.id = 'roomCard' + roomId;
-    let theTitle = '';
-    for (let i in simplifiedRoom.usernames) {
-        theTitle += simplifiedRoom.usernames[i] + '\n';
-    }
-    if (simplifiedRoom.audienceCount > 0) {
-        theTitle += simplifiedRoom.audienceCount + ' Audience member' + (simplifiedRoom.audienceCount == 1 ? 's\n': '\n');
-    }
-    theTitle += 'Click to play\nRight click to join audience';
-    bDiv.title = theTitle;
-    const numberDiv = document.createElement('div');
-    numberDiv.classList.add('roomnum');
-    numberDiv.classList.add('d-flex');
-    numberDiv.classList.add('justify-content-center');
-    numberDiv.innerHTML = romanize(roomId);
-    numberDiv.id = 'roomNum' + roomId;
-    bDiv.appendChild(numberDiv);
-    const playerCountSpan = document.createElement('span');
-    playerCountSpan.alt = simplifiedRoom.count + ' player' + (simplifiedRoom.count == 1 ? '' : 's');
-    for (let i=0; i<4; i++) {
-        if (i<simplifiedRoom.count) {
-            playerCountSpan.innerHTML += '&#x25CF; ';
-        } else {
-            playerCountSpan.innerHTML += '&#x25CB; ';
-        }
-    }
-    bDiv.appendChild(playerCountSpan);
-    //Make it clickable
-    bDiv.roomID = roomId;
-    if (simplifiedRoom.count > 0) {
-        bDiv.addEventListener('contextmenu',joinAudience);
-    }
-    bDiv.addEventListener('click', buttonClick);
-    document.getElementById('rooms').appendChild(bDiv);
-}
-function createReturnToGameRoomCard() {
-    const bDiv = document.createElement('div');
-    bDiv.classList.add('roomcard');
-    bDiv.classList.add('col-md-3');
-    bDiv.classList.add('col-xs-6');
-    bDiv.classList.add('white');
-    bDiv.id = 'roomCardReturnToGame';
-    const numberDiv = document.createElement('div');
-    numberDiv.classList.add('roomnum');
-    numberDiv.classList.add('d-flex');
-    numberDiv.classList.add('justify-content-center');
-    numberDiv.innerHTML = 'Continue';
-    numberDiv.id = 'roomNumReturnToGame';
-    bDiv.appendChild(numberDiv);
-    const playerCountSpan = document.createElement('span');
-    for (let i=0; i<4; i++) {
-        playerCountSpan.innerHTML += '&#x25CB; ';
-    }
-    bDiv.appendChild(playerCountSpan);
-    //Make it clickable
-    bDiv.addEventListener('click', returnToGameRoomClick);
-    document.getElementById('rooms').appendChild(bDiv);
-}
-
-
-function createCustomRoomCard() {
-    const bDiv = document.createElement('div');
-    bDiv.classList.add('roomcard');
-    bDiv.classList.add('col-md-3');
-    bDiv.classList.add('col-xs-6');
-    bDiv.classList.add('white');
-    bDiv.id = 'roomCardCustom';
-    const numberDiv = document.createElement('div');
-    numberDiv.classList.add('roomnum');
-    numberDiv.classList.add('d-flex');
-    numberDiv.classList.add('justify-content-center');
-    numberDiv.innerHTML = 'Custom';
-    numberDiv.id = 'roomNumCustom';
-    bDiv.appendChild(numberDiv);
-    const playerCountSpan = document.createElement('span');
-    for (let i=0; i<4; i++) {
-        playerCountSpan.innerHTML += '&#x25CB; ';
-    }
-    bDiv.appendChild(playerCountSpan);
-    //Make it clickable
-    bDiv.addEventListener('click', customRoomClick);
-    document.getElementById('rooms').appendChild(bDiv);
-}
-
-function createNewRoomCard() {
-    const bDiv = document.createElement('div');
-    bDiv.classList.add('roomcard');
-    bDiv.classList.add('col-md-3');
-    bDiv.classList.add('col-xs-6');
-    bDiv.classList.add('white');
-    bDiv.id = 'roomCardNew';
-    const numberDiv = document.createElement('div');
-    numberDiv.classList.add('roomnum');
-    numberDiv.classList.add('d-flex');
-    numberDiv.classList.add('justify-content-center');
-    numberDiv.innerHTML = 'New';
-    numberDiv.id = 'roomNumNew';
-    bDiv.appendChild(numberDiv);
-    const playerCountSpan = document.createElement('span');
-    for (let i=0; i<4; i++) {
-        playerCountSpan.innerHTML += '&#x25CB; ';
-    }
-    bDiv.appendChild(playerCountSpan);
-    //Make it clickable
-    bDiv.addEventListener('click', newRoomClick);
-    document.getElementById('rooms').appendChild(bDiv);
+    renderer.hud.rooms.render();
 }
 
 function ping() {socket.emit('currentAction');}//Debug function
@@ -2409,6 +2287,7 @@ function exitCurrentRoom(value) {
     } else {
         clearTimeout(exitTimeout);
         socket.emit('exitRoom');
+        renderer.gamestate.inGame = false;
         hand = [];
         drawHand();
         returnTableQueue = [['hide']];
