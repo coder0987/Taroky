@@ -17,6 +17,10 @@ class Renderer {
         this._game.renderAll();
         this._hud.renderAll();
     }
+    clearScreen() {
+        this._game.clearScreen();
+        this._hud.clearScreen();
+    }
 
     set gamestate(gs) {
         this._gamestate = gs;
@@ -39,6 +43,10 @@ class GameRenderer {
         this._hand = new HandRenderer();
         this._table = new TableRenderer();
     }
+    clearScreen() {
+        this._hand.clear();
+        this._table.clear();
+    }
     renderAll() {
         this._hand.render();
         this._table.render();
@@ -57,11 +65,17 @@ class HUDRenderer {
         this._nav = new NavBarRenderer();
         this._rooms = new RoomsRenderer();
         this._settings = new SettingsRenderer();
+        this._invite = new InviteRenderer();
     }
     renderAll() {
         this._nav.render();
         this._rooms.render();
         this._settings.render();
+    }
+    clearScreen() {
+        this._nav.clear();
+        this._rooms.clear();
+        this._settings.clear();
     }
     get nav() {
         return this._nav;
@@ -71,6 +85,9 @@ class HUDRenderer {
     }
     get settings() {
         return this._settings;
+    }
+    get invite() {
+        return this._invite;
     }
 }
 
@@ -97,6 +114,56 @@ class NavBarRenderer {
 
     get accountHandler() {
         return this._accountHandler;
+    }
+}
+
+class InviteRenderer {
+    constructor() {
+        this._inviteScreen = document.getElementById('inviteScreen');
+        this._inviteCode = document.getElementById('inviteJoinCode');
+        this._inviteCopied = document.getElementById('copied');
+    }
+    createCard(roomName, roomCode, username) {
+        let card = document.createElement('div');
+        card.classList.add('invite-card');
+        let cardRemoveTimeout = setTimeout(() => {document.body.removeChild(card)},10000);
+
+        let nameElem = document.createElement('h3');
+        nameElem.classList.add('invite-card-header');
+        nameElem.innerHTML = 'New Invite From ' + username + ' to Room ' + roomName + '!';
+        card.appendChild(nameElem);
+
+        let joinButton = document.createElement('a');
+        joinButton.classList.add('invite-card-button');
+        joinButton.innerHTML = 'Join';
+        joinButton.addEventListener('click', () => {
+            exitCurrentRoom(true);
+           document.body.removeChild(card);
+           clearTimeout(cardRemoveTimeout);joinFromInvite(roomCode)
+        }, {once:true});
+        card.appendChild(joinButton);
+
+        let spacerSpan = document.createElement('span');
+        spacerSpan.classList.add('invite-card-spacer');
+        spacerSpan.innerHTML = '-';
+        card.appendChild(spacerSpan);
+
+        let ignoreButton = document.createElement('a');
+        ignoreButton.classList.add('invite-card-button');
+        ignoreButton.innerHTML = 'Ignore';
+        ignoreButton.addEventListener('click', () => {document.body.removeChild(card); clearTimeout(cardRemoveTimeout)}, {once:true});
+        card.appendChild(ignoreButton);
+
+        document.body.appendChild(card);
+    }
+    renderInviteScreen() {
+        this._inviteCode.href = 'https://machtarok.com/?join=' + roomCode;
+        this._inviteCode.innerHTML = 'https://machtarok.com/?join=' + roomCode;
+        this._inviteScreen.removeAttribute('hidden');
+    }
+    clear() {
+        this._inviteScreen.setAttribute('hidden','hidden');
+        this._inviteCopied.setAttribute('hidden','hidden');
     }
 }
 

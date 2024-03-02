@@ -2376,55 +2376,22 @@ function clearButtons() {
 }
 
 function invite() {
-        document.getElementById('inviteJoinCode').href = 'https://machtarok.com/?join=' + roomCode;
-        document.getElementById('inviteJoinCode').innerHTML = 'https://machtarok.com/?join=' + roomCode;
-        document.getElementById('inviteScreen').removeAttribute('hidden');
-        socket.emit('getPlayerList');
-    }
-    function closeInvite() {
-      document.getElementById('inviteScreen').setAttribute('hidden','hidden');
-      document.getElementById('copied').setAttribute('hidden','hidden');
-    }
-    function createInviteCard(roomName,roomCode, username) {
-        let card = document.createElement('div');
-        card.classList.add('invite-card');
-        let cardRemoveTimeout = setTimeout(() => {document.body.removeChild(card)},10000);
+    renderer.hud.invite.renderInviteScreen();
+    socket.emit('getPlayerList');
+}
+function closeInvite() {
+    renderer.hud.invite.clear();
+}
 
-        let nameElem = document.createElement('h3');
-        nameElem.classList.add('invite-card-header');
-        nameElem.innerHTML = 'New Invite From ' + username + ' to Room ' + roomName + '!';
-        card.appendChild(nameElem);
-
-        let joinButton = document.createElement('a');
-        joinButton.classList.add('invite-card-button');
-        joinButton.innerHTML = 'Join';
-        joinButton.addEventListener('click', () => {
-        exitCurrentRoom(true);
-           document.body.removeChild(card);
-           clearTimeout(cardRemoveTimeout);joinFromInvite(roomCode)
-        }, {once:true});
-        card.appendChild(joinButton);
-
-        let spacerSpan = document.createElement('span');
-        spacerSpan.classList.add('invite-card-spacer');
-        spacerSpan.innerHTML = '-';
-        card.appendChild(spacerSpan);
-
-        let ignoreButton = document.createElement('a');
-        ignoreButton.classList.add('invite-card-button');
-        ignoreButton.innerHTML = 'Ignore';
-        ignoreButton.addEventListener('click', () => {document.body.removeChild(card); clearTimeout(cardRemoveTimeout)}, {once:true});
-        card.appendChild(ignoreButton);
-
-        document.body.appendChild(card);
-
-    }
+function createInviteCard(roomName, roomCode, username) {
+    renderer.hud.invite.createCard(roomName, roomCode, username);
+}
 
 
 function alive() {
     socket.emit('alive', (callback) => {
         if (!callback) {
-            alert('The Socket has Disconnected. Reload page to attempt recovery');
+            addError('The Socket has Disconnected. Reload page to attempt recovery');
             window.location.reload();
         }
     });
@@ -2490,6 +2457,8 @@ function exitCurrentRoom(value) {
 }
 
 function clearScreen() {
+    renderer.clearScreen();
+    clearChat();
     returnTableQueue = [['hide']];
     drawTable(true);
     hand = [];
@@ -2501,7 +2470,6 @@ function clearScreen() {
     document.getElementById('center').innerHTML = '';
     document.getElementById('currentAction').innerHTML = '';
     document.getElementById('currentPlayer').innerHTML = '';
-    clearChat();
     document.getElementById('genericRoundInfo').textContent = '';
     for (let i=0; i<4; i++) {
         document.getElementById('roundInfo' + (i+1)).textContent = '';
