@@ -26,8 +26,8 @@ class Renderer {
         this._gamestate = gs;
         renderAll();
     }
-    get gamestate() {
-        return this._gamestate;
+    get game() {
+        return this._game;
     }
     get hud() {
         return this._hud;
@@ -42,6 +42,7 @@ class GameRenderer {
     constructor() {
         this._hand = new HandRenderer();
         this._table = new TableRenderer();
+        this._action = new ActionInfoRenderer();
     }
     clearScreen() {
         this._hand.clear();
@@ -57,6 +58,9 @@ class GameRenderer {
     get table() {
         return this._table;
     }
+    get actionInfo() {
+        return this._action;
+    }
 }
 
 //HUD covers the Navbar and other components outside of the game logic
@@ -66,6 +70,7 @@ class HUDRenderer {
         this._rooms = new RoomsRenderer();
         this._settings = new SettingsRenderer();
         this._invite = new InviteRenderer();
+        this._lobby = new LobbyControlsRenderer();
     }
     renderAll() {
         this._nav.render();
@@ -88,6 +93,9 @@ class HUDRenderer {
     }
     get invite() {
         return this._invite;
+    }
+    get lobby() {
+        return this._lobby;
     }
 }
 
@@ -115,6 +123,18 @@ class NavBarRenderer {
 
     get accountHandler() {
         return this._accountHandler;
+    }
+}
+
+class LobbyControlsRenderer {
+    constructor() {
+        this._lobbyControls = document.getElementById('lobby-controls');
+    }
+    render() {
+        this._lobbyControls.removeAttribute('hidden');
+    }
+    clear() {
+        this._lobbyControls.setAttribute('hidden','hidden');
     }
 }
 
@@ -176,8 +196,7 @@ class RoomsRenderer {
 
     render() {
         if (!renderer.gamestate.inGame) {
-            this._drawnRooms = [];
-            this._rooms.innerHTML = '';
+            this.clear();
             this.createNewRoomCard();
             for (let i in availableRooms) {
                 this.createRoomCard(availableRooms[i],i);
@@ -189,7 +208,10 @@ class RoomsRenderer {
             }
         }
     }
-    clear() {}
+    clear() {
+        this._drawnRooms = [];
+        this._rooms.innerHTML = '';
+    }
     createRoomCard(simplifiedRoom, roomId) {
         const bDiv = document.createElement('div');
         bDiv.classList.add('roomcard');
@@ -308,6 +330,18 @@ class RoomsRenderer {
 class SettingsRenderer {
     render() {}
     clear() {}
+}
+
+class ActionInfoRenderer {
+    constructor() {
+        this._actionInfo = document.getElementById('actionInfo');
+    }
+    render() {
+        this._actionInfo.removeAttribute('hidden');
+    }
+    clear() {
+        this._actionInfo.setAttribute('hidden','hidden');
+    }
 }
 
 class HandRenderer {

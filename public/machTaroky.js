@@ -433,22 +433,28 @@ function displayRoundInfo(theRoundInfo) {
 
 function displayRoomConnected(roomConnected) {
     inGame = true;
-    renderer.gamestate.inGame = true;
-    document.getElementById('rooms').innerHTML = '';
     connectingToRoom = false;
+
+    renderer.gamestate.inGame = true;
+    renderer.gamestate.connectingToRoom = false;
+
+    renderer.hud.rooms.clear();
+    renderer.hud.lobby.clear();
+    renderer.game.actionInfo.render();
     addMessage('Connected to room ' + (roomConnected));
-    document.getElementById('lobby-controls').setAttribute('hidden','hidden');
-    document.getElementById('actionInfo').removeAttribute('hidden');
 }
 
 function displayAudienceConnected(audienceConnected) {
     inGame = true;
-    renderer.gamestate.inGame = true;
-    document.getElementById('rooms').innerHTML = '';
     connectingToRoom = false;
+
+    renderer.gamestate.inGame = true;
+    renderer.gamestate.connectingToRoom = false;
+
+    renderer.hud.rooms.clear();
+    renderer.hud.lobby.clear();
+    renderer.game.actionInfo.render();
     addMessage('Joined audience in room ' + (audienceConnected));
-    document.getElementById('lobby-controls').setAttribute('hidden','hidden');
-    document.getElementById('actionInfo').removeAttribute('hidden');
 }
 
 
