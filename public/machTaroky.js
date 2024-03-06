@@ -199,65 +199,6 @@ function loaded() {
     }
 }
 
-let fullscreenMode = false;
-function fullscreen() {
-    fullscreenMode = !fullscreenMode;
-    try {
-        if (!fullscreenMode) {
-            //disable fullscreen
-            if (document.fullscreenElement) {
-                closeFullscreen();
-            }
-            document.getElementById('navbar').classList.remove('hidden');
-            document.getElementById('footer').classList.remove('hidden');
-        } else {
-            //enable fullscreen
-            if (!document.fullscreenElement) {
-                openFullscreen();
-            }
-            document.getElementById('navbar').classList.add('hidden');
-            document.getElementById('footer').classList.add('hidden');
-        }
-    } catch (footerMightNotExist) {}
-}
-
-//Interface with officially supported functions
-function openFullscreen() {
-    if (document.body.requestFullscreen) {
-      document.body.requestFullscreen();
-    } else if (document.body.webkitRequestFullscreen) { /* Safari */
-      document.body.webkitRequestFullscreen();
-    } else if (document.body.msRequestFullscreen) { /* IE11 */
-      document.body.msRequestFullscreen();
-    }
-}
-
-/* Close fullscreen */
-function closeFullscreen() {
-  if (document.exitFullscreen) {
-    document.exitFullscreen();
-  } else if (document.webkitExitFullscreen) { /* Safari */
-    document.webkitExitFullscreen();
-  } else if (document.msExitFullscreen) { /* IE11 */
-    document.msExitFullscreen();
-  }
-}
-
-function fullscreenChangeEvent(e) {
-    if (fullscreenMode) {
-        //should be in fullscreen
-        if (!document.fullscreenElement) {
-            fullscreen();
-        }
-    } else {
-        //shouldn't be in fullscreen
-        if (document.fullscreenElement) {
-            fullscreen();
-        }
-    }
-}
-
-
 let tableDrawnTime = Date.now();//ms since START_TIME
 function drawTable(shouldHide) {
     if (shouldHide) {
@@ -461,9 +402,7 @@ function keyListener(e) {
     //TODO add hotkeys
     switch (e.code) {
         case 'Escape':
-            if (fullscreenMode) {
-                fullscreen();
-            }
+            //Unfortunately browsers dislike this event when in fullscreen so it cannot be used
             break;
         case 'Enter':
             handleSendMessageClick();
@@ -1107,10 +1046,10 @@ window.addEventListener('message', (event) => {
 function onLoad() {
     generateDeck();
     document.addEventListener('keydown', keyListener);
-    document.addEventListener("fullscreenchange", fullscreenChangeEvent);
-    document.addEventListener("mozfullscreenchange", fullscreenChangeEvent);
-    document.addEventListener("webkitfullscreenchange", fullscreenChangeEvent);
-    document.addEventListener("msfullscreenchange", fullscreenChangeEvent);
+    document.addEventListener("fullscreenchange", renderer.fullscreenChangeEvent);
+    document.addEventListener("mozfullscreenchange", renderer.fullscreenChangeEvent);
+    document.addEventListener("webkitfullscreenchange", renderer.fullscreenChangeEvent);
+    document.addEventListener("msfullscreenchange", renderer.fullscreenChangeEvent);
 
     if (!localStorage.getItem('tarokyInstance')) {
         do {

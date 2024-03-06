@@ -11,6 +11,7 @@ class Renderer {
         this._game = new GameRenderer();
         this._hud = new HUDRenderer();
         this._gamestate = gamestate;
+        this._fullscreen = false;
         renderer = this;
     }
     renderAll() {
@@ -20,6 +21,58 @@ class Renderer {
     clearScreen() {
         this._game.clearScreen();
         this._hud.clearScreen();
+    }
+    toggleFullscreen(state) {
+        if (typeof state === 'undefined') {
+            this._fullscreen = !this._fullscreen;
+        } else {
+            this._fullscreen = state;
+        }
+
+        if (!this._fullscreen) {
+            //disable fullscreen
+            if (document.fullscreenElement) {
+                this.closeFullscreen();
+            }
+            this.hud.nav.render();
+        } else {
+            //enable fullscreen
+            if (!document.fullscreenElement) {
+                this.openFullscreen();
+            }
+            this.hud.nav.clear();
+        }
+    }
+    openFullscreen() {
+        try {
+            if (document.body.requestFullscreen) {
+              document.body.requestFullscreen();
+            } else if (document.body.webkitRequestFullscreen) { /* Safari */
+              document.body.webkitRequestFullscreen();
+            } else if (document.body.msRequestFullscreen) { /* IE11 */
+              document.body.msRequestFullscreen();
+            }
+        } catch (reqDenied) {
+            this.toggleFullscreen(false);
+        }
+    }
+    closeFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE11 */
+            document.msExitFullscreen();
+        }
+    }
+    fullscreenChangeEvent(e) {
+        if (document.fullscreenElement) {
+            //should be in fullscreen
+            renderer.toggleFullscreen(true);
+        } else {
+            //shouldn't be in fullscreen
+            renderer.toggleFullscreen(false);
+        }
     }
 
     set gamestate(gs) {
@@ -34,6 +87,9 @@ class Renderer {
     }
     get gamestate() {
         return this._gamestate;
+    }
+    get fullscreen() {
+        return this._fullscreen;
     }
 }
 
@@ -108,8 +164,12 @@ class NavBarRenderer {
             this._navbar.classList.add("fixed-top");
         }
     }
-    render() {}
-    clear() {}
+    render() {
+        this.nav.classList.remove('hidden');
+    }
+    clear() {
+        this.nav.classList.add('hidden');
+    }
     renderSignIn(href) {
         this._accountHandler.innerHTML = 'Sign In';
         this._accountHandler.href = href;
@@ -127,6 +187,12 @@ class NavBarRenderer {
 
     get accountHandler() {
         return this._accountHandler;
+    }
+    get nav() {
+        if (this._navbar == null) {
+            this._navbar = document.getElementById("navbar");
+        }
+        return this._navbar;
     }
 }
 
