@@ -1516,7 +1516,7 @@ function onLoad() {
         addError('Failed to play the card');
     });
     socket.on('disconnect', function() {
-        addError('Socket Disconnected! Attempting auto-reconnect...');
+        //addError('Socket Disconnected! Attempting auto-reconnect...');
         socket.connect();
     });
     socket.on('gameEnded', function() {
