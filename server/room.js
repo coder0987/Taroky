@@ -200,6 +200,10 @@ class Room {
         return playersInGameArr;
     }
 
+    get type() {
+        return this._roomType;
+    }
+
     // Setters
     set settings(settings) {
         this._settings = settings;
