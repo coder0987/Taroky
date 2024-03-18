@@ -2218,7 +2218,7 @@ function createShareButton(score) {
     theButton.addEventListener('click', () => {
         const shareUrl = 'https://machtarok.com/';
         const shareTitle = 'I made a ' + score + ' on MachTarok Daily!';
-        const shareText = 'Can you beat me? Sign in and click "Daily" to see: ';
+        const shareText = 'I made a ' + score + ' on MachTarok Daily!\nCan you beat me? Sign in and click "Daily" to see: ';
         const shareMessage = `${shareText}\n${shareUrl}`;
 
         if (navigator.share) {
