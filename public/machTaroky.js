@@ -2293,6 +2293,7 @@ function exitCurrentRoom(value) {
         document.getElementById('currentAction').innerHTML = '';
         document.getElementById('currentPlayer').innerHTML = '';
         clearChat();
+        document.getElementById('roundInfo').setAttribute('hidden','hidden');
         document.getElementById('genericRoundInfo').textContent = '';
         for (let i=0; i<4; i++) {
             document.getElementById('roundInfo' + (i+1)).textContent = '';

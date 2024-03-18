@@ -2475,6 +2475,9 @@ function actionCallback(action, room, pn) {
                 }
                 SOCKET_LIST[room.players[humanPN].socket].emit('challengeComplete',room.players[humanPN].chips - 100);
                 challenge.complete(players[room.players[humanPN].socket].username, room.players[humanPN].chips - 100);
+                for (let i in SOCKET_LIST) {
+                    SOCKET_LIST[i].emit('returnPlayerCount', numOnlinePlayers, challenge.leaderboard, challenge.retryLeaderboard);
+                }
                 action.action = 'retry';
                 action.pn = humanPN;
             } else {
