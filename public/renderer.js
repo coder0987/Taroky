@@ -448,15 +448,17 @@ class RoomsRenderer {
 
             for (let i in renderer.gamestate.leaderboard) {
                 let l1t = document.createElement('p');
-                l1t.innerHTML = (+i+1) + '. ' + renderer.gamestate.leaderboard[i].username + ': ' + renderer.gamestate.leaderboard[i].score;
+                l1t.innerHTML = (+i+1) + '. ' + renderer.gamestate.leaderboard[i].name + ': ' + renderer.gamestate.leaderboard[i].score;
                 l1d.appendChild(l1t)
             }
 
             let l2p = document.createElement('h3');
             l2p.innerHTML = 'Daily Challenge Multi-Try Top Scores';
+            l2d.appendChild(l2p);
+            l2d.appendChild(document.createElement('hr'))
             for (let i in renderer.gamestate.retryLeaderboard) {
                 let l2t = document.createElement('p');
-                l2t.innerHTML = (+i+1) + '. ' + renderer.gamestate.retryLeaderboard[i].username + ': ' + renderer.gamestate.retryLeaderboard[i].score;
+                l2t.innerHTML = (+i+1) + '. ' + renderer.gamestate.retryLeaderboard[i].name + ': ' + renderer.gamestate.retryLeaderboard[i].score;
                 l2d.appendChild(l2t)
             }
 
