@@ -430,7 +430,7 @@ class RoomsRenderer {
         this._rooms.appendChild(bDiv);
     }
     drawLeaderboards() {
-        if (leaderboard && leaderboard.length > 0) {
+        if (renderer.gamestate.leaderboard && renderer.gamestate.leaderboard.length > 0) {
             this._leaderboard.innerHTML = '';
             let l1d = document.createElement('div');
             l1d.classList.add('col-12');
@@ -446,17 +446,17 @@ class RoomsRenderer {
             l1d.appendChild(l1p);
             l1d.appendChild(document.createElement('hr'))
 
-            for (let i in leaderboard) {
+            for (let i in renderer.gamestate.leaderboard) {
                 let l1t = document.createElement('p');
-                l1t.innerHTML = (+i+1) + '. ' + leaderboard[i].username + ': ' + leaderboard[i].score;
+                l1t.innerHTML = (+i+1) + '. ' + renderer.gamestate.leaderboard[i].username + ': ' + renderer.gamestate.leaderboard[i].score;
                 l1d.appendChild(l1t)
             }
 
             let l2p = document.createElement('h3');
             l2p.innerHTML = 'Daily Challenge Multi-Try Top Scores';
-            for (let i in retryLeaderboard) {
+            for (let i in renderer.gamestate.retryLeaderboard) {
                 let l2t = document.createElement('p');
-                l2t.innerHTML = (+i+1) + '. ' + retryLeaderboard[i].username + ': ' + retryLeaderboard[i].score;
+                l2t.innerHTML = (+i+1) + '. ' + renderer.gamestate.retryLeaderboard[i].username + ': ' + renderer.gamestate.retryLeaderboard[i].score;
                 l2d.appendChild(l2t)
             }
 
