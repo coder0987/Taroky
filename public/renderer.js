@@ -291,7 +291,7 @@ class RoomsRenderer {
     clear() {
         this._drawnRooms = [];
         this._rooms.innerHTML = '';
-        this._leaderboard.setAttribute('hidden','hidden');
+        this._leaderboard.innerHTML = '';
     }
     createRoomCard(simplifiedRoom, roomId) {
         const bDiv = document.createElement('div');
