@@ -2265,8 +2265,8 @@ function createInviteCard(roomName, roomCode, username) {
 function alive() {
     socket.emit('alive', (callback) => {
         if (!callback) {
-            addError('The Socket has Disconnected. Reload page to attempt recovery');
-            window.location.reload();
+            //addError('The Socket has Disconnected. Reload page to attempt recovery');
+            socket.connect();
         }
     });
 }
