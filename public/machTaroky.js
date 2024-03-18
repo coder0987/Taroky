@@ -47,7 +47,8 @@ const ACTION_TABLE = {
     'follow': 'Play a Card',
     'winTrick': 'Collect the Cards from the Trick',
     'countPoints': 'Count Points',
-    'resetBoard': 'Reset the Board'
+    'resetBoard': 'Reset the Board',
+    'retry': 'Share the Challenge'
 };
 const VALUE_REVERSE = {
     Ace: 0, Two: 1, Three: 2, Four: 3, Jack: 4, Rider: 5, Queen: 6, King: 7,
@@ -818,6 +819,7 @@ function displayNextAction(action) {
                 break;
             case 'retry':
                 createShareButton(dailyScore);
+                returnTableQueue.push('hide');
                 break;
             default:
                 addMessage('Unknown action: ' + JSON.stringify(action));
@@ -1143,6 +1145,7 @@ function onLoad() {
         if (typeof data.leaderboard !== 'undefined') {
             renderer.gamestate.leaderboard = data.leaderboard;
             renderer.gamestate.retryLeaderboard = data.retryLeaderboard;
+            renderer.hud.rooms.render();
         }
         if (typeof data.povinnost !== 'undefined') {
             povinnostNumber = data.povinnost;
