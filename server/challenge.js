@@ -34,7 +34,7 @@ class Challenge {
             return;
         }
         for (let i in this._leaderboard) {
-            if (this._leaderboard[i].name == username) {
+            if (this._leaderboard[i].name.toLowerCase() == username.toLowerCase()) {
                 this._retryLeaderboard.push({'name':username, 'score': points});
                 return;
             }
