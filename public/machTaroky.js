@@ -97,6 +97,7 @@ let discardingOrPlaying = true;
 let timeOffset = 0;
 let elo;
 let admin;
+let dailyScore = 0;
 let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
 let activeUsername = '';
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
@@ -816,7 +817,7 @@ function displayNextAction(action) {
                 returnTableQueue.push('hide');
                 break;
             case 'retry':
-                exitCurrentRoom(true);
+                createShareButton(dailyScore);
                 break;
             default:
                 addMessage('Unknown action: ' + JSON.stringify(action));
@@ -1540,7 +1541,7 @@ function onLoad() {
     });
     socket.on('challengeComplete', function(score) {
         addBoldMessage('Good job on completing the challenge! You made a score of ' + score);
-        exitCurrentRoom(true);
+        dailyScore = score;
     });
 
     socket.emit('reconnect');
@@ -2201,6 +2202,34 @@ function resetBoardButton() {
         socket.emit('resetBoard');
         returnTableQueue = [['hidden']];
         drawTable(true);
+    });
+    document.getElementById('center').appendChild(theButton);
+}
+
+function createShareButton(score) {
+    let theButton = document.createElement('button');
+    theButton.classList.add('choice-button');
+    theButton.innerHTML = 'Share';
+    theButton.id = 'shareButton';
+    theButton.type = 'button';
+    theButton.addEventListener('click', () => {
+        const shareUrl = 'https://machtarok.com/';
+        const shareTitle = 'I made a ' + score + ' on MachTarok Daily!';
+        const shareText = 'Can you beat me? Sign in and click "Daily" to see: ';
+        const shareMessage = `${shareText}\n${shareUrl}`;
+
+        if (navigator.share) {
+            navigator.share({
+                title: shareTitle,
+                text: shareText,
+                url: shareUrl
+            })
+            .then(() => console.log('Successful share'))
+            .catch((error) => console.log('Error sharing:', error));
+        } else {
+            // Fallback for browsers that do not support Web Share API
+            alert(shareMessage);
+        }
     });
     document.getElementById('center').appendChild(theButton);
 }
