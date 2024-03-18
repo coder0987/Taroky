@@ -369,6 +369,7 @@ function displayRoundInfo(theRoundInfo) {
             }
         }
     }
+    roundInfoElement.removeAttribute('hidden');
 }
 
 function displayRoomConnected(roomConnected) {
