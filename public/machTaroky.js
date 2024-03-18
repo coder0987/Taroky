@@ -97,8 +97,6 @@ let discardingOrPlaying = true;
 let timeOffset = 0;
 let elo;
 let admin;
-let leaderboard;
-let retryLeaderboard;
 let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
 let activeUsername = '';
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
@@ -1142,8 +1140,8 @@ function onLoad() {
             document.getElementById('online-s').innerHTML = data.playerCount == 1 ? '' : 's';
         }
         if (typeof data.leaderboard !== 'undefined') {
-            leaderboard = data.leaderboard;
-            retryLeaderboard = data.retryLeaderboard;
+            renderer.gamestate.leaderboard = data.leaderboard;
+            renderer.gamestate.retryLeaderboard = data.retryLeaderboard;
         }
         if (typeof data.povinnost !== 'undefined') {
             povinnostNumber = data.povinnost;
@@ -1266,8 +1264,8 @@ function onLoad() {
     socket.on('returnPlayerCount', function(playerCount, lb, retyrlb) {
         document.getElementById('online').innerHTML = playerCount;
         document.getElementById('online-s').innerHTML = playerCount == 1 ? '' : 's';
-        leaderboard = lb;
-        retryLeaderboard = retyrlb;
+        renderer.gamestate.leaderboard = lb;
+        renderer.gamestate.retryLeaderboard = retyrlb;
     });
     socket.on('returnHand', function(returnHand,withGray) {
         hand = returnHand;
