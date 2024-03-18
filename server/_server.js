@@ -2479,7 +2479,7 @@ function actionCallback(action, room, pn) {
                     SOCKET_LIST[i].emit('returnPlayerCount', numOnlinePlayers, challenge.leaderboard, challenge.retryLeaderboard);
                 }
                 action.action = 'retry';
-                action.pn = humanPN;
+                action.player = humanPN;
             } else {
                 action.action = 'resetBoard';
             }
