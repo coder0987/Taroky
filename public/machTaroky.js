@@ -1516,7 +1516,7 @@ function onLoad() {
     });
     socket.on('disconnect', function() {
         addError('Socket Disconnected! Attempting auto-reconnect...');
-        window.location.reload();
+        socket.socket.connect();
     });
     socket.on('gameEnded', function() {
         exitCurrentRoom(true);
