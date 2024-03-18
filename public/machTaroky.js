@@ -1519,7 +1519,7 @@ function onLoad() {
     });
     socket.on('disconnect', function() {
         addError('Socket Disconnected! Attempting auto-reconnect...');
-        socket.socket.connect();
+        socket.connect();
     });
     socket.on('gameEnded', function() {
         exitCurrentRoom(true);
