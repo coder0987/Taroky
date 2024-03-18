@@ -171,11 +171,13 @@ class NavBarRenderer {
         this.nav.classList.add('hidden');
     }
     renderSignIn(href) {
+        if (!this._accountHandler) {this._accountHandler = document.getElementById("accountHandler")}
         this._accountHandler.innerHTML = 'Sign In';
         this._accountHandler.href = href;
         return this._accountHandler;
     }
     renderSignOut(href, name) {
+        if (!this._accountHandler) {this._accountHandler = document.getElementById("accountHandler")}
         if (!name) {
             this._accountHandler.innerHTML = 'Sign Out';
         } else {
