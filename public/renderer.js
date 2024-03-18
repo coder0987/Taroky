@@ -266,7 +266,7 @@ class InviteRenderer {
 class RoomsRenderer {
     constructor() {
         this._rooms = document.getElementById('rooms');
-        this._leaderboard = document.getElementById('leaderboard');
+        this._leaderboard = document.getElementById('dailyLeaderboard');
         this._drawnRooms = [];
     }
 
