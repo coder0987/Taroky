@@ -264,6 +264,7 @@ class InviteRenderer {
 class RoomsRenderer {
     constructor() {
         this._rooms = document.getElementById('rooms');
+        this._leaderboard = document.getElementById('leaderboard');
         this._drawnRooms = [];
     }
 
@@ -279,11 +280,16 @@ class RoomsRenderer {
             if (returnToGameAvailable) {
                 this.createReturnToGameRoomCard();
             }
+            if (activeUsername != '') {
+                this.createChallengeRoomCard();
+            }
+            this.drawLeaderboards();
         }
     }
     clear() {
         this._drawnRooms = [];
         this._rooms.innerHTML = '';
+        this._leaderboard.setAttribute('hidden','hidden');
     }
     createRoomCard(simplifiedRoom, roomId) {
         const bDiv = document.createElement('div');
@@ -398,6 +404,63 @@ class RoomsRenderer {
         this._rooms.appendChild(bDiv);
     }
 
+    createChallengeRoomCard() {
+        const bDiv = document.createElement('div');
+        bDiv.classList.add('roomcard');
+        bDiv.classList.add('col-md-3');
+        bDiv.classList.add('col-xs-6');
+        bDiv.classList.add('white');
+        bDiv.id = 'roomCardChallenge';
+        const numberDiv = document.createElement('div');
+        numberDiv.classList.add('roomnum');
+        numberDiv.classList.add('d-flex');
+        numberDiv.classList.add('justify-content-center');
+        numberDiv.innerHTML = 'Daily';
+        numberDiv.id = 'roomNumChallenge';
+        bDiv.appendChild(numberDiv);
+        const playerCountSpan = document.createElement('span');
+        for (let i=0; i<4; i++) {
+            playerCountSpan.innerHTML += '&#x25CB; ';
+        }
+        bDiv.appendChild(playerCountSpan);
+        //Make it clickable
+        bDiv.addEventListener('click', challengeRoomClick);
+        this._rooms.appendChild(bDiv);
+    }
+    drawLeaderboards() {
+        if (leaderboard && leaderboard.length > 0) {
+            this._leaderboard.innerHTML = '';
+            let l1d = document.createElement('div');
+            l1d.classList.add('col-12');
+            l1d.classList.add('col-md-6');
+            let l2d = document.createElement('div');
+            l2d.classList.add('col-12');
+            l2d.classList.add('col-md-6');
+            this._leaderboard.appendChild(l1d);
+            this._leaderboard.appendChild(l2d);
+
+            let l1p = document.createElement('h3');
+            l1p.innerHTML = 'Daily Challenge Leaderboard';
+            l1d.appendChild(l1p);
+            l1d.appendChild(document.createElement('hr'))
+
+            for (let i in leaderboard) {
+                let l1t = document.createElement('p');
+                l1t.innerHTML = (+i+1) + '. ' + leaderboard[i].username + ': ' + leaderboard[i].score;
+                l1d.appendChild(l1t)
+            }
+
+            let l2p = document.createElement('h3');
+            l2p.innerHTML = 'Daily Challenge Multi-Try Top Scores';
+            for (let i in retryLeaderboard) {
+                let l2t = document.createElement('p');
+                l2t.innerHTML = (+i+1) + '. ' + retryLeaderboard[i].username + ': ' + retryLeaderboard[i].score;
+                l2d.appendChild(l2t)
+            }
+
+            this._leaderboard.removeAttribute('hidden');
+        }
+    }
 }
 
 class SettingsRenderer {
