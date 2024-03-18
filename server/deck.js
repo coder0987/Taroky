@@ -420,6 +420,48 @@ class Deck {
         return handRankingPoints;
     }
 
+    static cardsToNotation(cards) {
+       let theNotation = '';
+       const SUIT_TO_NOTATION = {'Spade': 'S', 'Club': 'C', 'Heart': 'H', 'Diamond': 'D', 'Trump': 'T'};
+       try {
+           for (let i in cards) {
+               theNotation += SUIT_TO_NOTATION[cards[i].suit];
+               if (cards[i].suit == SUIT[4]) {
+                   //Trump
+                   let temp = +VALUE_REVERSE[cards[i].value] + 1;
+                   if (temp < 10) {
+                       temp = '0' + temp;
+                   }
+                   theNotation += temp;
+               } else {
+                   switch (cards[i].value) {
+                       case 'Ace':
+                       case 'Seven':
+                           theNotation += '1';
+                           break;
+                       case 'Two':
+                       case 'Eight':
+                           theNotation += '2';
+                           break;
+                       case 'Three':
+                       case 'Nine':
+                           theNotation += '3';
+                           break;
+                       case 'Four':
+                       case 'Ten':
+                           theNotation += '4';
+                           break;
+                       default:
+                           theNotation += cards[i].value.substring(0,1);
+                   }
+               }
+           }
+       } catch (err) {
+           SERVER.error('Cards could not be notated: ' + JSON.stringify(cards) + '\n' + err);
+       }
+       return theNotation;
+   }
+
     //Getters
     get deck() {
         return this._deck

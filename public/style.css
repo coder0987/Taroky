@@ -865,7 +865,6 @@ div.hand.twelve-cards img {
     max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
-    border: 2px solid var(--navy);
     border-left : 0px;
     border-right: 0px;
 }

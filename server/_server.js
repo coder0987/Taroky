@@ -32,7 +32,9 @@ const { SUIT,
     MESSAGE_TYPE,
     PLAYER_TYPE,
     DISCONNECT_TIMEOUT,
-    SENSITIVE_ACTIONS } = require('./enums.js');
+    SENSITIVE_ACTIONS,
+    ROOM_TYPE } = require('./enums.js');
+const Challenge = require('./challenge.js');
 
 const http = require('http');
 const https = require('https');
@@ -42,6 +44,7 @@ const path = require('path');
 const express = require('express');
 const { diffieHellman } = require('crypto');
 const math = require('mathjs');
+const schedule = require('node-schedule');
 
 const app = express();
 const START_TIME = Date.now();
@@ -65,6 +68,22 @@ let simplifiedRooms = {};
 let ticking = false;
 let autoActionTimeout;
 let numOnlinePlayers = 0;
+
+let challenge = new Challenge();
+
+schedule.scheduleJob('0 0 * * *', () => {
+    challenge = new Challenge();
+    for (let i in players) {
+        players[i].socket.emit('challengeOver');
+    }
+    for (let i in rooms) {
+        if (i.substring(0,9) == 'challenge') {
+            clearTimeout(rooms[i].autoAction);
+            SERVER.log('Game Ended. Closing the room.',i);
+            delete rooms[i];
+        }
+    }
+})
 
 function notate(room, notation) {
     if (notation) {
@@ -2106,6 +2125,7 @@ function actionCallback(action, room, pn) {
             shouldReturnTable = true;
 
             if (room.players[pn].hand.length == 0 || (room.board.trickWinCount[0] + room.board.trickWinCount[1] == 11)) {
+                SERVER.debug('Last trick');
                 //Last trick. Check if the I is present
                 let I = false;
                 let otherTrump = false;
@@ -2444,7 +2464,23 @@ function actionCallback(action, room, pn) {
             }
 
             actionTaken = true;
-            action.action = 'resetBoard';
+
+            if (room.type == ROOM_TYPE.CHALLENGE) {
+                let humanPN = 0;
+                for (let i in room.players) {
+                    if (room.players[i].type == PLAYER_TYPE.HUMAN) {
+                        humanPN = i;
+                        break;
+                    }
+                }
+                SOCKET_LIST[room.players[humanPN].socket].emit('challengeComplete',room.players[humanPN].chips - 100);
+                challenge.complete(players[room.players[humanPN].socket].username, room.players[humanPN].chips - 100);
+                action.action = 'retry';
+                action.pn = humanPN;
+            } else {
+                action.action = 'resetBoard';
+            }
+
             break;
         case 'resetBoard':
             //Reset everything for between matches. The board's properties, the players' hands, povinnost alliances, moneyCards, etc.
@@ -2462,6 +2498,9 @@ function actionCallback(action, room, pn) {
                 action.action = 'play';
             }
             actionTaken = true;
+            break;
+        case 'retry':
+            //haha do nothing
             break;
         default:
             SERVER.warn('Unrecognized actionCallback: ' + action.action,room.name);
@@ -2641,6 +2680,8 @@ function autoReconnect(socketId) {
             reconnectInfo.defaultSettings = notationToObject(players[socketId].userInfo.settings);
         }
     }
+    reconnectInfo.leaderboard = challenge.leaderboard;
+    reconnectInfo.retryLeaderboard = challenge.retryLeaderboard;
     SOCKET_LIST[socketId].emit('autoReconnect', reconnectInfo);
 }
 
@@ -2662,7 +2703,7 @@ io.sockets.on('connection', function (socket) {
         SERVER.debug('Join time: ' + Date.now());
         numOnlinePlayers++;
         for (let i in SOCKET_LIST) {
-            SOCKET_LIST[i].emit('returnPlayerCount',numOnlinePlayers);
+            SOCKET_LIST[i].emit('returnPlayerCount',numOnlinePlayers, challenge.leaderboard, challenge.retryLeaderboard);
         }
         if (returnToGame[socketId]) {
             SOCKET_LIST[socketId].emit('returnToGame');
@@ -2823,6 +2864,64 @@ io.sockets.on('connection', function (socket) {
         }
         if (!connected) socket.emit('roomNotConnected', roomID);
     });
+    socket.on('dailyChallenge', function() {
+        let connected = false;
+        if (players[socketId] && players[socketId].room == -1 && players[socketId].username != 'Guest') {
+            let theRoom;
+            {
+                let i = 1;
+                for (; rooms['challenge'+i]; i++) { }
+                rooms['challenge'+i] = new Room({'name': 'challenge'+i, 'type': ROOM_TYPE.CHALLENGE});
+                theRoom = rooms['challenge'+i];
+            }
+            let tarokyNotation = challenge.notation;
+            if (notate(theRoom,tarokyNotation)) {
+                let values = tarokyNotation.split('/');
+                let theSettings = values[values.length - 1].split(';');
+                let [setting,pn] = theSettings[theSettings.length - 1].split('=');
+                if (u(setting) || u(pn) || setting != 'pn' || isNaN(pn) || pn < 0 || pn > 4) {
+                    SERVER.debug('Player number not declared')
+                    pn = 0;
+                }
+                let roomID = theRoom.name;
+                rooms[roomID]['players'][pn].type = PLAYER_TYPE.HUMAN;
+                rooms[roomID]['players'][pn].socket = socketId;
+                rooms[roomID]['players'][pn].messenger = socket;
+                rooms[roomID]['players'][pn].pid = players[socketId].pid;
+                rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
+                rooms[roomID].settings = challenge.settings;
+                rooms[roomID].setSettingsNotation();
+                socket.emit('roomConnected', roomID);
+                connected = true;
+                players[socketId]['room'] = roomID;
+                players[socketId]['pn'] = pn;
+                rooms[roomID]['host'] = socketId;
+                autoReconnect(socketId);
+                socket.emit('timeSync', Date.now());
+
+                for (let i in rooms[roomID].players) {
+                    if (rooms[roomID].players[i].messenger) {
+                        rooms[roomID].players[i].messenger.emit('returnPlayersInGame', rooms[roomID].playersInGame);
+                    }
+                }
+
+                connected = true;
+
+                let playerType = rooms[roomID].players[0].type;
+                let action = rooms[roomID].board.nextStep;
+                if (playerType == PLAYER_TYPE.HUMAN) {
+                    playerAction(action, rooms[roomID], action.player);
+                } else if (playerType == PLAYER_TYPE.ROBOT) {
+                    robotAction(action, rooms[roomID], action.player);
+                } else if (playerType == PLAYER_TYPE.AI) {
+                    aiAction(action, rooms[roomID], action.player);
+                }
+            } else {
+                SERVER.debug('Notation error');
+            }
+        }
+        if (!connected) socket.emit('challengeNotConnected');
+    });
     socket.on('newRoom', function() {
         if (players[socketId] && players[socketId].room == -1) {
             let theSettings;
@@ -2905,21 +3004,6 @@ io.sockets.on('connection', function (socket) {
                     }
                 } else {
                     SERVER.debug('Notation error');
-                }
-            } else {
-                SERVER.warn('Invalid attempt to connect to room',roomID);
-                if (rooms[roomID]) {
-                    SERVER.debug('Room contains ' + rooms[roomID]['playerCount'] + ' players',roomID);
-                    if (rooms[roomID].locked) {
-                        SERVER.debug('Room is locked',roomID);
-                    }
-                } else {
-                    SERVER.debug('This room does not exist',roomID);
-                }
-                if (players[socketId]) {
-                    SERVER.debug('Player is in room ' + players[socketId].room,roomID);
-                } else {
-                    SERVER.debug('Player ' + socketId + ' does not exist',roomID);
                 }
             }
         } catch (err) {SERVER.debug('Notation error: ' + err);}
@@ -3501,7 +3585,7 @@ function tick() {
 
         simplifiedRooms = {};
         for (let i in rooms) {
-            if (rooms[i] && !rooms[i].settings.locked) {
+            if (rooms[i] && !rooms[i].settings.locked && rooms[i].type != ROOM_TYPE.CHALLENGE) {
                 let theUsernames = [];
                 for (let p in rooms[i].players) {
                     if (rooms[i].players[p].type == PLAYER_TYPE.HUMAN && players[rooms[i].players[p].socket]) {
@@ -3513,7 +3597,7 @@ function tick() {
                 if (!rooms[i]) {
                     SERVER.warn('A room disappeared');
                 } else {
-                    //Locked
+                    //Locked or challenge
                 }
             }
         }

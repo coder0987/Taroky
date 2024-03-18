@@ -1,5 +1,3 @@
-
-
 const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump' };
 
 const SUIT_REVERSE = { Spade: 0, Club: 1, Heart: 2, Diamond: 3, Trump: 4 };
@@ -34,6 +32,7 @@ const PLAYER_TYPE = { HUMAN: 0, ROBOT: 1, AI: 2, H: 0, R: 1 };
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
+const ROOM_TYPE = {STANDARD: 0, DEBUG: 1, TRAINING: 2, CHALLENGE: 3};
 
 module.exports = {
     SUIT,
@@ -49,5 +48,6 @@ module.exports = {
     MESSAGE_TYPE,
     PLAYER_TYPE,
     DISCONNECT_TIMEOUT,
-    SENSITIVE_ACTIONS
+    SENSITIVE_ACTIONS,
+    ROOM_TYPE
 }
