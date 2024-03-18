@@ -2871,7 +2871,7 @@ io.sockets.on('connection', function (socket) {
             {
                 let i = 1;
                 for (; rooms['challenge'+i]; i++) { }
-                rooms['challenge'+i] = new Room({'name': 'challenge'+i, 'type': ROOM_TYPE.CHALLENGE});
+                rooms['challenge'+i] = new Room({'name': 'challenge'+i, 'roomType': ROOM_TYPE.CHALLENGE});
                 theRoom = rooms['challenge'+i];
             }
             let tarokyNotation = challenge.notation;

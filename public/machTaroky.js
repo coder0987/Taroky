@@ -817,6 +817,9 @@ function displayNextAction(action) {
                 resetBoardButton();
                 returnTableQueue.push('hide');
                 break;
+            case 'retry':
+                exitCurrentRoom(true);
+                break;
             default:
                 addMessage('Unknown action: ' + JSON.stringify(action));
         }
@@ -1536,6 +1539,10 @@ function onLoad() {
             defaultSettings = returnSettings;
             addBoldMessage('Settings loaded');
         }
+    });
+    socket.on('challengeComplete', function(score) {
+        addBoldMessage('Good job on completing the challenge! You made a score of ' + score);
+        exitCurrentRoom(true);
     });
 
     socket.emit('reconnect');
