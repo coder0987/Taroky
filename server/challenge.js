@@ -1,5 +1,5 @@
 const Deck = require('./deck.js');
-const {DIFFICULTY} = require('./enums.js');
+const {DIFFICULTY, VALUE_REVERSE} = require('./enums.js');
 
 let baseDeck = Deck.createDeck();
 
