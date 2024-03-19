@@ -44,26 +44,51 @@ class Challenge {
     }
 
     static generateRandomNotationSequence() {
-        let notation = '100/100/100/100/';
-        let workingDeck = [];
-        for (let i in baseDeck) {
-            workingDeck[i] = baseDeck[i];
-        }
-        shuffleArray(workingDeck);
+       let goodHandWeight = 0.8;
+       let notation = '100/100/100/100/';
+       let workingDeck = [];
+       for (let i in baseDeck) {
+           workingDeck[i] = baseDeck[i];
+       }
+       shuffleArray(workingDeck);
+       for (let i in workingDeck) {
+           workingDeck[i].weight = ((VALUE_REVERSE[workingDeck[i].value] + (workingDeck[i].value == 'I' ? 15 : 0)) * (workingDeck[i].suit == 'Trump' ? 3 : 1));
+       }
 
-        for (let i=0; i<4; i++) {
-            notation += Deck.cardsToNotation(workingDeck.splice(0,12)) + '/';
-        }
 
-        let talonNotation = Deck.cardsToNotation(workingDeck.splice(0,6)) + '/';
-        notation += talonNotation;
+       workingDeck.sort((a,b) => {
+           if (Math.abs(0.5 - goodHandWeight) > Math.abs(0.5 - Math.random())) {
+               return goodHandWeight < 0.5 ? a.weight - b.weight: b.weight - a.weight;
+           }
+           return 0;
+       });
 
-        for (let i in this._settings) {
-            notation += i + '=' + this._settings[i] + ';';
-        }
-        notation += 'pn=' + Math.floor((4*Math.random()));
-        return notation;
-    }
+       for (let i in workingDeck) {
+           delete workingDeck[i].weight;
+       }
+
+       let workingPN = Math.floor(Math.random() * 4);
+
+       let mainHandNotation = Deck.cardsToNotation(workingDeck.splice(0,12)) + '/';
+       let talonNotation = Deck.cardsToNotation(workingDeck.splice(0,6)) + '/';
+
+       shuffleArray(workingDeck);
+
+       for (let i=0; i<4; i++) {
+           if (i != workingPN) {
+               notation += Deck.cardsToNotation(workingDeck.splice(0,12)) + '/';
+           } else {
+               notation += mainHandNotation;
+           }
+       }
+       notation += talonNotation;
+
+       for (let i in this._settings) {
+           notation += i + '=' + this._settings[i] + ';';
+       }
+       notation += 'pn=' + workingPN;
+       return notation;
+   }
 }
 
 function shuffleArray(array) {
