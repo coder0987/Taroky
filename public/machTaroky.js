@@ -1099,6 +1099,7 @@ function onLoad() {
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');
+        renderer.hud.rooms.render();
     });
 
     socket.on('loginExpired', function() {

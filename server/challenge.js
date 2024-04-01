@@ -5,8 +5,12 @@ let baseDeck = Deck.createDeck();
 
 class Challenge {
     constructor() {
-        this._leaderboard = [];
-        this._retryLeaderboard = [];
+        this._leaderboard = {};
+        this._retryLeaderboard = {};
+
+        this._arrLead = [];
+        this._arrRetryLead = [];
+
         this._settings = {'difficulty':DIFFICULTY.RUTHLESS, 'timeout': 0, 'aceHigh':false, 'locked':true};
         this._notation = Challenge.generateRandomNotationSequence();
 
@@ -21,11 +25,23 @@ class Challenge {
     }
 
     get leaderboard() {
-        return this._leaderboard.sort((a,b) => {return b.score - a.score;}).slice(0,10);
+        if (Object.keys(this._leaderboard).length != this._arrLead.length) {
+            this._arrLead = [];
+            for (let i in this._leaderboard) {
+                this._arrLead.push(this._leaderboard[i]);
+            }
+        }
+        return this._arrLead.sort((a,b) => {return b.score - a.score;}).slice(0,10);
     }
 
     get retryLeaderboard() {
-        return this._retryLeaderboard.sort((a,b) => {return b.score - a.score;}).slice(0,10);
+        if (Object.keys(this._retryLeaderboard).length != this._arrRetryLead.length) {
+            this._arrRetryLead = [];
+            for (let i in this._retryLeaderboard) {
+                this._arrRetryLead.push(this._retryLeaderboard[i]);
+            }
+        }
+        return this._arrRetryLead.sort((a,b) => {return +b.score.split('/')[0] - +a.score.split('/')[0];}).slice(0,10);
     }
 
     complete(username, points) {
@@ -33,18 +49,16 @@ class Challenge {
             //someone signed out while completing the challenge
             return;
         }
-        for (let i in this._leaderboard) {
-            if (this._leaderboard[i].name.toLowerCase() == username.toLowerCase()) {
-                this._retryLeaderboard.push({'name':username, 'score': points});
-                return;
-            }
+        if (!this._leaderboard[username.toLowerCase()]) {
+            this._leaderboard[username.toLowerCase()] = {'name':username, 'score': points};
+            this._retryLeaderboard[username.toLowerCase()] = {'name':username, 'score': points + '/1'};
+        } else {
+            this._retryLeaderboard[username.toLowerCase()] = {'name':username, 'score': points + '/' + (+this._retryLeaderboard[username.toLowerCase()].score.split('/')[1] + 1)};
         }
-        this._leaderboard.push({'name':username, 'score': points});
-        this._retryLeaderboard.push({'name':username, 'score': points});
     }
 
     static generateRandomNotationSequence() {
-       let goodHandWeight = 0.8;
+       let goodHandWeight = 0.7;
        let notation = '100/100/100/100/';
        let workingDeck = [];
        for (let i in baseDeck) {
