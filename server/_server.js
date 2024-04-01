@@ -2677,6 +2677,7 @@ function autoReconnect(socketId) {
     }
     if (players[socketId].username != 'Guest') {
         reconnectInfo.username = players[socketId].username;
+        reconnectInfo.dailyChallengeScore = challenge.getUserScore(players[socketId].username);
         if (players[socketId].userInfo) {
             reconnectInfo.elo = players[socketId].userInfo.elo;
             reconnectInfo.admin = players[socketId].userInfo.admin;
@@ -2701,7 +2702,15 @@ io.sockets.on('connection', function (socket) {
     }
     if (!SOCKET_LIST[socketId]) {
         SOCKET_LIST[socketId] = socket;
-        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null, timeLastMessageSent: 0 };
+
+        if (socket.handshake.auth.username && socket.handshake.auth.signInToken && checkSignIn(socket.handshake.auth.username, socket.handshake.auth.signInToken)) {
+            players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: username, token: signInToken, userInfo: null, timeLastMessageSent: 0 };
+            loadDatabaseInfo(username, socketId);
+            socket.emit('dailyChallengeScore', challenge.getUserScore(username));
+        } else {
+            players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null, timeLastMessageSent: 0 };
+        }
+
         SERVER.log('Player joined with socketID ' + socketId);
         SERVER.debug('Join time: ' + Date.now());
         numOnlinePlayers++;
@@ -3617,9 +3626,50 @@ function tick() {
     }
 }
 
+const signInCache = {};
+function checkSignIn(username, token) {
+    if (typeof username == 'string' && typeof token == 'string') {
+        if (signInCache[username] == token) {
+            return true;
+        }
+        try {
+            const options = {
+                hostname: 'sso.smach.us',
+                path: '/verify',
+                method: 'POST',
+                protocol: 'https:',
+                headers: {
+                    'Authorization': username.toLowerCase() + ':' + token
+                }
+            };
+            const req = https.request(options, (res) => {
+                if (res.statusCode === 200) {
+                    signInCache[username] = true;
+                    return true;
+                }
+            }).on("error", (err) => {
+            }).end();
+        } catch (err) {
+        }
+    }
+    return false;
+}
+
+function loadDatabaseInfo(username, socketId) {
+    Database.promiseCreateOrRetrieveUser(username).then((info) => {
+        SERVER.log('Loaded settings for user ' + username + ': ' + info);
+        players[socketId].userInfo = info;
+        socket.emit('elo',info.elo);
+        socket.emit('admin',info.admin);
+        socket.emit('defaultSettings',notationToObject(info.settings));
+    }).catch((err) => {
+        SERVER.warn('Database error:' + err);
+    });
+}
+
 function checkAllUsers() {
     for (let i in players) {
-        if (players[i].username != 'Guest' && players[i].type == PLAYER_TYPE.HUMAN) {
+        if (players[i].username != 'Guest') {
             try {
                 const options = {
                     hostname: 'sso.samts.us',

@@ -1063,17 +1063,17 @@ function onLoad() {
             localStorage.setItem('tarokyInstance',Math.random()*1000000000000000000);
         } while (localStorage.getItem('tarokyInstance') == 0);
     }
-
-    socket = io({auth: {token: localStorage.getItem('tarokyInstance')}});
-
     {
-        //Auto sign-in using cookies
-        let theUsername = getCookie('username');
-        let theToken = getCookie('token');
-        if (theUsername && theToken) {
-            socket.emit('login',theUsername,theToken);
-        }
-    }
+         //Auto sign-in using cookies
+         let theUsername = getCookie('username');
+         let theToken = getCookie('token');
+         if (theUsername && theToken) {
+             socket = io({auth: {token: localStorage.getItem('tarokyInstance'), username: theUsername, signInToken: theToken}});
+         } else {
+            socket = io({auth: {token: localStorage.getItem('tarokyInstance')}});
+         }
+     }
+
 
     //Create initial room cards
     drawRooms();
@@ -1134,6 +1134,9 @@ function onLoad() {
         if (typeof data.username !== 'undefined') {
             activeUsername = data.username;
             displaySignOut(data.username);
+            if (typeof data.dailyChallengeScore !== 'undefined') {
+                renderer.gamestate.dailyChallengeScore = data.dailyChallengeScore;
+            }
         } else {
             activeUsername = '';
         }
@@ -1217,6 +1220,9 @@ function onLoad() {
     socket.on('returnToGame', function() {
         returnToGameAvailable = true;
         drawRooms();
+    });
+    socket.on('dailyChallengeScore',function(ds) {
+        renderer.gamestate.dailyChallengeScore = ds;
     });
     //TODO save points and return save points
     socket.on('returnPlayers', function(returnPlayers) {
@@ -2219,8 +2225,8 @@ function createShareButton(score) {
     theButton.type = 'button';
     theButton.addEventListener('click', () => {
         const shareUrl = 'https://machtarok.com/';
-        const shareTitle = 'I made a ' + score + ' on MachTarok Daily!';
-        const shareText = 'I made a ' + score + ' on MachTarok Daily!\nCan you beat me? Sign in and click "Daily" to see: ';
+        const shareTitle = 'I made a ' + renderer.gamestate.dailyChallengeScore + ' on MachTarok Daily!';
+        const shareText = 'I made a ' + renderer.gamestate.dailyChallengeScore + ' on MachTarok Daily!\nCan you beat me? Sign in and click "Daily" to see: ';
         const shareMessage = `${shareText}\n${shareUrl}`;
 
         if (navigator.share) {

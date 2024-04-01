@@ -50,6 +50,10 @@ class Challenge {
         return temp;
     }
 
+    getUserScore(username) {
+        return this._leaderboard[username.toLowerCase()];
+    }
+
     complete(username, points) {
         if (username == 'Guest') {
             //someone signed out while completing the challenge
