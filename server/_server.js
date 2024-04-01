@@ -685,6 +685,7 @@ function playerAction(action, room, pn) {
             //TODO: show the player the discard pile so they can count on harder difficulties
             break;
         case 'resetBoard':
+        case 'retry':
             break;
         default:
             SERVER.warn('Unknown action: ' + action.action);

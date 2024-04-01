@@ -2218,6 +2218,9 @@ function resetBoardButton() {
 }
 
 function createShareButton(score) {
+    if (!renderer.gamestate.dailyChallengeScore) {
+        renderer.gamestate.dailyChallengeScore = score;
+    }
     let theButton = document.createElement('button');
     theButton.classList.add('choice-button');
     theButton.innerHTML = 'Share';
