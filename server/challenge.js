@@ -41,7 +41,13 @@ class Challenge {
                 this._arrRetryLead.push(this._retryLeaderboard[i]);
             }
         }
-        return this._arrRetryLead.sort((a,b) => {return +b.score.split('/')[0] - +a.score.split('/')[0];}).slice(0,10);
+        this._arrRetryLead = this._arrRetryLead.sort((a,b) => {return +b.score - +a.score;});
+        let temp = [];
+        for (let i=0; i<10 && i<this._arrRetryLead.length; i++) {
+            temp[i] = this._arrRetryLead[i];
+            temp.score = temp.score + ' (' + temp.tries + ')';
+        }
+        return temp;
     }
 
     complete(username, points) {
@@ -51,9 +57,12 @@ class Challenge {
         }
         if (!this._leaderboard[username.toLowerCase()]) {
             this._leaderboard[username.toLowerCase()] = {'name':username, 'score': points};
-            this._retryLeaderboard[username.toLowerCase()] = {'name':username, 'score': points + '/1'};
+            this._retryLeaderboard[username.toLowerCase()] = {'name':username, 'score': points, 'tries': 1};
         } else {
-            this._retryLeaderboard[username.toLowerCase()] = {'name':username, 'score': points + '/' + (+this._retryLeaderboard[username.toLowerCase()].score.split('/')[1] + 1)};
+            this._retryLeaderboard[username.toLowerCase()].tries += 1;
+            if (+this._retryLeaderboard[username.toLowerCase()].score < points) {
+                this._retryLeaderboard[username.toLowerCase()].score = points;
+            }
         }
     }
 
