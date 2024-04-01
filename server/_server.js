@@ -2706,7 +2706,8 @@ io.sockets.on('connection', function (socket) {
 
         if (socket.handshake.auth.username && socket.handshake.auth.signInToken && checkSignIn(socket.handshake.auth.username, socket.handshake.auth.signInToken)) {
             players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: username, token: signInToken, userInfo: null, timeLastMessageSent: 0 };
-            loadDatabaseInfo(username, socketId);
+            socket.emit('loginSuccess', username);
+            loadDatabaseInfo(username, socketId, socket);
             socket.emit('dailyChallengeScore', challenge.getUserScore(username));
         } else {
             players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null, timeLastMessageSent: 0 };
@@ -3656,7 +3657,7 @@ function checkSignIn(username, token) {
     return false;
 }
 
-function loadDatabaseInfo(username, socketId) {
+function loadDatabaseInfo(username, socketId, socket) {
     Database.promiseCreateOrRetrieveUser(username).then((info) => {
         SERVER.log('Loaded settings for user ' + username + ': ' + info);
         players[socketId].userInfo = info;
