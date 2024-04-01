@@ -2704,13 +2704,10 @@ io.sockets.on('connection', function (socket) {
     if (!SOCKET_LIST[socketId]) {
         SOCKET_LIST[socketId] = socket;
 
-        if (socket.handshake.auth.username && socket.handshake.auth.signInToken && checkSignIn(socket.handshake.auth.username, socket.handshake.auth.signInToken)) {
-            players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: username, token: signInToken, userInfo: null, timeLastMessageSent: 0 };
-            socket.emit('loginSuccess', username);
-            loadDatabaseInfo(username, socketId, socket);
-            socket.emit('dailyChallengeScore', challenge.getUserScore(username));
-        } else {
-            players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null, timeLastMessageSent: 0 };
+        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null, timeLastMessageSent: 0 };
+
+        if (socket.handshake.auth.username && socket.handshake.auth.signInToken) {
+            attemptSignIn(socket.handshake.auth.username, socket.handshake.auth.signInToken, socket, socketId)
         }
 
         SERVER.log('Player joined with socketID ' + socketId);
@@ -3629,10 +3626,16 @@ function tick() {
 }
 
 const signInCache = {};
-function checkSignIn(username, token) {
-    if (typeof username == 'string' && typeof token == 'string') {
-        if (signInCache[username] == token) {
-            return true;
+function attemptSignIn(username, token, socket, socketId) {
+    if (typeof username === 'string' && typeof token === 'string') {
+        if (signInCache[username.toLowerCase()] == token) {
+            players[socketId].username = username;
+            players[socketId].token = token;
+            socket.emit('loginSuccess', username);
+            loadDatabaseInfo(username, socketId, socket);
+            socket.emit('dailyChallengeScore', challenge.getUserScore(username));
+            SERVER.log('User ' + socketId + ' did auto sign-in (cache) ' + socket.handshake.auth.username);
+            return;
         }
         try {
             const options = {
@@ -3644,18 +3647,25 @@ function checkSignIn(username, token) {
                     'Authorization': username.toLowerCase() + ':' + token
                 }
             };
-            const req = https.request(options, (res) => {
+            https.request(options, (res) => {
                 if (res.statusCode === 200) {
-                    signInCache[username] = true;
-                    return true;
+                    signInCache[username.toLowerCase()] = true;
+                    players[socketId].username = username;
+                    players[socketId].token = token;
+                    socket.emit('loginSuccess', username);
+                    loadDatabaseInfo(username, socketId, socket);
+                    socket.emit('dailyChallengeScore', challenge.getUserScore(username));
+                    SERVER.log('User ' + socketId + ' did auto sign-in ' + socket.handshake.auth.username);
+                } else {
+                    SERVER.log(username + ' failed to sign in with status code ' + res.statusCode);
                 }
             }).on("error", (err) => {
             }).end();
         } catch (err) {
         }
     }
-    return false;
 }
+
 
 function loadDatabaseInfo(username, socketId, socket) {
     Database.promiseCreateOrRetrieveUser(username).then((info) => {
