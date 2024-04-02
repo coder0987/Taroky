@@ -3681,10 +3681,10 @@ function loadDatabaseInfo(username, socketId, socket) {
 
 function checkAllUsers() {
     for (let i in players) {
-        if (players[i].username != 'Guest') {
+        if (players[i].username != 'Guest' && SOCKET_LIST[players[i].socket]) {
             try {
                 const options = {
-                    hostname: 'sso.samts.us',
+                    hostname: 'sso.smach.us',
                     path: '/verify',
                     method: 'POST',
                     protocol: 'https:',
