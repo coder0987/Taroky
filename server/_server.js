@@ -2458,11 +2458,7 @@ function actionCallback(action, room, pn) {
             }
 
             room.informPlayers(room.board.notation + room.settingsNotation, MESSAGE_TYPE.NOTATION, {povinnost: room.board.povinnost});
-            for (let i in players) {
-                if (players[i].socket != -1) {
-                    returnToGame[players[i].socket] = false;
-                }
-            }
+
 
             actionTaken = true;
 
@@ -3681,7 +3677,7 @@ function loadDatabaseInfo(username, socketId, socket) {
 
 function checkAllUsers() {
     for (let i in players) {
-        if (players[i].username != 'Guest' && SOCKET_LIST[players[i].socket]) {
+        if (players[i].username != 'Guest' && SOCKET_LIST[players[i].id]) {
             try {
                 const options = {
                     hostname: 'sso.smach.us',
@@ -3696,18 +3692,18 @@ function checkAllUsers() {
                     if (res.statusCode !== 200) {
                         players[i].username = 'Guest';
                         players[i].token = -1;
-                        SOCKET_LIST[players[i].socket].emit('loginExpired');
+                        SOCKET_LIST[players[i].id].emit('loginExpired');
                     }
                 }).on("error", (err) => {
                     console.log("Error: ", err)
                     players[i].username = 'Guest';
                     players[i].token = -1;
-                    SOCKET_LIST[players[i].socket].emit('loginExpired');
+                    SOCKET_LIST[players[i].id].emit('loginExpired');
                 }).end();
             } catch (err) {
                 SERVER.error(err);
-                if (players[i].socket != -1) {
-                    SOCKET_LIST[players[i].socket].emit('loginExpired');
+                if (players[i].id != -1) {
+                    SOCKET_LIST[players[i].id].emit('loginExpired');
                 }
                 players[i].username = 'Guest';
                 players[i].token = -1;
