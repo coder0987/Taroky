@@ -18,6 +18,7 @@ window.addEventListener('load', function() {
     form.addEventListener('submit', send, true)
     document.getElementById("saveExitTop").addEventListener('click', () => {shouldLeave = true});
     document.getElementById("exitTop").addEventListener('click', () => {window.close();});
+    syncValWithSwitch()
     load();
 
 }, false);
@@ -54,6 +55,15 @@ function chatClick(e) {
     }
 }
 
+function syncValWithSwitch() {
+    if (aceHighSwitch.checked != (aceHighSwitch.value == 'on')) {
+        aceHighSwitch.checked = !aceHighSwitch.checked;
+    }
+    if (chatSwitch.checked != (chatSwitch.value == 'on')) {
+        chatSwitch.checked = !chatSwitch.checked;
+    }
+}
+
 function preferencesCallback(event) {
     //console.log(event);
     console.log(this.status);
@@ -77,6 +87,9 @@ function getPreferencesCallback(event) {
         let avatar = pref.avatar;
         let deck = pref.deck;
         let chat = pref.chat;
+
+        chatSwitch.value = chat ? 'on' : 'off';
+
         notationToSettingsPreferences(pref.settings);
 
         document.getElementById('av0').removeAttribute('checked');
@@ -84,10 +97,6 @@ function getPreferencesCallback(event) {
 
         document.getElementById('mach-deck-thumb').removeAttribute('checked');
         document.getElementById(deck).setAttribute('checked','checked');
-
-        if (!chat) {
-            chatSwitch.click();
-        }
     } else {
         console.log('Error: ');
         console.log(this.response);
@@ -126,9 +135,12 @@ function notationToSettingsPreferences(notation) {
                 break;
             case 'aceHigh':
                 if (rule != 'false') {
-                    aceHighSwitch.click();
+                    aceHighSwitch.value = 'on';
+                } else {
+                    aceHighSwitch.value = 'off';
                 }
             default:
         }
     }
+    syncValWithSwitch()
 }
