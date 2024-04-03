@@ -69,7 +69,7 @@ class Database {
                 info = await Database.getUser(username);
             } else {
                 await conn.query("INSERT INTO users (username) VALUES (?)", [username]);
-                info = {username: username, elo: 300, admin: false, settings: null};
+                info = {username: username, elo: 300, admin: false, settings: null, avatar: 0, deck: 'mach-deck-thumb', chat: true};
             }
         } catch (err) {
             throw err;
@@ -84,10 +84,10 @@ class Database {
     static async updateUser(username, column, data) {
         username = username.toLowerCase();
         let conn;
-        if (column == 'settings' || column == 'admin' || column == 'elo') {
+        if (column == 'settings' || column == 'admin' || column == 'elo' || column == 'avatar' || column == 'deck' || column == 'chat') {
             try {
                 conn = await pool.getConnection();
-                await conn.query("UPDATE users SET ? = ? WHERE username in (?)", [column, data, username]);
+                await conn.query("UPDATE users SET " + column + " = ? WHERE username in (?)", [data, username]);
             } catch (err) {
                 throw err;
             } finally {
@@ -101,6 +101,12 @@ class Database {
     }
     static saveSettings(username,settings) {
         Promise.resolve(Database.updateUser(username,'settings',settings));
+    }
+    static saveUserPreferences(username,settings,avatar,deck,chat) {
+        Promise.resolve(Database.updateUser(username,'settings',settings));
+        Promise.resolve(Database.updateUser(username,'avatar',avatar));
+        Promise.resolve(Database.updateUser(username,'deck',deck));
+        Promise.resolve(Database.updateUser(username,'chat',chat));
     }
 }
 

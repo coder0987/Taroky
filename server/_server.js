@@ -56,9 +56,25 @@ const BASE_FOLDER = __dirname.substring(0,__dirname.length - 6);
 app.use(express.static(BASE_FOLDER + 'public'));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.post('/preferences', function (req, res) {
-    res.setHeader('Content-Type', 'text/plain')
-    res.write('you posted:\n')
-    res.end(JSON.stringify(req.body, null, 2))
+    if(!req.headers.authorization) {
+        console.log('Sent request without username or password');
+        res.writeHead(403);
+        return res.end();
+    }
+    let username, token;
+    try {
+        const base64Credentials = req.headers.authorization.split(' ')[1];
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('utf8');
+        [username, token] = credentials.split(':');
+    } catch (err) {
+        console.log('Missing or corrupted credentials');
+        res.writeHead(403);
+        return res.end();
+    }
+    saveUserPreferencesConditional(username, token, req.body);
+
+    res.writeHead(200);
+    return res.end()
 });
 app.get('/preferences', function (req, res) {
     if(!req.headers.authorization) {
@@ -77,7 +93,21 @@ app.get('/preferences', function (req, res) {
         return res.end();
     }
 
-    sendUserInfoConditional(res, username, token);
+    let once = false;
+
+    sendUserInfoConditional(res, username, token, function(e) {
+        console.log('Error GET /preferences: ' + e);
+        if (!once) {
+            once = true;
+            res.status(403);
+            return res.end();
+        }
+    }, function(e) {
+        if (!once) {
+            once = true;
+            return res.status(200).json(JSON.stringify(e));
+        }
+    });
 });
 const server = require('http').createServer(app);
 
@@ -2705,6 +2735,9 @@ function autoReconnect(socketId) {
             reconnectInfo.elo = players[socketId].userInfo.elo;
             reconnectInfo.admin = players[socketId].userInfo.admin;
             reconnectInfo.defaultSettings = notationToObject(players[socketId].userInfo.settings);
+            reconnectInfo.chat = players[socketId].userInfo.chat;
+            reconnectInfo.avatar = players[socketId].userInfo.avatar;
+            reconnectInfo.deck = players[socketId].userInfo.deck;
         }
     }
     reconnectInfo.leaderboard = challenge.leaderboard;
@@ -3461,6 +3494,9 @@ io.sockets.on('connection', function (socket) {
                             socket.emit('elo',info.elo);
                             socket.emit('admin',info.admin);
                             socket.emit('defaultSettings',notationToObject(info.settings));
+                            socket.emit('chat',info.chat);
+                            socket.emit('avatar',info.avatar);
+                            socket.emit('deckChoice',info.deck);
                         }).catch((err) => {
                             SERVER.warn('Database error:' + err);
                         });
@@ -3688,18 +3724,62 @@ function attemptSignIn(username, token, socket, socketId) {
     }
 }
 
-function sendUserInfoConditional(res, username, token) {
+function saveUserPreferencesConditional(username, token, preferences) {
+    let avatar = +preferences.avatar;
+    let chat = preferences.chat == 'on';
+    let deck = preferences.deck;
+
+    let settings = Room.settingsToNotation({
+        'difficulty': +preferences.difficulty,
+        'timeout': +preferences.timeout,
+        'aceHigh': preferences.aceHigh == 'on',
+        'locked': preferences.locked == 'on'
+    });
+
+    if (signInCache[username] == token) {
+        Database.saveUserPreferences(username,settings,avatar,deck,chat);
+        for (let i in players) {
+            if (players[i].username == username) {
+                loadDatabaseInfo(username, players[i].id, players[i].socket);
+            }
+        }
+    }
+    try {
+        const options = {
+            hostname: 'sso.smach.us',
+            path: '/verify',
+            method: 'POST',
+            protocol: 'https:',
+            headers: {
+                'Authorization': username.toLowerCase() + ':' + token
+            }
+        };
+        https.request(options, (ssoRes) => {
+            if (ssoRes.statusCode === 200) {
+                signInCache[username.toLowerCase()] = token;
+                Database.saveUserPreferences(username,settings,avatar,deck,chat);
+                for (let i in players) {
+                    if (players[i].username == username) {
+                        loadDatabaseInfo(username, players[i].id, players[i].socket);
+                    }
+                }
+            } else {
+                SERVER.log(username + ' failed to sign in with status code ' + ssoRes.statusCode);
+            }
+        }).on("error", (err) => {
+        }).end();
+    } catch (err) {
+    }
+}
+
+function sendUserInfoConditional(res, username, token, error, callback) {
     if (signInCache[username] == token) {
         //Good to go
         Database.promiseCreateOrRetrieveUser(username).then((info) => {
             SERVER.log('Loaded settings for user ' + username + ': ' + info);
-            res.writeHead(200);
-            res.setHeader('Content-Type', 'application/json')
-            return res.end(JSON.stringify(info, null, 2));
+            callback(info);
         }).catch((err) => {
-            SERVER.warn('Database error:' + err);
-            res.writeHead(500);
-            return res.end();
+            error(err);
         });
         return;
     }
@@ -3714,43 +3794,25 @@ function sendUserInfoConditional(res, username, token) {
             }
         };
         https.request(options, (ssoRes) => {
-            if (res.statusCode === 200) {
+            if (ssoRes.statusCode === 200) {
                 signInCache[username.toLowerCase()] = token;
                 Database.promiseCreateOrRetrieveUser(username).then((info) => {
                     SERVER.log('Loaded settings for user ' + username + ': ' + info);
-                    if (res.finished) {
-                        throw "Response has already been returned";
-                    }
-                    res.writeHead(200);
-                    res.setHeader('Content-Type', 'application/json')
-                    return res.end(JSON.stringify(info, null, 2));
+                    callback(info);
                 }).catch((err) => {
                     SERVER.warn('Database error:' + err);
-                    if (!res.finished) {
-                        res.writeHead(500);
-                        return res.end();
-                    }
+                    error(err);
                 });
             } else {
                 SERVER.log(username + ' failed to sign in with status code ' + ssoRes.statusCode);
-                if (!res.finished) {
-                    res.writeHead(403);
-                    return res.end();
-                }
+                error()
             }
         }).on("error", (err) => {
-            if (!res.finished) {
-                res.writeHead(403);
-                return res.end();
-            }
+            error(err);
         }).end();
     } catch (err) {
-        if (!res.finished) {
-            res.writeHead(403);
-            return res.end();
-        }
+        error(err);
     }
-    return;
 }
 
 function loadDatabaseInfo(username, socketId, socket) {
@@ -3760,6 +3822,9 @@ function loadDatabaseInfo(username, socketId, socket) {
         socket.emit('elo',info.elo);
         socket.emit('admin',info.admin);
         socket.emit('defaultSettings',notationToObject(info.settings));
+        socket.emit('chat',info.chat);
+        socket.emit('avatar',info.avatar);
+        socket.emit('deckChoice',info.deck);
     }).catch((err) => {
         SERVER.warn('Database error:' + err);
     });

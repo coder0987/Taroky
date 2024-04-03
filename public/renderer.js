@@ -173,11 +173,15 @@ class NavBarRenderer {
         this.nav.classList.add('hidden');
     }
     updateAvatar() {
+        if (!this._profile) {this._profile = document.getElementById("profile-a")}
+        if (!this._avatar ) {this._avatar  = document.getElementById("profile-img")}
         if (renderer.gamestate.signedIn) {
             this._profile.classList.remove('no-click');
+            this._profile.href = '/userpreferences.html';
             this._avatar.src = '/assets/profile-pictures/profile-' + renderer.gamestate.avatar + '.png';
         } else {
             this._profile.classList.add('no-click');
+            this._profile.href = '';
             this._avatar.src = '/assets/profile-pictures/profile-0.png';
         }
     }

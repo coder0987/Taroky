@@ -116,6 +116,14 @@ class Room {
         return newCode;
     }
 
+    static settingsToNotation(settings) {
+        let settingNotation = '';
+        for (let i in settings) {
+            settingNotation += i + '=' + settings[i] + ';';
+        }
+        return settingNotation.substring(0,settingNotation.length - 1);
+    }
+
     // Getters
     get settings() {
         return this._settings;

@@ -134,6 +134,30 @@ function generateDeck() {
         //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
         card.src = '/assets/' + deck + '/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + deck_ending;
     }
+    generateCardBack(true);
+}
+
+function generateCardBack(a) {
+    let deck = getCookie('deck');
+    let deck_ending = '.jpg';
+    if (!deck || deck == 'mach-deck-thumb') {
+        deck = 'mach-deck-thumb';
+        deck_ending = '-t.png';
+    }
+    if (document.getElementById('cardBack')) {
+        if (!a) {hideCardBack;}
+    } else {
+        let card = document.createElement('img');
+        card.hidden = true;
+        card.id = 'cardBack';
+        card.src = '/assets/' + deck + '/card-back' + deck_ending;
+        card.alt = 'The back of a card';
+        document.getElementById('deck').appendChild(card);
+    }
+}
+function hideCardBack() {
+    document.getElementById('cardBack').setAttribute('hidden','hidden');
+    document.getElementById('deck').appendChild(document.getElementById('cardBack'));
 }
 
 function moveDeckToDeck() {
@@ -2381,17 +2405,7 @@ function exitCurrentRoom(value) {
         currentAction = null;
         discardingOrPlaying = true;
         removeHostTools();
-        if (document.getElementById('cardBack')) {
-            document.getElementById('cardBack').setAttribute('hidden','hidden');
-            document.getElementById('deck').appendChild(document.getElementById('cardBack'));
-        } else {
-            let card = document.createElement('img');
-            card.hidden = true;
-            card.id = 'cardBack';
-            card.src = '/assets/mach-deck-thumb/card-back-t.png';
-            card.alt = 'The back of a card';
-            document.getElementById('deck').appendChild(card);
-        }
+        generateCardBack();
         stopActionTimer();
         document.getElementById('center').innerHTML = '';//clears choice buttons
         document.getElementById('currentAction').innerHTML = '';
@@ -2425,17 +2439,7 @@ function clearScreen() {
         document.getElementById('roundInfo' + (i+1)).textContent = '';
     }
     removeHostTools();
-    if (document.getElementById('cardBack')) {
-        document.getElementById('cardBack').setAttribute('hidden','hidden');
-        document.getElementById('deck').appendChild(document.getElementById('cardBack'));
-    } else {
-        let card = document.createElement('img');
-        card.hidden = true;
-        card.id = 'cardBack';
-        card.src = '/assets/mach-deck-thumb/card-back-t.png';
-        card.alt = 'The back of a card';
-        document.getElementById('deck').appendChild(card);
-    }
+    generateCardBack();
 }
 
 function sortCards(toSort) {
