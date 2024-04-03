@@ -3718,26 +3718,37 @@ function sendUserInfoConditional(res, username, token) {
                 signInCache[username.toLowerCase()] = token;
                 Database.promiseCreateOrRetrieveUser(username).then((info) => {
                     SERVER.log('Loaded settings for user ' + username + ': ' + info);
+                    if (res.finished) {
+                        throw "Response has already been returned";
+                    }
                     res.writeHead(200);
                     res.setHeader('Content-Type', 'application/json')
                     return res.end(JSON.stringify(info, null, 2));
                 }).catch((err) => {
                     SERVER.warn('Database error:' + err);
-                    res.writeHead(500);
-                    return res.end();
+                    if (!res.finished) {
+                        res.writeHead(500);
+                        return res.end();
+                    }
                 });
             } else {
                 SERVER.log(username + ' failed to sign in with status code ' + ssoRes.statusCode);
+                if (!res.finished) {
+                    res.writeHead(403);
+                    return res.end();
+                }
+            }
+        }).on("error", (err) => {
+            if (!res.finished) {
                 res.writeHead(403);
                 return res.end();
             }
-        }).on("error", (err) => {
-            res.writeHead(403);
-            return res.end();
         }).end();
     } catch (err) {
-        res.writeHead(403);
-        return res.end();
+        if (!res.finished) {
+            res.writeHead(403);
+            return res.end();
+        }
     }
     return;
 }
