@@ -112,11 +112,20 @@ class ChatBox {
 
     hide() {
         //TODO separate chat and ledger
-        this.container.setAttribute('hidden','hidden');
+        document.getElementById('chat-box-container').classList.add('hidden');
+        document.getElementById('hand').classList.add('col-md-12');
+        document.getElementById('hand').classList.remove('col-md-6');
+        document.getElementById('chat-toggler').classList.add('hidden');
+        if (in_chat) {
+            chat_toggle();
+        }
     }
 
     show() {
-        this.container.removeAttribute('hidden');
+        document.getElementById('chat-box-container').classList.remove('hidden');
+        document.getElementById('hand').classList.add('col-md-6');
+        document.getElementById('hand').classList.remove('col-md-12');
+        document.getElementById('chat-toggler').classList.remove('hidden');
     }
 }
 

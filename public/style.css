@@ -350,9 +350,6 @@ h4 {
     color: var(--white);
 }
 
-.hidden {
-    display: none;
-}
 
 .flash {
     animation: flash-animation 0.5s;
@@ -1021,4 +1018,8 @@ div.hand.twelve-cards img {
 .disabled {
     background-color: var(--gray);
     cursor: not-allowed;
+}
+
+.hidden {
+    display: none !important;
 }
