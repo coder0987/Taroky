@@ -116,23 +116,19 @@ function notationToSettingsPreferences(notation) {
     let theSettings = notation.split(';')
     for (let i in theSettings) {
         let [setting,rule] = theSettings[i].split('=');
-        if (u(setting) || u(rule)) {
-            SERVER.debug('Undefined setting or rule')
-        } else {
-            switch (setting) {
-                case 'difficulty':
-                    document.getElementById('diff3').removeAttribute('checked');
-                    document.getElementById('diff' + rule).setAttribute('checked','checked');
-                    break;
-                case 'timeout':
-                    timeoutInput.value = +rule;
-                    break;
-                case 'aceHigh':
-                    if (rule != 'false') {
-                        aceHighSwitch.click();
-                    }
-                default:
-            }
+        switch (setting) {
+            case 'difficulty':
+                document.getElementById('diff3').removeAttribute('checked');
+                document.getElementById('diff' + rule).setAttribute('checked','checked');
+                break;
+            case 'timeout':
+                timeoutInput.value = +rule;
+                break;
+            case 'aceHigh':
+                if (rule != 'false') {
+                    aceHighSwitch.click();
+                }
+            default:
         }
     }
 }
