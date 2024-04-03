@@ -109,6 +109,15 @@ class ChatBox {
         }
         this.chatMessages = [];
     }
+
+    hide() {
+        //TODO separate chat and ledger
+        this.container.setAttribute('hidden','hidden');
+    }
+
+    show() {
+        this.container.removeAttribute('hidden');
+    }
 }
 
 class ChatMessage {

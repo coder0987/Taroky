@@ -159,6 +159,8 @@ class NavBarRenderer {
     constructor(loaded) {
         this._navbar = document.getElementById("navbar");
         this._accountHandler = document.getElementById("accountHandler");
+        this._profile = document.getElementById('profile-a');
+        this._avatar = document.getElementById('profile-img');
         if (loaded) {
             $('body').addClass('loaded');
             this._navbar.classList.add("fixed-top");
@@ -169,6 +171,15 @@ class NavBarRenderer {
     }
     clear() {
         this.nav.classList.add('hidden');
+    }
+    updateAvatar() {
+        if (renderer.gamestate.signedIn) {
+            this._profile.classList.remove('no-click');
+            this._avatar.src = '/assets/profile-pictures/profile-' + renderer.gamestate.avatar + '.png';
+        } else {
+            this._profile.classList.add('no-click');
+            this._avatar.src = '/assets/profile-pictures/profile-0.png';
+        }
     }
     renderSignIn(href) {
         if (!this._accountHandler) {this._accountHandler = document.getElementById("accountHandler")}

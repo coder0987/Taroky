@@ -98,6 +98,8 @@ let discardingOrPlaying = true;
 let timeOffset = 0;
 let elo;
 let admin;
+let avatar = 0;
+let displayChat = true;
 let dailyScore = 0;
 let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
 let activeUsername = '';
@@ -111,12 +113,19 @@ for (let v=0;v<22;v++)
 //UI (No game elements)
 
 function generateDeck() {
+    let deck = getCookie('deck');
+    let deck_ending = '.jpg';
+    if (!deck || deck == 'mach-deck-thumb') {
+        deck = 'mach-deck-thumb';
+        deck_ending = '-t.png';
+    }
+
     for (let i in baseDeck) {
         let card = document.createElement('img');
         card.hidden = true;
         card.id = baseDeck[i].value + baseDeck[i].suit;
         //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
-        card.src = '/assets/mach-deck-thumb/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + '-t.png';
+        card.src = '/assets/' + deck + '/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + deck_ending;
         card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
         document.getElementById('deck').appendChild(card);
     }
@@ -415,7 +424,7 @@ function keyListener(e) {
 
     /**loader */
 $(document).ready(function() {
-    renderer = new Renderer({});
+    renderer = new Renderer({avatar: 0});
     onLoad();
     setTimeout(function(){
         renderer.hud.nav = new NavBarRenderer(true);
@@ -1083,12 +1092,15 @@ function onLoad() {
        window.location.reload();
     });
 
-    socket.on('loginSuccess', function(username) {
+    socket.on('loginSuccess', function(username, avatar) {
         addBoldMessage('You successfully signed in as ' + username);
         activeUsername = username;
         displaySignOut(username);
         enableChat();
         document.getElementById('saveButton').removeAttribute('hidden');
+        renderer.gamestate.signedIn = true;
+        renderer.gamestate.avatar = avatar;
+        renderer.hud.nav.updateAvatar();
         renderer.hud.rooms.render();
     });
 
@@ -1099,7 +1111,10 @@ function onLoad() {
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');
+        renderer.gamestate.signedIn = false;
+        renderer.hud.nav.updateAvatar();
         renderer.hud.rooms.render();
+        chatBox.show();
     });
 
     socket.on('loginExpired', function() {
@@ -1111,7 +1126,10 @@ function onLoad() {
         document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
         disableChat();
+        renderer.gamestate.signedIn = false;
+        renderer.hud.nav.updateAvatar();
         renderer.hud.rooms.render();
+        chatBox.show();
     });
 
     socket.on('logout', function() {
@@ -1123,7 +1141,10 @@ function onLoad() {
         document.getElementById('saveButton').setAttribute('hidden','hidden');
         displaySignIn();
         disableChat();
+        renderer.gamestate.signedIn = false;
+        renderer.hud.nav.updateAvatar();
         renderer.hud.rooms.render();
+        chatBox.show();
     });
 
     socket.on('autoReconnect', function(data) {
@@ -1133,11 +1154,13 @@ function onLoad() {
         console.log(data);
         if (typeof data.username !== 'undefined') {
             activeUsername = data.username;
+            renderer.gamestate.signedIn = true;
             displaySignOut(data.username);
             if (typeof data.dailyChallengeScore !== 'undefined') {
                 renderer.gamestate.dailyChallengeScore = data.dailyChallengeScore;
             }
         } else {
+            renderer.gamestate.signedIn = false;
             activeUsername = '';
         }
         if (typeof data.defaultSettings !== 'undefined' && data.defaultSettings) {
@@ -1200,6 +1223,19 @@ function onLoad() {
         }
         if (typeof data.elo !== 'undefined') {
             elo = data.elo;
+        }
+        if (typeof data.avatar !== 'undefined') {
+            avatar = data.avatar;
+            renderer.gamestate.avatar = avatar;
+            renderer.hud.nav.updateAvatar();
+        }
+        if (typeof data.chat !== 'undefined') {
+            displayChat = data.chat;
+            if (displayChat) {
+                chatBox.show();
+            } else {
+                chatBox.hide();
+            }
         }
         if (data.admin) {
             admin = data.admin;
@@ -1537,6 +1573,19 @@ function onLoad() {
     socket.on('elo', function(returnElo) {
         elo = returnElo;
     });
+    socket.on('avatar', function(returnAvatar) {
+        avatar = returnAvatar;
+        renderer.gamestate.avatar = avatar;
+        renderer.hud.nav.updateAvatar();
+    });
+    socket.on('chat', function(returnChat) {
+        displayChat = returnChat;
+        if (displayChat) {
+            chatBox.show();
+        } else {
+            chatBox.hide();
+        }
+    })
     socket.on('admin', function(returnAdmin) {
         if (returnAdmin) {
             admin = returnAdmin;

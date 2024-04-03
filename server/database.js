@@ -87,7 +87,7 @@ class Database {
         if (column == 'settings' || column == 'admin' || column == 'elo') {
             try {
                 conn = await pool.getConnection();
-                await conn.query("UPDATE users SET " + column + " = ? WHERE username in (?)", [data, username]);
+                await conn.query("UPDATE users SET ? = ? WHERE username in (?)", [column, data, username]);
             } catch (err) {
                 throw err;
             } finally {

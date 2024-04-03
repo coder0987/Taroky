@@ -13,6 +13,7 @@
     cursor: pointer;
 }
 
+
 body {
     background-color: var(--green);
     padding-top: 4rem;
@@ -295,6 +296,10 @@ h4 {
 .navbar-brand {
     color: var(--red);
     font-weight: bold;
+}
+
+.navbar-nav {
+    width: 100%;
 }
 
 
@@ -633,6 +638,26 @@ div.hand.twelve-cards img {
     height: calc(100% - 50px);
 }
 
+.nav-size {
+    height: auto;
+    width: 2.5rem;
+}
+
+.profile-link {
+    padding-bottom: 0;
+    padding-top: 0;
+}
+
+.no-click {
+    cursor: not-allowed;
+}
+
+.avatar {
+    /*
+        For the user avatars
+    */
+}
+
 @media (min-width: 576px) {
     .back {
         width: 30%;
@@ -786,6 +811,11 @@ div.hand.twelve-cards img {
     }
     .grayed {
         display: inline-flex;
+    }
+    .profile-link {
+        margin-left: auto;
+        margin-right: 0;
+        display: block;
     }
 }
 

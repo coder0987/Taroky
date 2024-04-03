@@ -45,6 +45,7 @@ const express = require('express');
 const { diffieHellman } = require('crypto');
 const math = require('mathjs');
 const schedule = require('node-schedule');
+const bodyParser = require('body-parser');
 
 const app = express();
 const START_TIME = Date.now();
@@ -53,6 +54,31 @@ const BASE_FOLDER = __dirname.substring(0,__dirname.length - 6);
 
 //Standard file-serving
 app.use(express.static(BASE_FOLDER + 'public'));
+app.use(bodyParser.urlencoded({ extended: false }))
+app.post('/preferences', function (req, res) {
+    res.setHeader('Content-Type', 'text/plain')
+    res.write('you posted:\n')
+    res.end(JSON.stringify(req.body, null, 2))
+});
+app.get('/preferences', function (req, res) {
+    if(!req.headers.authorization) {
+        console.log('Sent request without username or password');
+        res.writeHead(403);
+        return res.end();
+    }
+    let username, token;
+    try {
+        const base64Credentials = req.headers.authorization.split(' ')[1];
+        const credentials = Buffer.from(base64Credentials, 'base64').toString('utf8');
+        [username, token] = credentials.split(':');
+    } catch (err) {
+        console.log('Missing or corrupted credentials');
+        res.writeHead(403);
+        return res.end();
+    }
+
+    sendUserInfoConditional(res, username, token);
+});
 const server = require('http').createServer(app);
 
 //SOCKETS
@@ -3649,7 +3675,7 @@ function attemptSignIn(username, token, socket, socketId) {
             };
             https.request(options, (res) => {
                 if (res.statusCode === 200) {
-                    signInCache[username.toLowerCase()] = true;
+                    signInCache[username.toLowerCase()] = token;
                     players[socketId].username = username;
                     players[socketId].token = token;
                     socket.emit('loginSuccess', username);
@@ -3666,6 +3692,59 @@ function attemptSignIn(username, token, socket, socketId) {
     }
 }
 
+function sendUserInfoConditional(res, username, token) {
+    if (signInCache[username] == token) {
+        //Good to go
+        Database.promiseCreateOrRetrieveUser(username).then((info) => {
+            SERVER.log('Loaded settings for user ' + username + ': ' + info);
+            res.writeHead(200);
+            res.setHeader('Content-Type', 'application/json')
+            return res.end(JSON.stringify(info, null, 2));
+        }).catch((err) => {
+            SERVER.warn('Database error:' + err);
+            res.writeHead(500);
+            return res.end();
+        });
+        return;
+    }
+    try {
+        const options = {
+            hostname: 'sso.smach.us',
+            path: '/verify',
+            method: 'POST',
+            protocol: 'https:',
+            headers: {
+                'Authorization': username.toLowerCase() + ':' + token
+            }
+        };
+        https.request(options, (ssoRes) => {
+            if (res.statusCode === 200) {
+                signInCache[username.toLowerCase()] = token;
+                Database.promiseCreateOrRetrieveUser(username).then((info) => {
+                    SERVER.log('Loaded settings for user ' + username + ': ' + info);
+                    res.writeHead(200);
+                    res.setHeader('Content-Type', 'application/json')
+                    return res.end(JSON.stringify(info, null, 2));
+                }).catch((err) => {
+                    SERVER.warn('Database error:' + err);
+                    res.writeHead(500);
+                    return res.end();
+                });
+            } else {
+                SERVER.log(username + ' failed to sign in with status code ' + ssoRes.statusCode);
+                res.writeHead(403);
+                return res.end();
+            }
+        }).on("error", (err) => {
+            res.writeHead(403);
+            return res.end();
+        }).end();
+    } catch (err) {
+        res.writeHead(403);
+        return res.end();
+    }
+    return;
+}
 
 function loadDatabaseInfo(username, socketId, socket) {
     Database.promiseCreateOrRetrieveUser(username).then((info) => {
