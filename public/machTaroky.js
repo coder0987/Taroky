@@ -121,13 +121,18 @@ function generateDeck() {
     }
 
     for (let i in baseDeck) {
-        let card = document.createElement('img');
+        let card;
+        if (document.getElementById(baseDeck[i].value + baseDeck[i].suit)) {
+            card = document.getElementById(baseDeck[i].value + baseDeck[i].suit);
+        } else {
+            card = document.createElement('img');
+            card.id = baseDeck[i].value + baseDeck[i].suit;
+            card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
+            document.getElementById('deck').appendChild(card);
+        }
         card.hidden = true;
-        card.id = baseDeck[i].value + baseDeck[i].suit;
         //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
         card.src = '/assets/' + deck + '/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + deck_ending;
-        card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
-        document.getElementById('deck').appendChild(card);
     }
 }
 
@@ -1109,6 +1114,7 @@ function onLoad() {
         displaySignIn();
         document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'deck=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');
         renderer.gamestate.signedIn = false;
@@ -1236,6 +1242,10 @@ function onLoad() {
             } else {
                 chatBox.hide();
             }
+        }
+        if (typeof data.deck !== 'undefined') {
+            document.cookie = 'deck=' + data.deck;
+            generateDeck();
         }
         if (data.admin) {
             admin = data.admin;
@@ -1585,6 +1595,10 @@ function onLoad() {
         } else {
             chatBox.hide();
         }
+    })
+    socket.on('deckChoice', function(returnDeckChoice) {
+        document.cookie = 'deck=' + returnDeckChoice;
+        generateDeck();
     })
     socket.on('admin', function(returnAdmin) {
         if (returnAdmin) {
@@ -2453,6 +2467,7 @@ function displaySignOut(withName) {
 function signOut() {
    document.cookie = 'username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+   document.cookie = 'deck=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
    renderer.hud.nav.accountHandler.removeEventListener('click',signOut);
 }
 
