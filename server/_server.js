@@ -2762,7 +2762,7 @@ io.sockets.on('connection', function (socket) {
     if (!SOCKET_LIST[socketId]) {
         SOCKET_LIST[socketId] = socket;
 
-        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: null, timeLastMessageSent: 0 };
+        players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: {avatar:0}, timeLastMessageSent: 0 };
 
         if (socket.handshake.auth.username && socket.handshake.auth.signInToken) {
             attemptSignIn(socket.handshake.auth.username, socket.handshake.auth.signInToken, socket, socketId)
@@ -2896,7 +2896,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['players'][i].socket = socketId;
                     rooms[roomID]['players'][i].messenger = socket;
                     rooms[roomID]['players'][i].pid = players[socketId].pid;
-                    rooms[roomID]['players'][i].avatar = players[socketId].avatar;
+                    rooms[roomID]['players'][i].avatar = players[socketId].userInfo.avatar;
                     rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                     socket.emit('roomConnected', roomID);
                     connected = true;
@@ -2959,7 +2959,7 @@ io.sockets.on('connection', function (socket) {
                 rooms[roomID]['players'][pn].socket = socketId;
                 rooms[roomID]['players'][pn].messenger = socket;
                 rooms[roomID]['players'][pn].pid = players[socketId].pid;
-                rooms[roomID]['players'][pn].avatar = players[socketId].avatar;
+                rooms[roomID]['players'][pn].avatar = players[socketId].userInfo.avatar;
                 rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                 rooms[roomID].settings = challenge.settings;
                 rooms[roomID].setSettingsNotation();
@@ -3012,7 +3012,7 @@ io.sockets.on('connection', function (socket) {
             theRoom['players'][pn].socket = socketId;
             theRoom['players'][pn].messenger = socket;
             theRoom['players'][pn].pid = players[socketId].pid;
-            theRoom['players'][pn].avatar = players[socketId].avatar;
+            theRoom['players'][pn].avatar = players[socketId].userInfo.avatar;
             theRoom['playerCount'] = 1;
             socket.emit('roomConnected', theRoom.name);
             players[socketId]['room'] = theRoom.name;
@@ -3051,7 +3051,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['players'][pn].socket = socketId;
                     rooms[roomID]['players'][pn].messenger = socket;
                     rooms[roomID]['players'][pn].pid = players[socketId].pid;
-                    rooms[roomID]['players'][pn].avatar = players[socketId].avatar;
+                    rooms[roomID]['players'][pn].avatar = players[socketId].userInfo.avatar;
                     rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                     socket.emit('roomConnected', roomID);
                     connected = true;
@@ -3110,7 +3110,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['players'][pn].socket = socketId;
                     rooms[roomID]['players'][pn].messenger = socket;
                     rooms[roomID]['players'][pn].pid = players[socketId].pid;
-                    rooms[roomID]['players'][pn].avatar = players[socketId].avatar;
+                    rooms[roomID]['players'][pn].avatar = players[socketId].userInfo.avatar;
                     rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                     rooms[roomID].board.notation = tempNotation;//Contains both game and settings notation, whereas board.notation normally only contains game notation
                     socket.emit('roomConnected', roomID);
