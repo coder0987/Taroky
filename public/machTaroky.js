@@ -146,6 +146,7 @@ function generateCardBack(a) {
     }
     if (document.getElementById('cardBack')) {
         if (!a) {hideCardBack;}
+        document.getElementById('cardBack').src = '/assets/' + deck + '/card-back' + deck_ending;
     } else {
         let card = document.createElement('img');
         card.hidden = true;

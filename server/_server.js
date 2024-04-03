@@ -3731,7 +3731,7 @@ function saveUserPreferencesConditional(username, token, preferences) {
 
     let settings = Room.settingsToNotation({
         'difficulty': +preferences.difficulty,
-        'timeout': +preferences.timeout,
+        'timeout': +preferences.timeout * 1000,
         'aceHigh': preferences.aceHigh == 'on',
         'locked': preferences.locked == 'on'
     });
