@@ -663,9 +663,15 @@ div.hand.twelve-cards img {
 }
 
 .avatar {
-    /*
-        For the user avatars
-    */
+    width: 50px;
+}
+
+.card-in-table {
+    display: inline-block;
+}
+
+.table-section {
+
 }
 
 @media (min-width: 576px) {

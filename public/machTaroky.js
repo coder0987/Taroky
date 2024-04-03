@@ -104,6 +104,7 @@ let dailyScore = 0;
 let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
 let activeUsername = '';
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
+let activeAvatars = {'0':0, '1':0, '2':0, '3':0};
 for (let s=0;s<4;s++)
     for (let v=0;v<8;v++)
         baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
@@ -325,7 +326,6 @@ function drawTable(shouldHide) {
                 let card = document.getElementById(table[i].card.value + table[i].card.suit);
                 card.style.filter = '';
                 document.getElementById('p' + (+table[i].pn+1)).appendChild(card);
-                let playerName = activeUsernames[+table[i].pn] ? activeUsernames[+table[i].pn] : 'Player ' + (+table[i].pn+1);
                 document.getElementById('p' + (+table[i].pn+1)).firstChild.innerHTML = '<br>';
                 document.getElementById('p' + (+table[i].pn+1)).firstChild.removeAttribute('hidden');
                 if (table[i].lead) {
@@ -361,6 +361,13 @@ function displayRoundInfo(theRoundInfo) {
             theInfo.innerHTML += ' - ' + theRoundInfo.chips[i];
         }
         playerDivs[i].appendChild(theInfo);
+
+        let theAvatar = document.createElement('img');
+        theAvatar.src = '/assets/profile-pictures/profile-' + (activeAvatars[i] ? activeAvatars[i] : 0) + '.png';
+        theAvatar.classList.add('avatar');
+        theAvatar.classList.add('no-margin-below');
+        theAvatar.id = 'playerAvatar' + (+i+1);
+        playerDivs[i].appendChild(theAvatar);
     }
 
     if (theRoundInfo.usernames) {
@@ -1029,7 +1036,11 @@ function updateRoomSettings(roomSettings) {
 function updatePlayersInGame(playersInGame) {
     let pn = playerNumber;
     for (let i in playersInGame) {
-        document.getElementById('settingsScreenPn' + (+i+1)).innerHTML = playersInGame[i] + (i == pn ? ' (You)': '');
+        document.getElementById('settingsScreenPn' + (+i+1)).innerHTML = playersInGame[i].name + (i == pn ? ' (You)': '');
+        activeAvatars[i] = playersInGame[i].avatar ? playersInGame[i].avatar : 0;
+        if (document.getElementById('playerAvatar' + (+i+1))) {
+            document.getElementById('playerAvatar' + (+i+1)).src = '/assets/profile-pictures/profile-' + (playersInGame[i].avatar ? playersInGame[i].avatar : 0) + '.png';
+        }
     }
 }
 

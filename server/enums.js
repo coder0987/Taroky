@@ -34,6 +34,8 @@ const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preve
 
 const ROOM_TYPE = {STANDARD: 0, DEBUG: 1, TRAINING: 2, CHALLENGE: 3};
 
+const NUM_AVATARS = 31;
+
 module.exports = {
     SUIT,
     SUIT_REVERSE,
@@ -49,5 +51,6 @@ module.exports = {
     PLAYER_TYPE,
     DISCONNECT_TIMEOUT,
     SENSITIVE_ACTIONS,
-    ROOM_TYPE
+    ROOM_TYPE,
+    NUM_AVATARS
 }

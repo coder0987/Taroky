@@ -33,7 +33,8 @@ const { SUIT,
     PLAYER_TYPE,
     DISCONNECT_TIMEOUT,
     SENSITIVE_ACTIONS,
-    ROOM_TYPE } = require('./enums.js');
+    ROOM_TYPE,
+    NUM_AVATARS } = require('./enums.js');
 const Challenge = require('./challenge.js');
 
 const http = require('http');
@@ -2650,6 +2651,7 @@ function disconnectPlayerTimeout(socketId) {
                 rooms[players[socketId].room]['players'][players[socketId].pn].type = PLAYER_TYPE.ROBOT;
                 rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
                 rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
+                rooms[players[socketId].room]['players'][players[socketId].pn].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
                 rooms[players[socketId].room]['playerCount'] = rooms[players[socketId].room]['playerCount'] - 1;
                 if (rooms[players[socketId].room]['playerCount'] > 0 && rooms[players[socketId].room]['host'] == socketId) {
                     for (let i in rooms[players[socketId].room]['players']) {
@@ -2815,6 +2817,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[players[socketId].room]['players'][players[socketId].pn].type = rooms[players[socketId].room].settings.difficulty != DIFFICULTY.AI ? PLAYER_TYPE.ROBOT : PLAYER_TYPE.AI;
                     rooms[players[socketId].room]['players'][players[socketId].pn].socket = -1;
                     rooms[players[socketId].room]['players'][players[socketId].pn].pid = -1;
+                    rooms[players[socketId].room]['players'][players[socketId].pn].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
                     rooms[players[socketId].room]['playerCount'] = rooms[players[socketId].room]['playerCount'] - 1;
                     if (rooms[players[socketId].room]['playerCount'] > 0 && rooms[players[socketId].room]['host'] == socketId) {
                         for (let i in rooms[players[socketId].room]['players']) {
@@ -2893,6 +2896,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['players'][i].socket = socketId;
                     rooms[roomID]['players'][i].messenger = socket;
                     rooms[roomID]['players'][i].pid = players[socketId].pid;
+                    rooms[roomID]['players'][i].avatar = players[socketId].avatar;
                     rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                     socket.emit('roomConnected', roomID);
                     connected = true;
@@ -2955,6 +2959,7 @@ io.sockets.on('connection', function (socket) {
                 rooms[roomID]['players'][pn].socket = socketId;
                 rooms[roomID]['players'][pn].messenger = socket;
                 rooms[roomID]['players'][pn].pid = players[socketId].pid;
+                rooms[roomID]['players'][pn].avatar = players[socketId].avatar;
                 rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                 rooms[roomID].settings = challenge.settings;
                 rooms[roomID].setSettingsNotation();
@@ -3007,6 +3012,7 @@ io.sockets.on('connection', function (socket) {
             theRoom['players'][pn].socket = socketId;
             theRoom['players'][pn].messenger = socket;
             theRoom['players'][pn].pid = players[socketId].pid;
+            theRoom['players'][pn].avatar = players[socketId].avatar;
             theRoom['playerCount'] = 1;
             socket.emit('roomConnected', theRoom.name);
             players[socketId]['room'] = theRoom.name;
@@ -3045,6 +3051,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['players'][pn].socket = socketId;
                     rooms[roomID]['players'][pn].messenger = socket;
                     rooms[roomID]['players'][pn].pid = players[socketId].pid;
+                    rooms[roomID]['players'][pn].avatar = players[socketId].avatar;
                     rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                     socket.emit('roomConnected', roomID);
                     connected = true;
@@ -3103,6 +3110,7 @@ io.sockets.on('connection', function (socket) {
                     rooms[roomID]['players'][pn].socket = socketId;
                     rooms[roomID]['players'][pn].messenger = socket;
                     rooms[roomID]['players'][pn].pid = players[socketId].pid;
+                    rooms[roomID]['players'][pn].avatar = players[socketId].avatar;
                     rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
                     rooms[roomID].board.notation = tempNotation;//Contains both game and settings notation, whereas board.notation normally only contains game notation
                     socket.emit('roomConnected', roomID);

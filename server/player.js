@@ -17,6 +17,7 @@ class Player {
         this._publicTeam = 0;
         this._savePoints = [];
         this._consecutiveAutos = 0;
+        this._avatar = 0;
         this._ai = ai;//AI is a string representing the AI's ID on the remote AI server
     }
 
@@ -342,6 +343,10 @@ class Player {
         this._messenger = messenger;
     }
 
+    set avatar(avatar) {
+        this._avatar = avatar;
+    }
+
     updateLastMessageSentTime() {
         this._timeLastMessageSent = Date.now();
     }
@@ -393,6 +398,10 @@ class Player {
 
     get timeLastMessageSent() {
         return this._timeLastMessageSent;
+    }
+
+    get avatar() {
+        return this._avatar;
     }
 }
 

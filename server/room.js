@@ -2,7 +2,7 @@ const Board = require('./board.js');
 const Player = require('./player.js');
 const Deck = require('./deck.js');
 const SERVER = require('./logger.js');
-const {DIFFICULTY, PLAYER_TYPE, ROOM_TYPE} = require('./enums.js');
+const {DIFFICULTY, PLAYER_TYPE, ROOM_TYPE, NUM_AVATARS} = require('./enums.js');
 
 let iterator = 100000;
 
@@ -27,6 +27,11 @@ class Room {
         this._audience = {};
         this._audienceCount = 0;
         this._roomType = roomType;
+
+        this._players[0].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
+        this._players[1].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
+        this._players[2].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
+        this._players[3].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
     }
 
     resetForNextRound() {
@@ -203,7 +208,10 @@ class Room {
     get playersInGame() {
         let playersInGameArr = [];
         for (let i in this._players) {
-            playersInGameArr[i] = this._players[i].socket == -1 ? (this._players[i].type == PLAYER_TYPE.ROBOT ? 'Robot' : 'AI') : players[this._players[i].socket].username;
+            playersInGameArr[i] = {
+                'name': this._players[i].socket == -1 ? (this._players[i].type == PLAYER_TYPE.ROBOT ? 'Robot' : 'AI') : players[this._players[i].socket].username,
+                'avatar': this._players[i].avatar
+            };
         }
         return playersInGameArr;
     }

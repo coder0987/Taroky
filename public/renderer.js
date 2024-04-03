@@ -134,7 +134,6 @@ class HUDRenderer {
         this._settings.render();
     }
     clearScreen() {
-        this._nav.clear();
         this._rooms.clear();
         this._settings.clear();
     }
