@@ -18,6 +18,7 @@ window.addEventListener('load', function() {
     form.addEventListener('submit', send, true)
     document.getElementById("saveExitTop").addEventListener('click', () => {shouldLeave = true});
     document.getElementById("exitTop").addEventListener('click', () => {window.close();});
+    document.getElementById("exitBottom").addEventListener('click', () => {window.close();});
     syncValWithSwitch()
     load();
 
@@ -128,10 +129,10 @@ function notationToSettingsPreferences(notation) {
         switch (setting) {
             case 'difficulty':
                 document.getElementById('diff3').removeAttribute('checked');
-                document.getElementById('diff' + rule).setAttribute('checked','checked');
+                document.getElementById('diff' + (1+ +rule)).setAttribute('checked','checked');
                 break;
             case 'timeout':
-                timeoutInput.value = +rule;
+                timeoutInput.value = +rule / 1000;
                 break;
             case 'aceHigh':
                 if (rule != 'false') {
