@@ -34,7 +34,7 @@ const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preve
 
 const ROOM_TYPE = {STANDARD: 0, DEBUG: 1, TRAINING: 2, CHALLENGE: 3};
 
-const NUM_AVATARS = 31;
+const NUM_AVATARS = 58;
 
 module.exports = {
     SUIT,
