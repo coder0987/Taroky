@@ -302,6 +302,19 @@ h4 {
     width: 100%;
 }
 
+.max-width {
+    width: 100%;
+}
+
+.no-side-padding {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.save-button-preferences {
+    margin-left: 10px;
+    margin-right: 10px;
+}
 
 .footer {
     -webkit-transition: .5s ease-in-out;

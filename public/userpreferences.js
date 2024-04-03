@@ -5,6 +5,7 @@ let aceHighSwitch;
 let timeoutInput;
 const SHOW_TOUR = false;
 let userNameToken = '';
+let shouldLeave = false;
 
 window.addEventListener('load', function() {
     form = document.getElementById('form');
@@ -15,6 +16,8 @@ window.addEventListener('load', function() {
     aceHighSwitch.addEventListener('click',aceHighClick);
     chatSwitch.addEventListener('click',chatClick);
     form.addEventListener('submit', send, true)
+    document.getElementById("saveExitTop").addEventListener('click', () => {shouldLeave = true});
+    document.getElementById("exitTop").addEventListener('click', () => {window.close();});
     load();
 
 }, false);
@@ -56,6 +59,9 @@ function preferencesCallback(event) {
     console.log(this.status);
     if (this.status === 200) {
         console.log(this.responseText);
+        if (shouldLeave) {
+            window.close();
+        }
     } else {
         console.log('Error: ');
         console.log(this.response);
