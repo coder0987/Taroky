@@ -10,8 +10,10 @@ window.addEventListener('load', function() {
     form = document.getElementById('form');
     saveButton = document.getElementById('saveUP');
     chatSwitch = document.getElementById('chatSwitch');
-    aceHighSwitch = document.getElementById('aceHigh');
+    aceHighSwitch = document.getElementById('aceHighLow');
     timeoutInput = document.getElementById('timeout');
+    aceHighSwitch.addEventListener('click',aceHighClick);
+    chatSwitch.addEventListener('click',chatClick);
     form.addEventListener('submit', send, true)
     load();
 
@@ -33,6 +35,22 @@ async function load() {
     }
 }
 
+function aceHighClick(e) {
+    if (aceHighSwitch.value == 'on') {
+        aceHighSwitch.value = 'off';
+    } else {
+        aceHighSwitch.value = 'on';
+    }
+}
+
+function chatClick(e) {
+    if (chatSwitch.value == 'on') {
+        chatSwitch.value = 'off';
+    } else {
+        chatSwitch.value = 'on';
+    }
+}
+
 function preferencesCallback(event) {
     //console.log(event);
     console.log(this.status);
@@ -50,16 +68,20 @@ function getPreferencesCallback(event) {
     if (this.status === 200) {
         console.log(this);
         let pref = JSON.parse(this.response);
-        let settings = pref.settings;
-        let [aceHigh, difficulty, timeout, lock] = settings.split(';');
         let avatar = pref.avatar;
         let deck = pref.deck;
         let chat = pref.chat;
+        notationToSettingsPreferences(pref.settings);
 
-        timeoutInput.value = timeout;
         document.getElementById('av0').removeAttribute('checked');
         document.getElementById('av' + avatar).setAttribute('checked','checked');
-        //todo load the rest of the settings
+
+        document.getElementById('mach-deck-thumb').removeAttribute('checked');
+        document.getElementById(deck).setAttribute('checked','checked');
+
+        if (!chat) {
+            chatSwitch.click();
+        }
     } else {
         console.log('Error: ');
         console.log(this.response);
@@ -83,4 +105,28 @@ function send(e) {
     req.setRequestHeader("Authorization", 'Basic ' + userNameToken);
     req.send(new URLSearchParams(new FormData(form).entries()));
     e.preventDefault();
+}
+function notationToSettingsPreferences(notation) {
+    let theSettings = notation.split(';')
+    for (let i in theSettings) {
+        let [setting,rule] = theSettings[i].split('=');
+        if (u(setting) || u(rule)) {
+            SERVER.debug('Undefined setting or rule')
+        } else {
+            switch (setting) {
+                case 'difficulty':
+                    document.getElementById('diff3').removeAttribute('checked');
+                    document.getElementById('diff' + rule).setAttribute('checked','checked');
+                    break;
+                case 'timeout':
+                    timeoutInput.value = +rule;
+                    break;
+                case 'aceHigh':
+                    if (rule != 'false') {
+                        aceHighSwitch.click();
+                    }
+                default:
+            }
+        }
+    }
 }

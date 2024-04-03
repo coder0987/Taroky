@@ -350,6 +350,7 @@ function notationToSettings(room,notation) {
                     if (rule != 'false') {
                         room.settings.aceHigh = true;
                     }
+                    break;
                 case 'lock':
                 case 'locked':
                     room.settings.lock = rule == 'true';
