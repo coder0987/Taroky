@@ -129,9 +129,9 @@ function generateDeck() {
             card = document.createElement('img');
             card.id = baseDeck[i].value + baseDeck[i].suit;
             card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
+            card.hidden = true;
             document.getElementById('deck').appendChild(card);
         }
-        card.hidden = true;
         //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
         card.src = '/assets/' + deck + '/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + deck_ending;
     }
@@ -146,7 +146,7 @@ function generateCardBack(a) {
         deck_ending = '-t.png';
     }
     if (document.getElementById('cardBack')) {
-        if (!a) {hideCardBack;}
+        if (!a) {hideCardBack();}
         document.getElementById('cardBack').src = '/assets/' + deck + '/card-back' + deck_ending;
     } else {
         let card = document.createElement('img');
@@ -785,6 +785,7 @@ function displayNextAction(action) {
                 }
                 break;
             case 'prever':
+                drawHand();
                 addBoldMessage('Would you like to go prever?');
                 createChoiceButtons(BUTTON_TYPE.PREVER);
                 break;
