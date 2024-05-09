@@ -548,7 +548,7 @@ class DeckRenderer {
             deck_ending = '-t.png';
         }
         if (document.getElementById('cardBack')) {
-            if (!a) {hideCardBack();}
+            if (!a) {this.clearCardBack();}
             document.getElementById('cardBack').src = '/assets/' + deck + '/card-back' + deck_ending;
         } else {
             let card = document.createElement('img');
