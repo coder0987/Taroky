@@ -99,6 +99,7 @@ class GameRenderer {
         this._hand = new HandRenderer();
         this._table = new TableRenderer();
         this._action = new ActionInfoRenderer();
+        this._deck = new DeckRenderer();
     }
     clearScreen() {
         this._hand.clear();
@@ -107,6 +108,9 @@ class GameRenderer {
     renderAll() {
         this._hand.render();
         this._table.render();
+    }
+    get deck() {
+        return this._deck;
     }
     get hand() {
         return this._hand;
@@ -495,6 +499,90 @@ class ActionInfoRenderer {
     }
     clear() {
         this._actionInfo.setAttribute('hidden','hidden');
+    }
+}
+
+class DeckRenderer {
+    constructor() {
+        this._deck = document.getElementById('deck');
+        this.generateBaseDeck();
+        this.generateDeck();
+    }
+    generateBaseDeck() {
+        this._baseDeck = [];
+        for (let s=0;s<4;s++)
+            for (let v=0;v<8;v++)
+                this._baseDeck.push({'value': s > 1 ? RED_VALUE[v] : BLACK_VALUE[v] ,'suit':SUIT[s]});
+        for (let v=0;v<22;v++)
+            this._baseDeck.push({'value':TRUMP_VALUE[v],'suit':SUIT[4]});
+    }
+    generateDeck() {
+        //TODO relies on getCookie and a couple of enums from machtaroky.js
+        let deck = getCookie('deck');
+        let deck_ending = '.jpg';
+        if (!deck || deck == 'mach-deck-thumb') {
+            deck = 'mach-deck-thumb';
+            deck_ending = '-t.png';
+        }
+
+        for (let i in this._baseDeck) {
+            let card;
+            if (document.getElementById(this._baseDeck[i].value + this._baseDeck[i].suit)) {
+                card = document.getElementById(this._baseDeck[i].value + this._baseDeck[i].suit);
+            } else {
+                card = document.createElement('img');
+                card.id = this._baseDeck[i].value + this._baseDeck[i].suit;
+                card.alt = this._baseDeck[i].value + ' of ' + this._baseDeck[i].suit;
+                card.hidden = true;
+                this._deck.appendChild(card);
+            }
+            card.src = '/assets/' + deck + '/' + this._baseDeck[i].suit.toLowerCase() + '-' + this._baseDeck[i].value.toLowerCase() + deck_ending;
+        }
+        this.generateCardBack(true);
+    }
+    generateCardBack(a) {
+        let deck = getCookie('deck');
+        let deck_ending = '.jpg';
+        if (!deck || deck == 'mach-deck-thumb') {
+            deck = 'mach-deck-thumb';
+            deck_ending = '-t.png';
+        }
+        if (document.getElementById('cardBack')) {
+            if (!a) {hideCardBack();}
+            document.getElementById('cardBack').src = '/assets/' + deck + '/card-back' + deck_ending;
+        } else {
+            let card = document.createElement('img');
+            card.hidden = true;
+            card.id = 'cardBack';
+            card.src = '/assets/' + deck + '/card-back' + deck_ending;
+            card.alt = 'The back of a card';
+            this._deck.appendChild(card);
+        }
+        this._cardBack = document.getElementById('cardBack');
+    }
+    clearCardBack() {
+        this._cardBack.setAttribute('hidden','hidden');
+        this._deck.appendChild(document.getElementById('cardBack'));
+    }
+    render() {}
+    clear() {
+        for (let i in this._baseDeck) {
+            let child = document.getElementById(this._baseDeck[i].value + this._baseDeck[i].suit );
+            child.classList.remove('drew');
+            child.classList.remove('col-md-1');
+            child.classList.remove('col-xs-3');
+            child.hidden = true;
+            child.removeEventListener('mouseenter',enter);
+            child.removeEventListener('mouseleave',exit);
+            child.removeEventListener('click',clickCard);
+            child.removeEventListener('click',discardClickListener);
+            child.removeEventListener('click',swapCardsClickListener);
+            child.title='';
+            child.classList.remove('image-hover-highlight');
+            child.classList.remove('selected');
+            child.classList.remove('grayed');
+            this._deck.appendChild(child);
+        }
     }
 }
 

@@ -379,3 +379,20 @@ function disableChat() {
     document.getElementById('chat-input').placeholder = 'Sign in to send chat messages';
     document.getElementById('chat-input').setAttribute('readonly','true');
 }
+
+let in_chat = false;
+function chat_toggle() {
+  let chat_box_container = document.getElementById('chat-box-container');
+  let hand_div = document.getElementById('hand');
+  if (in_chat) {
+    hand_div.classList.remove('d-none');
+    chat_box_container.classList.remove('d-flex');
+    chat_box_container.classList.add('d-none');
+    in_chat = false;
+  } else {
+    hand_div.classList.add('d-none');
+    chat_box_container.classList.add('d-flex');
+    chat_box_container.classList.remove('d-none');
+    in_chat = true;
+  }
+}

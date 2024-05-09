@@ -113,122 +113,35 @@ for (let v=0;v<22;v++)
 
 //UI (No game elements)
 
-function generateDeck() {
-    let deck = getCookie('deck');
-    let deck_ending = '.jpg';
-    if (!deck || deck == 'mach-deck-thumb') {
-        deck = 'mach-deck-thumb';
-        deck_ending = '-t.png';
-    }
-
-    for (let i in baseDeck) {
-        let card;
-        if (document.getElementById(baseDeck[i].value + baseDeck[i].suit)) {
-            card = document.getElementById(baseDeck[i].value + baseDeck[i].suit);
-        } else {
-            card = document.createElement('img');
-            card.id = baseDeck[i].value + baseDeck[i].suit;
-            card.alt = baseDeck[i].value + ' of ' + baseDeck[i].suit;
-            card.hidden = true;
-            document.getElementById('deck').appendChild(card);
-        }
-        //card.addEventListener('error', function() {this.src = '/assets/images/TarokyBack.jpg'});//Default to the Card Back in case of error
-        card.src = '/assets/' + deck + '/' + baseDeck[i].suit.toLowerCase() + '-' + baseDeck[i].value.toLowerCase() + deck_ending;
-    }
-    generateCardBack(true);
-}
-
-function generateCardBack(a) {
-    let deck = getCookie('deck');
-    let deck_ending = '.jpg';
-    if (!deck || deck == 'mach-deck-thumb') {
-        deck = 'mach-deck-thumb';
-        deck_ending = '-t.png';
-    }
-    if (document.getElementById('cardBack')) {
-        if (!a) {hideCardBack();}
-        document.getElementById('cardBack').src = '/assets/' + deck + '/card-back' + deck_ending;
-    } else {
-        let card = document.createElement('img');
-        card.hidden = true;
-        card.id = 'cardBack';
-        card.src = '/assets/' + deck + '/card-back' + deck_ending;
-        card.alt = 'The back of a card';
-        document.getElementById('deck').appendChild(card);
-    }
-}
-function hideCardBack() {
-    document.getElementById('cardBack').setAttribute('hidden','hidden');
-    document.getElementById('deck').appendChild(document.getElementById('cardBack'));
-}
-
-function moveDeckToDeck() {
-    let deckDiv = document.getElementById('deck');
-    for (let i in baseDeck) {
-        let child = document.getElementById(baseDeck[i].value + baseDeck[i].suit );
-        child.classList.remove('drew');
-        child.classList.remove('col-md-1');
-        child.classList.remove('col-xs-3');
-        child.hidden = true;
-        child.removeEventListener('mouseenter',enter);
-        child.removeEventListener('mouseleave',exit);
-        child.removeEventListener('click',clickCard);
-        child.removeEventListener('click',discardClickListener);
-        child.removeEventListener('click',swapCardsClickListener);
-        child.title='';
-        child.classList.remove('image-hover-highlight');
-        child.classList.remove('selected');
-        child.classList.remove('grayed');
-        deckDiv.appendChild(child);
-    }
-}
-
-let in_chat = false;
-function chat_toggle() {
-  let chat_box_container = document.getElementById('chat-box-container');
-  let hand_div = document.getElementById('hand');
-  if (in_chat) {
-    hand_div.classList.remove('d-none');
-    chat_box_container.classList.remove('d-flex');
-    chat_box_container.classList.add('d-none');
-    in_chat = false;
-  } else {
-    hand_div.classList.add('d-none');
-    chat_box_container.classList.add('d-flex');
-    chat_box_container.classList.remove('d-none');
-    in_chat = true;
-  }
-}
-
 /** navbar */
 function includeHTML() {
     let z, i, elmnt, file, xhttp;
     /* Loop through a collection of all HTML elements: */
     z = document.getElementsByTagName("*");
     for (i = 0; i < z.length; i++) {
-      elmnt = z[i];
-      /*search for elements with a certain atrribute:*/
-      file = elmnt.getAttribute("w3-include-html");
-      if (file) {
-        /* Make an HTTP request using the attribute value as the file name: */
-        xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-          if (this.readyState == 4) {
-            if (this.status == 200) {elmnt.innerHTML = this.responseText;}
-            if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
-            /* Remove the attribute, and call this function once more: */
-            elmnt.removeAttribute("w3-include-html");
-            includeHTML();
-            loaded();
-          }
+        elmnt = z[i];
+        /*search for elements with a certain atrribute:*/
+        file = elmnt.getAttribute("w3-include-html");
+        if (file) {
+            /* Make an HTTP request using the attribute value as the file name: */
+            xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (this.readyState == 4) {
+                    if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                    if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                    /* Remove the attribute, and call this function once more: */
+                    elmnt.removeAttribute("w3-include-html");
+                    includeHTML();
+                    loaded();
+                }
+            }
+            xhttp.open("GET", file, true);
+            xhttp.send();
+            /* Exit the function: */
+            return;
         }
-        xhttp.open("GET", file, true);
-        xhttp.send();
-        /* Exit the function: */
-        return;
-      }
     }
-  }
+}
 
 /**load button */
 function loadButton() {
@@ -1102,7 +1015,6 @@ window.addEventListener('message', (event) => {
 }, false);
 
 function onLoad() {
-    generateDeck();
     document.addEventListener('keydown', keyListener);
     document.addEventListener("fullscreenchange", renderer.fullscreenChangeEvent);
     document.addEventListener("mozfullscreenchange", renderer.fullscreenChangeEvent);
@@ -1282,7 +1194,7 @@ function onLoad() {
         }
         if (typeof data.deck !== 'undefined') {
             document.cookie = 'deck=' + data.deck;
-            generateDeck();
+            renderer.game.deck.generateDeck();
         }
         if (data.admin) {
             admin = data.admin;
@@ -1635,7 +1547,7 @@ function onLoad() {
     })
     socket.on('deckChoice', function(returnDeckChoice) {
         document.cookie = 'deck=' + returnDeckChoice;
-        generateDeck();
+        renderer.game.deck.generateDeck();
     })
     socket.on('admin', function(returnAdmin) {
         if (returnAdmin) {
@@ -2048,7 +1960,7 @@ function notationSubmitButtonClickEvent() {
         if (notation.length < 10) {
             return;
         }
-        moveDeckToDeck();
+        renderer.game.deck.clear();
         clearScreen();
         connectingToRoom=true;
         socket.emit('customRoom',notation);
@@ -2418,7 +2330,7 @@ function exitCurrentRoom(value) {
         currentAction = null;
         discardingOrPlaying = true;
         removeHostTools();
-        generateCardBack();
+        renderer.game.deck.generateCardBack();
         stopActionTimer();
         document.getElementById('center').innerHTML = '';//clears choice buttons
         document.getElementById('currentAction').innerHTML = '';
@@ -2452,7 +2364,7 @@ function clearScreen() {
         document.getElementById('roundInfo' + (i+1)).textContent = '';
     }
     removeHostTools();
-    generateCardBack();
+    renderer.game.deck.generateCardBack();
 }
 
 function sortCards(toSort) {
