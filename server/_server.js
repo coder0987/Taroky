@@ -2781,6 +2781,9 @@ io.sockets.on('connection', function (socket) {
     if (players[socketId] && players[socketId].tempDisconnect) {
         SOCKET_LIST[socketId] = socket;
         players[socketId].socket = socket;
+        if (rooms[players[socketId].room] && ~players[socketId].pn) {
+            rooms[players[socketId].room].players[players[socketId].pn].messenger = socket;
+        }//todo fix audience messenger
         SERVER.debug('Player ' + socketId + ' auto-reconnected');
         players[socketId].tempDisconnect = false;
         socket.emit('message','You have been automatically reconnected');//debug
