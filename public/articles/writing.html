@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Writing an Article - Mach Tarok</title>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function includeHTML() {
+            var z, i, elmnt, file, xhttp;
+            /* Loop through a collection of all HTML elements: */
+            z = document.getElementsByTagName("*");
+            for (i = 0; i < z.length; i++) {
+              elmnt = z[i];
+              /*search for elements with a certain atrribute:*/
+              file = elmnt.getAttribute("w3-include-html");
+              if (file) {
+                /* Make an HTTP request using the attribute value as the file name: */
+                xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                  if (this.readyState == 4) {
+                    if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                    if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                    /* Remove the attribute, and call this function once more: */
+                    loaded();
+                    elmnt.removeAttribute("w3-include-html");
+                    includeHTML();
+                  }
+                }
+                xhttp.open("GET", file, true);
+                xhttp.send();
+                /* Exit the function: */
+                return;
+              }
+            }
+        }
+        function getCookie(cname) {
+          let name = cname + "=";
+          let decodedCookie = decodeURIComponent(document.cookie);
+          let ca = decodedCookie.split(';');
+          for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+              c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+              return c.substring(name.length, c.length);
+            }
+          }
+          return "";
+        }
+        window.onload = () => {
+            includeHTML();
+        }
+        function loaded() {
+            let username = getCookie('username');
+            let accHandler = document.getElementById('accountHandler');
+            if (username) {
+                accHandler.innerHTML = 'Sign Out (' + username + ')';
+                accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
+            } else {
+                accHandler.hidden = 'hidden';
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body style="padding: 0px;">
+    <div w3-include-html="/nav.html"></div>
+
+    <div class="container navy-txt">
+        <br>
+        <h1>Writing an Article</h1>
+        <div class="row">
+            <div class="col">
+                <p>So you want to write an article for MachTarok.com</p>
+                <p>Great!</p>
+                <p>Here are a few things to keep in mind:</p>
+                <ul>
+                    <li>There's no word limit - Write as much or as little as you like</li>
+                    <li>Images are fine - but we have pictures of the cards. If you would like to have pictures of potential hands, include a note that says what cards</li>
+                    <li>Don't worry about styling - We'll take care of that so you can focus on the content</li>
+                    <li>Lists, bold, italics, and the rest - All of that is supported</li>
+                    <li>Not sure what to write about? Check out the <a class="small-link" href="topics.html">Topics</a> page for inspiration</li>
+                    <li>When your article is ready, email it to <a class="small-link" href="mailto:webmaster@smach.us">webmaster@smach.us</a> with TAROKY ARTICLE as the subject line</li>
+                    <li>Don't forget a title!</li>
+                    <li>If you want to include a target audience and/or tags, you can (ex. target audience is new players, tags are Tarocky, Trump, Playing with Povinnost)</li>
+                    <li>Please include your name, how long you have played taroky for, and what tournaments you have won</li>
+                </ul>
+
+                <p>Below is an example author card. Note the different things included.</p>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="author-card col-md-8 col-12">
+                <h2>About the Author</h2>
+                <p>Samuel Mach has been playing Taroky for nearly 10 years.</p>
+                <p>He has been to several local Taroky tournaments and started MachTarok in July of 2022.</p>
+                <p>This article was published April 1, 2025.</p>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="feedback col-md-8 col-12">
+                <p>Feedback? Suggestions? Want to <a class="small-link" href="writing.html">write an article</a> yourself?</p>
+                <p>Send an email to <a class="small-link" href="mailto:webmaster@smach.us">webmaster@smach.us</a></p>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    
+    </div>
+   
+    <br>
+    <br>
+    <br>
+    <br>
+</div>
+
+    <script>
+        includeHTML();
+    </script>
+</body>
+</html>
