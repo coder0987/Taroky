@@ -1,4 +1,4 @@
 :a
-node _server.js
+node server/_server.js debug
 goto a
 echo shutdown...

@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="google-site-verification" content="nbjYjxk3X-LYzr5IkNG2gTpM3pfo4eQnfHYJiBMZSQU"/>
+
+    <title>BETA - Mach Tarok</title>
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Mach Tarok",
+            "alternateName": "Mach Taroky",
+            "url": "https://machtarok.com/",
+            "description": "A webpage for playing Taroky, a traditional Czech card game for 4 players."
+        }
+    </script>
+
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"
+            integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+            crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/hopscotch/hopscotch.css">
+    <link rel="stylesheet" href="/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/assets/hopscotch/hopscotch.js"></script>
+    <script src="/chatbox.js"></script>
+    <script src="/machTaroky.js"></script>
+    <script src="/renderer.js"></script>
+</head>
+<body>
+
+<div id="loader-wrapper">
+    <div class="loader-section section-left"></div>
+    <div class="loader-section section-right"></div>
+</div>
+
+<div id="loader" class="container">
+    <div class="d-flex justify-content-center">
+        <img src="/assets/logo/logo-animation-green.gif" alt="MachTarok" class="col-9 ">
+    </div>
+    <div class="d-flex justify-content-center">
+        <p class="white-txt">&copy; 2023 James, Lauren, and Samuel Mach</p>
+    </div>
+    <div class="d-flex justify-content-center">
+        <button class="button btn green" id="load" onclick="loadButton()">Page not loading? Click here</button>
+    </div>
+</div>
+
+<div w3-include-html="/nav.html"></div>
+
+<div id="inviteScreen" class="container invite" hidden="hidden">
+    <div class="row flex-nowrap">
+        <div class="col-md-11 col-10">
+            <h2>Invite</h2>
+        </div>
+        <div class="col-md col-2">
+            <button onclick="closeInvite()" class="close">X</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <p>Click the link below to copy it and send it to your friends:</p>
+            <a id="inviteJoinCode" href="https://machtarok.com/?join=CODE" class="share-link copy-text">machtarok.com/?join=CODE</a><span
+                hidden="hidden" id="copied">  Copied!</span>
+        </div>
+        <div class="col-12">
+            <br>
+            <h3>Online Players:</h3>
+            <table class="table" id="inviteTable">
+                <thead>
+                <tr>
+                    <th scope="col">Username</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Invite</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+            <p id="inviteNoOneOnline" hidden="hidden">Looks like no one else is online, try sending the link to them
+                directly</p>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!--
+        Room Card template
+        <div id="roomcard" class="roomcard col-md-2 col-sm-3 col-xs-6 white">
+            <div id="roomnum" class="roomnum d-flex justify-content-center">I</div>
+            <span id="players" alt="1 player">&#x25CF; &#x25CB; &#x25CB; &#x25CB;</span> players
+        </div>
+    -->
+    <div class="row" id="lobby-controls">
+        <div class="col-12 col-md-6 clearfix" id="joinRoomDiv">
+            <div class="d-flex justify-content-center">
+                <input type="text" class="button btn-primary sticky-bottom" id="join" placeholder="Room Code"
+                       oninput="this.value = this.value.toUpperCase();">
+                <button class="button btn red sticky-bottom"
+                        onclick="joinFromInvite(document.getElementById('join').value)">Join
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="outer">
+        <div id="actionInfo" class="row actionInfo" hidden="hidden">
+            <div class="d-flex justify-content-center col">
+                <button class="button btn red sticky-bottom exit" id="exit" onclick="exitCurrentRoom()">➤</button>
+            </div>
+            <div class="col no-padding">
+                <div id="currentAction"></div>
+            </div>
+            <div class="col no-padding">
+                <div id="currentPlayer" class="your-move"></div>
+            </div>
+            <div class="col no-padding">
+                <div id="timer"></div>
+            </div>
+            <div class="col-md"></div>
+        </div>
+        <div id="table" class="row table-container auto-shrink" hidden="hidden">
+            <div id="p1" class="col-3"><span id="p1leader" class="no-margin-below"><br></span></div>
+            <div id="p2" class="col-3"><span id="p2leader" class="no-margin-below"><br></span></div>
+            <div id="p3" class="col-3"><span id="p3leader" class="no-margin-below"><br></span></div>
+            <div id="p4" class="col-3"><span id="p4leader" class="no-margin-below"><br></span></div>
+        </div>
+        <div id="roundInfo" class="row roundInfo">
+            <div class="col-md col-6" id="roundInfo1"></div>
+            <div class="col-md col-6" id="roundInfo2"></div>
+            <div class="col-md col-6" id="roundInfo3"></div>
+            <div class="col-md col-6" id="roundInfo4"></div>
+            <div class="col-12" id="genericRoundInfo"></div>
+        </div>
+        <div id="center"></div>
+        <hr>
+        <div id="host" hidden="hidden" class="row">
+            <div class="col-12">
+                <h2 class="centered" id="settingsRoomName">Room I (Join code OWGVN)</h2>
+            </div>
+            <div class="col-md-6 col-12">
+                <div>
+                    <span>1.</span>
+                    <span id="settingsScreenPn1">Username (You)</span>
+                </div>
+                <div>
+                    <span>2.</span>
+                    <span id="settingsScreenPn2">Robot</span>
+                </div>
+                <div>
+                    <span>3.</span>
+                    <span id="settingsScreenPn3">Robot</span>
+                </div>
+                <div>
+                    <span>4.</span>
+                    <span id="settingsScreenPn4">Robot</span>
+                </div>
+                <br>
+                <button onclick="invite()" class="btn white">Invite</button>
+            </div>
+            <div id="settings" class="flex-nowrap col-md-6 col-12" hidden="hidden">
+                <hr>
+                <label for="difficultySelector" class="col-md-3 col-6">Difficulty:</label>
+                <select id="difficultySelector" name="Select Difficulty:"
+                        onchange="submitSettings(&quot;difficulty&quot;)" class="btn white">
+                    <option value="0" id="Beginner">Beginner</option>
+                    <option value="1" id="Easy">Easy</option>
+                    <option value="2" id="Normal">Normal</option>
+                    <option value="3" id="Hard">Hard</option>
+                    <option value="4" id="Ruthless">Ruthless</option>
+                    <option value="5" id="AI">AI</option>
+                </select>
+                <hr>
+                <label for="timeoutButton" class="col-md-3 col-6">Timeout:</label>
+                <input type="number" value="30" min="-1" id="timeoutButton"
+                       onchange="submitSettings(&quot;timeout&quot;)" class="col-3">
+                <hr>
+                <label for="aceHighSelector" class="col-md-3 col-6">Ace High:</label>
+                <input type="checkbox" checked="false" id="aceHighSelector"
+                       onchange="submitSettings(&quot;aceHigh&quot;)">
+                <hr>
+                <label for="lockButton" id="lockButtonP" class="col-md-3 col-6">Visibility:</label>
+                <button id="lockButton"
+                        onclick="if (this.innerHTML=='Public'){this.innerHTML='Private';}else{this.innerHTML='Public';}submitSettings('visibility')"
+                        class="btn white">Private
+                </button>
+                <hr>
+                <button id="saveButton" onclick="submitSettings('save');" hidden="hidden" class="btn white">Save
+                </button>
+                <br>
+            </div>
+            <div id="display-settings" hidden="hidden">
+                <span style="display: inline-block; width: 175px;">Select the difficulty:	</span><span
+                    id="display-difficulty"></span>
+                <br>
+                <span style="display: inline-block; width: 175px;">Timeout (in seconds):	</span><span
+                    id="display-timeout"></span>
+                <br>
+                <span style="display: inline-block; width: 175px;">Ace High:	</span><span id="display-ace"></span>
+                <br>
+                <span style="display: inline-block; width: 175px;">Visibility:	</span><span
+                    id="display-visibility"></span>
+                <br>
+            </div>
+            <div class="col-12">
+                <br>
+                <!--<input type="checkbox"><span>Ready</span>-->
+                <button hidden id="startGame"
+                        onclick="removeHostTools();addMessage('Starting...');socket.emit('startGame');"
+                        class="btn white">
+                    Start Game
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rooms"></div>
+    <div id="dailyLeaderboard" class="row"></div>
+    <div class="row" id="chat-and-hand">
+        <div id="chat-box-container" class="chat-box-container col-md-6 d-md-inline d-none">
+            <p style="margin: 0; text-align: right;"><span id="online">1</span> Player<span id="online-s"></span> Online</p>
+            <div id="chatbox" class="chat-box"></div>
+            <div id="chat-entry" class="chat-box-entry">
+                <form id="chat-form" class="chat-form" novalidate="" onsubmit="return false;">
+                    <input id="chat-input" class="chat-input" maxlength="1000" type="text" required=""
+                           placeholder="Sign in to send chat messages" value="" readonly="true">
+                </form>
+                <button id="chat-send-button" class="button btn red sticky-bottom send-button disabled"
+                        onclick="handleSendMessageClick();">
+                    <span id="center-vertically">➤ Send</span>
+                </button>
+            </div>
+        </div>
+        <div id="hand" class="hand col-12 col-md-6 twelve-cards d-md-block"></div>
+    </div>
+</div>
+<button id="chat-toggler" class="d-inline d-md-none btn navy footer" onclick="chat_toggle()">Chat</button>
+<div id="deck">
+    <img hidden="hidden" src="/assets/mach-deck-thumb/card-back-t.png" id="cardBack" onload="cardBackLoaded=true">
+</div>
+
+
+<script>includeHTML();</script>
+<script src="assets/hopscotch/tour.js"></script>
+</body>
+</html>

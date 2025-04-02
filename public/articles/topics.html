@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Topics - Mach Tarok</title>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function includeHTML() {
+            var z, i, elmnt, file, xhttp;
+            /* Loop through a collection of all HTML elements: */
+            z = document.getElementsByTagName("*");
+            for (i = 0; i < z.length; i++) {
+              elmnt = z[i];
+              /*search for elements with a certain atrribute:*/
+              file = elmnt.getAttribute("w3-include-html");
+              if (file) {
+                /* Make an HTTP request using the attribute value as the file name: */
+                xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                  if (this.readyState == 4) {
+                    if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                    if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                    /* Remove the attribute, and call this function once more: */
+                    loaded();
+                    elmnt.removeAttribute("w3-include-html");
+                    includeHTML();
+                  }
+                }
+                xhttp.open("GET", file, true);
+                xhttp.send();
+                /* Exit the function: */
+                return;
+              }
+            }
+        }
+        function getCookie(cname) {
+          let name = cname + "=";
+          let decodedCookie = decodeURIComponent(document.cookie);
+          let ca = decodedCookie.split(';');
+          for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+              c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+              return c.substring(name.length, c.length);
+            }
+          }
+          return "";
+        }
+        window.onload = () => {
+            includeHTML();
+        }
+        function loaded() {
+            let username = getCookie('username');
+            let accHandler = document.getElementById('accountHandler');
+            if (username) {
+                accHandler.innerHTML = 'Sign Out (' + username + ')';
+                accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
+            } else {
+                accHandler.hidden = 'hidden';
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body style="padding: 0px;">
+    <div w3-include-html="/nav.html"></div>
+
+    <div class="container navy-txt">
+        <br>
+        <h1>Article Topics</h1>
+        <div class="row">
+            <div class="col">
+                <p>Here are a few topics for future articles</p>
+
+                <h2>Topics for Players</h2>
+                <h3>New Players</h3>
+                <ul>
+                    <li>Terms - What are the Trul? Skyz, Mund & Pagat</li>
+                    <li>Terms - What are Money Cards? Taroky, Tarocky, Bida, Uni, etc.</li>
+                    <li>Discarding - What should Povinnost throw away?</li>
+                    <li>Discarding - What should Povinnost's partner or opposer throw away?</li>
+                    <li>Povinnost - What to lead? <a class="small-link" href="first-card.html">Example Article</a></li>
+                    <li>Winning - Never let a Trick Go By</li>
+                    <li>Points - Getting your Kings Home</li>
+                    <li>Points - Getting the Pagat and Mund Home</li>
+                </ul>
+                <h3>Casual Players</h3>
+                <ul>
+                    <li>Prever - When to play alone</li>
+                    <li>Prever - When to look at the other half of the Talon</li>
+                    <li>Prever - What to lead</li>
+                    <li>Partners - When to throw Grease</li>
+                    <li>Partners - Signalling and Receiving Messages through Plays</li>
+                    <li>Color - Using Color to Bleed Trump</li>
+                    <li>Points - Calling Pagat</li>
+                </ul>
+                <h3>Competetive Players</h3>
+                <ul>
+                    <li>Competition - The Tournament Mindset</li>
+                    <li>Counting - How and Why to Count Trump</li>
+                    <li>Counting - When to Count Color</li>
+                    <li>Counting - Pagat on the End</li>
+                    <li>Valat and Contra - When to Raise the Stakes</li>
+                    <li>Valat - Winning with an Off</li>
+                    <li>Prever - Winning with a Marginal Hand</li>
+                </ul>
+                <h3>Veteran Players</h3>
+                <ul>
+                    <li>Mind Games - Watching your Opponents' Hands</li>
+                    <li>Mind Games - Strategic Shuffling (Deal by 1s, 2s, 12s)</li>
+                    <li>Mind Games - Holding the XIX</li>
+                    <li>Mind Games - False Signalling</li>
+                    <li>Mind Games - Calling Yourself (XIX) as Povinnost</li>
+                </ul>
+
+                <h2>Topics for Taroky Enthusiasts</h2>
+                <h3>Design</h3>
+                <ul>
+                    <li>Taroks - Variations</li>
+                    <li>Cards - The Suits of Taroky</li>
+                    <li>Cards - Looking at the Trump</li>
+                    <li>Play - Stages of the Game</li>
+                </ul>
+                <h3>History</h3>
+                <ul>
+                    <li>Taroks - Origins of Taroky</li>
+                    <li>Taroks - Brgining the Game to Texas</li>
+                    <li>Taroks - Down through the Ages</li>
+                </ul>
+                <h3>Family</h3>
+                <ul>
+                    <li>Taroks - A Game for Generations</li>
+                    <li>Taroks - Playing at the Holidays</li>
+                    <li>Taroks - Bringing Family Together</li>
+                </ul>
+                <p>
+                    The same topic may be used more than once. See <a class="small-link" href="writing.html">the Writing page</a> for guidelines.
+                </p>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="feedback col-md-8 col-12">
+                <p>Feedback? Suggestions? Want to <a class="small-link" href="writing.html">write an article</a> yourself?</p>
+                <p>Send an email to <a class="small-link" href="mailto:webmaster@smach.us">webmaster@smach.us</a></p>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    
+    </div>
+   
+    <br>
+    <br>
+    <br>
+    <br>
+</div>
+
+    <script>
+        includeHTML();
+    </script>
+</body>
+</html>

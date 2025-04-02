@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Updates - Mach Tarok</title>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function includeHTML() {
+            var z, i, elmnt, file, xhttp;
+            /* Loop through a collection of all HTML elements: */
+            z = document.getElementsByTagName("*");
+            for (i = 0; i < z.length; i++) {
+              elmnt = z[i];
+              /*search for elements with a certain atrribute:*/
+              file = elmnt.getAttribute("w3-include-html");
+              if (file) {
+                /* Make an HTTP request using the attribute value as the file name: */
+                xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                  if (this.readyState == 4) {
+                    if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                    if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                    /* Remove the attribute, and call this function once more: */
+                    loaded();
+                    elmnt.removeAttribute("w3-include-html");
+                    includeHTML();
+                  }
+                }
+                xhttp.open("GET", file, true);
+                xhttp.send();
+                /* Exit the function: */
+                return;
+              }
+            }
+        }
+        function getCookie(cname) {
+          let name = cname + "=";
+          let decodedCookie = decodeURIComponent(document.cookie);
+          let ca = decodedCookie.split(';');
+          for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+              c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+              return c.substring(name.length, c.length);
+            }
+          }
+          return "";
+        }
+        window.onload = () => {
+            includeHTML();
+        }
+        function loaded() {
+            let username = getCookie('username');
+            let accHandler = document.getElementById('accountHandler');
+            if (username) {
+                accHandler.innerHTML = 'Sign Out (' + username + ')';
+                accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
+            } else {
+                accHandler.hidden = 'hidden';
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body style="padding: 0px; padding-bottom: 4rem;">
+<div w3-include-html="/nav.html"></div>
+
+<div class="container navy-txt">
+    <br>
+    <div class="row">
+        <div class="col">
+            <h1>News and Updates</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>March 2025</h2>
+            <ul>
+                <li>It may not seem like it- but we've been hard at work for the last year!</li>
+                <li>MachTarok is currently undergoing a huge developmental shift. This isn't visible yet, but will be soon.</li>
+                <li>The first article <a href="/articles/first-card.html">The First Trick</a> was uploaded</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>April 2024</h2>
+            <ul>
+                <li>Added two new decks to choose from in the User Preferences page</li>
+                <li>Added 31 avatars, which are currently visible in your nav bar but will soon be visible to everyone</li>
+                <li>Finished initial work on the Users Preference page, including the ability to turn off the chat and edit room settings</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>March 2024</h2>
+            <ul>
+                <li>Added the Daily Challenge, accessible to all players who are signed in!</li>
+                <li>Click on "Daily" from the main page and play the same hand as everyone else to see who can do best each day</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>October 2023</h2>
+            <ul>
+                <li>Added updates page (Hi!)</li>
+                <li>Revamped the Room Entry page to include more information, join codes, and an invite screen</li>
+                <li>Added join codes</li>
+                <li>Added a chat box (sign in to send chat messages!)</li>
+                <li>Made the main game mobile friendly by fixing table overflow issues and resizing the hand and chat</li>
+                <li>Revamped the layout of the hand, chat, table, round info, and just about everything in-game</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>September 2023</h2>
+            <ul>
+                <li>Revamped custom room options to include weighted hand generation</li>
+                <li>To try it out, click "Custom Room" then drag that bar all the way up, click the generate button, and enjoy!</li>
+                <li>Bug fixes including server crash, point miscalculation, and glitched text</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>July 2023</h2>
+            <ul>
+                <li>Added return to game, an option to easily continue a game after leaving without losing your progress</li>
+                <li>Revamped the discard system to make it easy to see which cards you drew</li>
+                <li>Added settings saves, so you can easily reuse settings (Sign in to test it out!)</li>
+                <li>Created deep learning hooks so AI can start learning soon (hopefully!)</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>June 2023</h2>
+            <ul>
+                <li>Added a database, to store player information like default settings and ELO rating</li>
+                <li>Created a donation page (Be sure to check it out)</li>
+                <li>Some bug fixes for passing the talon cards</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>May 2023</h2>
+            <ul>
+                <li>Created a fullscreen mode, accessible by click the fullscreen button from the navigation bar</li>
+                <li>Revamped the table</li>
+                <li>Made the bots much better</li>
+                <li>Fixed many, many server crash bugs</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>April 2023</h2>
+            <ul>
+                <li>Completed a ton of work on Artificial Intelligence bots (coming soon, hopefully!)</li>
+                <li>Added the audience, which you can join by right-clicking on a room!</li>
+                <li>Made the bots much better</li>
+                <li>Fixed many, many server crash bugs</li>
+                <li>Created Taroky Notation, a simple way to replay games whenever you want</li>
+                <li>Began work on AI, which will (hopefully) be usable soon</li>
+                <li>Completed a ton of back-end work, including log files, server infrastructure, and, again, fixing server crashes</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>March 2023</h2>
+            <ul>
+                <li>Made the table actually usable (You should've seen the old design! Good luck knowing who played what)</li>
+                <li>Finished game play, including prever talon, 12s choice, and playing cards</li>
+                <li>Added auto-reconnect, in case you press reload during a game or get disconnected</li>
+                <li>Made the room cards look decent (The old ones were... something you didn't want to see)</li>
+                <li>More bug fixes than can be counted, from paying 1/3rd of a chip, to server crashes, to text glitching, to disappearing cards, to missing information, to more server crashes</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>July 2022 - February 2023</h2>
+            <ul>
+                <li>Created the original version of MachTarok on July 15, 2022</li>
+                <li>Created nearly everything you have come to know and love, one step at a time</li>
+            </ul>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h2>Planned Updates</h2>
+            <ul>
+                <li>Artificial Intelligence players</li>
+                <li>Mobile-friendly hand and chat design</li>
+                <li>User preferences and spelling variations</li>
+                <li>And more!</li>
+            </ul>
+            <p>Don't see an update you want added? Email us at <a href="mailto:webmaster@smach.us" class="small-link">webmaster@smach.us</a> or add an issue on <a href="https://github.com/coder0987/Taroky/issues" class="small-link">GitHub</a></p>
+        </div>
+    </div>
+
+
+    <p>For a full list of changes, view the <a class="small-link" href="https://github.com/coder0987/Taroky/commits/master">GitHub changelog</a></p>
+
+</div>
+
+<script>
+        includeHTML();
+    </script>
+</body>
+</html>
