@@ -4,7 +4,8 @@
 //COMMAND-LINE ARGUMENTS
 
 //Used for non-"production" instances of the server
-const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train';
+const DEBUG_MODE = process.argv[2] == 'debug' || process.argv[2] == 'train' || process.argv[2] == 'test';
+const TEST = process.argv[4];
 const LOG_LEVEL = process.argv[3] || (DEBUG_MODE ? 5 : 3);//Defaults to INFO level. No traces or debugs.
 const TRAINING_MODE = process.argv[2] == 'train';
 
@@ -123,7 +124,6 @@ const returnToGame = {};
 
 let simplifiedRooms = {};
 let ticking = false;
-let autoActionTimeout;
 let numOnlinePlayers = 0;
 
 let challenge = new Challenge();
@@ -310,6 +310,7 @@ function cardsToNotation(cards) {
         }
     } catch (err) {
         SERVER.error('Cards could not be notated: ' + JSON.stringify(cards) + '\n' + err);
+        throw new Error("oopsie daisy");
     }
     return theNotation;
 }
@@ -432,7 +433,17 @@ function findTheI(players) {
            return i; //found the I
        }
    }
-   SERVER.trace('ERROR: No one has the I');
+   /* The I was in the prever talon and was rejected
+   SERVER.errorTrace('ERROR: No one has the I');
+   SERVER.error(JSON.stringify(players[0].hand))
+   SERVER.error(JSON.stringify(players[1].hand))
+   SERVER.error(JSON.stringify(players[2].hand))
+   SERVER.error(JSON.stringify(players[3].hand))
+   SERVER.error(JSON.stringify(players[0].discard))
+   SERVER.error(JSON.stringify(players[1].discard))
+   SERVER.error(JSON.stringify(players[2].discard))
+   SERVER.error(JSON.stringify(players[3].discard))
+   */
    return -1;
 }
 
@@ -494,7 +505,8 @@ function autoAction(action, room, pn) {
             action.info.auto = true;
         }
     } else {
-        SERVER.log('AutoAction: player ' + pn + ' may have disconnected', room.name);
+        //SERVER.log('AutoAction: player ' + pn + ' may have disconnected', room.name);
+        //console.trace();
     }
 
     let hand = room['players'][pn].hand;
@@ -592,9 +604,17 @@ function robotAction(action, room, pn) {
         switch (action.action) {
             case 'play':
             case 'shuffle':
+                action.info.type = Robot.robotShuffle();
+                action.info.again = Robot.robotShuffleAgain();
+                if (action.info.type == 'Cut') {
+                    action.info.location = Robot.robotCutLocation();
+                }
                 break;
             case 'cut':
-                action.info.style = 'Cut';
+                action.info.style = room.botCutChoice;
+                if (action.info.style == 'Cut') {
+                    action.info.location = room.botCutLoc;
+                }
                 break;
             case 'deal':
                 break;
@@ -1236,9 +1256,10 @@ function actionCallback(action, room, pn) {
         case 'shuffle':
             const type = action.info.type;
             const again = action.info.again;
+            const location = action.info.location >= 7 && action.info.location <= 47 ? action.info.location : 32;
             if (type > 0 && type < 4) {
                 //1: cut, 2: riffle, 3: randomize
-                room['deck'].shuffleDeck(type);
+                room['deck'].shuffleDeck(type, location);
             }
             if (!again) {
                 action.action = 'cut';
@@ -1257,25 +1278,26 @@ function actionCallback(action, room, pn) {
         case 'deal':
             style = room['board']['cutStyle'];
             if (!style) style = 'Cut';
-            for (let i = 0; i < 6; i++) room['board'].talon[i] = room['deck'].splice(0, 1)[0];
+            //console.log(room.deck instanceof Deck);
+            for (let i = 0; i < 6; i++) room['board'].talon[i] = room.deck.splice(0, 1)[0];
             switch (style) {
                 case '1':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
                     break;
                 case '2':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 2; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 2; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
                     break;
                 case '3':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 3; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 3; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
                     break;
                 case '4':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 4; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 4; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
                     break;
                 case '12':
                     room.board.hands = {1:[], 2:[], 3:[], 4:[]};
                     for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) {
                         for (let c = 0; c < 12; c++) {
-                            room.board.hands[i+1].push(room['deck'].splice(0, 1)[0]);
+                            room.board.hands[i+1].push(room.deck.splice(0, 1)[0]);
                         }
                     }
                     action.action = '12choice';
@@ -1283,18 +1305,18 @@ function actionCallback(action, room, pn) {
                     actionTaken = true;
                     break;
                 case '12 Straight':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
                     break;
                 case '345':
                     for (let t = 3; t < 6; t++) {
                         for (let i = 0; i < 4; i++) {
-                            for (let c = 0; c < t; c++) room['players'][i].hand.push(room['deck'].splice(0, 1)[0]);
+                            for (let c = 0; c < t; c++) room['players'][i].hand.push(room.deck.splice(0, 1)[0]);
                         }
                     }
                     break;
                 default:
                     //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room['deck'].splice(0, 1)[0]); }
+                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
             }
             if (actionTaken) {
                 //12 choice
@@ -1825,6 +1847,14 @@ function actionCallback(action, room, pn) {
                 if (action.player == room['board'].povinnost) {
                     action.player = findTheI(room.players);
                     action.action = 'iote';
+
+                    if (action.player == -1) {
+                        //Prever talon had the I, and it was rejected :(
+                        //Skip to contra
+                        action.action = 'preverContra';
+                        action.player = (room.board.prever+1)%4;
+                        room.board.firstContraPlayer = action.player;
+                    }
                 }
             }
             actionTaken = true;
@@ -2254,6 +2284,23 @@ function actionCallback(action, room, pn) {
         case 'countPoints':
             let pointCountMessageTable = [];
             let chipsOwed = 0;
+
+            
+            //Combine discard piles
+            let povinnostTeamDiscard = [];
+            let opposingTeamDiscard = [];
+            for (let i in room.players) {
+                if (room.players[i].isTeamPovinnost) {
+                    povinnostTeamDiscard = povinnostTeamDiscard.concat(room.players[i].discard);
+                } else {
+                    opposingTeamDiscard = opposingTeamDiscard.concat(room.players[i].discard);
+                }
+                room.players[i].discard = [];
+            }
+
+            SERVER.debug('Discard piles:\n' + JSON.stringify(povinnostTeamDiscard) + '\n' + JSON.stringify(opposingTeamDiscard), room.name);
+
+
             //Called valat
             if (room.board.valat != -1) {
                 //Possible settings: room.settings.valat * 2
@@ -2295,20 +2342,6 @@ function actionCallback(action, room, pn) {
             } else {
                 //No valat called
 
-                //Combine discard piles
-                let povinnostTeamDiscard = [];
-                let opposingTeamDiscard = [];
-                for (let i in room.players) {
-                    if (room.players[i].isTeamPovinnost) {
-                        for (let j = room.players[i].discard.length-1; j >= 0; j--) {
-                            povinnostTeamDiscard.push(room.players[i].discard.splice(0,1)[0]);
-                        }
-                    } else {
-                        for (let j = room.players[i].discard.length-1; j >= 0; j--) {
-                            opposingTeamDiscard.push(room.players[i].discard.splice(0,1)[0]);
-                        }
-                    }
-                }
                 if (room.board.trickWinCount[0] == 0 || room.board.trickWinCount[1] == 0) {
                     //Uncalled valat
                     //Possible settings: room.settings.valat
@@ -2517,6 +2550,9 @@ function actionCallback(action, room, pn) {
 
             room.informPlayers(room.board.notation + room.settingsNotation, MESSAGE_TYPE.NOTATION, {povinnost: room.board.povinnost});
 
+            
+            //Preserve card order - notation is a bit funky but it should work
+            room.deck.deck = Deck.simulateCounting(povinnostTeamDiscard, opposingTeamDiscard);
 
             actionTaken = true;
 
@@ -2551,9 +2587,14 @@ function actionCallback(action, room, pn) {
             }
             action.player = (action.player+1)%4;
             if (action.player == room.board.povinnost) {
-                room.resetForNextRound()
+                room.resetForNextRound();
+                
                 action.player = room['board'].povinnost;//already iterated
                 action.action = 'play';
+            }
+            if (room.stop) {
+                SERVER.log('Stopping game in room ' + room.name);
+                return;//End the round
             }
             actionTaken = true;
             break;
@@ -2589,12 +2630,11 @@ function actionCallback(action, room, pn) {
         playerType = room['players'][action.player].type;
 
         //Prepare for auto-action if no response is given
-        if (autoActionTimeout) {
-            clearTimeout(autoActionTimeout);
+        if (room.autoAction) {
+            clearTimeout(room.autoAction);
         }
         if (room.settings.timeout > 0) {
-            autoActionTimeout = setTimeout(autoAction, room.settings.timeout, action, room, action.player);
-            room.autoAction = autoActionTimeout;
+            room.autoAction = setTimeout(autoAction, room.settings.timeout, action, room, action.player);
         }
 
 
@@ -2631,6 +2671,9 @@ function actionCallback(action, room, pn) {
         }
     }
 }
+
+//GLOBAL VARIABLE - HERE FOR TESTING PURPOSES
+runAction = autoAction;//hehe maybe this will work
 
 function broadcast(message) {
     for (let i in SOCKET_LIST) {
@@ -3948,6 +3991,16 @@ if (DEBUG_MODE) {
     server.listen(8442);
 }
 console.log("Log level: " + LOG_LEVEL);
+
+if (TEST) {
+    const ShuffleTest = require('./Tests/shuffle.js');
+    if (!ShuffleTest) {
+        console.log('Unknown test: ' + TEST);
+        return;
+    }
+    let test = new ShuffleTest();
+    test.initiateTest();
+}
 
 function shutDown() {
     //First, save any information

@@ -11,7 +11,11 @@ class Room {
         let name         = args.name || 'Room';
         let settings     = args.settings || {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'aceHigh':false, 'locked':true};
         let roomType     = args.roomType || 0;
-        let logLevel     = args.logLevel || 3;
+        let logLevel     = args.logLevel || SERVER.logLevel;
+        let botCutChoice = args.botCutChoice || 'Cut';
+        let botCutLoc    = args.botCutLoc || 32;
+        let deck         = args.deck || new Deck();
+        let stop         = args.stop || false;
 
         this._settings = settings;
         this._name = name;
@@ -19,7 +23,7 @@ class Room {
         this._host = -1;
         this._board = new Board();
         this._playerCount = 0;
-        this._deck = new Deck();
+        this._deck = deck;
         this._players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
         this._autoAction = 0;
         this._settingsNotation = 'difficulty=2;timeout=30000;aceHigh=false;locked=false';
@@ -28,10 +32,29 @@ class Room {
         this._audienceCount = 0;
         this._roomType = roomType;
 
+        this._stopAtEnd = stop;
+        this._botCutChoice = botCutChoice;
+        this._botCutLoc = botCutLoc;
+
         this._players[0].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
         this._players[1].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
         this._players[2].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
         this._players[3].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
+
+        if (args.started) {
+            this.jumpStart(args.povinnost);
+        }
+    }
+
+    jumpStart(pov) {
+        this.gameNumber = 1;
+        this._board.nextStep.action = 'shuffle';
+        this._board.nextStep.player = pov;//povinnost shuffles
+    }
+
+    playToEnd() {
+        this._stopAtEnd = true;
+        runAction(this._board.nextStep, this, this._board.nextStep.player);
     }
 
     resetForNextRound() {
@@ -39,7 +62,11 @@ class Room {
         for (let i in this._players) {
             this._players[i].resetForNextRound();
         }
-        this._deck = new Deck();
+        if (this._deck.deck.length != 54) {
+            SERVER.error("Whoops! The deck has the wrong number of cards.");
+            console.log(this._deck.deck);
+            this._deck = new Deck();
+        }
     }
 
     informPlayers(message, messageType, extraInfo, pn) {
@@ -198,11 +225,22 @@ class Room {
         //Returns the player with the most chips. If tie, ignore it
         let highestChipsCount = 0;
         for (let i in this._players) {
-            if (this._players[i].chips > this._players[0].chips) {
+            if (this._players[i].chips > this._players[highestChipsCount].chips) {
                 highestChipsCount = i;
             }
         }
         return this._players[highestChipsCount];
+    }
+
+    get winnerNum() {
+        //Returns the player with the most chips. If tie, ignore it
+        let highestChipsCount = 0;
+        for (let i in this._players) {
+            if (this._players[i].chips > this._players[highestChipsCount].chips) {
+                highestChipsCount = i;
+            }
+        }
+        return highestChipsCount;
     }
 
     get playersInGame() {
@@ -218,6 +256,21 @@ class Room {
 
     get type() {
         return this._roomType;
+    }
+
+    get stop() {
+        return this._stopAtEnd;
+    }
+
+    get botCutChoice() {
+        return this._botCutChoice;
+    }
+    get botCutLoc() {
+        return this._botCutLoc;
+    }
+
+    get cutter() {
+        return (this.board.povinnost + 2) % 4;// Opposite of povinnost cuts
     }
 
     // Setters

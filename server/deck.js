@@ -14,7 +14,12 @@ const SUIT_SORT_ORDER = {
 }
 
 class Deck {
-    constructor() {
+    constructor(d) {
+        if (d) {
+            //Create a copy of this deck instead
+            this._deck = structuredClone(d.deck);
+            return;
+        }
         this._baseDeck = Deck.createDeck();
         this._deck = Deck.createDeck();
         this.shuffleDeck(3);
@@ -70,6 +75,123 @@ class Deck {
 
     splice(start, end) {
         return this._deck.splice(start, end);
+    }
+
+    static points(cards) {
+        let tp = 0;
+        for (let i in cards) {
+            tp += Deck.pointValue(cards[i]);
+        }
+        return tp;
+    }
+
+    static get5(cards) {
+        if (cards.length == 0) {return 0;}
+        if (Deck.points(cards) <= 5 || cards.length <= 4) {
+            return cards.length;
+        }
+        if (Deck.points(cards.slice(0,5)) > 5) {
+            //First 5 are not all 1s
+            if (Deck.pointValue(cards[0]) == 5) {
+                return 1;//5-pointer
+            }
+            if (Deck.pointValue(cards[1]) == 5) {
+                let temp = cards[0];
+                cards[0] = cards[1];
+                cards[1] = temp;
+                return 1;
+            }
+            if (Deck.points(cards.slice(0,2)) == 5) {
+                //Queen and 1, or rider and jack
+                return 2;
+            }
+            if (Deck.pointValue(cards[2]) == 5) {
+                let temp = cards[0];
+                cards[0] = cards[2];
+                cards[2] = temp;
+                return 1;
+            }
+            if (Deck.points(cards.slice(0,3)) == 5) {
+                return 3;
+            }
+            if (Deck.pointValue(cards[3]) == 5) {
+                let temp = cards[0];
+                cards[0] = cards[3];
+                cards[3] = temp;
+                return 1;
+            }
+            if (Deck.points(cards.slice(0,4)) == 5) {
+                return 4;
+            }
+            switch (Deck.pointValue(cards[0])) {
+                case 1:
+                    //First few cards don't add up to 5 - next two together must bust
+                case 2:
+                    //Next two together must bust
+                    return 1;//I'm too lazy to code that
+                case 3:
+                    //May bust with second. Look either for a jack or 2 1s
+                    let first = -1;
+                    for (let i in cards) {
+                        let pv = Deck.pointValue(cards[i])
+                        if (pv == 1 && ~first) {
+                            let temp = cards[1];
+                            cards[1] = cards[first];
+                            cards[first] = temp;
+
+                            temp = cards[2];
+                            cards[2] = cards[i];
+                            cards[i] = temp;
+                            return 3;
+                        } else if (pv == 1) {
+                            first = i;
+                        } else if (pv == 2) {
+                            let temp = cards[1];
+                            cards[1] = cards[i];
+                            cards[i] = temp;
+                            return 2;
+                        }
+                    }
+                    return cards.length; // Nothing adds to 5
+                case 4:
+                    //Def. busts with second card. Look for 1 pointer
+                    let idx = -1;
+                    for (let i in cards) {
+                        if (Deck.pointValue(cards[i]) == 1) {
+                            idx = i;
+                            break;
+                        }
+                    }
+                    if (idx = -1) {
+                        //No more 1-pointers :( just give up
+                        return cards.length;
+                    }
+                    let temp = cards[1];
+                    cards[1] = cards[idx];
+                    cards[idx] = temp;
+                    return 2;
+            }
+        }
+        return 5;//First 5 are all 1s
+    }
+
+    static simulateCounting(povCards, oppCards) {
+        let stack = [];
+
+        //Simulate counting the cards and return one string of all the cards put together
+        if (povCards.length < oppCards.length - 5) {
+            let num;
+            while (num = Deck.get5(povCards)) {
+                stack = stack.concat(povCards.splice(0,num));
+            }
+        }
+        if (oppCards.length < povCards.length - 5) {
+            let num;
+            while (num = Deck.get5(oppCards)) {
+                stack = stack.concat(oppCards.splice(0,num));
+            }
+        }
+        return povCards.concat(stack).concat(oppCards);
     }
 
     static sortCards(toSort, aceHigh) {
@@ -465,6 +587,10 @@ class Deck {
     //Getters
     get deck() {
         return this._deck
+    }
+
+    set deck(deck) {
+        this._deck = deck;
     }
 
 }

@@ -5,6 +5,22 @@ const SERVER = require('./logger.js');
 class Robot {
     //ROBOT DIFFICULTY LAYOUT: go from hardest -> easiest so the more difficult algorithms fall back onto the less difficult ones while we haven't yet finished
     //BEGINNER: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5
+    static robotShuffle() {
+        //Returns 'type'
+        //1: cut, 2: riffle, 3: randomize. DON'T DO 3.
+        return Math.random(1,3);
+    }
+
+    static robotShuffleAgain() {
+        //Returns boolean
+        return Math.random(0,10) > 8;
+    }
+
+    static robotCutLocation() {
+        return Math.random(7,47);
+    }
+    
+    
     static robotDiscard(hand, difficulty) {
         switch (difficulty) {
             case DIFFICULTY.AI:
@@ -27,8 +43,15 @@ class Robot {
                 //Fallthrough to highest point-value
             case DIFFICULTY.EASY:
                 //Return highest point value card (most likely a queen)
+                if (Deck.handWithoutGray(hand).length == 0) {
+                    //Oops! gotta discard a trump
+                    hand = Deck.grayUndiscardables(hand);
+                    if (Deck.handWithoutGray(hand).length == 0) {
+                        SERVER.error('Hand has no valid cards!')
+                        SERVER.error(hand);
+                    }
+                }
                 return Deck.highestPointValue(Deck.handWithoutGray(hand));
-                break;
             case DIFFICULTY.BEGINNER:
                 return Deck.firstSelectableCard(hand);
             default:
