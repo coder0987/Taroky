@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <div w3-include-html="/nav.html"></div>
+
+    <title>Room Preferences</title>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body> 
+<h1>Room Preferences</h1>
+
+<div class="container-fluid white card">
+  <div class="card-body">
+    <h2 class="card-title">Room Preferences</h2>
+
+    <!--IDs of items below have not been changed from the user preferences page. IDs will need to be room specific?-->
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="chatSwitch">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Chat</label>
+          </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="aceHighLow">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Ace high</label>
+          </div>
+
+         <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="knocking">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Knocking</label>
+          </div>
+
+          <label class="form-label">Difficulty</label>
+          <div class="btn-group container-fluid flex-wrap: wrap" role="group" aria-label="difficulty">
+            <input type="radio" class="btn-check" name="difficulty" id="diff1" autocomplete="off" checked>
+            <label class="btn btn-primary" for="btnradio1">Beginner</label>
+            <input type="radio" class="btn-check" name="btnradio" id="diff2" autocomplete="off">
+            <label class="btn btn-primary" for="btnradio2">Easy</label>
+            <input type="radio" class="btn-check" name="difficulty" id="diff3" autocomplete="off">
+            <label class="btn btn-primary" for="btnradio1">Normal</label>
+            <input type="radio" class="btn-check" name="difficulty" id="diff4" autocomplete="off">
+            <label class="btn btn-primary" for="btnradio2">Hard</label>
+            <input type="radio" class="btn-check" name="btnradio" id="diff5" autocomplete="off">
+            <label class="btn btn-primary" for="btnradio2">Ruthless</label>
+            <input type="radio" class="btn-check" name="difficulty" id="diff6" autocomplete="off">
+            <label class="btn btn-primary" for="btnradio1">AI</label>
+
+          </div>
+        </div>
+</div><br>
+
+
+
+<div class="p-2 position-sticky bottom-0 row"><button class="btn red" id="saveUP">Save preferences</button></div>
+    </body>
+    </html>
