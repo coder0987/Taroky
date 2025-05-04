@@ -243,6 +243,17 @@ class Room {
         return highestChipsCount;
     }
 
+    get bestHandNum() {
+        //Returns the player with the highest hand ranking. If tie, ignore it
+        let highestHand = 0;
+        for (let i in this._players) {
+            if (this._players[i].handRank > this._players[highestHand].handRank) {
+                highestHand = i;
+            }
+        }
+        return highestHand;
+    }
+
     get playersInGame() {
         let playersInGameArr = [];
         for (let i in this._players) {

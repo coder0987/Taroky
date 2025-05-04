@@ -1676,6 +1676,10 @@ function actionCallback(action, room, pn) {
             //Determines point which point cards the player has, starting with Povinnost and rotating around. Povinnost has the option to call Bida or Uni but others are called automatically
             let isPovinnost = room.board.povinnost == pn;
             //Needed info: trump count, 5-pointer count, trul detection
+
+            //Quick hand ranking
+            room.players[pn].handRank = Deck.basicHandRanking(currentHand);
+
             let numTrumps = 0;
             let fiverCount = 0;
             let owedChips = 0;
@@ -2586,15 +2590,15 @@ function actionCallback(action, room, pn) {
                 }
             }
             action.player = (action.player+1)%4;
+            if (room.stop) {
+                SERVER.log('Stopping game in room ' + room.name);
+                return;//End the round
+            }
             if (action.player == room.board.povinnost) {
                 room.resetForNextRound();
                 
                 action.player = room['board'].povinnost;//already iterated
                 action.action = 'play';
-            }
-            if (room.stop) {
-                SERVER.log('Stopping game in room ' + room.name);
-                return;//End the round
             }
             actionTaken = true;
             break;

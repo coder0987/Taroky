@@ -62,7 +62,8 @@ class ShuffleTest {
         theRoom.playToEnd();
         
         let deck = theRoom.deck;
-        let winner = theRoom.winnerNum - theRoom.board.povinnost + 4;//Povinnost will always be 2
+        //Can get winner based on theRoom.winnerNum or theRoom.bestHandNum
+        let winner = theRoom.bestHandNum - theRoom.board.povinnost + 4;//Povinnost will always be 0
         winner %= 4;
         
         /*

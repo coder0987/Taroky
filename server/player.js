@@ -18,6 +18,7 @@ class Player {
         this._savePoints = [];
         this._consecutiveAutos = 0;
         this._avatar = 0;
+        this._handRank = 0;
         this._ai = ai;//AI is a string representing the AI's ID on the remote AI server
     }
 
@@ -27,6 +28,7 @@ class Player {
         this.tempHand = [];
         this.isTeamPovenost = false;
         this._publicTeam = 0;
+        this._handRank = 0;
     }
 
     createAI() {
@@ -268,36 +270,6 @@ class Player {
         return guarantees;
     }
 
-    basicHandRanking() {
-        /*Returns a point-value estimate of how good a hand is
-        Points are given for:
-            -Voided suits (2pt each)
-            -Trump
-            -Trump again, if higher than XV
-            -Trump chain, for each guaranteed win trump (Skyz, then XXI, then XX, etc)
-            -Kings/5-point cards
-        */
-        let handRankingPoints = 0;
-        handRankingPoints += trumpChain(hand);
-        for (let i in this._hand) {
-            if (hand[i].suit == 'Trump') {
-                handRankingPoints++;
-                if (VALUE_REVERSE(this._hand[i].value) >= 14) {
-                    handRankingPoints++;
-                }
-            }
-            if (pointValue(this._hand[i]) == 5) {
-                handRankingPoints++;
-            }
-        }
-        for (let i = 0; i < 4; i++) {
-            if (numOfSuit(SUIT[i] == 0)) {
-                handRankingPoints++;
-            }
-        }
-        return handRankingPoints;
-    }
-
     //Setters
     set type(type) {
         this._type = type;
@@ -345,6 +317,10 @@ class Player {
 
     set avatar(avatar) {
         this._avatar = avatar;
+    }
+
+    set handRank(handRank) {
+        this._handRank = handRank;
     }
 
     updateLastMessageSentTime() {
@@ -402,6 +378,10 @@ class Player {
 
     get avatar() {
         return this._avatar;
+    }
+
+    get handRank() {
+        return this._handRank;
     }
 }
 
