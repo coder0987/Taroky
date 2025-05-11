@@ -4,6 +4,8 @@ const SERVER = require('./logger.js');
 const http = require('http');
 
 class Player {
+    #client;
+
     constructor(type, ai) {
         this._type = type;
         this._socket = -1;
@@ -323,6 +325,10 @@ class Player {
         this._handRank = handRank;
     }
 
+    set client(client) {
+        this.#client = client;
+    }
+
     updateLastMessageSentTime() {
         this._timeLastMessageSent = Date.now();
     }
@@ -382,6 +388,10 @@ class Player {
 
     get handRank() {
         return this._handRank;
+    }
+
+    get client() {
+        return this.#client;
     }
 }
 

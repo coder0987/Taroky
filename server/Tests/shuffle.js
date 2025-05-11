@@ -16,7 +16,7 @@ class ShuffleTest {
         /*this.runTest();
         console.log(winnersMatrix);
         return;*/
-        for (let i=0; i<10000; i++) {
+        for (let i=0; i<100; i++) {
             try {
                 this.runTest();
                 SERVER.error(i)

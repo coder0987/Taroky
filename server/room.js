@@ -1,12 +1,18 @@
 const Board = require('./board.js');
 const Player = require('./player.js');
 const Deck = require('./deck.js');
+const GamePlay = require('./GamePlay.js');
+const GameManager = require('./GameManager.js');
 const SERVER = require('./logger.js');
-const {DIFFICULTY, PLAYER_TYPE, ROOM_TYPE, NUM_AVATARS} = require('./enums.js');
+const {DIFFICULTY, PLAYER_TYPE, ROOM_TYPE, NUM_AVATARS, MESSAGE_TYPE} = require('./enums.js');
+const {cardsToNotation} = require('./notation');
+const {playerOffset} = require('./utils');
 
 let iterator = 100000;
 
 class Room {
+    #gameplay;
+
     constructor(args) {
         let name         = args.name || 'Room';
         let settings     = args.settings || {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'aceHigh':false, 'locked':true};
@@ -40,6 +46,8 @@ class Room {
         this._players[1].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
         this._players[2].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
         this._players[3].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
+
+        this.#gameplay = new GamePlay(this);
 
         if (args.started) {
             this.jumpStart(args.povinnost);
@@ -111,6 +119,53 @@ class Room {
         }
     }
 
+    notifyStartGame() {
+        for (let i = 0; i < 4; i++) {
+            if (this._players[i].type == PLAYER_TYPE.HUMAN) {
+                players[this._players[i].socket].socket.emit('startingGame', this._host, i, this._board.gameNumber, this._settings);
+            }
+        }
+    }
+
+    updateImportantInfo() {
+        this._board.importantInfo.chips = {
+            '0': this._players[0].chips,
+            '1': this._players[1].chips,
+            '2': this._players[2].chips,
+            '3': this._players[3].chips
+        };
+    }
+
+    updateDealNotation() {
+        this._board.importantInfo.povinnost = (this._board.povinnost+1);
+        this._board.notation = ''   + this._players[             this._board.povinnost].chips + '/'
+                                    + this._players[playerOffset(this._board.povinnost,1)].chips + '/'
+                                    + this._players[playerOffset(this._board.povinnost,2)].chips + '/'
+                                    + this._players[playerOffset(this._board.povinnost,3)].chips + '/'
+                                    + cardsToNotation(this._players[playerOffset(this._board.povinnost,0)].hand) + '/'
+                                    + cardsToNotation(this._players[playerOffset(this._board.povinnost,1)].hand) + '/'
+                                    + cardsToNotation(this._players[playerOffset(this._board.povinnost,2)].hand) + '/'
+                                    + cardsToNotation(this._players[playerOffset(this._board.povinnost,3)].hand) + '/'
+                                    + cardsToNotation(this._board.talon) + '/';
+        
+        this.setSettingsNotation(this);
+
+        SERVER.log(this._board.notation);
+    }
+
+    prepReturnToGame() {
+        for (let i in this._players) {
+            if (this._players[i].socket != -1) {
+                GameManager.INSTANCE.returnToGame[this._players[i].socket] = {notation: this._board.notation + this._settingsNotation, povinnost: this._board.povinnost, pn: i};
+            }
+        }
+    }
+
+    informPovinnost() {
+        SERVER.debug('Povinnost is ' + this._board.povinnost, this._name, this._name);
+        this.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST, { 'pn': this._board.povinnost }, this._board.povinnost);
+    }
+
     ejectAudience() {
         for (let i in this._audience) {
             this._audience[i].messenger.emit('gameEnded');
@@ -157,6 +212,10 @@ class Room {
     }
 
     // Getters
+    get gameplay() {
+        return this.#gameplay;
+    }
+
     get settings() {
         return this._settings;
     }

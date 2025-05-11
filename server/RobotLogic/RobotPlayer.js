@@ -1,8 +1,16 @@
-const Deck = require('./deck.js');
-const { SUIT, DIFFICULTY, DIFFICULTY_TABLE, VALUE_REVERSE, VALUE_REVERSE_ACE_HIGH, TRUMP_VALUE } = require('./enums.js');
-const SERVER = require('./logger.js');
+/**
+ * TODO
+ * This class will replace the current Robot class
+ * RobotEasy
+ * RobotMedium
+ * etc.
+ * 
+ * will extend this class and be instantiated by the room
+ * the methods will no longer be static
+ */
 
-class Robot {
+
+class RobotPlayer extends Player {
     //ROBOT DIFFICULTY LAYOUT: go from hardest -> easiest so the more difficult algorithms fall back onto the less difficult ones while we haven't yet finished
     //BEGINNER: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5
     static robotShuffle() {
@@ -598,7 +606,7 @@ class Robot {
     }
     static robotChooseHand(theChoices) {
         for (let i in theChoices) {
-            if (typeof theChoices[i] !== 'undefined' && theChoices[i] !== null) {
+            if (typeof theChoices[i] !== 'undefined') {
                 return i;
             }
         }
@@ -642,5 +650,4 @@ function whoIsWinning(table, aceHigh) {
     return table[currentWinner];
 }
 
-
-module.exports = Robot;
+module.exports = RobotPlayer;

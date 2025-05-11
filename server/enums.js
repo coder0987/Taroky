@@ -36,6 +36,37 @@ const ROOM_TYPE = {STANDARD: 0, DEBUG: 1, TRAINING: 2, CHALLENGE: 3, TEST: 4};
 
 const NUM_AVATARS = 58;
 
+const ACTION = {
+    START: 'start',
+    PLAY: 'play',
+    SHUFFLE: 'shuffle',
+    CUT: 'cut',
+    DEAL: 'deal',
+    CHOICE: '12choice',
+    PREVER: 'prever',
+    DRAW_TALON: 'drawTalon',
+    PASS_TALON: 'passTalon',
+    PASS_PREVER: 'passPrever',
+    CALL_PREVER: 'callPrever'
+}
+
+const SHUFFLE_TYPE = {
+    CUT: 1,
+    RIFFLE: 2,
+    RANDOM: 3
+}
+
+const CUT_TYPE = {
+    CUT: 'Cut',
+    ONES: '1',
+    TWOS: '2',
+    THREES: '3',
+    FOURS: '4',
+    TWELVES: '12',
+    TWELVE_STRAIGHT: '12 Straight',
+    THREE_FOUR_FIVE: '345',
+}
+
 module.exports = {
     SUIT,
     SUIT_REVERSE,
@@ -52,5 +83,8 @@ module.exports = {
     DISCONNECT_TIMEOUT,
     SENSITIVE_ACTIONS,
     ROOM_TYPE,
-    NUM_AVATARS
+    NUM_AVATARS,
+    ACTION,
+    SHUFFLE_TYPE,
+    CUT_TYPE
 }

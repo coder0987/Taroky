@@ -35,8 +35,10 @@ const { SUIT,
     DISCONNECT_TIMEOUT,
     SENSITIVE_ACTIONS,
     ROOM_TYPE,
-    NUM_AVATARS } = require('./enums.js');
+    NUM_AVATARS,
+    ACTION } = require('./enums.js');
 const Challenge = require('./challenge.js');
+const GameManager = require('./GameManager.js');
 
 const http = require('http');
 const https = require('https');
@@ -116,11 +118,13 @@ const server = require('http').createServer(app);
 //SOCKETS
 const io = require('socket.io')(server);
 
+const gm = new GameManager();
+
 SOCKET_LIST = {};
 players = {};
-rooms = {};
+rooms = gm.rooms;
 
-const returnToGame = {};
+const returnToGame = gm.returnToGame;
 
 let simplifiedRooms = {};
 let ticking = false;
@@ -712,10 +716,10 @@ function playerAction(action, room, pn) {
         case '12choice':
             let tempChoiceArray = {};
             for (let i in room.board.hands) {
-                if (typeof room.board.hands[i] == 'undefined') {
+                if (typeof room.board.hands[i] == 'undefined' || !room.board.hands[i]) {
                     delete tempChoiceArray[i];
                 } else {
-                    tempChoiceArray[i] = i;
+                    tempChoiceArray[i] = +i + 1;
                 }
             }
             SOCKET_LIST[room.players[pn].socket].emit('12choice',tempChoiceArray);
@@ -1221,164 +1225,25 @@ function actionCallback(action, room, pn) {
     SERVER.functionCall('actionCallback', {name:'action', value:action.action}, {name:'pn',value:pn}, {name:'Room Number',value:room.name}, {name:'info',value:JSON.stringify(action.info)});
 
     switch (action.action) {
-        case 'start':
-            room['board'].gameNumber = 1;
-            SERVER.log('Game 1 is starting',room.name);
-            action.action = 'shuffle';
-            action.player = pn;//First game, host is assumed to shuffle
-            for (let i = 0; i < 4; i++) {
-                if (room['players'][i].type == PLAYER_TYPE.HUMAN) {
-                    //Starting the game is a special case. In all other cases, actions completed will inform the players through the take action methods
-                    players[room['players'][i].socket].socket.emit('startingGame', room.host, i, room['board'].gameNumber, room.settings);//Inform the players of game beginning.
-                }
-            }
-            room.board.importantInfo.chips = {
-                '0': room.players[0].chips,
-                '1': room.players[1].chips,
-                '2': room.players[2].chips,
-                '3': room.players[3].chips
-            }
-            actionTaken = true;
+        case ACTION.START:
+            actionTaken = room.gameplay.start();
             break;
-        case 'play':
-            room['board'].gameNumber++;
-            SERVER.log('Game ' + room['board'].gameNumber + ' is starting',room.name);
-            action.action = 'shuffle';
-            action.player = (room['board'].povinnost+3)%4;
-            room.board.importantInfo.chips = {
-                '0': room.players[0].chips,
-                '1': room.players[1].chips,
-                '2': room.players[2].chips,
-                '3': room.players[3].chips
-            }
-            actionTaken = true;
+        case ACTION.PLAY:
+            actionTaken = room.gameplay.play();
             break;
-        case 'shuffle':
-            const type = action.info.type;
-            const again = action.info.again;
-            const location = action.info.location >= 7 && action.info.location <= 47 ? action.info.location : 32;
-            if (type > 0 && type < 4) {
-                //1: cut, 2: riffle, 3: randomize
-                room['deck'].shuffleDeck(type, location);
-            }
-            if (!again) {
-                action.action = 'cut';
-                action.player = (pn + 3) % 4;//The player before the dealer must cut, then the dealer must deal
-                actionTaken = true;
-            }
+        case ACTION.SHUFFLE:
+            actionTaken = room.gameplay.shuffle();
             break;
-        case 'cut':
-            style = action.info.style;
-            if (style == 'Cut') room['deck'].shuffleDeck(1, action.info.location);
-            action.action = 'deal';
-            action.player = (pn + 1) % 4;//The player after the cutter must deal
-            room['board']['cutStyle'] = style;//For the dealer
-            actionTaken = true;
+        case ACTION.CUT:
+            actionTaken = room.gameplay.cut();
             break;
-        case 'deal':
-            style = room['board']['cutStyle'];
-            if (!style) style = 'Cut';
-            //console.log(room.deck instanceof Deck);
-            for (let i = 0; i < 6; i++) room['board'].talon[i] = room.deck.splice(0, 1)[0];
-            switch (style) {
-                case '1':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
-                    break;
-                case '2':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 2; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
-                    break;
-                case '3':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 3; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
-                    break;
-                case '4':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 4; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
-                    break;
-                case '12':
-                    room.board.hands = {1:[], 2:[], 3:[], 4:[]};
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) {
-                        for (let c = 0; c < 12; c++) {
-                            room.board.hands[i+1].push(room.deck.splice(0, 1)[0]);
-                        }
-                    }
-                    action.action = '12choice';
-                    action.player = (action.player+1)%4;
-                    actionTaken = true;
-                    break;
-                case '12 Straight':
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 12; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
-                    break;
-                case '345':
-                    for (let t = 3; t < 6; t++) {
-                        for (let i = 0; i < 4; i++) {
-                            for (let c = 0; c < t; c++) room['players'][i].hand.push(room.deck.splice(0, 1)[0]);
-                        }
-                    }
-                    break;
-                default:
-                    //Cases 6, Cut, or any malformed cut style. Note the deck has already been cut
-                    for (let i = 0; room['deck'].deck[0]; i = (i + 1) % 4) { for (let c = 0; c < 6; c++)room['players'][i].hand.push(room.deck.splice(0, 1)[0]); }
-            }
-            if (actionTaken) {
-                //12 choice
-                break;
-            }
-            if (room['board'].povinnost == -1) {
-                //Povinnost first round chosen by cards
-                room['board'].povinnost = findPovinnost(room['players'])
-            }
-            room.board.importantInfo.povinnost = (room.board.povinnost+1);
-            room.board.notation = '' + room.players[room['board'].povinnost].chips + '/'
-                                    + room.players[playerOffset(room['board'].povinnost,1)].chips + '/'
-                                    + room.players[playerOffset(room['board'].povinnost,2)].chips + '/'
-                                    + room.players[playerOffset(room['board'].povinnost,3)].chips + '/'
-                                    + cardsToNotation(room.players[playerOffset(room['board'].povinnost,0)].hand) + '/'
-                                    + cardsToNotation(room.players[playerOffset(room['board'].povinnost,1)].hand) + '/'
-                                    + cardsToNotation(room.players[playerOffset(room['board'].povinnost,2)].hand) + '/'
-                                    + cardsToNotation(room.players[playerOffset(room['board'].povinnost,3)].hand) + '/'
-                                    + cardsToNotation(room.board.talon) + '/';
-            setSettingNotation(room);
-            //Povinnost rotation is handled by the board reset function
-            SERVER.log(room.board.notation);//For debug when the server crashes
-
-            for (let i in room.players) {
-                if (room.players[i].socket != -1) {
-                    returnToGame[room.players[i].socket] = {notation: room.board.notation + room.settingsNotation, povinnost: room.board.povinnost, pn: i};
-                }
-            }
-
-            SERVER.debug('Povinnost is ' + room['board'].povinnost,room.name, room.name);
-            room.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':room['board'].povinnost},room['board'].povinnost);
-            action.action = 'prever';
-            action.player = room['board'].povinnost;
-            actionTaken = true;
+        case ACTION.DEAL:
+            actionTaken = room.gameplay.deal();
             break;
-        case '12choice':
-            let chosenHand = room.board.hands[action.info.choice];
-            if (!chosenHand) {
-                SERVER.error('Chosen hand does not exist',room.name);
-                break;
-            }
-            while (chosenHand[0]) {room.players[action.player].hand.push(chosenHand.splice(0,1)[0]);}
-            delete room.board.hands[action.info.choice];
-            if (room.board.hands[1] || room.board.hands[2] || room.board.hands[3] || room.board.hands[4]) {
-                //At least 1 hand is left
-                action.player = (action.player+1)%4;
-                actionTaken = true;
-            } else {
-                if (room['board'].povinnost == -1) {
-                    //Povinnost first round chosen by cards
-                    room['board'].povinnost = findPovinnost(room['players'])
-                }
-                room.board.importantInfo.povinnost = (room.board.povinnost+1);
-                //Povinnost rotation is handled by the board reset function
-                SERVER.debug('Povinnost is ' + room['board'].povinnost,room.name);
-                room.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST,{'pn':room['board'].povinnost},room['board'].povinnost);
-                action.action = 'prever';
-                action.player = room['board'].povinnost;
-                actionTaken = true;
-            }
+        case ACTION.CHOICE:
+            actionTaken = room.gameplay.choice();
             break;
-        case 'prever':
+        case ACTION.PREVER:
             break;//ignore this, the callback is for the players
         case 'drawTalon':
             if (action.player == room['board'].povinnost) {
@@ -3365,10 +3230,10 @@ io.sockets.on('connection', function (socket) {
     });
     socket.on('chooseHand', function(theChoice) {
         if (players[socketId] && rooms[players[socketId].room] && rooms[players[socketId].room]['board']['nextStep'].action == '12choice' && rooms[players[socketId].room]['board']['nextStep'].player == players[socketId]['pn']) {
-            if (isNaN(theChoice) || !rooms[players[socketId].room]['board'].hands[theChoice]) {
+            if (isNaN(theChoice) || !rooms[players[socketId].room]['board'].hands[theChoice - 1]) {
                 return;
             }
-            rooms[players[socketId].room]['board']['nextStep'].info.choice = theChoice;
+            rooms[players[socketId].room]['board']['nextStep'].info.choice = theChoice - 1;
             actionCallback(rooms[players[socketId].room]['board']['nextStep'], rooms[players[socketId].room], rooms[players[socketId].room]['board']['nextStep'].player);
         }
     });

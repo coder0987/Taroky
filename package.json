@@ -9,5 +9,14 @@
     "mathjs": "^11.8.0",
     "node-schedule": "^2.1.1",
     "socket.io": "^4.5.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "scripts": {
+    "test": "jest",
+    "dev": "node ./server/_server.js debug",
+    "start": "node ./server/_server.js",
+    "shuffle": "node ./server/_server.js test 1 shuffle"
   }
 }

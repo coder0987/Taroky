@@ -77,6 +77,31 @@ class Deck {
         return this._deck.splice(start, end);
     }
 
+    dealTalon(talon) {
+        for (let i = 0; i < 6; i++)
+            talon[i] = this.splice(0, 1)[0];
+    }
+
+    dealBy(hands, num) {
+        for (let i = 0; this._deck[0]; i = (i + 1) % 4) {
+            for (let c = 0; c < num; c++) {
+                hands[i].push(this.splice(0, 1)[0]);
+            }
+        }
+    }
+
+    deal345(hands) {
+        for (let t = 3; t < 6; t++) {
+            for (let i = 0; i < 4; i++) {
+                for (let c = 0; c < t; c++) hands[i].push(this.splice(0, 1)[0]);
+            }
+        }
+    }
+
+    static dealHand(from, to) {
+        while (from[0]) {to.push(from.splice(0,1)[0]);}
+    }
+
     static points(cards) {
         let tp = 0;
         for (let i in cards) {
