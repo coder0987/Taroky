@@ -136,6 +136,14 @@ class Room {
         };
     }
 
+    updateImportantPreverInfo() {
+        this._board.importantInfo.prever = (this._board.prever+1);
+    }
+
+    updateImportantPreverMultiplierInfo() {
+        this._board.importantInfo.preverMultiplier = this._board.preverMultiplier;
+    }
+
     updateDealNotation() {
         this._board.importantInfo.povinnost = (this._board.povinnost+1);
         this._board.notation = ''   + this._players[             this._board.povinnost].chips + '/'
@@ -168,6 +176,52 @@ class Room {
 
     informDrawTalon(pn, numCards) {
         this.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards': this._board.talon.slice(0,numCards)});
+    }
+
+    informPreverTalon(pn, step) {
+        this.informPlayer(pn, '', MESSAGE_TYPE.PREVER_TALON,{'cards': this._players[pn].tempHand,'step':step});
+    }
+
+    informPreverKeptFirst() {
+        this.informPlayers('kept the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':this._board.prever,'step':3},this._board.prever);
+    }
+
+    informPreverRejectedFirst() {
+        this.informPlayers('rejected the first set of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':this._board.publicPreverTalon,'pn':this._board.prever,'step':1},this._board.prever);
+    }
+
+    informPreverKeptSecond() {
+        this.informPlayers('kept the second set of cards',MESSAGE_TYPE.PREVER_TALON,{'pn':this._board.prever,'step':3},this._board.prever);
+    }
+
+    informPreverRejectedSecond() {
+        this.informPlayers('rejected the second of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':this._board.publicPreverTalon.slice(3,6),'pn':this._board.prever,'step':1},this._board.prever);
+    }
+
+    establishPreverTeams() {
+        if (this._board.povinnost === this._board.prever) {
+            // Povinnost called prever. Everyone is against povinnost
+            for (let i=0; i<4; i++) {
+                this._players[i].isTeamPovinnost = false;
+                this._players[i].publicTeam = -1;
+            }
+            this._players[this._board.prever].isTeamPovinnost = true;
+            this._players[this._board.prever].publicTeam = 1;
+        } else {
+            // Someone besides povinnost called prever. Everyone is team povinnost
+            for (let i=0; i<4; i++) {
+                this._players[i].isTeamPovinnost = true;
+                this._players[i].publicTeam = 1;
+            }
+            this._players[this._board.prever].isTeamPovinnost = false;
+            this._players[this._board.prever].publicTeam = -1;
+        }
+    }
+
+    markCardsAsPlayed(listOfCards) {
+        for (let i in listOfCards) {
+            this._board.cardsPlayed[Deck.cardId(listOfCards[i], this._settings.aceHigh)] = true;
+        }
     }
 
     ejectAudience() {

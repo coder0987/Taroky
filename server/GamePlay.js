@@ -54,6 +54,10 @@ class GamePlay {
         return this.#room.board.povinnost;
     }
 
+    get prever() {
+        return this.#room.board.prever;
+    }
+
     set action(action) {
         this.#room.board.nextStep.action = action;
     }
@@ -64,6 +68,10 @@ class GamePlay {
 
     set povinnost(pn) {
         this.#room.board.povinnost = pn;
+    }
+
+    set prever(pn) {
+        this.#room.board.prever = pn;
     }
 
     nextPlayer() {
@@ -257,7 +265,126 @@ class GamePlay {
         return true;
     }
 
-    
+    passPrever() {
+        this.nextPlayer();
+
+        if (this.player === this.povinnost) {
+            if (this.prever !== -1) {
+                this.action = ACTION.DRAW_PREVER_TALON;
+                this.player = this.prever;
+                this.#room.establishPreverTeams();
+
+                this.drawPreverTalonStep1();
+
+                return true;
+            }
+
+            this.action = ACTION.DRAW_TALON;
+            return true;
+        }
+
+        this.action = ACTION.PREVER;
+        return true;
+    }
+
+    callPrever() {
+        this.board.playingPrever = true;
+        this.prever = this.player;
+        this.board.preverTalonStep = 0;
+        this.#room.updateImportantPreverInfo();
+        
+        this.nextPlayer();
+        this.action = ACTION.PREVER;
+        
+        if (this.player === this.povinnost) {
+            // Last player called prever
+            this.#room.establishPreverTeams();
+
+            this.prevPlayer();
+            this.action = ACTION.DRAW_PREVER_TALON;
+
+            this.drawPreverTalonStep1();
+        }
+
+        return true;
+    }
+
+    drawPreverTalon() {
+        if (this.board.preverTalonStep === 0) {
+            this.drawPreverTalonStep1();
+        } else if (this.board.preverTalonStep === 1) {
+            this.drawPreverTalonStep2();
+        } else if (this.board.preverTalonStep === 2) {
+            this.drawPreverTalonStep3();
+        }
+
+        this.#room.updateImportantPreverMultiplierInfo();
+        return true;
+    }
+
+    drawPreverTalonStep1() {
+        Deck.dealCards(this.board.talon, this.currentPlayer.tempHand, 3);
+        Deck.sortCards(this.currentPlayer.tempHand, this.#room.settings.aceHigh);
+
+        this.#room.informPreverTalon(this.player, 0);
+
+        this.board.preverTalonStep = 1;
+        this.board.preverMultiplier = 1;
+    }
+
+    drawPreverTalonStep2() {
+        if (this.info.accept) {
+            Deck.dealCards(this.currentPlayer.tempHand, this.currentPlayer.hand, 3);
+            Deck.dealCards(this.board.talon, this.#room.players[nextPlayer(this.player)].discard, 3);
+
+            this.#room.informPreverKeptFirst();
+            
+            this.action = ACTION.DISCARD;
+            return;
+        }
+
+        // Prever rejected the first set of cards
+        Deck.copyCards(this.currentPlayer.tempHand, this.board.publicPreverTalon, 3);
+
+        this.#room.informPreverRejectedFirst();
+
+        Deck.dealCards(this.currentPlayer.tempHand, this.board.talon, 3);
+        Deck.dealCards(this.board.talon, this.currentPlayer.tempHand, 3);
+
+        this.#room.informPreverTalon(this.player, 1);
+
+        this.board.preverTalonStep = 2;
+        this.board.preverMultiplier = 2;
+    }
+
+    drawPreverTalonStep3() {
+        if (this.info.accept) {
+            // Prever has accepted the second set of 3 cards
+            Deck.dealCards(this.currentPlayer.tempHand, this.currentPlayer.hand, 3);
+
+            this.#room.markCardsAsPlayed(this.board.talon);
+            this.#room.informPreverKeptSecond();
+
+            Deck.dealCards(this.board.talon, this.#room.players[nextPlayer(this.player)].discard, 3);
+
+            this.action = ACTION.DISCARD;
+            return;
+        }
+
+        // Prever has rejected the second set of cards and will instead return to the first set
+        Deck.copyCards(this.currentPlayer.tempHand, this.board.publicPreverTalon, 3);
+
+        this.#room.informPreverRejectedSecond();
+
+        // Move the first set of 3 from the talon to prever's hand, and the second set to an opponent's discard pile
+        Deck.dealCards(this.board.talon, this.currentPlayer.hand, 3);
+        Deck.dealCards(this.currentPlayer.tempHand, this.#room.players[nextPlayer(this.player)].discard, 3);
+
+        this.#room.markCardsAsPlayed(this.board.publicPreverTalon.slice(3,6));
+
+        this.board.preverMultiplier = 4;
+        this.action = ACTION.DISCARD;
+    }
 }
 
 module.exports = GamePlay;

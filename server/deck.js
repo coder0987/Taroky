@@ -106,6 +106,10 @@ class Deck {
         for (let i=0; i<count; i++) {to.push(from.splice(0,1)[0]);}
     }
 
+    static copyCards(from, to, count) {
+        for (let i=0; i<count; i++) {to.push(from.slice(i,i+1)[0]);}
+    }
+
     static points(cards) {
         let tp = 0;
         for (let i in cards) {
