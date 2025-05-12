@@ -3,6 +3,9 @@ const gm = GameManager.INSTANCE;
 
 const Room = require('./room');
 const Database = require('./database');
+const SERVER = require('./logger');
+
+const { notationToObject } = require('./notation');
 
 const https = require('https');
 
@@ -18,19 +21,6 @@ class Auth {
         socket.emit('loginSuccess', username);
         Auth.loadDatabaseInfo(username, socketId, socket);
         socket.emit('dailyChallengeScore', gm.challenge.getUserScore(username));
-
-        Database.promiseCreateOrRetrieveUser(username).then((info) => {
-            SERVER.log('Loaded settings for user ' + username + ': ' + info);
-            players[socketId].userInfo = info;
-            socket.emit('elo',info.elo);
-            socket.emit('admin',info.admin);
-            socket.emit('defaultSettings',notationToObject(info.settings));
-            socket.emit('chat',info.chat);
-            socket.emit('avatar',info.avatar);
-            socket.emit('deckChoice',info.deck);
-        }).catch((err) => {
-            SERVER.warn('Database error:' + err);
-        });
     }
 
     static attemptSignIn(username, token, socket, socketId) {
@@ -38,6 +28,7 @@ class Auth {
             if (Auth.#signInCache[username.toLowerCase()] == token) {
                 Auth.signInSuccess(username, token, socket, socketId);
                 SERVER.log('User ' + socketId + ' did auto sign-in (cache) ' + socket.handshake.auth.username);
+                return;
             }
 
             Auth.signIn(username, token, (err) => {
@@ -63,7 +54,7 @@ class Auth {
             'locked': preferences.locked == 'on'
         });
 
-        if (Auth.#signInCache[username] == token) {
+        if (Auth.#signInCache[username.toLowerCase()] == token) {
             Database.saveUserPreferences(username,settings,avatar,deck,chat);
             for (let i in players) {
                 if (players[i].username == username) {
@@ -85,7 +76,7 @@ class Auth {
     }
 
     static sendUserInfoConditional(res, username, token, error, callback) {
-        if (Auth.#signInCache[username] == token) {
+        if (Auth.#signInCache[username.toLowerCase()] == token) {
             //Good to go
             Database.promiseCreateOrRetrieveUser(username).then((info) => {
                 SERVER.log('Loaded settings for user ' + username + ': ' + info);
