@@ -1,6 +1,11 @@
+const Deck = require('./deck');
+
 class GameManager {
     #returnToGame = {};
     #rooms = {};
+    #players = {};
+    #baseDeck = new Deck();
+    #challenge;
 
     static INSTANCE;
 
@@ -14,6 +19,22 @@ class GameManager {
 
     get rooms() {
         return this.#rooms;
+    }
+
+    get baseDeck() {
+        return this.#baseDeck;
+    }
+
+    get challenge() {
+        return this.#challenge;
+    }
+
+    get players() {
+        return this.#players;
+    }
+
+    set challenge(c) {
+        this.#challenge = c;
     }
 }
 

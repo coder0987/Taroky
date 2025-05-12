@@ -1,7 +1,11 @@
 const Deck = require('./deck.js');
 const {DIFFICULTY, VALUE_REVERSE} = require('./enums.js');
+const { shuffleArray } = require('./utils.js');
+const GameManager = require('./GameManager.js');
 
-let baseDeck = Deck.createDeck();
+const schedule = require('node-schedule');
+
+let baseDeck = GameManager.INSTANCE.baseDeck;
 
 class Challenge {
     constructor() {
@@ -70,6 +74,22 @@ class Challenge {
         }
     }
 
+    scheduleChallenge() {
+        schedule.scheduleJob('0 0 * * *', () => {
+            GameManager.INSTANCE.challenge = new Challenge();
+            for (let i in GameManager.INSTANCE.players) {
+                GameManager.INSTANCE.players[i].socket.emit('challengeOver');
+            }
+            for (let i in GameManager.INSTANCE.rooms) {
+                if (i.substring(0,9) == 'challenge') {
+                    clearTimeout(GameManager.INSTANCE.rooms[i].autoAction);
+                    SERVER.log('Game Ended. Closing the room.',i);
+                    delete GameManager.INSTANCE.rooms[i];
+                }
+            }
+        })
+    }
+
     static generateRandomNotationSequence() {
        let goodHandWeight = 0.7;
        let notation = '100/100/100/100/';
@@ -116,13 +136,6 @@ class Challenge {
        notation += 'pn=' + workingPN;
        return notation;
    }
-}
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
 }
 
 module.exports = Challenge;

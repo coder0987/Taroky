@@ -12,22 +12,20 @@ const TRAINING_MODE = process.argv[2] == 'train';
 //imports
 const SERVER = require('./logger.js');
 SERVER.logLevel = LOG_LEVEL;
+
+const Deck = require('./deck.js');
+const GameManager = require('./GameManager.js');
+
+const gm = new GameManager();
+
 const Player = require('./player.js');
 const Room = require('./room.js');
-const Deck = require('./deck.js');
 const AI = require('./AI.js');
 const Robot = require('./robot.js');
 const AdminPanel = require('./adminPanel.js');
 const Database = require('./database.js');
 const { Buffer } = require('node:buffer')
-const { SUIT,
-    SUIT_REVERSE,
-    RED_VALUE,
-    RED_VALUE_ACE_HIGH,
-    BLACK_VALUE,
-    TRUMP_VALUE,
-    VALUE_REVERSE,
-    VALUE_REVERSE_ACE_HIGH,
+const {
     DIFFICULTY,
     DIFFICULTY_TABLE,
     MESSAGE_TYPE,
@@ -38,17 +36,13 @@ const { SUIT,
     NUM_AVATARS,
     ACTION } = require('./enums.js');
 const Challenge = require('./challenge.js');
-const GameManager = require('./GameManager.js');
+
+const { u, whoWon, findTheI } = require('./utils');
+const { notationToSettings, notationToObject, notationToCards, notate } = require('./notation');
 
 const http = require('http');
 const https = require('https');
-const url = require('url');
-const fs = require('fs');
-const path = require('path');
 const express = require('express');
-const { diffieHellman } = require('crypto');
-const math = require('mathjs');
-const schedule = require('node-schedule');
 const bodyParser = require('body-parser');
 
 const app = express();
@@ -118,11 +112,14 @@ const server = require('http').createServer(app);
 //SOCKETS
 const io = require('socket.io')(server);
 
-const gm = new GameManager();
-
 SOCKET_LIST = {};
-players = {};
+players = gm.players;
 rooms = gm.rooms;
+
+gm.challenge = new Challenge();
+gm.challenge.scheduleChallenge();
+
+let baseDeck = gm.baseDeck;
 
 const returnToGame = gm.returnToGame;
 
@@ -130,356 +127,6 @@ let simplifiedRooms = {};
 let ticking = false;
 let numOnlinePlayers = 0;
 
-let challenge = new Challenge();
-
-schedule.scheduleJob('0 0 * * *', () => {
-    challenge = new Challenge();
-    for (let i in players) {
-        players[i].socket.emit('challengeOver');
-    }
-    for (let i in rooms) {
-        if (i.substring(0,9) == 'challenge') {
-            clearTimeout(rooms[i].autoAction);
-            SERVER.log('Game Ended. Closing the room.',i);
-            delete rooms[i];
-        }
-    }
-})
-
-function notate(room, notation) {
-    if (notation) {
-        try {
-            if (typeof notation !== "string") {
-                SERVER.debug('Notation: not a string');
-                return false;
-            }
-            room = room || new Room({'name':'temporary'});
-            room.board.povinnost = 0;
-            room.board.importantInfo.povinnost = (room.board.povinnost+1);
-            //Return the room
-            let values = notation.split('/');
-            if (values.length > 20 || values.length < 10) {
-                SERVER.debug('Notation: Illegal number of values');
-                return false;
-            }
-
-            //Get the settings
-            let theSettings = values[values.length - 1];
-            notationToSettings(room, theSettings);
-
-            let thePlayers = room.players;
-            for (let i=0; i<4; i++) {
-                if (isNaN(+values[i])) {
-                    SERVER.debug('Notation: chips count is NaN');
-                    return false;
-                }
-                thePlayers[i].chips = +values[i];
-            }
-            for (let i=0; i<4; i++) {
-                let theHand = notationToCards(values[i+4],room.settings.aceHigh);
-                if (theHand && theHand.length == 12) {
-                    thePlayers[i].hand = theHand;
-                } else {
-                    SERVER.debug('Notation: hand is illegal');
-                    return false;
-                }
-            }
-            let theTalon = notationToCards(values[8],room.settings.aceHigh);
-            if (theTalon && theTalon.length == 6) {
-                room.board.talon = theTalon;
-            } else {
-                SERVER.debug('Notation: talon is illegal');
-                return false;
-            }
-            let toCheck = theTalon.concat(thePlayers[0].hand).concat(thePlayers[1].hand).concat(thePlayers[2].hand).concat(thePlayers[3].hand);
-            for (let i in baseDeck) {
-                let found = false;
-                for (let j in toCheck) {
-                    if (baseDeck[i].suit == toCheck[j].suit &&
-                        baseDeck[i].value == toCheck[j].value) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    SERVER.debug('Notation: Missing card');
-                    return false;
-                }
-            }
-
-            //This is the first point at which the game may reasonably be played from
-            //So, encode the settings if they exist. Then, if no more is present, return the room
-            let valuesWithoutSettings = values;
-            delete valuesWithoutSettings[valuesWithoutSettings.length - 1];
-            room.board.notation = (valuesWithoutSettings).join('/');
-            room.board.hasTheI = findTheI(room.players);
-            if (values.length === 10) {
-                room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
-                return room;
-            }
-
-
-            //TODO: finish notation decoding. Next is prever. See TarokyNotation.md
-
-
-            room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
-            return room;
-        } catch (err) {
-            SERVER.debug('Error in notate() ' + err);
-            return false;
-        }
-    }
-    SERVER.debug('Notation: No notation provided');
-    return false;
-}
-
-function u(v) {
-    if (typeof v === 'undefined') {
-        return true;
-    }
-    return false;
-}
-
-function notationToCards(notatedCards, aceHigh) {
-    try {
-        let cards = [];
-        const SUIT_NOTATION = {S:SUIT[0],C:SUIT[1],H:SUIT[2],D:SUIT[3],T:SUIT[4]};
-        const VALUE_NOTATION = {'1':0,'2':1,'3':2,'4':3,'J':4,'R':5,'Q':6,'K':7};
-
-        while (notatedCards.length >= 2) {
-            let suit = SUIT_NOTATION[notatedCards.substring(0,1)];
-            notatedCards = notatedCards.substring(1);
-            if (u(suit)) {
-                return false;
-            }
-            if (suit === SUIT[4]) {
-                let value = TRUMP_VALUE[+notatedCards.substring(0,2)-1];
-                notatedCards = notatedCards.substring(2);
-                if (u(value)) {
-                    return false;
-                }
-                cards.push({'value':value, 'suit': SUIT[4]});
-            } else {
-                let value = VALUE_NOTATION[notatedCards.substring(0,1)];
-                notatedCards = notatedCards.substring(1);
-                let redValueEnum = aceHigh ? RED_VALUE_ACE_HIGH : RED_VALUE;
-                value = (suit === SUIT[0] || suit === SUIT[1]) ? BLACK_VALUE[value] : redValueEnum[value];
-                if (u(value)) {
-                    return false;
-                }
-                cards.push({ 'value': value, 'suit': suit });
-            }
-        }
-        return cards;
-    } catch (err) {
-        SERVER.debug(err);
-        return false;
-    }
-}
-function cardsToNotation(cards) {
-    let theNotation = '';
-    const SUIT_TO_NOTATION = {'Spade': 'S', 'Club': 'C', 'Heart': 'H', 'Diamond': 'D', 'Trump': 'T'};
-    try {
-        for (let i in cards) {
-            theNotation += SUIT_TO_NOTATION[cards[i].suit];
-            if (cards[i].suit == SUIT[4]) {
-                //Trump
-                let temp = +VALUE_REVERSE[cards[i].value] + 1;
-                if (temp < 10) {
-                    temp = '0' + temp;
-                }
-                theNotation += temp;
-            } else {
-                switch (cards[i].value) {
-                    case 'Ace':
-                    case 'Seven':
-                        theNotation += '1';
-                        break;
-                    case 'Two':
-                    case 'Eight':
-                        theNotation += '2';
-                        break;
-                    case 'Three':
-                    case 'Nine':
-                        theNotation += '3';
-                        break;
-                    case 'Four':
-                    case 'Ten':
-                        theNotation += '4';
-                        break;
-                    default:
-                        theNotation += cards[i].value.substring(0,1);
-                }
-            }
-        }
-    } catch (err) {
-        SERVER.error('Cards could not be notated: ' + JSON.stringify(cards) + '\n' + err);
-        throw new Error("oopsie daisy");
-    }
-    return theNotation;
-}
-function setSettingNotation(room) {
-    let settingNotation = '';
-    for (let i in room.settings) {
-        settingNotation += i + '=' + room.settings[i] + ';';
-    }
-    room.settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
-}
-function notationToSettings(room,notation) {
-    room.settingsNotation = notation;
-    let theSettings = notation.split(';')
-    for (let i in theSettings) {
-        let [setting,rule] = theSettings[i].split('=');
-        if (u(setting) || u(rule)) {
-            SERVER.debug('Undefined setting or rule')
-        } else {
-            switch (setting) {
-                case 'difficulty':
-                    if (DIFFICULTY_TABLE[rule]) {
-                        room.settings.difficulty = +rule;
-                    }
-                    break;
-                case 'timeout':
-                    rule = +rule;
-                    if (!isNaN(rule)) {
-                        if (rule <= 0) {
-                            rule = 0;//No timeout for negatives
-                        } else if (rule <= 20000) {
-                            rule = 20000;//20 second min
-                        } else if (rule >= 3600000) {
-                            rule = 3600000;//One hour max
-                        }
-                       room.settings.timeout = rule;
-                    }
-                    break;
-                case 'aceHigh':
-                    if (rule != 'false') {
-                        room.settings.aceHigh = true;
-                    }
-                    break;
-                case 'lock':
-                case 'locked':
-                    room.settings.lock = rule == 'true';
-                    break;
-                case 'pn':
-                    //Handled later
-                    break;
-                default:
-                    SERVER.warn('Unknown setting: ' + setting + '=' + rule);
-            }
-        }
-    }
-}
-function notationToObject(notation) {
-    if (!notation) {
-        return null;
-    }
-    let settingsObject = {};
-    let theSettings = notation.split(';')
-    for (let i in theSettings) {
-        let [setting,rule] = theSettings[i].split('=');
-        if (u(setting) || u(rule)) {
-            SERVER.debug('Undefined setting or rule')
-        } else {
-            switch (setting) {
-                case 'difficulty':
-                    if (DIFFICULTY_TABLE[rule]) {
-                        settingsObject.difficulty = +rule;
-                    }
-                    break;
-                case 'timeout':
-                    rule = +rule;
-                    if (!isNaN(rule)) {
-                        if (rule <= 0) {
-                            rule = 0;//No timeout for negatives
-                        } else if (rule <= 20000) {
-                            rule = 20000;//20 second min
-                        } else if (rule >= 3600000) {
-                            rule = 3600000;//One hour max
-                        }
-                       settingsObject.timeout = rule;
-                    }
-                    break;
-                case 'lock':
-                case 'locked':
-                    settingsObject.lock = rule;
-                    break;
-                case 'aceHigh':
-                    settingsObject.aceHigh = rule == 'true';
-                    break;
-                case 'pn':
-                    //Handled later
-                    break;
-                default:
-                    SERVER.warn('Unknown setting: ' + setting + '=' + rule);
-            }
-        }
-    }
-    return settingsObject;
-}
-
-let baseDeck = Deck.createDeck();
-
-function findPovinnost(players) {
-    let value = 1; //start with the 'II' and start incrementing to next Trump if no one has it until povinnost is found
-    while (true) { //loop until we find povinnost
-        for (let i = 0; i < 4; i++) {
-            if (Deck.handContainsCard(players[i].hand, TRUMP_VALUE[value])) {
-                return i; //found povinnost
-            }
-        }
-        value++;
-    }
-}
-function findTheI(players) {
-   for (let i = 0; i < 4; i++) {
-       if (Deck.handContainsCard(players[i].hand, TRUMP_VALUE[0])) {
-           return i; //found the I
-       }
-   }
-   /* The I was in the prever talon and was rejected
-   SERVER.errorTrace('ERROR: No one has the I');
-   SERVER.error(JSON.stringify(players[0].hand))
-   SERVER.error(JSON.stringify(players[1].hand))
-   SERVER.error(JSON.stringify(players[2].hand))
-   SERVER.error(JSON.stringify(players[3].hand))
-   SERVER.error(JSON.stringify(players[0].discard))
-   SERVER.error(JSON.stringify(players[1].discard))
-   SERVER.error(JSON.stringify(players[2].discard))
-   SERVER.error(JSON.stringify(players[3].discard))
-   */
-   return -1;
-}
-
-function whoWon(table, leadPlayer, aceHigh) {
-    //First card in the table belongs to the leadPlayer
-    let trickLeadCard = table[0];
-    let trickLeadSuit = trickLeadCard.suit;
-    let highestTrump = -1;
-    let currentWinner = 0;//LeadPlayer is assumed to be winning
-
-    let reverseEnum = aceHigh ? VALUE_REVERSE_ACE_HIGH : VALUE_REVERSE;
-
-    for (let i=0; i<4; i++) {
-        if (table[i].suit == 'Trump' && reverseEnum[table[i].value] > highestTrump) {
-            highestTrump = reverseEnum[table[i].value];
-            currentWinner = i;
-        }
-    }
-    if (highestTrump != -1) {
-        //If a trump was played, then the highest trump wins
-        return (leadPlayer+currentWinner)%4;
-    }
-    let highestOfLeadSuit = reverseEnum[trickLeadCard.value];
-    for (let i=1; i<4; i++) {
-        if (table[i].suit == trickLeadSuit && reverseEnum[table[i].value] > highestOfLeadSuit) {
-            highestOfLeadSuit = reverseEnum[table[i].value];
-            currentWinner = i;
-        }
-    }
-    //No trumps means that the winner is whoever played the card of the lead suit with the highest value
-    return (leadPlayer+currentWinner)%4;
-}
 
 //SEE Card Locations in codeNotes
 //SEE Action Flow in codeNotes
@@ -2222,9 +1869,9 @@ function actionCallback(action, room, pn) {
                     }
                 }
                 SOCKET_LIST[room.players[humanPN].socket].emit('challengeComplete',room.players[humanPN].chips - 100);
-                challenge.complete(players[room.players[humanPN].socket].username, room.players[humanPN].chips - 100);
+                gm.challenge.complete(players[room.players[humanPN].socket].username, room.players[humanPN].chips - 100);
                 for (let i in SOCKET_LIST) {
-                    SOCKET_LIST[i].emit('returnPlayerCount', numOnlinePlayers, challenge.leaderboard, challenge.retryLeaderboard);
+                    SOCKET_LIST[i].emit('returnPlayerCount', numOnlinePlayers, gm.challenge.leaderboard, gm.challenge.retryLeaderboard);
                 }
                 action.action = 'retry';
                 action.player = humanPN;
@@ -2433,7 +2080,7 @@ function autoReconnect(socketId) {
     }
     if (players[socketId].username != 'Guest') {
         reconnectInfo.username = players[socketId].username;
-        reconnectInfo.dailyChallengeScore = challenge.getUserScore(players[socketId].username);
+        reconnectInfo.dailyChallengeScore = gm.challenge.getUserScore(players[socketId].username);
         if (players[socketId].userInfo) {
             reconnectInfo.elo = players[socketId].userInfo.elo;
             reconnectInfo.admin = players[socketId].userInfo.admin;
@@ -2443,8 +2090,8 @@ function autoReconnect(socketId) {
             reconnectInfo.deck = players[socketId].userInfo.deck;
         }
     }
-    reconnectInfo.leaderboard = challenge.leaderboard;
-    reconnectInfo.retryLeaderboard = challenge.retryLeaderboard;
+    reconnectInfo.leaderboard = gm.challenge.leaderboard;
+    reconnectInfo.retryLeaderboard = gm.challenge.retryLeaderboard;
     SOCKET_LIST[socketId].emit('autoReconnect', reconnectInfo);
 }
 
@@ -2472,7 +2119,7 @@ io.sockets.on('connection', function (socket) {
         SERVER.debug('Join time: ' + Date.now());
         numOnlinePlayers++;
         for (let i in SOCKET_LIST) {
-            SOCKET_LIST[i].emit('returnPlayerCount',numOnlinePlayers, challenge.leaderboard, challenge.retryLeaderboard);
+            SOCKET_LIST[i].emit('returnPlayerCount',numOnlinePlayers, gm.challenge.leaderboard, gm.challenge.retryLeaderboard);
         }
         if (returnToGame[socketId]) {
             SOCKET_LIST[socketId].emit('returnToGame');
@@ -2648,7 +2295,7 @@ io.sockets.on('connection', function (socket) {
                 rooms['challenge'+i] = new Room({'name': 'challenge'+i, 'roomType': ROOM_TYPE.CHALLENGE});
                 theRoom = rooms['challenge'+i];
             }
-            let tarokyNotation = challenge.notation;
+            let tarokyNotation = gm.challenge.notation;
             if (notate(theRoom,tarokyNotation)) {
                 let values = tarokyNotation.split('/');
                 let theSettings = values[values.length - 1].split(';');
@@ -2664,7 +2311,7 @@ io.sockets.on('connection', function (socket) {
                 rooms[roomID]['players'][pn].pid = players[socketId].pid;
                 rooms[roomID]['players'][pn].avatar = players[socketId].userInfo.avatar;
                 rooms[roomID]['playerCount'] = rooms[roomID]['playerCount'] + 1;
-                rooms[roomID].settings = challenge.settings;
+                rooms[roomID].settings = gm.challenge.settings;
                 rooms[roomID].setSettingsNotation();
                 socket.emit('roomConnected', roomID);
                 connected = true;
@@ -2879,7 +2526,7 @@ io.sockets.on('connection', function (socket) {
                 case 'difficulty':
                     if (DIFFICULTY_TABLE[rule]) {
                         rooms[players[socketId].room].settings.difficulty = +rule;
-                        setSettingNotation(rooms[players[socketId].room]);
+                        rooms[players[socketId].room].setSettingsNotation();
                         SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[rule],players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + DIFFICULTY_TABLE[rule], MESSAGE_TYPE.SETTING);
 
@@ -2915,7 +2562,7 @@ io.sockets.on('connection', function (socket) {
                             rule = 3600000;//One hour max
                         }
                         rooms[players[socketId].room].settings.timeout = rule;
-                        setSettingNotation(rooms[players[socketId].room]);
+                        rooms[players[socketId].room].setSettingsNotation();
                         SERVER.debug('Timeout is set to ' + (rule/1000) + 's',players[socketId].room);
                         rooms[players[socketId].room].informPlayers('Setting ' + setting + ' updated to ' + (rule/1000) + 's', MESSAGE_TYPE.SETTING);
                     }
@@ -2923,7 +2570,7 @@ io.sockets.on('connection', function (socket) {
                 case 'lock':
                     //Room may be locked or unlocked
                     rooms[players[socketId].room].settings.locked = !(!rule);
-                    setSettingNotation(rooms[players[socketId].room]);
+                    rooms[players[socketId].room].setSettingsNotation();
                     let toSend = rooms[players[socketId].room].settings.locked ? 'This room is now private' : 'This room is now public';
                     SERVER.log(toSend, players[socketId].room);
                     rooms[players[socketId].room].informPlayers(toSend, MESSAGE_TYPE.SETTING);
@@ -2936,7 +2583,7 @@ io.sockets.on('connection', function (socket) {
                         rooms[players[socketId].room].settings.aceHigh = false;
                         rooms[players[socketId].room].informPlayers('Ace is low', MESSAGE_TYPE.SETTING);
                     }
-                    setSettingNotation(rooms[players[socketId].room]);
+                    rooms[players[socketId].room].setSettingsNotation();
                     break;
             }
             for (let i in rooms[players[socketId].room].players) {
@@ -3403,7 +3050,7 @@ function attemptSignIn(username, token, socket, socketId) {
             players[socketId].token = token;
             socket.emit('loginSuccess', username);
             loadDatabaseInfo(username, socketId, socket);
-            socket.emit('dailyChallengeScore', challenge.getUserScore(username));
+            socket.emit('dailyChallengeScore', gm.challenge.getUserScore(username));
             SERVER.log('User ' + socketId + ' did auto sign-in (cache) ' + socket.handshake.auth.username);
             return;
         }
@@ -3424,7 +3071,7 @@ function attemptSignIn(username, token, socket, socketId) {
                     players[socketId].token = token;
                     socket.emit('loginSuccess', username);
                     loadDatabaseInfo(username, socketId, socket);
-                    socket.emit('dailyChallengeScore', challenge.getUserScore(username));
+                    socket.emit('dailyChallengeScore', gm.challenge.getUserScore(username));
                     SERVER.log('User ' + socketId + ' did auto sign-in ' + socket.handshake.auth.username);
                 } else {
                     SERVER.log(username + ' failed to sign in with status code ' + res.statusCode);
@@ -3592,7 +3239,7 @@ let interval;
 let verifyUsers;
 if (!TRAINING_MODE) {
     //AI in training won't use normal room operations
-    interval = setInterval(tick, 1000 / 60.0);//60 FPS
+    interval = setInterval(tick, 1000);//once each second
     verifyUsers = setInterval(checkAllUsers, 5*60*1000);
 }
 

@@ -1,5 +1,8 @@
 const { SUIT, TRUMP_VALUE, RED_VALUE, RED_VALUE_ACE_HIGH, BLACK_VALUE, VALUE_REVERSE, DIFFICULTY_TABLE } = require('./enums');
 const SERVER = require('./logger.js');
+const GameManager = require('./GameManager.js')
+
+let baseDeck = GameManager.INSTANCE.baseDeck;
 
 function notationToCards(notatedCards, aceHigh) {
     try {
@@ -172,9 +175,97 @@ function notationToObject(notation) {
     return settingsObject;
 }
 
+function notate(room, notation) {
+    if (notation) {
+        try {
+            if (typeof notation !== "string") {
+                SERVER.debug('Notation: not a string');
+                return false;
+            }
+            room = room || new Room({'name':'temporary'});
+            room.board.povinnost = 0;
+            room.board.importantInfo.povinnost = (room.board.povinnost+1);
+            //Return the room
+            let values = notation.split('/');
+            if (values.length > 20 || values.length < 10) {
+                SERVER.debug('Notation: Illegal number of values');
+                return false;
+            }
+
+            //Get the settings
+            let theSettings = values[values.length - 1];
+            notationToSettings(room, theSettings);
+
+            let thePlayers = room.players;
+            for (let i=0; i<4; i++) {
+                if (isNaN(+values[i])) {
+                    SERVER.debug('Notation: chips count is NaN');
+                    return false;
+                }
+                thePlayers[i].chips = +values[i];
+            }
+            for (let i=0; i<4; i++) {
+                let theHand = notationToCards(values[i+4],room.settings.aceHigh);
+                if (theHand && theHand.length == 12) {
+                    thePlayers[i].hand = theHand;
+                } else {
+                    SERVER.debug('Notation: hand is illegal');
+                    return false;
+                }
+            }
+            let theTalon = notationToCards(values[8],room.settings.aceHigh);
+            if (theTalon && theTalon.length == 6) {
+                room.board.talon = theTalon;
+            } else {
+                SERVER.debug('Notation: talon is illegal');
+                return false;
+            }
+            let toCheck = theTalon.concat(thePlayers[0].hand).concat(thePlayers[1].hand).concat(thePlayers[2].hand).concat(thePlayers[3].hand);
+            for (let i in baseDeck) {
+                let found = false;
+                for (let j in toCheck) {
+                    if (baseDeck[i].suit == toCheck[j].suit &&
+                        baseDeck[i].value == toCheck[j].value) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    SERVER.debug('Notation: Missing card');
+                    return false;
+                }
+            }
+
+            //This is the first point at which the game may reasonably be played from
+            //So, encode the settings if they exist. Then, if no more is present, return the room
+            let valuesWithoutSettings = values;
+            delete valuesWithoutSettings[valuesWithoutSettings.length - 1];
+            room.board.notation = (valuesWithoutSettings).join('/');
+            room.board.hasTheI = findTheI(room.players);
+            if (values.length === 10) {
+                room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
+                return room;
+            }
+
+
+            //TODO: finish notation decoding. Next is prever. See TarokyNotation.md
+
+
+            room.board.nextStep = { player: 0, action: 'prever', time: Date.now(), info: null };
+            return room;
+        } catch (err) {
+            SERVER.debug('Error in notate() ' + err);
+            return false;
+        }
+    }
+    SERVER.debug('Notation: No notation provided');
+    return false;
+}
+
 module.exports = {
     notationToCards,
     cardsToNotation,
     notationToSettings,
-    notationToObject
+    notationToObject,
+    notate
 }
