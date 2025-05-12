@@ -15,7 +15,7 @@ class Player {
         this._discard = [];
         this._hand = [];
         this._tempHand = [];
-        this._isTeamPovenost = false;
+        this._isTeamPovinnost = false;
         this._publicTeam = 0;
         this._savePoints = [];
         this._consecutiveAutos = 0;
@@ -28,7 +28,7 @@ class Player {
         this.hand = [];
         this.discard = [];
         this.tempHand = [];
-        this.isTeamPovenost = false;
+        this.isTeamPovinnost = false;
         this._publicTeam = 0;
         this._handRank = 0;
     }
@@ -301,8 +301,8 @@ class Player {
         this._tempHand = tempHand;
     }
 
-    set isTeamPovenost(isTeamPovenost) {
-        this._isTeamPovenost = isTeamPovenost;
+    set isTeamPovinnost(isTeamPovinnost) {
+        this._isTeamPovinnost = isTeamPovinnost;
     }
 
     set publicTeam(publicTeam) {
@@ -362,8 +362,8 @@ class Player {
         return this._tempHand;
     }
 
-    get isTeamPovenost() {
-        return this._isTeamPovenost;
+    get isTeamPovinnost() {
+        return this._isTeamPovinnost;
     }
 
     get publicTeam() {

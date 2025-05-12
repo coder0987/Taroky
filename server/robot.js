@@ -504,7 +504,7 @@ class Robot {
                             }
                             return Deck.highestTrump(playableCards);
                         }
-                        //todo if povenost follows then trumping is more likely so play higher
+                        //todo if povinnost follows then trumping is more likely so play higher
                         return Deck.lowestTrump(playableCards);
                     }
                 } else {
