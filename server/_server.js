@@ -1245,61 +1245,11 @@ function actionCallback(action, room, pn) {
             break;
         case ACTION.PREVER:
             break;//ignore this, the callback is for the players
-        case 'drawTalon':
-            if (action.player == room['board'].povinnost) {
-                room.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,4)});
-                //Note that SLICE not SPLICE is used for informPlayer, so the array is not modified yet
-                room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
-                room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
-                room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
-                room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
-                action.player = (action.player + 1) % 4;
-            } else {
-                room.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
-                room['players'][action.player].hand.push(room['board'].talon.splice(0, 1)[0]);
-                if (action.player == (room['board'].povinnost + 2) % 4) {
-                    //Player +2 pov. has drawn the final card in the talon
-                    action.player = room['board'].povinnost;
-                    action.action = 'discard';
-                } else if (action.player == (room['board'].povinnost + 3) % 4) {
-                    //Player +3 pov. has drawn a rejected card from the talon
-                    if (room['board'].talon.length == 0) {
-                        //Player +2 pov. rejected the card
-                        action.player = room['board'].povinnost;
-                        action.action = 'discard';
-                        //TODO: can both +1 and +2 reject the cards and +3 draw them both? I've never encountered this in a real game before
-                    } else {
-                        action.player = (room['board'].povinnost + 2) % 4;
-                    }
-
-                } else {
-                    action.player = (action.player + 1) % 4;
-                }
-            }
-            actionTaken = true;
+        case ACTION.DRAW_TALON:
+            actionTaken = room.gameplay.drawTalon();
             break;
-        case 'passTalon':
-            //2 cases
-            if (action.player == (room['board'].povinnost + 3) % 4) {
-                //Player 1 or 2 from pov. has passed the card and it has been rejected again
-                if (room['board'].talon.length == 2) {
-                    //Player +1 pov. passed the card
-                    room.informPlayer((room['board'].povinnost + 1) % 4, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
-                    room['players'][(room['board'].povinnost + 1) % 4].hand.push(room['board'].talon.splice(0, 1)[0]);
-                }
-                //Player +2 pov. gets the remaining card in every case
-                room.informPlayer((room['board'].povinnost + 2) % 4, '', MESSAGE_TYPE.DRAW, {'cards':room.board.talon.slice(0,1)});
-                room['players'][(room['board'].povinnost + 2) % 4].hand.push(room['board'].talon.splice(0, 1)[0]);
-
-                action.player = room['board'].povinnost;
-                action.action = 'discard';
-                actionTaken = true;
-            } else {
-                //Player 1 or 2 from pov. would like to pass a card
-                action.player = (room['board'].povinnost + 3) % 4;
-                action.action = 'drawTalon';
-                actionTaken = true;
-            }
+        case ACTION.PASS_TALON:
+            actionTaken = room.gameplay.passTalon();
             break;
         case 'passPrever':
             if (shouldTrainAI) {

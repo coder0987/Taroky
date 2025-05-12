@@ -166,6 +166,10 @@ class Room {
         this.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST, { 'pn': this._board.povinnost }, this._board.povinnost);
     }
 
+    informDrawTalon(pn, numCards) {
+        this.informPlayer(pn, '', MESSAGE_TYPE.DRAW, {'cards': this._board.talon.slice(0,numCards)});
+    }
+
     ejectAudience() {
         for (let i in this._audience) {
             this._audience[i].messenger.emit('gameEnded');

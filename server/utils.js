@@ -2,6 +2,10 @@ const { SHUFFLE_TYPE, TRUMP_VALUE, VALUE_REVERSE, VALUE_REVERSE_ACE_HIGH } = req
 const Deck = require('./deck');
 
 function nextPlayer(pn) {
+    return (pn + 1) % 4;
+}
+
+function prevPlayer(pn) {
     return (pn + 3) % 4;
 }
 
@@ -90,4 +94,4 @@ function u(v) {
     return false;
 }
 
-module.exports = { nextPlayer, shuffleType, shuffleLocation, u, findPovinnost, findTheI, whoWon, playerOffset, playerPerspective };
+module.exports = { prevPlayer, nextPlayer, shuffleType, shuffleLocation, u, findPovinnost, findTheI, whoWon, playerOffset, playerPerspective };

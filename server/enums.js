@@ -47,7 +47,8 @@ const ACTION = {
     DRAW_TALON: 'drawTalon',
     PASS_TALON: 'passTalon',
     PASS_PREVER: 'passPrever',
-    CALL_PREVER: 'callPrever'
+    CALL_PREVER: 'callPrever',
+    DISCARD: 'discard'
 }
 
 const SHUFFLE_TYPE = {

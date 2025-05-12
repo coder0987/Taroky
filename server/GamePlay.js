@@ -5,7 +5,7 @@
 const Deck = require('./deck');
 const SERVER = require('./logger');
 const { ACTION, CUT_TYPE, SHUFFLE_TYPE } = require('./enums');
-const { nextPlayer, shuffleLocation, shuffleType, findPovinnost, u } = require('./utils');
+const { nextPlayer, prevPlayer, shuffleLocation, shuffleType, findPovinnost, u, playerOffset } = require('./utils');
 
 class GamePlay {
     #room;
@@ -50,6 +50,10 @@ class GamePlay {
         return this.players[this.player];
     }
 
+    get povinnost() {
+        return this.#room.board.povinnost;
+    }
+
     set action(action) {
         this.#room.board.nextStep.action = action;
     }
@@ -58,8 +62,16 @@ class GamePlay {
         this.#room.board.nextStep.player = pn;
     }
 
+    set povinnost(pn) {
+        this.#room.board.povinnost = pn;
+    }
+
     nextPlayer() {
         this.player = nextPlayer(this.player);
+    }
+
+    prevPlayer() {
+        this.player = prevPlayer(this.player);
     }
 
     start() {
@@ -93,7 +105,7 @@ class GamePlay {
 
         if (!again) {
             this.action = ACTION.CUT;
-            this.nextPlayer();
+            this.prevPlayer();
             return true;
         }
 
@@ -141,9 +153,8 @@ class GamePlay {
                 this.action = ACTION.CHOICE;
                 this.nextPlayer();
                 return true;
-                //TODO
             case CUT_TYPE.TWELVE_STRAIGHT:
-                this.deck.dealBy(thgis.hands, 12);
+                this.deck.dealBy(this.hands, 12);
                 break;
             case CUT_TYPE.THREE_FOUR_FIVE:
                 this.deck.deal345(this.hands);
@@ -152,9 +163,9 @@ class GamePlay {
                 this.deck.dealBy(this.hands, 6);
         }
 
-        if (this.board.povinnost === -1) {
+        if (this.povinnost === -1) {
             // First game, find povinnost
-            this.board.povinnost = findPovinnost(this.players);
+            this.povinnost = findPovinnost(this.players);
         }
 
         this.#room.updateDealNotation();
@@ -162,7 +173,7 @@ class GamePlay {
         this.#room.informPovinnost();
 
         this.action = ACTION.PREVER;
-        this.player = this.board.povinnost;
+        this.player = this.povinnost;
         return true;
     }
 
@@ -186,9 +197,9 @@ class GamePlay {
         }
 
         // Done choosing, move on to Prever
-        if (this.board.povinnost === -1) {
+        if (this.povinnost === -1) {
             // First game, find povinnost
-            this.board.povinnost = findPovinnost(this.players);
+            this.povinnost = findPovinnost(this.players);
         }
 
         this.#room.updateDealNotation();
@@ -196,9 +207,57 @@ class GamePlay {
         this.#room.informPovinnost();
 
         this.action = ACTION.PREVER;
-        this.player = this.board.povinnost;
+        this.player = this.povinnost;
         return true;
     }
+
+    drawTalon() {
+        let numToDraw = 1;
+
+        if (this.player === this.povinnost) {
+            numToDraw = 4;
+        }
+
+        this.#room.informDrawTalon(this.player, numToDraw);
+        Deck.dealCards(this.board.talon, this.currentPlayer.hand, numToDraw);
+
+        this.nextPlayer();
+
+        if (this.board.talon.length === 0) {
+            this.action = ACTION.DISCARD;
+            this.player = this.povinnost;
+        }
+
+        return true;
+    }
+
+    passTalon() {
+        if (this.player !== playerOffset(this.povinnost, 3)) {
+            // Player who would draw wants to pass to the player who normally would not draw
+            this.player = playerOffset(this.povinnost, 3);
+            this.action = ACTION.DRAW_TALON;
+            return true;
+        }
+
+        // Player +3 has rejected the extra card (very rare)
+        if (this.board.talon.length == 2) {
+            // Player directly after povinnost passed and got rebuffed
+            this.player = playerOffset(this.povinnost, 1);
+            this.#room.informDrawTalon(this.player, 1);
+            Deck.dealCards(this.board.talon, this.currentPlayer.hand, 1);
+        }
+
+        // Player across from povinnost gets the remaining card always
+        this.player = playerOffset(this.povinnost, 2);
+        this.#room.informDrawTalon(this.player, 1);
+        Deck.dealCards(this.board.talon, this.currentPlayer.hand, 1);
+
+        this.player = this.povinnost;
+        this.action = ACTION.DISCARD;
+        return true;
+    }
+
+    
 }
 
 module.exports = GamePlay;
