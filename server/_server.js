@@ -36,12 +36,12 @@ const {
     NUM_AVATARS,
     ACTION } = require('./enums.js');
 const Challenge = require('./challenge.js');
+const Auth = require('./Auth');
 
 const { u, whoWon, findTheI } = require('./utils');
 const { notationToObject, notate, playerPerspective } = require('./notation');
 
 const http = require('http');
-const https = require('https');
 const express = require('express');
 const bodyParser = require('body-parser');
 
@@ -69,7 +69,7 @@ app.post('/preferences', function (req, res) {
         res.writeHead(403);
         return res.end();
     }
-    saveUserPreferencesConditional(username, token, req.body);
+    Auth.saveUserPreferencesConditional(username, token, req.body);
 
     res.writeHead(200);
     return res.end()
@@ -93,7 +93,7 @@ app.get('/preferences', function (req, res) {
 
     let once = false;
 
-    sendUserInfoConditional(res, username, token, function(e) {
+    Auth.sendUserInfoConditional(res, username, token, function(e) {
         console.log('Error GET /preferences: ' + e);
         if (!once) {
             once = true;
@@ -107,7 +107,7 @@ app.get('/preferences', function (req, res) {
         }
     });
 });
-const server = require('http').createServer(app);
+const server = http.createServer(app);
 
 //SOCKETS
 const io = require('socket.io')(server);
@@ -2106,7 +2106,7 @@ io.sockets.on('connection', function (socket) {
         players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1, userInfo: {avatar:0}, timeLastMessageSent: 0 };
 
         if (socket.handshake.auth.username && socket.handshake.auth.signInToken) {
-            attemptSignIn(socket.handshake.auth.username, socket.handshake.auth.signInToken, socket, socketId)
+            Auth.attemptSignIn(socket.handshake.auth.username, socket.handshake.auth.signInToken, socket, socketId)
         }
 
         SERVER.log('Player joined with socketID ' + socketId);
@@ -2823,48 +2823,7 @@ io.sockets.on('connection', function (socket) {
     //User account tools
     socket.on('login', function(username, token) {
         if (typeof username == 'string' && typeof token == 'string' && players[socketId]) {
-            try {
-                const options = {
-                    hostname: 'sso.smach.us',
-                    path: '/verify',
-                    method: 'POST',
-                    protocol: 'https:',
-                    headers: {
-                        'Authorization': username.toLowerCase() + ':' + token
-                    }
-                };
-                const req = https.request(options, (res) => {
-                    SERVER.log('Player ' + socketId + ' sign in status: ' + res.statusCode);
-                    if (res.statusCode === 200) {
-                        players[socketId].username = username;
-                        players[socketId].token = token;
-                        socket.emit('loginSuccess', username);
-                        SERVER.log('Player ' + socketId + ' has signed in as ' + username);
-
-                        Database.promiseCreateOrRetrieveUser(username).then((info) => {
-                            SERVER.log('Loaded settings for user ' + username + ': ' + info);
-                            players[socketId].userInfo = info;
-                            socket.emit('elo',info.elo);
-                            socket.emit('admin',info.admin);
-                            socket.emit('defaultSettings',notationToObject(info.settings));
-                            socket.emit('chat',info.chat);
-                            socket.emit('avatar',info.avatar);
-                            socket.emit('deckChoice',info.deck);
-                        }).catch((err) => {
-                            SERVER.warn('Database error:' + err);
-                        });
-                    } else {
-                        SERVER.log('Player ' + socketId + ' sent an invalid token or username');
-                        socket.emit('loginFail');
-                    }
-                }).on("error", (err) => {
-                    SERVER.error(err);
-                    socket.emit('loginFail');
-                }).end();
-            } catch (err) {
-                SERVER.error(err);
-                socket.emit('loginFail');
-            }
+            Auth.attemptSignIn(username, token, socket, socketId);
         }
     });
     socket.on('logout', function() {
@@ -3035,196 +2994,12 @@ function tick() {
     }
 }
 
-const signInCache = {};
-function attemptSignIn(username, token, socket, socketId) {
-    if (typeof username === 'string' && typeof token === 'string') {
-        if (signInCache[username.toLowerCase()] == token) {
-            players[socketId].username = username;
-            players[socketId].token = token;
-            socket.emit('loginSuccess', username);
-            loadDatabaseInfo(username, socketId, socket);
-            socket.emit('dailyChallengeScore', gm.challenge.getUserScore(username));
-            SERVER.log('User ' + socketId + ' did auto sign-in (cache) ' + socket.handshake.auth.username);
-            return;
-        }
-        try {
-            const options = {
-                hostname: 'sso.smach.us',
-                path: '/verify',
-                method: 'POST',
-                protocol: 'https:',
-                headers: {
-                    'Authorization': username.toLowerCase() + ':' + token
-                }
-            };
-            https.request(options, (res) => {
-                if (res.statusCode === 200) {
-                    signInCache[username.toLowerCase()] = token;
-                    players[socketId].username = username;
-                    players[socketId].token = token;
-                    socket.emit('loginSuccess', username);
-                    loadDatabaseInfo(username, socketId, socket);
-                    socket.emit('dailyChallengeScore', gm.challenge.getUserScore(username));
-                    SERVER.log('User ' + socketId + ' did auto sign-in ' + socket.handshake.auth.username);
-                } else {
-                    SERVER.log(username + ' failed to sign in with status code ' + res.statusCode);
-                }
-            }).on("error", (err) => {
-            }).end();
-        } catch (err) {
-        }
-    }
-}
-
-function saveUserPreferencesConditional(username, token, preferences) {
-    let avatar = +preferences.avatar;
-    let chat = preferences.chat == 'on';
-    let deck = preferences.deck;
-
-    let settings = Room.settingsToNotation({
-        'difficulty': +preferences.difficulty,
-        'timeout': +preferences.timeout * 1000,
-        'aceHigh': preferences.aceHighLow == 'on',
-        'locked': preferences.locked == 'on'
-    });
-
-    if (signInCache[username] == token) {
-        Database.saveUserPreferences(username,settings,avatar,deck,chat);
-        for (let i in players) {
-            if (players[i].username == username) {
-                loadDatabaseInfo(username, players[i].id, players[i].socket);
-            }
-        }
-    }
-    try {
-        const options = {
-            hostname: 'sso.smach.us',
-            path: '/verify',
-            method: 'POST',
-            protocol: 'https:',
-            headers: {
-                'Authorization': username.toLowerCase() + ':' + token
-            }
-        };
-        https.request(options, (ssoRes) => {
-            if (ssoRes.statusCode === 200) {
-                signInCache[username.toLowerCase()] = token;
-                Database.saveUserPreferences(username,settings,avatar,deck,chat);
-                for (let i in players) {
-                    if (players[i].username == username) {
-                        loadDatabaseInfo(username, players[i].id, players[i].socket);
-                    }
-                }
-            } else {
-                SERVER.log(username + ' failed to sign in with status code ' + ssoRes.statusCode);
-            }
-        }).on("error", (err) => {
-        }).end();
-    } catch (err) {
-    }
-}
-
-function sendUserInfoConditional(res, username, token, error, callback) {
-    if (signInCache[username] == token) {
-        //Good to go
-        Database.promiseCreateOrRetrieveUser(username).then((info) => {
-            SERVER.log('Loaded settings for user ' + username + ': ' + info);
-            callback(info);
-        }).catch((err) => {
-            error(err);
-        });
-        return;
-    }
-    try {
-        const options = {
-            hostname: 'sso.smach.us',
-            path: '/verify',
-            method: 'POST',
-            protocol: 'https:',
-            headers: {
-                'Authorization': username.toLowerCase() + ':' + token
-            }
-        };
-        https.request(options, (ssoRes) => {
-            if (ssoRes.statusCode === 200) {
-                signInCache[username.toLowerCase()] = token;
-                Database.promiseCreateOrRetrieveUser(username).then((info) => {
-                    SERVER.log('Loaded settings for user ' + username + ': ' + info);
-                    callback(info);
-                }).catch((err) => {
-                    SERVER.warn('Database error:' + err);
-                    error(err);
-                });
-            } else {
-                SERVER.log(username + ' failed to sign in with status code ' + ssoRes.statusCode);
-                error()
-            }
-        }).on("error", (err) => {
-            error(err);
-        }).end();
-    } catch (err) {
-        error(err);
-    }
-}
-
-function loadDatabaseInfo(username, socketId, socket) {
-    Database.promiseCreateOrRetrieveUser(username).then((info) => {
-        SERVER.log('Loaded settings for user ' + username + ': ' + info);
-        players[socketId].userInfo = info;
-        socket.emit('elo',info.elo);
-        socket.emit('admin',info.admin);
-        socket.emit('defaultSettings',notationToObject(info.settings));
-        socket.emit('chat',info.chat);
-        socket.emit('avatar',info.avatar);
-        socket.emit('deckChoice',info.deck);
-    }).catch((err) => {
-        SERVER.warn('Database error:' + err);
-    });
-}
-
-function checkAllUsers() {
-    for (let i in players) {
-        if (players[i].username != 'Guest' && SOCKET_LIST[players[i].id]) {
-            try {
-                const options = {
-                    hostname: 'sso.smach.us',
-                    path: '/verify',
-                    method: 'POST',
-                    protocol: 'https:',
-                    headers: {
-                        'Authorization': players[i].username.toLowerCase() + ':' + players[i].token
-                    }
-                };
-                const req = https.request(options, (res) => {
-                    if (res.statusCode !== 200) {
-                        players[i].username = 'Guest';
-                        players[i].token = -1;
-                        SOCKET_LIST[players[i].id].emit('loginExpired');
-                    }
-                }).on("error", (err) => {
-                    console.log("Error: ", err)
-                    players[i].username = 'Guest';
-                    players[i].token = -1;
-                    SOCKET_LIST[players[i].id].emit('loginExpired');
-                }).end();
-            } catch (err) {
-                SERVER.error(err);
-                if (players[i].id != -1) {
-                    SOCKET_LIST[players[i].id].emit('loginExpired');
-                }
-                players[i].username = 'Guest';
-                players[i].token = -1;
-            }
-        }
-    }
-}
-
 let interval;
 let verifyUsers;
 if (!TRAINING_MODE) {
     //AI in training won't use normal room operations
     interval = setInterval(tick, 1000);//once each second
-    verifyUsers = setInterval(checkAllUsers, 5*60*1000);
+    verifyUsers = setInterval(Auth.checkAllUsers, 5*60*1000);
 }
 
 //Begin listening
