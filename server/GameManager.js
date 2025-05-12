@@ -6,6 +6,7 @@ class GameManager {
     #players = {};
     #baseDeck = new Deck();
     #challenge;
+    #SOCKET_LIST = {};
 
     static INSTANCE;
 
@@ -31,6 +32,10 @@ class GameManager {
 
     get players() {
         return this.#players;
+    }
+
+    get SOCKET_LIST() {
+        return this.#SOCKET_LIST;
     }
 
     set challenge(c) {

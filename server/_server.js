@@ -38,7 +38,7 @@ const {
 const Challenge = require('./challenge.js');
 
 const { u, whoWon, findTheI } = require('./utils');
-const { notationToSettings, notationToObject, notationToCards, notate } = require('./notation');
+const { notationToObject, notate, playerPerspective } = require('./notation');
 
 const http = require('http');
 const https = require('https');
@@ -112,7 +112,7 @@ const server = require('http').createServer(app);
 //SOCKETS
 const io = require('socket.io')(server);
 
-SOCKET_LIST = {};
+SOCKET_LIST = gm.SOCKET_LIST;
 players = gm.players;
 rooms = gm.rooms;
 
@@ -1979,12 +1979,6 @@ function actionCallback(action, room, pn) {
 //GLOBAL VARIABLE - HERE FOR TESTING PURPOSES
 runAction = autoAction;//hehe maybe this will work
 
-function broadcast(message) {
-    for (let i in SOCKET_LIST) {
-        SOCKET_LIST[i].emit('broadcast', message);
-    }
-}//Debug function
-
 function disconnectPlayerTimeout(socketId) {
     if (players[socketId] && players[socketId].tempDisconnect) {
         if (!players[socketId]) { return; }
@@ -2987,7 +2981,6 @@ io.sockets.on('connection', function (socket) {
     })
 });
 
-function numEmptyRooms() { let emptyRoomCount = 0; for (let i in rooms) { if (rooms[i].playerCount == 0 && !rooms[i].debug) emptyRoomCount++; } return emptyRoomCount; }
 function checkRoomsEquality(a, b) {
     if (Object.keys(a).length != Object.keys(b).length) { return false; }
     for (let i in a) {
@@ -3226,62 +3219,12 @@ function checkAllUsers() {
     }
 }
 
-function playerOffset(startingPlayer, offset) {
-    return (+startingPlayer + +offset)%4;
-}
-
-function playerPerspective(originalPlace, viewpoint) {
-    //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
-    return ((+originalPlace - +viewpoint) + 4)%4;
-}
-
 let interval;
 let verifyUsers;
 if (!TRAINING_MODE) {
     //AI in training won't use normal room operations
     interval = setInterval(tick, 1000);//once each second
     verifyUsers = setInterval(checkAllUsers, 5*60*1000);
-}
-
-AdminPanel.reloadClients = () => {
-    for (let i in SOCKET_LIST) {
-        SOCKET_LIST[i].emit('reload');
-    }
-}
-AdminPanel.printPlayerList = (printToConsole) => {
-    const playerListObject = [];
-    for (let i in players) {
-        if (printToConsole) {console.log('Player ' + i + ':');}
-        playerListObject.push({});
-        for (let p in players[i]) {
-            if (p != 'socket' && p != 'token') {
-                playerListObject[playerListObject.length - 1][p] = players[i][p];
-                if (printToConsole) {
-                    console.log('\t' + p + ': ' + players[i][p]);
-                }
-            }
-        }
-        //players[socketId] = { 'id': socketId, 'pid': -1, 'room': -1, 'pn': -1, 'socket': socket, 'roomsSeen': {}, tempDisconnect: false, username: 'Guest', token: -1 }
-    }
-    return playerListObject;
-}
-AdminPanel.printRoomsList = (printToConsole) => {
-    const roomListObject = [];
-    for (let i in rooms) {
-        if (printToConsole) {console.log('Room ' + i + ':');}
-        roomListObject.push({});
-        for (let r in rooms[i]) {
-            if (r != '_deck' && r != '_playerList' && r != '_players' && r != '_trainingGoal'
-                    && r != '_settings' && r != '_audience' && r != '_board') {
-                //todo: players, audience, and board have useful information that needs to be extracted and sent
-                roomListObject[roomListObject.length - 1][r] = rooms[i][r];
-                if (printToConsole) {
-                    console.log('\t' + r + ': ' + rooms[i][r]);
-                }
-            }
-        }
-    }
-    return roomListObject;
 }
 
 //Begin listening
