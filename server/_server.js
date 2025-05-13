@@ -1996,7 +1996,7 @@ function disconnectPlayerTimeout(socketId) {
                 rooms[players[socketId].room]['playerCount'] = rooms[players[socketId].room]['playerCount'] - 1;
                 if (rooms[players[socketId].room]['playerCount'] > 0 && rooms[players[socketId].room]['host'] == socketId) {
                     for (let i in rooms[players[socketId].room]['players']) {
-                        if (rooms[players[socketId].room]['players'][i].pn == PLAYER_TYPE.HUMAN) {
+                        if (rooms[players[socketId].room]['players'][i].type == PLAYER_TYPE.HUMAN) {
                             rooms[players[socketId].room]['host'] = rooms[players[socketId].room]['players'][i].socket;
                             players[rooms[players[socketId].room]['players'][i].socket].socket.emit('roomHost'); break;
                         }
