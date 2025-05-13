@@ -4,8 +4,8 @@
 
 const Deck = require('./deck');
 const SERVER = require('./logger');
-const { ACTION, CUT_TYPE, SHUFFLE_TYPE } = require('./enums');
-const { nextPlayer, prevPlayer, shuffleLocation, shuffleType, findPovinnost, u, playerOffset } = require('./utils');
+const { SUIT, ACTION, CUT_TYPE, SHUFFLE_TYPE, MONEY_CARDS } = require('./enums');
+const { nextPlayer, prevPlayer, shuffleLocation, shuffleType, findPovinnost, u, playerOffset, findTheI } = require('./utils');
 
 class GamePlay {
     #room;
@@ -48,6 +48,10 @@ class GamePlay {
 
     get currentPlayer() {
         return this.players[this.player];
+    }
+
+    get currentMoneyCards() {
+        return this.#room.board.moneyCards[this.player];
     }
 
     get povinnost() {
@@ -384,6 +388,101 @@ class GamePlay {
 
         this.board.preverMultiplier = 4;
         this.action = ACTION.DISCARD;
+    }
+
+    discard() {
+        const card = this.info.card;
+
+        if (!card || !Deck.moveCard(this.currentPlayer.hand, this.currentPlayer.discard, card.suit, card.value)) {
+            this.#room.informFailedDiscard(this.player, card);
+            return false;
+        }
+
+        if (card.suit == SUIT.TRUMP) {
+            this.#room.informTrumpDiscarded(this.player, card);
+        }
+
+        if (this.currentPlayer.hand.length === 12) {
+            this.nextPlayer();
+        }
+
+        if (this.currentPlayer.hand.length === 12) {
+            // All players have discarded
+            this.player = this.povinnost;
+
+            if (this.board.playingPrever) {
+                // Prever - no need to call partners
+                this.action = ACTION.MONEY_CARDS;
+            } else {
+                // No prever - Povinnost will call a partner
+                this.action = ACTION.PARTNER;
+            }
+        }
+
+        return true;
+    }
+
+    povinnostBidaUniChoice() {
+        // Player is assumed to be povinnost. This action is only taken if povinnost has bida or uni and no one is prever
+        this.board.buc = this.info.choice;
+        this.action = ACTION.MONEY_CARDS;
+    }
+
+    moneyCards() {
+        const currentHand = this.currentPlayer.hand;
+        this.currentPlayer.handRank = Deck.basicHandRanking(currentHand);
+
+        const skipUniBida = (this.player === this.povinnost && !this.board.playingPrever && !this.board.povinnostBidaUniChoice);
+
+        const numTrump = Deck.numOfSuit(currentHand, SUIT.TRUMP);
+        const num5Count = Deck.num5Count(currentHand);
+        let owedChips = 0;
+
+        // Trump-based money cards
+        if (numTrump === 0 && !skipUniBida) {
+            owedChips += 4;
+            this.currentMoneyCards.push(MONEY_CARDS.UNI);
+        } else if (numTrump <= 2 && !skipUniBida) {
+            owedChips += 2;
+            this.currentMoneyCards.push(MONEY_CARDS.BIDA);
+        } else if (numTrump >= 10) {
+            owedChips += 4;
+            this.currentMoneyCards.push(MONEY_CARDS.TAROKY);
+        } else if (numTrump >= 8) {
+            owedChips += 2;
+            this.currentMoneyCards.push(MONEY_CARDS.TAROCKY);
+        }
+
+        // 5-count based money cards
+        if (Deck.handContainsTrul(currentHand)) {
+            owedChips += 2;
+            this.currentMoneyCards.push(MONEY_CARDS.TRUL);
+        }
+
+        if (Deck.handContainsRosaPane(currentHand)) {
+            if (num5Count > 4) {
+                owedChips += 6;
+                this.currentMoneyCards.push(MONEY_CARDS.ROSA_PANE_PLUS);
+            } else {
+                owedChips += 4;
+                this.currentMoneyCards.push(MONEY_CARDS.ROSA_PANE);
+            }
+        } else if (num5Count >= 4) {
+            owedChips += 2;
+            this.currentMoneyCards.push(MONEY_CARDS.PANE);
+        }
+
+        this.#room.informMoneyCards(this.player, this.currentMoneyCards);
+        this.#room.payMoneyCards(this.player, owedChips);
+        this.#room.updateImportantMoneyCardsInfo();
+
+        this.nextPlayer();
+        if (this.player === this.povinnost) {
+            this.action = ACTION.VALAT;
+            this.board.hasTheI = findTheI(this.players);
+        }
+
+        return true;
     }
 }
 

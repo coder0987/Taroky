@@ -1,7 +1,16 @@
-const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump' };
+const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump', SPADE: 'Spade', CLUB: 'Club', HEART: 'Heart', DIAMOND: 'Diamond', TRUMP: 'Trump' };
 
 const SUIT_REVERSE = { Spade: 0, Club: 1, Heart: 2, Diamond: 3, Trump: 4 };
 
+const VALUE = { 
+    ACE: 'Ace', TWO: 'Two', THREE: 'Three', FOUR: 'Four', 
+    SEVEN: 'Seven', EIGHT: 'Eight', NINE: 'Nine', TEN: 'Ten', 
+    JACK: 'Jack', QUEEN: 'Queen', KING: 'King', 
+    I: 'I', II: 'II', III: 'III', IIII: 'IIII', V: 'V', VI: 'VI',
+    VII: 'VII', VIII: 'VIII', IX: 'IX', X: 'X', XI: 'XI', XII: 'XII',
+    XIII: 'XIII', XIV: 'XIV', XV: 'XV', XVI: 'XVI', XVII: 'XVII',
+    XVIII: 'XVIII', XIX: 'XIX', XX: 'XX', XXI: 'XXI', SKYZ: 'Skyz'
+};
 const RED_VALUE = { 0: 'Ace', 1: 'Two', 2: 'Three', 3: 'Four', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const RED_VALUE_ACE_HIGH = { 0: 'Two', 1: 'Three', 2: 'Four', 3: 'Ace', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
@@ -50,6 +59,10 @@ const ACTION = {
     CALL_PREVER: 'callPrever',
     DISCARD: 'discard',
     DRAW_PREVER_TALON: 'drawPreverTalon',
+    MONEY_CARDS: 'moneyCards',
+    PARTNER: 'partner',
+    POVINNOST_BIDA_UNI_CHOICE: 'povinnostBidaUniChoice',
+    VALAT: 'valat',
 }
 
 const SHUFFLE_TYPE = {
@@ -69,9 +82,21 @@ const CUT_TYPE = {
     THREE_FOUR_FIVE: '345',
 }
 
+const MONEY_CARDS = {
+    UNI: 'Uni',
+    BIDA: 'Bida',
+    TAROKY: 'Taroky',
+    TAROCKY: 'Tarocky',
+    TRUL: 'Trul',
+    PANE: 'Pane',
+    ROSA_PANE: 'Rosa-Pane',
+    ROSA_PANE_PLUS: 'Rosa-Pane+'
+};
+
 module.exports = {
     SUIT,
     SUIT_REVERSE,
+    VALUE,
     RED_VALUE,
     RED_VALUE_ACE_HIGH,
     BLACK_VALUE,
@@ -88,5 +113,6 @@ module.exports = {
     NUM_AVATARS,
     ACTION,
     SHUFFLE_TYPE,
-    CUT_TYPE
+    CUT_TYPE,
+    MONEY_CARDS
 }

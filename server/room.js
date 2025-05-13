@@ -144,6 +144,26 @@ class Room {
         this._board.importantInfo.preverMultiplier = this._board.preverMultiplier;
     }
 
+    updateImportantMoneyCardsInfo() {
+        this._board.importantInfo.chips = {
+            '0': this._players[0].chips,
+            '1': this._players[1].chips,
+            '2': this._players[2].chips,
+            '3': this._players[3].chips
+        }
+        this._board.importantInfo.moneyCards = this._board.moneyCards;
+    }
+
+    payMoneyCards(pn, owedChips) {
+        for (let i in this._players) {
+            if (i == pn) {
+                this._players[i].chips += 3 * owedChips;
+            } else {
+                this._players[i].chips -= owedChips;
+            }
+        }
+    }
+
     updateDealNotation() {
         this._board.importantInfo.povinnost = (this._board.povinnost+1);
         this._board.notation = ''   + this._players[             this._board.povinnost].chips + '/'
@@ -196,6 +216,46 @@ class Room {
 
     informPreverRejectedSecond() {
         this.informPlayers('rejected the second of cards',MESSAGE_TYPE.PREVER_TALON,{'cards':this._board.publicPreverTalon.slice(3,6),'pn':this._board.prever,'step':1},this._board.prever);
+    }
+
+    informFailedDiscard(pn, card) {
+        if (this._players[pn].type == PLAYER_TYPE.HUMAN) {
+            this._players[pn].messenger.emit('failedDiscard', card);
+        }
+        if (card) {
+            SERVER.warn('Player ' + pn + ' failed to discard the ' + card.value + ' of ' + card.suit, this._name);
+        }
+        SERVER.warn('Failed to discard. Cards in hand: ' + JSON.stringify(this._players[pn].hand), this._name);
+    }
+
+    informTrumpDiscarded(pn, card) {
+        this.informPlayers('discarded the ' + card.value, MESSAGE_TYPE.TRUMP_DISCARD, {pn: pn, card: card}, pn);
+        
+        // I'm not really sure what this code does :)
+        if (this._board.prever != -1) {
+            this._board.trumpDiscarded[0].push({suit:card.suit, value:card.value});
+        } else {
+            this._board.trumpDiscarded[((+this._board.povinnost - +pn) + 4)%4].push({suit:card.suit, value:card.value});
+        }
+
+        // Mark it as played for the bots
+        this._board.cardsPlayed[Deck.cardId(card, this._settings.aceHigh)] = true;
+    }
+
+    informMoneyCards(pn, moneyCards) {
+        let theMessage = 'is calling ';
+        let yourMoneyCards = 'You are calling ';
+        let numCalled = 0;
+        for (let i in moneyCards) {
+            numCalled++;
+            theMessage += ((numCalled>1 ? ', ' : '') + moneyCards[i]);
+            yourMoneyCards += ((numCalled>1 ? ', ' : '') + moneyCards[i]);
+        }
+        if (numCalled == 0) {
+            theMessage += 'nothing';
+            yourMoneyCards += 'nothing';
+        }
+        this.informPlayers(theMessage, MESSAGE_TYPE.MONEY_CARDS, {youMessage: yourMoneyCards, pn: pn}, pn);
     }
 
     establishPreverTeams() {

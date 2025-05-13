@@ -907,72 +907,14 @@ function actionCallback(action, room, pn) {
         case ACTION.DRAW_PREVER_TALON:
             actionTaken = room.gameplay.drawPreverTalon();
             break;
-        case 'discard':
-            let card = action.info.card;
-            let discarded = false;
-            if (card && card.suit && card.value) {
-                for (let i in room['players'][pn].hand) {
-                    if (room['players'][pn].hand[i].suit == card.suit && room['players'][pn].hand[i].value == card.value) {
-                        room.players[pn].discard.push(room['players'][pn].hand.splice(i, 1)[0]);
-                        discarded = true;
-                        break;
-                    }
-                }
-            }
-            if (discarded) {
-                if (shouldTrainAI) {
-                    room.players[pn].trainPersonalizedAI(room, pn, 8, 0, card, 1);
-                }
-                actionTaken = true;
-                //Announce discard Trump cards
-                if (card.suit == 'Trump') {
-                    room.informPlayers('discarded the ' + card.value, MESSAGE_TYPE.TRUMP_DISCARD, {pn: pn, card: card}, pn);
-                    if (room.board.prever != -1) {
-                        room.board.trumpDiscarded[0].push({suit:card.suit, value:card.value});
-                    } else {
-                        room.board.trumpDiscarded[((+room.board.povinnost - +pn) + 4)%4].push({suit:card.suit, value:card.value});
-                    }
-                    room.board.cardsPlayed[Deck.cardId(card, room.settings.aceHigh)] = true;
-                }
-                if (room['players'][action.player].hand.length == 12) {
-                    action.player = (action.player + 1) % 4;
-                    if (room['players'][action.player].hand.length == 12) {
-                        action.player = (action.player + 1) % 4;
-                        if (room['players'][action.player].hand.length == 12) {
-                            action.player = (action.player + 1) % 4;
-                            if (room['players'][action.player].hand.length == 12) {
-                                action.player = room['board'].povinnost;
-                                if (room['board'].playingPrever) {
-                                    //A player is going prever. No partner cards
-                                    action.action = 'moneyCards';
-                                    //Note that prever is calling Bida or Uni no matter what
-                                    //If prever has bida or uni, he calls bida or uni. No choice.
-                                } else {
-                                    //No player going prever. Povinnost will call a partner
-                                    action.action = 'partner';
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                if (players[room['players'][pn].socket]) {
-                    players[room['players'][pn].socket].socket.emit('failedDiscard', card);
-                }
-                if (action.info.card) {
-                    SERVER.warn('Player ' + pn + ' failed to discard the ' + action.info.card.value + ' of ' + action.info.card.suit,room.name);
-                }
-                SERVER.warn('Failed to discard. Cards in hand: ' + JSON.stringify(room['players'][pn].hand),room.name);
-            }
+        case ACTION.DISCARD:
+            actionTaken = room.gameplay.discard();
             break;
-        case 'povinnostBidaUniChoice':
-            //player is assumed to be povinnost. This action is only taken if povinnost has bida or uni and no one is prever
-            if (shouldTrainAI) {
-                room.players[pn].trainPersonalizedAI(room, pn, 9, 11, null, action.info.choice ? 1 : 0);
-            }
-            room.board.buc = action.info.choice;
-            action.action = 'moneyCards';//Fallthrough. Go directly to moneyCards
-        case 'moneyCards':
+        case ACTION.POVINNOST_BIDA_UNI_CHOICE:
+            room.gameplay.povinnostBidaUniChoice();
+            // Intentional fallthrough
+        case ACTION.MONEY_CARDS:
+            /*
             //Determines point which point cards the player has, starting with Povinnost and rotating around. Povinnost has the option to call Bida or Uni but others are called automatically
             let isPovinnost = room.board.povinnost == pn;
             //Needed info: trump count, 5-pointer count, trul detection
@@ -1066,7 +1008,8 @@ function actionCallback(action, room, pn) {
             if (action.player == room['board'].povinnost) {
                 action.action = 'valat';
                 room.board.hasTheI = findTheI(room.players);
-            }
+            }*/
+            actionTaken = room.gameplay.moneyCards();
             break;
         case 'partner':
             let povinnostChoice = room['board'].partnerCard;

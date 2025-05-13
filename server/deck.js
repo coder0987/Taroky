@@ -1,5 +1,6 @@
 const { SUIT,
     SUIT_REVERSE,
+    VALUE,
     RED_VALUE,
     RED_VALUE_ACE_HIGH,
     BLACK_VALUE,
@@ -107,7 +108,7 @@ class Deck {
     }
 
     static copyCards(from, to, count) {
-        for (let i=0; i<count; i++) {to.push(from.slice(i,i+1)[0]);}
+        to.push(...from.slice(0,count));
     }
 
     static points(cards) {
@@ -262,8 +263,8 @@ class Deck {
     }
 
     static pointValue(card) {
-        if (card.suit == 'Trump') {
-            if (card.value == 'I' || card.value == 'XXI' || card.value == 'Skyz') {
+        if (card.suit == SUIT.TRUMP) {
+            if (card.value == VALUE.I || card.value == VALUE.XXI || card.value == VALUE.SKYZ) {
                 return 5;
             }
             return 1;
@@ -306,6 +307,15 @@ class Deck {
     static handContains(handToCheck, valueToCheck, suitToCheck) {
         for (let i in handToCheck) {
             if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
+                return true;
+            }
+        }
+        return false;
+    }
+    static moveCard(from, to, suit, value) {
+        for (let i in from) {
+            if (from[i].suit == suit && from[i].value == value) {
+                to.push(from.splice(i, 1)[0]);
                 return true;
             }
         }
@@ -419,6 +429,37 @@ class Deck {
         for (let i in hand) {
             hand[i].grayed = false;
         }
+    }
+    static handContainsTrul(hand) {
+        let hasSkyz = false, hasXXI = false, hasI = false;
+
+        for (const card of hand) {
+            if (card.value === VALUE.SKYZ) hasSkyz = true;
+            else if (card.value === VALUE.XXI) hasXXI = true;
+            else if (card.value === VALUE.I) hasI = true;
+        }
+
+        return hasSkyz && hasXXI && hasI;
+    }
+    static handContainsRosaPane(hand) {
+        let kings = [false, false, false, false];
+
+        for (const card of hand) {
+            if (card.value === VALUE.KING) {
+                kings[ SUIT_REVERSE[card.suit] ] = true;
+            }
+        }
+
+        return kings[0] && kings[1] && kings[2] && kings[3];
+    }
+    static num5Count(hand) {
+        let count = 0;
+        for (let i in hand) {
+            if (Deck.pointValue(hand[i]) === 5) {
+                count++;
+            }
+        }
+        return count;
     }
     static numOfSuit(hand, suit) {
         let suitCount = 0;

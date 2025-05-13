@@ -1,8 +1,9 @@
 const { SUIT, TRUMP_VALUE, RED_VALUE, RED_VALUE_ACE_HIGH, BLACK_VALUE, VALUE_REVERSE, DIFFICULTY_TABLE } = require('./enums');
 const SERVER = require('./logger.js');
-const GameManager = require('./GameManager.js')
+const GameManager = require('./GameManager.js');
+const { u, findTheI } = require('./utils');
 
-let baseDeck = GameManager.INSTANCE.baseDeck;
+let baseDeck = GameManager.INSTANCE.baseDeck.deck;
 
 function notationToCards(notatedCards, aceHigh) {
     try {
@@ -232,6 +233,7 @@ function notate(room, notation) {
                 }
                 if (!found) {
                     SERVER.debug('Notation: Missing card');
+                    SERVER.debug(JSON.stringify(baseDeck[i]));
                     return false;
                 }
             }
