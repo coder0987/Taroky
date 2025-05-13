@@ -78,16 +78,19 @@ describe('Deck class', () => {
   test('handContainsCard should return true if card present', () => {
     const hand = [{ value: 'XIX', suit: SUIT.TRUMP }];
     expect(Deck.handContainsCard(hand, 'XIX')).toBe(true);
+    expect(Deck.handContainsCard(hand, 'I')).toBe(false);
   });
 
   test('handHasSuit should return true for matching suit', () => {
     const hand = [{ suit: 'Spade', value: 'Ace' }];
     expect(Deck.handHasSuit(hand, 'Spade')).toBe(true);
+    expect(Deck.handHasSuit(hand, 'Trump')).toBe(false);
   });
 
   test('handContains should detect card with suit and value', () => {
     const hand = [{ suit: 'Trump', value: 'XIX' }];
     expect(Deck.handContains(hand, 'XIX', 'Trump')).toBe(true);
+    expect(Deck.handContains(hand, 'II', 'Trump')).toBe(false);
   });
 
   test('pointValue should assign correct values', () => {
@@ -130,7 +133,13 @@ describe('Deck class', () => {
       { suit: 'Trump', value: 'XXI' },
       { suit: 'Trump', value: 'Skyz' }
     ];
+    const noTrul = [
+        { suit: 'Trump', value: 'I' },
+        { suit: 'Trump', value: 'XXI' },
+        { suit: 'Spade', value: 'King' }
+    ]
     expect(Deck.handContainsTrul(hand)).toBe(true);
+    expect(Deck.handContainsTrul(noTrul)).toBe(false);
   });
 
   test('handContainsRosaPane should detect all kings', () => {
@@ -140,7 +149,14 @@ describe('Deck class', () => {
       { suit: 'Heart', value: 'King' },
       { suit: 'Diamond', value: 'King' }
     ];
+    const noRosaPane = [
+      { suit: 'Spade', value: 'King' },
+      { suit: 'Club', value: 'King' },
+      { suit: 'Heart', value: 'King' },
+      { suit: 'Skyz', value: 'Trump' }
+    ];
     expect(Deck.handContainsRosaPane(hand)).toBe(true);
+    expect(Deck.handContainsRosaPane(noRosaPane)).toBe(false);
   });
 
   test('sortCards should group and sort by suit/value', () => {
