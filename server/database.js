@@ -97,12 +97,12 @@ class Database {
         }
     }
 
-    static async updateUser(username, settings, avatar, deck, chat) {
+    static async updateUserAll(username, settings, avatar, deck, chat) {
         username = username.toLowerCase();
         let conn;
         try {
             conn = await pool.getConnection();
-            await conn.query("UPDATE users SET settings = ?, avatar = ?, deck = ?, chat = ? WHERE username in (?)", [settings, elo, avatar, deck, chat, username]);
+            await conn.query("UPDATE users SET settings = ?, avatar = ?, deck = ?, chat = ? WHERE username in (?)", [settings, avatar, deck, chat, username]);
         } catch (err) {
             throw err;
         } finally {
@@ -117,7 +117,7 @@ class Database {
         Promise.resolve(Database.updateUser(username,'settings',settings));
     }
     static saveUserPreferences(username,settings,avatar,deck,chat) {
-        Promise.resolve(Database.updateUser(username,settings,avatar,deck,chat));
+        Promise.resolve(Database.updateUserAll(username,settings,avatar,deck,chat));
     }
 }
 
