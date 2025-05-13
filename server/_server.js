@@ -865,7 +865,6 @@ function actionCallback(action, room, pn) {
     let currentHand = room['players'][pn].hand;//linked, not copied
     let playerType = room['players'][pn].type;
     let actionTaken = false;
-    let style;
     let shouldReturnTable = false;
     let shouldTrainAI = room.players[pn].socket != -1 && players[room.players[pn].socket].username != 'Guest';
 
@@ -914,101 +913,6 @@ function actionCallback(action, room, pn) {
             room.gameplay.povinnostBidaUniChoice();
             // Intentional fallthrough
         case ACTION.MONEY_CARDS:
-            /*
-            //Determines point which point cards the player has, starting with Povinnost and rotating around. Povinnost has the option to call Bida or Uni but others are called automatically
-            let isPovinnost = room.board.povinnost == pn;
-            //Needed info: trump count, 5-pointer count, trul detection
-
-            //Quick hand ranking
-            room.players[pn].handRank = Deck.basicHandRanking(currentHand);
-
-            let numTrumps = 0;
-            let fiverCount = 0;
-            let owedChips = 0;
-            for (let i in currentHand) {
-                if (currentHand[i].suit == "Trump") { numTrumps++; }
-                if (currentHand[i].value == "King" || currentHand[i].value == "I" || currentHand[i].value == "XXI" || currentHand[i].value == "Skyz") { fiverCount++; }
-            }
-            if (numTrumps == 0) {
-                if (!isPovinnost || room.board.buc || (room.board.prever != -1)) {
-                    //Uni
-                    owedChips += 4;
-                    room['board'].moneyCards[pn].push("Uni");
-                }
-            } else if (numTrumps <= 2) {
-                if (!isPovinnost || room.board.buc || (room.board.prever != -1)) {
-                    //Bida
-                    owedChips += 2;
-                    room['board'].moneyCards[pn].push("Bida");
-                }
-            } else if (numTrumps >= 10) {
-                //Taroky (big ones)
-                owedChips += 4;
-                room['board'].moneyCards[pn].push("Taroky");
-            } else if (numTrumps >= 8) {
-                //Tarocky (little ones)
-                owedChips += 2;
-                room['board'].moneyCards[pn].push("Tarocky");
-            }
-            if (fiverCount >= 3) {
-                //Check for trul
-                if (Deck.handContainsCard(currentHand, "I") && Deck.handContainsCard(currentHand, "XXI") && Deck.handContainsCard(currentHand, "Skyz")) {
-                    //Trul
-                    owedChips += 2;
-                    room['board'].moneyCards[pn].push("Trul");
-                }
-                if (Deck.handContains(currentHand, "King", "Spade") && Deck.handContains(currentHand, "King", "Club") && Deck.handContains(currentHand, "King", "Heart") && Deck.handContains(currentHand, "King", "Diamond")) {
-                    if (fiverCount > 4) {
-                        //Rosa-Pane+
-                        owedChips += 6;
-                        room['board'].moneyCards[pn].push("Rosa-Pane+");
-                    } else {
-                        //Rosa-Pane
-                        owedChips += 4;
-                        room['board'].moneyCards[pn].push("Rosa-Pane");
-                    }
-                } else if (fiverCount >= 4) {
-                    //Pane
-                    owedChips += 2;
-                    room['board'].moneyCards[pn].push("Pane");
-                }
-            }
-
-            //Inform all players of current moneyCards
-            let theMessage = 'is calling ';
-            let yourMoneyCards = 'You are calling ';
-            let numCalled = 0;
-            for (let i in room['board'].moneyCards[pn]) {
-                numCalled++;
-                theMessage += ((numCalled>1 ? ', ' : '') + room['board'].moneyCards[pn][i]);
-                yourMoneyCards += ((numCalled>1 ? ', ' : '') + room['board'].moneyCards[pn][i]);
-            }
-            if (numCalled == 0) {
-                theMessage += 'nothing';
-                yourMoneyCards += 'nothing';
-            }
-            room.informPlayers(theMessage, MESSAGE_TYPE.MONEY_CARDS, {youMessage: yourMoneyCards, pn: pn}, pn);
-            for (let i in room['players']) {
-                if (i == pn) {
-                    room['players'][i].chips += 3 * owedChips;
-                } else {
-                    room['players'][i].chips -= owedChips;
-                }
-                room.board.importantInfo.chips = {
-                    '0': room.players[0].chips,
-                    '1': room.players[1].chips,
-                    '2': room.players[2].chips,
-                    '3': room.players[3].chips
-                }
-            }
-            room.board.importantInfo.moneyCards = room.board.moneyCards;
-            actionTaken = true;
-
-            action.player = (pn + 1) % 4;
-            if (action.player == room['board'].povinnost) {
-                action.action = 'valat';
-                room.board.hasTheI = findTheI(room.players);
-            }*/
             actionTaken = room.gameplay.moneyCards();
             break;
         case 'partner':
