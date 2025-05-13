@@ -5,7 +5,7 @@ const SUIT_REVERSE = { Spade: 0, Club: 1, Heart: 2, Diamond: 3, Trump: 4 };
 const VALUE = { 
     ACE: 'Ace', TWO: 'Two', THREE: 'Three', FOUR: 'Four', 
     SEVEN: 'Seven', EIGHT: 'Eight', NINE: 'Nine', TEN: 'Ten', 
-    JACK: 'Jack', QUEEN: 'Queen', KING: 'King', 
+    JACK: 'Jack', RIDER: 'Rider', QUEEN: 'Queen', KING: 'King', 
     I: 'I', II: 'II', III: 'III', IIII: 'IIII', V: 'V', VI: 'VI',
     VII: 'VII', VIII: 'VIII', IX: 'IX', X: 'X', XI: 'XI', XII: 'XII',
     XIII: 'XIII', XIV: 'XIV', XV: 'XV', XVI: 'XVI', XVII: 'XVII',
