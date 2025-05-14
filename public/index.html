@@ -171,7 +171,7 @@
                 <hr>
                 <label for="difficultySelector" class="col-md-3 col-6">Difficulty:</label>
                 <select id="difficultySelector" name="Select Difficulty:"
-                        onchange="submitSettings(&quot;difficulty&quot;)" class="btn white">
+                        onchange="submitSettings('difficulty')" class="btn white">
                     <option value="0" id="Beginner">Beginner</option>
                     <option value="1" id="Easy">Easy</option>
                     <option value="2" id="Normal">Normal</option>
@@ -182,11 +182,11 @@
                 <hr>
                 <label for="timeoutButton" class="col-md-3 col-6">Timeout:</label>
                 <input type="number" value="30" min="-1" id="timeoutButton"
-                       onchange="submitSettings(&quot;timeout&quot;)" class="col-3">
+                       onchange="submitSettings('timeout')" class="col-3">
                 <hr>
                 <label for="aceHighSelector" class="col-md-3 col-6">Ace High:</label>
                 <input type="checkbox" checked="false" id="aceHighSelector"
-                       onchange="submitSettings(&quot;aceHigh&quot;)">
+                       onchange="submitSettings('aceHigh')">
                 <hr>
                 <label for="lockButton" id="lockButtonP" class="col-md-3 col-6">Visibility:</label>
                 <button id="lockButton"
