@@ -402,11 +402,9 @@ class GamePlay {
             this.#room.informTrumpDiscarded(this.player, card);
         }
 
-        if (this.currentPlayer.hand.length === 12) {
-            this.nextPlayer();
-        }
+        this.player = Deck.getPlayerToDiscard(this.hands, this.povinnost);
 
-        if (this.currentPlayer.hand.length === 12) {
+        if (this.player === -1) {
             // All players have discarded
             this.player = this.povinnost;
 

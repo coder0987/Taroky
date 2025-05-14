@@ -430,6 +430,20 @@ class Deck {
             hand[i].grayed = false;
         }
     }
+    static getPlayerToDiscard(hands, povinnost) {
+        const { playerOffset } = require('./utils'); // Put here to remove dependency cycle :/
+        for (let i = 0; i < hands.length; i++) {
+            // Starting with povinnost, check all 4 hands to see if any have more than 12 cards
+            const p = playerOffset(povinnost, i);
+
+            if (hands[p].length > 12) {
+                return p;
+            }
+        }
+
+        // If all have 12 or fewer, return -1
+        return -1;
+    }
     static handContainsTrul(hand) {
         let hasSkyz = false, hasXXI = false, hasI = false;
 

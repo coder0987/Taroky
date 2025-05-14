@@ -9,6 +9,15 @@ function prevPlayer(pn) {
     return (pn + 3) % 4;
 }
 
+function playerOffset(startingPlayer, offset) {
+    return (+startingPlayer + +offset)%4;
+}
+
+function playerPerspective(originalPlace, viewpoint) {
+    //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
+    return ((+originalPlace - +viewpoint) + 4)%4;
+}
+
 function shuffleType(givenType) {
     if (u(givenType)) {
         return SHUFFLE_TYPE.RANDOM;
@@ -76,15 +85,6 @@ function whoWon(table, leadPlayer, aceHigh) {
     }
     //No trumps means that the winner is whoever played the card of the lead suit with the highest value
     return (leadPlayer+currentWinner)%4;
-}
-
-function playerOffset(startingPlayer, offset) {
-    return (+startingPlayer + +offset)%4;
-}
-
-function playerPerspective(originalPlace, viewpoint) {
-    //Ex. if player 0 is povinnost and player 1 is AI, then from AI's view player 3 is povinnost
-    return ((+originalPlace - +viewpoint) + 4)%4;
 }
 
 function u(v) {
