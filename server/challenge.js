@@ -1,5 +1,5 @@
 const Deck = require('./deck.js');
-const {DIFFICULTY, VALUE_REVERSE} = require('./enums.js');
+const { DIFFICULTY, VALUE_REVERSE } = require('./enums.js');
 const { shuffleArray } = require('./utils.js');
 const GameManager = require('./GameManager.js');
 

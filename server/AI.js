@@ -1,4 +1,3 @@
-const math = require('mathjs');
 const Deck = require('./deck.js');
 const SERVER = require('./logger.js');
 const { Buffer } = require('node:buffer');

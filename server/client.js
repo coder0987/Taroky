@@ -4,16 +4,7 @@
  */
 
 class Client {
-    #returnToGame;
     constructor() {
 
-    }
-
-    get returnToGame() {
-        return this.#returnToGame;
-    }
-
-    set returnToGame(rtg) {
-        this.#returnToGame = rtg;
     }
 }
