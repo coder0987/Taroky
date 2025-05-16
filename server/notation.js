@@ -264,10 +264,22 @@ function notate(room, notation) {
     return false;
 }
 
+function getPNFromNotation(notation) {
+    const values = notation.split('/');
+    const theSettings = values[values.length - 1].split(';');
+    const [setting,pn] = theSettings[theSettings.length - 1].split('=');
+    if (u(setting) || u(pn) || setting != 'pn' || isNaN(pn) || pn < 0 || pn > 4) {
+        SERVER.debug('Player number not declared')
+        pn = 0;
+    }
+    return pn;
+}
+
 module.exports = {
     notationToCards,
     cardsToNotation,
     notationToSettings,
     notationToObject,
-    notate
+    notate,
+    getPNFromNotation
 }

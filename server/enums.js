@@ -63,6 +63,16 @@ const ACTION = {
     PARTNER: 'partner',
     POVINNOST_BIDA_UNI_CHOICE: 'povinnostBidaUniChoice',
     VALAT: 'valat',
+    LEAD: 'lead',
+    FOLLOW: 'follow',
+    IOTE: 'iote',
+    CONTRA: 'contra',
+    PREVER_CONTRA: 'preverContra',
+    PREVER_VALAT_CONTRA: 'preverValatContra',
+    VALAT_CONTRA: 'valatContra',
+    WIN_TRICK: 'winTrick',
+    COUNT_POINTS: 'countPoints',
+    RESET: 'resetBoard',
 }
 
 const SHUFFLE_TYPE = {
@@ -77,6 +87,7 @@ const CUT_TYPE = {
     TWOS: '2',
     THREES: '3',
     FOURS: '4',
+    SIXES: '6',
     TWELVES: '12',
     TWELVE_STRAIGHT: '12 Straight',
     THREE_FOUR_FIVE: '345',

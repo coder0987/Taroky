@@ -1,4 +1,5 @@
 const Deck = require('./deck');
+const SERVER = require('./logger');
 
 class GameManager {
     #returnToGame = {};
@@ -7,11 +8,109 @@ class GameManager {
     #baseDeck = new Deck();
     #challenge;
     #SOCKET_LIST = {};
+    #numOnlinePlayers = 0;
 
     static INSTANCE;
 
     constructor() {
         GameManager.INSTANCE = this;
+    }
+
+    removeRoom(roomID) {
+        const room = this.#rooms[roomID];
+
+        if (!room) {
+            return;
+        }
+
+        room.ejectAudience();
+        clearTimeout(room.autoAction);
+        delete this.#rooms[roomID];
+
+        SERVER.log(`Game Ended. Closing room ${roomID}`);
+    }
+
+    addRoom( args = {}, prefix = '' ) {
+        const id = this.getFirstOpenRoomID(prefix);
+
+        args.name = id;
+
+        rooms[id] = new Room(args);
+
+        SERVER.log(`New room created: ${id}`);
+
+        return rooms[id];
+    }
+
+    removePlayer(socketId) {
+        try {
+            SOCKET_LIST[socketId].disconnect();
+        } catch (ignore) {}
+        numOnlinePlayers--;
+        delete players[socketId];
+        delete SOCKET_LIST[socketId];
+    }
+
+    addPlayer(socketId, socket, client) {
+        this.#SOCKET_LIST[socketId] = socket;
+        this.#players[socketId] = client;
+        this.#numOnlinePlayers++;
+
+        // Let other players know
+        for (let i in this.#SOCKET_LIST) {
+            this.#SOCKET_LIST[i].emit('returnPlayerCount', this.#numOnlinePlayers, this.#challenge.leaderboard, this.#challenge.retryLeaderboard);
+        }
+
+        // Handle return to game
+        if (this.#returnToGame[socketId]) {
+            this.#SOCKET_LIST[socketId].emit('returnToGame');
+        }
+
+        SERVER.log('Player joined with socketID ' + socketId);
+        SERVER.debug('Join time: ' + Date.now());
+    }
+
+    getRoomByCode(code) {
+        for (let i in rooms) {
+            if (code === rooms[i].joinCode) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    getFirstOpenRoomID(prefix) {
+        let i = 1;
+        for (; rooms[prefix+i]; i++) {}
+        return prefix + i;
+    }
+
+    getPlayerList(socketId) {
+        let playerListToSend = [];
+        for (let i in players) {
+            if (i != socketId && players[i].room != players[socketId].room) {
+                playerListToSend.push({
+                    username: players[i].username,
+                    status: (players[i].disconnecting ? 'Idle' : players[i].room == -1 ? 'Online' : 'In Game'),
+                    socket: i
+                });
+            }
+        }
+        return playersList;
+    }
+
+    sendChatMessage(username, message) {
+        for (let i in players) {
+            if (players[i].roomID === -1 && players[i].username !== username) {
+                players[i].socket.emit('chatMessage', playerName, message);
+            }
+        }
+    }
+    
+    sendLeaderboardToAll() {
+        for (let i in this.#SOCKET_LIST) {
+            this.#SOCKET_LIST[i].emit('returnPlayerCount', this.#numOnlinePlayers, this.#challenge.leaderboard, this.#challenge.retryLeaderboard);
+        }
     }
 
     get returnToGame() {

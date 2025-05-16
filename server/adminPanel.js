@@ -43,6 +43,10 @@ class AdminPanel {
         }
         return roomListObject;
     }
+
+    static shutDown() {
+        throw new Error("Shutting down the server NOW");
+    }
 }
 
 module.exports = AdminPanel;

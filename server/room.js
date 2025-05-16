@@ -1,10 +1,11 @@
 const Board = require('./board.js');
-const Player = require('./player.js');
+const Player = require('./Player/Player.js');
+const RobotPlayer = require('./Player/RobotPlayer.js');
 const Deck = require('./deck.js');
 const GamePlay = require('./GamePlay.js');
 const GameManager = require('./GameManager.js');
 const SERVER = require('./logger.js');
-const {DIFFICULTY, PLAYER_TYPE, ROOM_TYPE, NUM_AVATARS, MESSAGE_TYPE} = require('./enums.js');
+const {DIFFICULTY, PLAYER_TYPE, ROOM_TYPE, NUM_AVATARS, MESSAGE_TYPE, DIFFICULTY_TABLE, SENSITIVE_ACTIONS} = require('./enums.js');
 const {cardsToNotation} = require('./notation');
 const {playerOffset} = require('./utils');
 
@@ -27,10 +28,11 @@ class Room {
         this._name = name;
         this._joinCode = Room.createJoinCode();
         this._host = -1;
+        this._hostPN = -1;
         this._board = new Board();
         this._playerCount = 0;
         this._deck = deck;
-        this._players = [new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT), new Player(PLAYER_TYPE.ROBOT)];
+        this._players = [new RobotPlayer({room: this}), new RobotPlayer({room: this}), new RobotPlayer({room: this}), new RobotPlayer({room: this})];
         this._autoAction = 0;
         this._settingsNotation = 'difficulty=2;timeout=30000;aceHigh=false;locked=false';
         this._logLevel = logLevel;//0: none, 1: errors, 2: warn, 3: info, 4: debug logs, 5: trace
@@ -41,11 +43,6 @@ class Room {
         this._stopAtEnd = stop;
         this._botCutChoice = botCutChoice;
         this._botCutLoc = botCutLoc;
-
-        this._players[0].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
-        this._players[1].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
-        this._players[2].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
-        this._players[3].avatar = Math.floor(Math.random() * NUM_AVATARS + 1);
 
         this.#gameplay = new GamePlay(this);
 
@@ -119,10 +116,30 @@ class Room {
         }
     }
 
+    sendAllPlayers(messageType, message) {
+        for (let i in this._players) {
+            if (this._players[i].messenger) {
+                this._players[i].messenger.emit(messageType, message);
+            }
+        }
+    }
+
+    sendAudience(messageType, message) {
+        for (let i in this._audience) {
+            if (this._audience[i].messenger) {
+                this._audience[i].messenger.emit(messageType, message);
+            }
+        }
+    }
+
+    sendTable() {
+        this.informTable();
+    }
+
     notifyStartGame() {
-        for (let i = 0; i < 4; i++) {
-            if (this._players[i].type == PLAYER_TYPE.HUMAN) {
-                players[this._players[i].socket].socket.emit('startingGame', this._host, i, this._board.gameNumber, this._settings);
+        for (let i in this._players) {
+            if (this._players[i].messenger) {
+                this._players[i].messenger.emit('startingGame', this._host, i, this._board.gameNumber, this._settings);
             }
         }
     }
@@ -154,6 +171,48 @@ class Room {
         this._board.importantInfo.moneyCards = this._board.moneyCards;
     }
 
+    updateImportantUsernamesInfo() {
+        this._board.importantInfo.usernames = {'0':null, '1':null, '2':null, '3':null};
+        for (let i in this._players) {
+            if (this._players[i].username && this._players[i].username != 'Guest') {
+                this._board.importantInfo.usernames[i] = this._players[i].username;
+            }
+        }
+    }
+
+    updatePartnerCardInfo() {
+        this._board.importantInfo.partnerCard = this._board.partnerCard;
+    }
+
+    updateImportantValatInfo() {
+        this._board.importantInfo.valat = this._board.valat + 1;
+    }
+
+    updateImportantIOTEInfo() {
+        this._board.importantInfo.iote = this._board.iote + 1;
+    }
+
+    updateImportantContraInfo() {
+        this._board.importantInfo.contra = Math.pow(2,
+                ~this._board.contra[0] ? this._board.contra[0] +
+                (~this._board.contra[1] ? this._board.contra[1] : 0) : 0);
+    }
+
+    updateTrickHistory(pn) {
+        this._board.trickHistory.push(
+            {
+                leadPlayer: this._board.leadPlayer,
+                winner: pn,
+                cards: [
+                    {suit: this._board.table[0].suit, value: this._board.table[0].value},
+                    {suit: this._board.table[1].suit, value: this._board.table[1].value},
+                    {suit: this._board.table[2].suit, value: this._board.table[2].value},
+                    {suit: this._board.table[3].suit, value: this._board.table[3].value}
+                ]
+            }
+        );
+    }
+
     payMoneyCards(pn, owedChips) {
         for (let i in this._players) {
             if (i == pn) {
@@ -161,6 +220,20 @@ class Room {
             } else {
                 this._players[i].chips -= owedChips;
             }
+        }
+    }
+
+    payWinnings(team1Players, team2Players, chipsOwed) {
+        for (let i in team1Players) {
+            let tempChipsOwed = chipsOwed;
+            if (team1Players.length == 1) { tempChipsOwed *= 3; }
+            team1Players[i].chips += tempChipsOwed;
+        }
+
+        for (let i in team2Players) {
+            let tempChipsOwed = chipsOwed;
+            if (team2Players.length == 1) { tempChipsOwed *= 3; }
+            team2Players[i].chips -= tempChipsOwed;
         }
     }
 
@@ -187,6 +260,52 @@ class Room {
                 GameManager.INSTANCE.returnToGame[this._players[i].socket] = {notation: this._board.notation + this._settingsNotation, povinnost: this._board.povinnost, pn: i};
             }
         }
+    }
+
+    resetAutoAction() {
+        if (this._autoAction) {
+            clearTimeout(this._autoAction);
+        }
+        if (this._settings.timeout > 0) {
+            this._autoAction = setTimeout(runAction, this._settings.timeout, this._board.nextStep.action, this, this._board.nextStep.player);
+        }
+    }
+
+    informPlayersInGame() {
+        this.sendAllPlayers('returnPlayersInGame', this.playersInGame);
+    }
+
+    informSettings() {
+        this.sendAllPlayers('returnSettings', this._settings);
+    }
+
+    informActionTaken() {
+        this.sendAudience('returnRoundInfo', this._board.importantInfo);
+
+        for (let i in this._players) {
+            if (this._players[i].messenger) {
+                this._board.importantInfo.pn = (+i+1);
+                this._players[i].messenger.emit('returnHand', Deck.sortCards(this._players[i].hand, this._settings.aceHigh), false);
+                this._players[i].messenger.emit('returnRoundInfo', this._board.importantInfo);
+                this._board.importantInfo.pn = null;
+            }
+        }
+    }
+
+    informNextAction() {
+        const action = this._board.nextStep;
+
+        if (SENSITIVE_ACTIONS[action.action]) {
+            const pn = action.player;
+            if (this._players[pn].messenger) {
+                this._players[pn].messenger.emit('nextAction', action);
+            }
+            
+            return;
+        }
+
+        this.sendAllPlayers('nextAction', action);
+        this.sendAudience('nextAction', action);
     }
 
     informPovinnost() {
@@ -219,7 +338,7 @@ class Room {
     }
 
     informFailedDiscard(pn, card) {
-        if (this._players[pn].type == PLAYER_TYPE.HUMAN) {
+        if (this._players[pn].messenger) {
             this._players[pn].messenger.emit('failedDiscard', card);
         }
         if (card) {
@@ -256,6 +375,79 @@ class Room {
             yourMoneyCards += 'nothing';
         }
         this.informPlayers(theMessage, MESSAGE_TYPE.MONEY_CARDS, {youMessage: yourMoneyCards, pn: pn}, pn);
+    }
+
+    informCalledValat(pn) {
+        this.informPlayers('called valat', MESSAGE_TYPE.VALAT, {pn: pn},pn);
+    }
+
+    informIOTECalled(pn) {
+        this.informPlayers('called the I on the end', MESSAGE_TYPE.IOTE, {pn: pn},pn);
+    }
+
+    informCalledContra(pn) {
+        this.informPlayers('called contra', MESSAGE_TYPE.CONTRA, {pn: pn}, pn);
+    }
+
+    informTable() {
+        this.sendAllPlayers('returnTable', this._board.table);
+        this.sendAudience('returnTable', this._board.table);
+    }
+
+    informPartnerCard() {
+        this.informPlayers('(Povinnost) is playing with the ' + this._board.partnerCard, MESSAGE_TYPE.PARTNER, 
+            {youMessage: 'You are playing with the ' + this._board.partnerCard, pn: this._board.nextStep.player}, this._board.nextStep.player);
+    }
+
+    informCardLead(pn, card) {
+        this.informPlayers('lead the ' + card.value + ' of ' + card.suit, MESSAGE_TYPE.LEAD, {pn: pn, card: card}, pn);
+    }
+
+    informCardPlayed(pn, card) {
+        this.informPlayers('played the ' + card.value + ' of ' + card.suit, MESSAGE_TYPE.PLAY, {pn: pn, card: card}, pn);
+    }
+
+    informWonTrick(trickWinner) {
+        this.informPlayers( 'won the trick', MESSAGE_TYPE.WINNER, {pn: trickWinner},trickWinner );
+    }
+
+    informFinalPoints(team1Players, team2Players, chipsOwed, pointCountMessageTable) {
+        for (let i in team1Players) {
+            let tempChipsOwed = chipsOwed;
+            if (team1Players.length == 1) { tempChipsOwed *= 3; }
+            if (tempChipsOwed < 0) {
+                this.informPlayer(team1Players[i].pn, 'Your team lost ' + (-tempChipsOwed) + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+            } else {
+                this.informPlayer(team1Players[i].pn, 'Your team won ' + tempChipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+            }
+        }
+
+        for (let i in team2Players) {
+            let tempChipsOwed = chipsOwed;
+            if (team2Players.length == 1) { tempChipsOwed *= 3; }
+            if (tempChipsOwed < 0) {
+                this.informPlayer(team2Players[i].pn, 'Your team won ' + (-tempChipsOwed) + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+            } else {
+                this.informPlayer(team2Players[i].pn, 'Your team lost ' + tempChipsOwed + ' chips', MESSAGE_TYPE.PAY, pointCountMessageTable);
+            }
+        }
+    }
+
+    informGameNotation() {
+        this.informPlayers(this._board.notation + this._settingsNotation, MESSAGE_TYPE.NOTATION, {povinnost: this._board.povinnost});
+    }
+
+    sendChatMessage(username, message) {
+        for (let i in this._players) {
+            if (this._players[i].messenger && this._players[i].username !== username) {
+                this._players[i].messenger.emit('chatMessage', username, message);
+            } 
+        }
+        for (let i in this._audience) {
+            if (this._audience[i].messenger && this._audience[i].username !== username) {
+                this._audience[i].messenger.emit('chatMessage', username, message);
+            } 
+        }
     }
 
     establishPreverTeams() {
@@ -301,12 +493,167 @@ class Room {
         }
     }
 
+    removeFromAudience(socketId) {
+        if (this._audience[socketId]) {
+            delete this._audience[socketId];
+            this.audienceCount--;
+        }
+    }
+
+    removeFromGame(pn) {
+        if (this._players[pn].type !== PLAYER_TYPE.HUMAN) {
+            return;
+        }
+
+        const wasHost = this._host == this._players[pn].socketId;
+
+        this._players[pn] = new RobotPlayer( { old: this._players[pn] } );
+        this._playerCount--;
+
+        if (wasHost) {
+            this.newHost();
+        }
+
+        this.informPlayers('left the room',MESSAGE_TYPE.DISCONNECT,{},pn);
+        this.informPlayersInGame();
+        if (this._board.nextStep.player === pn) {
+            runAction(this._board.nextStep, this, pn);
+        }
+    }
+
+    fillSlot(client, pn) {
+        client.pn = pn;
+
+        this._players[pn] = new HumanPlayer( { old: this._players[pn], client: client } );
+        this._playerCount++;
+
+        this.informPlayers('joined the game', MESSAGE_TYPE.CONNECT, {}, pn);
+
+        if (this.debug) {
+            client.socket.emit('debugRoomJoin');
+        }
+
+        this.informPlayersInGame();
+
+        if (~this._host) {
+            this._host = client.socketId;
+            this._hostPN = pn;
+        }
+    }
+
+    addToGame(client) {
+        const pn = this.findOpenSlot();
+
+        this.fillSlot(client, pn);
+    }
+
+    findOpenSlot() {
+        for (let i in this._players) {
+            if (this._players[i].type !== PLAYER_TYPE.HUMAN) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    newHost() {
+        // Find a HUMAN, and designate that player as the host
+        for (let i in this._players) {
+            if (this._players[i].type === PLAYER_TYPE.HUMAN) {
+                this._host = this._players[i].socketId;
+                this._hostPN = i;
+                this._players[i].socket.emit('roomHost');
+                break;
+            }
+        }
+    }
+
+    addToAudience( client ) {
+        this._audience[client.socketId] = client;
+        this._audienceCount++;
+    }
+
     setSettingsNotation() {
         let settingNotation = '';
         for (let i in this._settings) {
             settingNotation += i + '=' + this._settings[i] + ';';
         }
         this._settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
+    }
+
+    changeDifficulty(difficulty) {
+        if (!DIFFICULTY_TABLE[difficulty]) {
+            return;
+        }
+
+        this._settings.difficulty = +difficulty;
+        this.setSettingsNotation();
+
+        // TODO: switch bots to AI if difficulty is set to AI, and vice-versa
+
+        SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[difficulty], this._name);
+        this.informPlayers('Difficulty updated to ' + DIFFICULTY_TABLE[difficulty], MESSAGE_TYPE.SETTING);
+    }
+
+    changeTimeout(number) {
+        number = Math.floor(Number(number));
+        
+        if (isNaN(number)) {
+            return;
+        }
+
+        if (number <= 0) {
+            number = 0;
+        } else if (number <= 20000) {
+            number = 20000;
+        } else if (number >= 3600000) {
+            number = 3600000;
+        }
+
+        this._settings.timeout = number;
+
+        this.setSettingsNotation();
+
+        SERVER.debug('Timeout is set to ' + (number/1000) + 's', this._name);
+        this.informPlayers('Timeout updated to ' + (number/1000) + 's', MESSAGE_TYPE.SETTING);
+    }
+
+    changeAceHigh(aceHigh) {
+        let message;
+
+        if (aceHigh) {
+            this._settings.aceHigh = true;
+            message = 'Ace is high';
+        } else {
+            this._settings.aceHigh = false;
+            message = 'Ace is low';
+        }
+
+        this.setSettingsNotation();
+
+        SERVER.debug(message, this._name);
+        this.informPlayers(message, MESSAGE_TYPE.SETTING);
+    }
+
+    changeLock(lock) {
+        let message;
+
+        if (lock) {
+            this._settings.locked = true;
+            message = 'The room is now private';
+        } else {
+            this._settings.locked = false;
+            message = 'The room is now public';
+        }
+
+        this.setSettingsNotation();
+
+        SERVER.debug(message, this._name);
+        this.informPlayers(message, MESSAGE_TYPE.SETTING);
+    }
+
+    promptAction() {
+        this._players[this._board.nextStep.player].next();
     }
 
     static createJoinCode() {
@@ -348,6 +695,10 @@ class Room {
 
     get host() {
         return this._host;
+    }
+
+    get hostPN () {
+        return this._hostPN;
     }
 
     get board() {

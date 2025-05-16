@@ -44,7 +44,7 @@ class Board {
         this.#buc = false;
         this.#leadPlayer = -1;
         this.#leadCard = null;
-        this.#nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
+        this.#nextStep = { player: 0, action: 'start', time: Date.now(), info: {} };
         this.#cutStyle = '';
         this.#moneyCards = [[], [], [], []];
         this.#trickWinCount = [0, 0];

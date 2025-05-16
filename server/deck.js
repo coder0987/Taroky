@@ -111,6 +111,15 @@ class Deck {
         to.push(...from.slice(0,count));
     }
 
+    static removeCard(from, card) {
+        for (let i in from) {
+            if (from[i].suit === card.suit && from[i].value === card.value) {
+                return from.splice(i, 1)[0];
+            }
+        }
+        return null;
+    }
+
     static points(cards) {
         let tp = 0;
         for (let i in cards) {
@@ -307,6 +316,14 @@ class Deck {
     static handContains(handToCheck, valueToCheck, suitToCheck) {
         for (let i in handToCheck) {
             if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
+                return true;
+            }
+        }
+        return false;
+    }
+    static handContainsNonGray(handToCheck, valueToCheck, suitToCheck) {
+        for (let i in handToCheck) {
+            if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck && !handToCheck[i].grayed) {
                 return true;
             }
         }
