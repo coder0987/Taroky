@@ -1135,7 +1135,7 @@ class GamePlay {
                     pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':Math.abs(chipsOwed)});
                 } else {
                     chipsOwed = 40;
-                    if (room.board.prever !== -1) {
+                    if (this.playingPrever) {
                         chipsOwed = 60;
                     }
                     pointCountMessageTable.push({'name':'Won a Called Valat', 'value':chipsOwed});
@@ -1145,13 +1145,13 @@ class GamePlay {
                 if (this.board.trickWinCount[0] > 0) {
                     //Povinnost team won a trick
                     chipsOwed = 40;
-                    if (room.board.prever !== -1) {
+                    if (this.playingPrever) {
                         chipsOwed = 60;
                     }
                     pointCountMessageTable.push({'name':'Failed a Called Valat', 'value':chipsOwed});
                 } else {
                     chipsOwed = -40;
-                    if (room.board.prever !== -1) {
+                    if (this.playingPrever) {
                         chipsOwed = -60;
                     }
                     pointCountMessageTable.push({'name':'Won a Called Valat', 'value':Math.abs(chipsOwed)});
@@ -1168,7 +1168,7 @@ class GamePlay {
 
         if (this.board.trickWinCount[0] === 0) {
             chipsOwed = 20;
-            if (room.board.prever != -1) {
+            if (this.playingPrever) {
                 chipsOwed = 30;
             }
             pointCountMessageTable.push({'name':'Valat', 'value':chipsOwed});
@@ -1182,7 +1182,7 @@ class GamePlay {
         if (this.board.trickWinCount[1] === 0) {
             //Opposing team valat'd
             chipsOwed = -20;
-            if (room.board.prever != -1) {
+            if (this.playingPrever) {
                 chipsOwed = -30;
             }
             pointCountMessageTable.push({'name':'Valat', 'value':Math.abs(chipsOwed)});
@@ -1259,7 +1259,7 @@ class GamePlay {
                     chipsOwed -= 4;
                 } else {
                     //Nobody played the I but it was called
-                    chipsOwed += (this.players[this.board.iote].isTeamPovinnost ? -4 : 4);
+                    chipsOwed += (this.players[this.board.hasTheI].isTeamPovinnost ? -4 : 4);
                 }
             } else {
                 //Not called but played on the last trick
