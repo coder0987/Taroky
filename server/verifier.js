@@ -139,7 +139,7 @@ function verifyCredentials(username, token) {
     // Not meant to verify that they go together, but that they are the right structure
 
     const usernameIsValid = !u(username) && typeof username === 'string';
-    const tokenIsValid = notNegativeOne(token);
+    const tokenIsValid = !u(token) && typeof token === 'string';
 
     return usernameIsValid && tokenIsValid;
 }

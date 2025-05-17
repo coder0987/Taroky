@@ -571,7 +571,10 @@ class Client {
 
     // User account tools
     handleLogin(username, token) {
+        SERVER.log(`User ${this.#socketId} is attempting to sign in`);
+
         if (!verifyCredentials(username, token)) {
+            SERVER.log('Illegal credentials: username or token is the incorrect type');
             return;
         }
         Auth.attemptSignIn(username, token, this.socket, this.socketId);
