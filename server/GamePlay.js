@@ -70,6 +70,8 @@ class GamePlay {
         return this.#room.board.prever;
     }
 
+    // Setters
+
     set action(action) {
         this.#room.board.nextStep.action = action;
     }
@@ -80,6 +82,10 @@ class GamePlay {
 
     set time(time) {
         this.#room.board.nextStep.time = time;
+    }
+
+    set info(info) {
+        this.#room.board.nextStep.info = info;
     }
 
     set povinnost(pn) {
@@ -106,7 +112,7 @@ class GamePlay {
 
     actionCallback() {
         // A player has made a decision and submitted the move
-        SERVER.functionCall('GP.actionCallback');
+        SERVER.functionCall('GP.actionCallback', {name:'action', value: this.action}, {name:'Info', value: JSON.stringify(this.info)});
 
         let actionTaken = false;
 

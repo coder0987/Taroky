@@ -31,6 +31,8 @@ class GameManager {
     }
 
     addRoom( args = {}, prefix = '' ) {
+        const Room = require('./Room'); // To avoid dependency cycle
+
         const id = this.getFirstOpenRoomID(prefix);
 
         args.name = id;
@@ -87,16 +89,16 @@ class GameManager {
 
     getPlayerList(socketId) {
         let playerListToSend = [];
-        for (let i in players) {
-            if (i != socketId && players[i].room != players[socketId].room) {
+        for (let i in this.#players) {
+            if (i != socketId && this.#players[i].room != this.#players[socketId].room) {
                 playerListToSend.push({
-                    username: players[i].username,
-                    status: (players[i].disconnecting ? 'Idle' : players[i].room == -1 ? 'Online' : 'In Game'),
+                    username: this.#players[i].username,
+                    status: (this.#players[i].disconnecting ? 'Idle' : this.#players[i].room == -1 ? 'Online' : 'In Game'),
                     socket: i
                 });
             }
         }
-        return playersList;
+        return playerListToSend;
     }
 
     sendChatMessage(username, message) {

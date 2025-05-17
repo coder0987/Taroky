@@ -11,11 +11,12 @@ const gm = GameManager.INSTANCE;
 
 const { DISCONNECT_TIMEOUT, ACTION, SENSITIVE_ACTIONS, ROOM_TYPE } = require('./enums');
 const Deck = require('./deck');
-const { verifyCanJoinAudience, verifyCanPlayDailyChallenge, verifyCanMakeRoom, verifyCanReturnToGame, verifyPlayerCanChangeSettings, verifyCanSendInvite, verifyCanStartGame, verifyPlayerCanTakeAction, sanitizeShuffleType, sanitizeBoolean, sanitizeCutStyle, sanitizeCutLocation, sanitizeHandChoice, sanitizeDrawTalonChoice, verifyPartnerChoice, verifyCanDiscard, verifyPlayerCanTakeContraAction, verifyPlayerCanPlayCard, verifyCredentials, verifyCanSendMessage, verifyRoomExists, verifyCanSendMessageTo } = require('./Verifier');
+const { verifyCanJoinAudience, verifyCanPlayDailyChallenge, verifyCanMakeRoom, verifyCanReturnToGame, verifyPlayerCanChangeSettings, verifyCanSendInvite, verifyCanStartGame, verifyPlayerCanTakeAction, sanitizeShuffleType, sanitizeBoolean, sanitizeCutStyle, sanitizeCutLocation, sanitizeHandChoice, sanitizeDrawTalonChoice, verifyPartnerChoice, verifyCanDiscard, verifyPlayerCanTakeContraAction, verifyPlayerCanPlayCard, verifyCredentials, verifyCanSendMessage, verifyRoomExists, verifyCanSendMessageTo, verifyCanSaveSettings } = require('./Verifier');
 const { getPNFromNotation, notationToObject } = require('./notation');
 const { playerPerspective } = require('./utils');
 const Auth = require('./Auth');
 const AdminPanel = require('./AdminPanel');
+const Database = require('./database');
 
 class Client {
     #timeLastMessageSent;
@@ -159,7 +160,7 @@ class Client {
     handleReconnect() {
         gm.SOCKET_LIST[this.#socketId] = this.#socket;
 
-        SERVER.debug(`Player ${socketId} auto-reconnected`);
+        SERVER.debug(`Player ${this.#socketId} auto-reconnected`);
         this.#socket.emit('message','You have been automatically reconnected');//debug
 
         this.#tempDisconnect = false;
@@ -173,7 +174,7 @@ class Client {
         this.#tempDisconnect = true;
         this.#roomsSeen = {};
 
-        SERVER.debug(`Player ${socketId} may have disconnected`);
+        SERVER.debug(`Player ${this.#socketId} may have disconnected`);
     }
 
     handleExitRoom() {
@@ -251,6 +252,8 @@ class Client {
         if (!joined) {
             this.#socket.emit('challengeNotConnected');
         }
+
+        this.#socket.emit('roomConnected', room.name);
     }
 
     handleNewRoom() {
@@ -269,6 +272,7 @@ class Client {
 
         this.#socket.emit('roomHost');
         this.#socket.emit('youStart', room.name, room.joinCode);
+        this.#socket.emit('roomConnected', room.name);
         this.sync();
     }
 
@@ -322,6 +326,7 @@ class Client {
 
     handleChangeSettings(setting, rule) {
         if (!verifyPlayerCanChangeSettings(this, setting, rule)) {
+            SERVER.debug(`Player ${this.#socketId} attempted to edit settings illegally`);
             return;
         }
 
@@ -345,7 +350,7 @@ class Client {
         this.#room.informSettings();
     }
 
-    handleGetPlayerList() {
+    handleGetPlayers() {
         this.#socket.emit('returnPlayerList', gm.getPlayerList(this.#socketId));
     }
 
@@ -377,6 +382,7 @@ class Client {
 
     handlePlayerShuffle(type, again) {
         if (!verifyPlayerCanTakeAction(this, ACTION.SHUFFLE)) {
+            SERVER.debug('Shuffle rejected');
             return;
         }
 
@@ -389,7 +395,7 @@ class Client {
         this.room.gameplay.actionCallback();
     }
 
-    handlePlayercut(style, location) {
+    handlePlayerCut(style, location) {
         if (!verifyPlayerCanTakeAction(this, ACTION.CUT)) {
             return;
         }
@@ -552,6 +558,17 @@ class Client {
         this.#userInfo = {};
         this.#socket.emit('logout');
         SERVER.log(`Player ${this.#socketId} has signed out`);
+    }
+
+    handleSaveSettings() {
+        if (!verifyCanSaveSettings(this)) {
+            return;
+        }
+
+        Database.saveSettings(this.#username, this.#room.settingsNotation);
+        this.#userInfo.settings = this.#room.settingsNotation;
+        this.#socket.emit('defaultSettings', notationToObject(this.#room.settingsNotation));
+        SERVER.log('Default settings saved for user ' + this.#username + ': ' + this.#room.settingsNotation);
     }
 
     // Admin Tools
@@ -733,6 +750,14 @@ class Client {
         return this.#room;
     }
 
+    get inGame() {
+        return this.#inGame;
+    }
+
+    get inAudience() {
+        return this.#inAudience;
+    }
+
     get pn() {
         return this.#pn;
     }
@@ -763,6 +788,10 @@ class Client {
 
     get nextStep() {
         return this.#room?.board.nextStep;
+    }
+
+    get hand() {
+        return this.player?.hand;
     }
 
     get settings() {

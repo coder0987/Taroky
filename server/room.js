@@ -8,6 +8,7 @@ const SERVER = require('./logger.js');
 const {DIFFICULTY, PLAYER_TYPE, ROOM_TYPE, NUM_AVATARS, MESSAGE_TYPE, DIFFICULTY_TABLE, SENSITIVE_ACTIONS} = require('./enums.js');
 const {cardsToNotation} = require('./notation');
 const {playerOffset} = require('./utils');
+const HumanPlayer = require('./Player/HumanPlayer.js');
 
 let iterator = 100000;
 
@@ -59,7 +60,7 @@ class Room {
 
     playToEnd() {
         this._stopAtEnd = true;
-        runAction(this._board.nextStep, this, this._board.nextStep.player);
+        this.gameplay.actionCallback();
     }
 
     resetForNextRound() {
@@ -83,11 +84,11 @@ class Room {
                         //Handled by youMessage
                         this._players[i].messenger.emit('gameMessage','You ' + message,messageType,extraInfo);
                     } else {
-                        if (pn != -1 && this._players[pn].socket != -1 && players[this._players[pn].socket].username != 'Guest') {
-                            this._players[i].messenger.emit('gameMessage', players[this._players[pn].socket].username + ' ' + message,messageType,extraInfo);
+                        if (this._players[i].messenger && this._players[i].username != 'Guest') {
+                            this._players[i].messenger.emit('gameMessage', this._players[i].username + ' ' + message, messageType, extraInfo);
                         } else {
                             pn = +pn;
-                            this._players[i].messenger.emit('gameMessage','Player ' + (pn+1) + ' ' + message,messageType,extraInfo);
+                            this._players[i].messenger.emit('gameMessage','Player ' + (pn+1) + ' ' + message, messageType, extraInfo);
                         }
                     }
                 } else {
@@ -267,7 +268,7 @@ class Room {
             clearTimeout(this._autoAction);
         }
         if (this._settings.timeout > 0) {
-            this._autoAction = setTimeout(runAction, this._settings.timeout, this._board.nextStep.action, this, this._board.nextStep.player);
+            this._autoAction = setTimeout(() => this.gameplay.actionCallback(), this._settings.timeout);
         }
     }
 
@@ -489,6 +490,8 @@ class Room {
                 players[this._players[i].socket]['pn'] = -1;
                 players[this._players[i].socket]['roomsSeen'] = {};
                 this._players[i].messenger.emit('gameEnded');
+            } else if (this._players[i].timeout) {
+                this._players[i].clearTimeout();
             }
         }
     }
@@ -517,7 +520,7 @@ class Room {
         this.informPlayers('left the room',MESSAGE_TYPE.DISCONNECT,{},pn);
         this.informPlayersInGame();
         if (this._board.nextStep.player === pn) {
-            runAction(this._board.nextStep, this, pn);
+            this.gameplay.actionCallback();
         }
     }
 
@@ -535,7 +538,7 @@ class Room {
 
         this.informPlayersInGame();
 
-        if (~this._host) {
+        if (this._host === -1) {
             this._host = client.socketId;
             this._hostPN = pn;
         }
@@ -786,7 +789,7 @@ class Room {
         let playersInGameArr = [];
         for (let i in this._players) {
             playersInGameArr[i] = {
-                'name': this._players[i].socket == -1 ? (this._players[i].type == PLAYER_TYPE.ROBOT ? 'Robot' : 'AI') : players[this._players[i].socket].username,
+                'name': this._players[i].type !== PLAYER_TYPE.HUMAN ? (this._players[i].type == PLAYER_TYPE.ROBOT ? 'Robot' : 'AI') : this._players[i].username,
                 'avatar': this._players[i].avatar
             };
         }

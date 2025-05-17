@@ -1,4 +1,4 @@
-const { PLAYER_TYPE, NUM_AVATARS, SHUFFLE_TYPE, CUT_TYPE, ACTION } = require('../enums');
+const { PLAYER_TYPE, NUM_AVATARS, SHUFFLE_TYPE, CUT_TYPE, ACTION, DIFFICULTY } = require('../enums');
 const Player = require('./Player');
 const RobotAuto = require('./RobotAuto');
 const RobotBeginner = require('./RobotBeginner');
@@ -21,6 +21,8 @@ class RobotPlayer extends Player {
     constructor( args = {} ) {
         if (args.old) {
             super( args.old );
+        } else {
+            super(args);
         }
 
         this.type = PLAYER_TYPE.ROBOT;
@@ -67,6 +69,10 @@ class RobotPlayer extends Player {
 
             this.room.gameplay.actionCallback();
         }, this.#delay);
+    }
+
+    clearTimeout() {
+        this.clearTimeout(this.#timeout);
     }
     
     start() {

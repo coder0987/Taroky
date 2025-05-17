@@ -1,4 +1,5 @@
 const { ACTION } = require("../enums");
+const SERVER = require("../logger");
 
 class Player {
     #type;
@@ -226,7 +227,7 @@ class Player {
     }
 
     get room() {
-        return this.room;
+        return this.#room;
     }
     
     get action() {

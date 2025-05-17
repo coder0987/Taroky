@@ -132,136 +132,221 @@ io.sockets.on('connection', function (socket) {
         client.handleReconnect();
     }
 
-    socket.on('reconnect', function() {
+    const log = (event) => SERVER.debug(`Received socket event: '${event}' from player ${socketId}`);
+
+    socket.on('reconnect', () => {
+        log('reconnect');
         client.socket = socket;
         client.handleReconnect();
     });
 
-    socket.on('disconnect', client.handleDisconnect);
-
-    socket.on('exitRoom', client.handleExitRoom);
-
-    socket.on('alive', client.handleAlive);
-
-    socket.on('joinAudience', client.handleJoinAudience);
-
-    socket.on('roomConnect', client.handleJoinRoom);
-
-    socket.on('dailyChallenge', client.handleDailyChallenge);
-
-    socket.on('newRoom', client.handleNewRoom);
-
-    socket.on('customRoom', client.handleCustomRoom);
-
-    socket.on('returnToGame', client.handleReturnToGame);
-
-    socket.on('requestTimeSync', client.sync);
-
-    socket.on('currentAction', client.handleCurrentAction);
-
-    socket.on('getRooms', function () {
-        if (socket) {
-            socket.emit('returnRooms', simplifiedRooms);
-        }
+    socket.on('disconnect', () => {
+        log('disconnect');
+        client.handleDisconnect();
     });
-    
-    socket.on('settings', client.handleChangeSettings);
 
-    socket.on('getPlayerList', client.handleGetPlayers);
-    
-    socket.on('invite', client.handleSendInvite);
+    socket.on('exitRoom', () => {
+        log('exitRoom');
+        client.handleExitRoom();
+    });
 
-    socket.on('startGame', client.handleStartGame);
+    socket.on('alive', (callback) => {
+        //log('alive');
+        client.handleAlive(callback);
+    });
 
-    socket.on('play', function () {
+    socket.on('joinAudience', (roomID) => {
+        log('joinAudience');
+        client.handleJoinAudience(roomID);
+    });
+
+    socket.on('roomConnect', (roomID, idIsCode) => {
+        log('roomConnect');
+        client.handleJoinRoom(roomID, idIsCode);
+    });
+
+    socket.on('dailyChallenge', () => {
+        log('dailyChallenge');
+        client.handleDailyChallenge();
+    });
+
+    socket.on('newRoom', () => {
+        log('newRoom');
+        client.handleNewRoom();
+    });
+
+    socket.on('customRoom', (notation) => {
+        log('customRoom');
+        client.handleCustomRoom(notation);
+    });
+
+    socket.on('returnToGame', () => {
+        log('returnToGame');
+        client.handleReturnToGame();
+    });
+
+    socket.on('requestTimeSync', () => {
+        log('requestTimeSync');
+        client.sync();
+    });
+
+    socket.on('currentAction', () => {
+        log('currentAction');
+        client.handleCurrentAction();
+    });
+
+    socket.on('getRooms', () => {
+        log('getRooms');
+        if (socket) socket.emit('returnRooms', simplifiedRooms);
+    });
+
+    socket.on('settings', (setting, rule) => {
+        log('settings');
+        client.handleChangeSettings(setting, rule);
+    });
+
+    socket.on('getPlayerList', () => {
+        log('getPlayerList');
+        client.handleGetPlayers();
+    });
+
+    socket.on('invite', (socketId) => {
+        log('invite');
+        client.handleSendInvite(socketId);
+    });
+
+    socket.on('startGame', () => {
+        log('startGame');
+        client.handleStartGame();
+    });
+
+    socket.on('play', () => {
+        log('play');
         client.handlePlayerTakeAction(ACTION.PLAY);
     });
 
-    socket.on('shuffle', client.handlePlayerShuffle);
+    socket.on('shuffle', () => {
+        log('shuffle');
+        client.handlePlayerShuffle();
+    });
 
-    socket.on('cut', client.handlePlayerCut);
+    socket.on('cut', (style, location) => {
+        log('cut');
+        client.handlePlayerCut(style, location);
+    });
 
-    socket.on('deal', function () {
+    socket.on('deal', () => {
+        log('deal');
         client.handlePlayerTakeAction(ACTION.DEAL);
     });
 
-    socket.on('chooseHand', client.handleChooseHand);
+    socket.on('chooseHand', (choice) => {
+        log('chooseHand');
+        client.handleChooseHand(choice);
+    });
 
-    socket.on('goPrever', function () {
+    socket.on('goPrever', () => {
+        log('goPrever');
         client.handlePrever(true);
     });
 
-    socket.on('noPrever', function () {
+    socket.on('noPrever', () => {
+        log('noPrever');
         client.handlePrever(false);
     });
 
-    socket.on('goTalon', function () {
+    socket.on('goTalon', () => {
+        log('goTalon');
         client.handleTalon(true);
     });
 
-    socket.on('noTalon', function () {
+    socket.on('noTalon', () => {
+        log('noTalon');
         client.handleTalon(false);
     });
 
-    socket.on('discard', client.handleDiscard);
+    socket.on('discard', (card) => {
+        log('discard');
+        client.handleDiscard(card);
+    });
 
-    socket.on('goBida or Uni', function () {
+    socket.on('goBida or Uni', () => {
+        log('goBida or Uni');
         client.handleBidaUni(true);
     });
 
-    socket.on('noBida or Uni', function () {
+    socket.on('noBida or Uni', () => {
+        log('noBida or Uni');
         client.handleBidaUni(false);
     });
 
-    socket.on('moneyCards', function () {
+    socket.on('moneyCards', () => {
+        log('moneyCards');
         client.handlePlayerTakeAction(ACTION.MONEY_CARDS);
     });
 
-    socket.on('choosePartner', client.handlePartnerCard);
+    socket.on('choosePartner', (partner) => {
+        log('choosePartner');
+        client.handlePartnerCard(partner);
+    });
 
-    socket.on('goPrever Talon', function () {
+    socket.on('goPrever Talon', () => {
+        log('goPrever Talon');
         client.handlePreverTalon(true);
     });
 
-    socket.on('noPrever Talon', function () {
+    socket.on('noPrever Talon', () => {
+        log('noPrever Talon');
         client.handlePreverTalon(false);
     });
 
-    socket.on('goValat', function () {
+    socket.on('goValat', () => {
+        log('goValat');
         client.handleValat(true);
     });
 
-    socket.on('noValat', function () {
+    socket.on('noValat', () => {
+        log('noValat');
         client.handleValat(false);
     });
 
-    socket.on('goContra', function () {
+    socket.on('goContra', () => {
+        log('goContra');
         client.handleContra(true);
     });
 
-    socket.on('noContra', function () {
+    socket.on('noContra', () => {
+        log('noContra');
         client.handleContra(false);
     });
 
-    socket.on('goIOTE', function () {
+    socket.on('goIOTE', () => {
+        log('goIOTE');
         client.handleIOTE(true);
     });
 
-    socket.on('noIOTE', function () {
+    socket.on('noIOTE', () => {
+        log('noIOTE');
         client.handleIOTE(false);
     });
 
-    socket.on('lead', client.handlePlayCard);
+    socket.on('lead', (card) => {
+        log('lead');
+        client.handlePlayCard(card);
+    });
 
-    socket.on('winTrick', function () {
+    socket.on('winTrick', () => {
+        log('winTrick');
         client.handlePlayerTakeAction(ACTION.WIN_TRICK);
     });
 
-    socket.on('countPoints', function () {
+    socket.on('countPoints', () => {
+        log('countPoints');
         client.handlePlayerTakeAction(ACTION.COUNT_POINTS);
     });
 
-    socket.on('resetBoard', function () {
+    socket.on('resetBoard', () => {
+        log('resetBoard');
         client.handlePlayerTakeAction(ACTION.RESET);
     });
 
@@ -274,36 +359,66 @@ io.sockets.on('connection', function (socket) {
     */
 
     //User account tools
-    socket.on('login', client.handleLogin);
-
-    socket.on('logout', function() {
-        if (players[socketId]) {
-            players[socketId].username = 'Guest';
-            players[socketId].token = -1;
-            players[socketId].userInfo = null;
-            socket.emit('logout');
-            SERVER.log('Player ' + socketId + ' has signed out');
-        }
+    socket.on('login', (username, token) => {
+        log('login');
+        client.handleLogin(username, token);
     });
-    socket.on('saveSettings', client.handleLogout);
+
+    socket.on('logout', () => {
+        log('logout');
+        client.handleLogout();
+    });
+
+    socket.on('saveSettings', () => {
+        log('saveSettings');
+        client.handleSaveSettings();
+    });
 
     //Admin tools
-    socket.on('restartServer', client.restartServer);
-    socket.on('reloadClients', client.reloadClients);
-    socket.on('printPlayerList', client.printPlayerList);
-    socket.on('printRoomList', client.printRoomList);
-    socket.on('adminMessage', client.adminMessage);
-    socket.on('adminSignIn', function(username) {
-        //debug function
+    socket.on('restartServer', (immediately) => {
+        log('restartServer');
+        client.restartServer(immediately);
+    });
+
+    socket.on('reloadClients', () => {
+        log('reloadClients');
+        client.reloadClients();
+    });
+
+    socket.on('printPlayerList', () => {
+        log('printPlayerList');
+        client.printPlayerList();
+    });
+
+    socket.on('printRoomList', () => {
+        log('printRoomList');
+        client.printRoomList();
+    });
+
+    socket.on('adminMessage', (id, message) => {
+        log('adminMessage');
+        client.adminMessage(id, message);
+    });
+
+    socket.on('adminSignIn', (username) => {
+        log('adminSignIn');
         if (DEBUG_MODE && players[socketId]) {
-            players[socketId].username = username;
-            players[socketId].userInfo = {admin:true,elo:2000};
+            gm.players[socketId].username = username;
+            gm.players[socketId].userInfo = { admin: true, elo: 2000 };
             socket.emit('loginSuccess', username);
-            socket.emit('admin',true);
+            socket.emit('admin', true);
         }
     });
-    socket.on('removeRoom', client.removeRoom);
-    socket.on('broadcastMessage', (name, message) => {client.sendChat(message)});
+
+    socket.on('removeRoom', (id) => {
+        log('removeRoom');
+        client.removeRoom(id);
+    });
+
+    socket.on('broadcastMessage', (name, message) => {
+        log('broadcastMessage');
+        client.sendChat(message);
+    });
 });
 
 function checkRoomsEquality(a, b) {

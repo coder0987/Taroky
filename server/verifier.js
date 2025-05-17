@@ -5,6 +5,7 @@
 const Deck = require('./deck');
 const { ACTION, SHUFFLE_TYPE, CUT_TYPE } = require('./enums');
 const GameManager = require('./GameManager');
+const SERVER = require('./logger');
 const gm = GameManager.INSTANCE;
 
 const { u } = require('./utils');
@@ -30,7 +31,7 @@ function roomNextStep(client, action) {
 }
 
 function clientIsCurrentPlayer(client) {
-    return !u(client) && client && client.inGame && client.room && client.room.board && client.room.board.nextStep && client.room.board.nextStep.player === client.pn;
+    return !u(client) && client && client.inGame && client.room && client.room.board && client.room.board.nextStep && Number(client.room.board.nextStep.player) === Number(client.pn);
 }
 
 function notNegativeOne(number) {
@@ -103,7 +104,6 @@ function verifyPlayerCanTakeAction(client, action) {
     const clientIsValid = roomNextStep(client, action);
     const clientIsPlayer = clientIsCurrentPlayer(client);
 
-
     return clientIsValid && clientIsPlayer;
 }
 
@@ -118,7 +118,7 @@ function verifyPlayerCanPlayCard(client, card) {
 function verifyPartnerChoice(client, partner) {
     const partnerChoices = Deck.possiblePartners(client.hand);
 
-    return verifyCardStructure(partner) && partnerChoices.includes(partner);
+    return verifyCardStructure(partner) && partnerChoices.some(p => p.suit === partner.suit && p.value === partner.value);
 }
 
 function verifyPlayerCanTakeContraAction(client) {
@@ -150,6 +150,13 @@ function verifyRoomExists(id) {
 
 function verifyCanSendMessage(client) {
     return !u(client) && client && client.username && client.username !== 'Guest' && client.canSendMessage();
+}
+
+function verifyCanSaveSettings(client) {
+    const isValid = !u(client) && client && client.username && client.username !== 'Guest'
+        && client.inGame && client.room && client.room.settingsNotation;
+    
+    return isValid;
 }
 
 function sanitizeShuffleType(type) {
@@ -245,6 +252,7 @@ module.exports = {
     verifyCanSendMessageTo,
     verifyRoomExists,
     verifyCanSendMessage,
+    verifyCanSaveSettings,
 
     sanitizeShuffleType,
     sanitizeCutStyle,

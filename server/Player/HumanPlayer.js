@@ -1,5 +1,6 @@
 const Deck = require('../deck');
 const { PLAYER_TYPE } = require('../enums');
+const Player = require('./Player');
 
 class HumanPlayer extends Player {
     #client;
@@ -7,6 +8,8 @@ class HumanPlayer extends Player {
     constructor( args = {} ) {
         if (args.old) {
             super(args.old);
+        } else {
+            super(args);
         }
 
         this.type = PLAYER_TYPE.HUMAN;

@@ -634,7 +634,10 @@ function displayNextAction(action) {
                     socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
                 });
                 document.getElementById('cardBack').addEventListener('mouseleave',function() {
-                    document.getElementById('shuffleButton').hidden = true;
+                    const shuffleButton = document.getElementById('shuffleButton').hidden;
+                    if (shuffleButton) {
+                        shuffleButton.hidden = true;
+                    }
                     this.hidden = true;
                     let deck = document.getElementById('deck');
                     deck.appendChild(this);
