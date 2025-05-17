@@ -60,7 +60,7 @@ class RobotPlayer extends Player {
         return this.#timeout;
     }
 
-    submit(long) {
+    submit(long = 0) {
         this.#timeout = setTimeout(() => {
             if (!this.room) {
                 return;
@@ -180,7 +180,7 @@ class RobotPlayer extends Player {
 
         this.info.card = this.#logic.robotLead(this.hand, this.room);
 
-        this.submit(true);
+        this.submit(1);
     }
 
     follow() {
@@ -188,11 +188,11 @@ class RobotPlayer extends Player {
 
         this.info.card = this.#logic.robotPlay(this.hand, this.room);
 
-        this.submit(true);
+        this.submit(1);
     }
 
     win() {
-        this.submit(true);
+        this.submit(1);
     }
 
     count() {
