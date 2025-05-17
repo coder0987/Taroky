@@ -23,6 +23,7 @@ class GameManager {
             return;
         }
 
+        room.ejectPlayers();
         room.ejectAudience();
         clearTimeout(room.autoAction);
         delete this.#rooms[roomID];
