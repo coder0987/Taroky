@@ -183,7 +183,9 @@ function notate(room, notation) {
                 SERVER.debug('Notation: not a string');
                 return false;
             }
-            room = room || new Room({'name':'temporary'});
+            if (!room) {
+                throw new Error("A valid room must be passed in");
+            }
             room.board.povinnost = 0;
             room.board.importantInfo.povinnost = (room.board.povinnost+1);
             //Return the room

@@ -59,7 +59,7 @@ function findTheI(players) {
 
 function whoWon(table, leadPlayer, aceHigh) {
     //First card in the table belongs to the leadPlayer
-    let trickLeadCard = table[0];
+    let trickLeadCard = table[0].card;
     let trickLeadSuit = trickLeadCard.suit;
     let highestTrump = -1;
     let currentWinner = 0;//LeadPlayer is assumed to be winning
@@ -67,8 +67,8 @@ function whoWon(table, leadPlayer, aceHigh) {
     let reverseEnum = aceHigh ? VALUE_REVERSE_ACE_HIGH : VALUE_REVERSE;
 
     for (let i=0; i<4; i++) {
-        if (table[i].suit == 'Trump' && reverseEnum[table[i].value] > highestTrump) {
-            highestTrump = reverseEnum[table[i].value];
+        if (table[i].card.suit == 'Trump' && reverseEnum[table[i].card.value] > highestTrump) {
+            highestTrump = reverseEnum[table[i].card.value];
             currentWinner = i;
         }
     }
@@ -78,8 +78,8 @@ function whoWon(table, leadPlayer, aceHigh) {
     }
     let highestOfLeadSuit = reverseEnum[trickLeadCard.value];
     for (let i=1; i<4; i++) {
-        if (table[i].suit == trickLeadSuit && reverseEnum[table[i].value] > highestOfLeadSuit) {
-            highestOfLeadSuit = reverseEnum[table[i].value];
+        if (table[i].card.suit == trickLeadSuit && reverseEnum[table[i].card.value] > highestOfLeadSuit) {
+            highestOfLeadSuit = reverseEnum[table[i].card.value];
             currentWinner = i;
         }
     }

@@ -37,6 +37,10 @@ class GamePlay {
         return this.#room.board;
     }
 
+    get settings() {
+        return this.#room.settings;
+    }
+
     get deck() {
         return this.#room.deck;
     }
@@ -984,13 +988,13 @@ class GamePlay {
 
         const lead = Deck.removeCard(this.currentPlayer.hand, this.info.card);
 
-        if (!lead) {
+        if (!lead || !lead.suit || !lead.value) {
             SERVER.error('No lead card!');
             return false;
         }
 
         this.board.table.push( { card: lead, pn: this.player, lead: true} );
-        this.leadCard = lead;
+        this.board.leadCard = lead;
         
         this.trackCards(lead);
 
@@ -1043,10 +1047,10 @@ class GamePlay {
 
         const tableCards = [];
 
-        tableCards.push(room.board.table.splice(0,1)[0].card)
-        tableCards.push(room.board.table.splice(0,1)[0].card)
-        tableCards.push(room.board.table.splice(0,1)[0].card)
-        tableCards.push(room.board.table.splice(0,1)[0].card)
+        tableCards.push(this.#room.board.table.splice(0,1)[0].card)
+        tableCards.push(this.#room.board.table.splice(0,1)[0].card)
+        tableCards.push(this.#room.board.table.splice(0,1)[0].card)
+        tableCards.push(this.#room.board.table.splice(0,1)[0].card)
 
         Deck.copyCards(tableCards, this.currentPlayer.discard, 4);
 
@@ -1265,27 +1269,27 @@ class GamePlay {
         }
 
 
-        this.payChips(pointCountMessageTable, owedChips);
+        this.payChips(pointCountMessageTable, chipsOwed);
             
         this.#room.deck.deck = Deck.simulateCounting(povinnostTeamDiscard, opposingTeamDiscard);
         return true;
     }
 
-    payChips(messageTable, owedChips) {
+    payChips(messageTable, chipsOwed) {
         let team1Players = [];
         let team2Players = [];
-        for (let i in room.players) {
+        for (let i in this.players) {
             if (this.players[i].isTeamPovinnost) {
-                team1Players.push(room.players[i]);
+                team1Players.push(this.players[i]);
                 team1Players[team1Players.length - 1].pn = i;
             } else {
-                team2Players.push(room.players[i]);
+                team2Players.push(this.players[i]);
                 team2Players[team2Players.length - 1].pn = i;
             }
         }
 
         this.#room.payWinnings(team1Players, team2Players, chipsOwed);
-        this.#room.informFinalPoints(team1Players, team2Players, owedChips, messageTable);
+        this.#room.informFinalPoints(team1Players, team2Players, chipsOwed, messageTable);
         this.#room.informGameNotation();
         this.#room.updateImportantInfo();
 

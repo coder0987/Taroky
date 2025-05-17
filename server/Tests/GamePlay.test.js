@@ -2,7 +2,8 @@ const GameManager = require('../GameManager');
 const gm = new GameManager(); // Typically done by _server.js
 const Room = require('../room');
 const GamePlay = require('../GamePlay');
-const { ACTION, SUIT, VALUE, MONEY_CARDS } = require('../enums');
+const { ACTION, SUIT, VALUE, MONEY_CARDS, PLAYER_TYPE } = require('../enums');
+const Deck = require('../deck');
 
 // Mock the logger to suppress output during tests
 jest.mock('../logger', () => ({
@@ -144,5 +145,56 @@ describe('GamePlay.moneyCards', () => {
         
         // Ensure the important money cards info was updated
         expect(room.updateImportantMoneyCardsInfo).toHaveBeenCalled();
+    });
+});
+
+describe('Gameplay.countPoints()', () => {
+    let room;
+    let deck;
+
+    beforeEach(() => {
+        // Create a new room and full deck
+        room = new Room('testRoom');
+        deck = Deck.createDeck();;
+
+        // Assume the room initializes 4 players (0-3)
+        room.players = Array.from({ length: 4 }, (_, i) => ({
+            discard: [],
+            isTeamPovinnost: i % 2 === 0, // 0 & 2 are Povinnost, 1 & 3 are opposing
+            type: PLAYER_TYPE.HUMAN,
+            messenger: { emit: jest.fn() }, // Stub messenger
+        }));
+
+        // Distribute cards evenly (13 per player + 2 get 14 from full 54-card deck)
+        for (let i = 0; deck[0]; i++) {
+            room.players[i % 4].discard.push(deck.splice(0,1)[0]);
+        }
+
+        // Set up minimal board state
+        room.board.valat = -1;
+        room.board.trickWinCount = [6, 6];
+        room.board.prever = -1;
+        room.board.preverMultiplier = 1;
+        room.board.contra = [-1, -1];
+        room.board.iote = -1;
+        room.board.ioteWin = 0;
+
+        jest.spyOn(room.gameplay, 'payChips');
+    });
+
+    test('counts total points correctly from discard piles', () => {
+        const expectedChipsOwed = -2;
+
+        const result = room.gameplay.countPoints();
+
+        expect(result).toBe(true);
+        expect(room.gameplay.payChips).toHaveBeenCalled();
+
+        // Extract actual arguments from call
+        const [messageTable, chipsOwed] = room.gameplay.payChips.mock.calls[0];
+
+        expect(Array.isArray(messageTable)).toBe(true);
+        expect(typeof chipsOwed).toBe('number');
+        expect(chipsOwed).toBe(expectedChipsOwed);
     });
 });

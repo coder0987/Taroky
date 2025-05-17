@@ -12,7 +12,7 @@ const gm = GameManager.INSTANCE;
 const { DISCONNECT_TIMEOUT, ACTION, SENSITIVE_ACTIONS, ROOM_TYPE } = require('./enums');
 const Deck = require('./deck');
 const { verifyCanJoinAudience, verifyCanPlayDailyChallenge, verifyCanMakeRoom, verifyCanReturnToGame, verifyPlayerCanChangeSettings, verifyCanSendInvite, verifyCanStartGame, verifyPlayerCanTakeAction, sanitizeShuffleType, sanitizeBoolean, sanitizeCutStyle, sanitizeCutLocation, sanitizeHandChoice, sanitizeDrawTalonChoice, verifyPartnerChoice, verifyCanDiscard, verifyPlayerCanTakeContraAction, verifyPlayerCanPlayCard, verifyCredentials, verifyCanSendMessage, verifyRoomExists, verifyCanSendMessageTo, verifyCanSaveSettings } = require('./Verifier');
-const { getPNFromNotation, notationToObject } = require('./notation');
+const { notate, getPNFromNotation, notationToObject } = require('./notation');
 const { playerPerspective } = require('./utils');
 const Auth = require('./Auth');
 const AdminPanel = require('./AdminPanel');
@@ -137,9 +137,9 @@ class Client {
                 Deck.grayUnplayables(this.player.hand, this.#room.board.leadCard);
                 obj.withGray = true;
             }
-
-            obj.hand = [...Deck.sortCards(this.player.hand, this.#room.settings.aceHigh)];
         }
+        
+        obj.hand = [...Deck.sortCards(this.player.hand, this.#room.settings.aceHigh)];
 
         // Important info
         obj.roundInfo = structuredClone(this.#room.board.importantInfo);
@@ -523,8 +523,9 @@ class Client {
     }
 
     handleLead(card) {
-        if (!verifyPlayerCanTakeAction(this, ACTION.FOLLOW) || !verifyPlayerCanPlayCard(card)) {
+        if (!verifyPlayerCanTakeAction(this, ACTION.LEAD) || !verifyPlayerCanPlayCard(this, card)) {
             this.socket.emit('failedLead', card);
+            SERVER.debug(`Player ${this.#socketId} failed to lead a card`);
             return;
         }
 
@@ -534,7 +535,8 @@ class Client {
     }
 
     handleFollow(card) {
-        if (!verifyPlayerCanTakeAction(this, ACTION.FOLLOW) || !verifyPlayerCanPlayCard(card)) {
+        if (!verifyPlayerCanTakeAction(this, ACTION.FOLLOW) || !verifyPlayerCanPlayCard(this, card)) {
+            SERVER.debug(`Player ${this.#socketId} failed to follow with card`);
             this.socket.emit('failedFollow', card);
             return;
         }
@@ -661,7 +663,7 @@ class Client {
 
     joinByNotation(room, notation) {
         // Assumes room was created by gm
-        if (!notate(this.#room, notation)) {
+        if (!notate(room, notation)) {
             SERVER.debug('Notation error');
             gm.removeRoom(room.name);
 
@@ -676,11 +678,15 @@ class Client {
 
         room.fillSlot(this, pn);
 
-        this.sync();
+        this.#socket.emit('roomConnected', this.#roomID);
 
+        this.sync();
+        
+        room.notifyStartGame();
         room.promptAction();
 
-        this.#socket.emit('roomConnected', this.#roomID);
+        Deck.unGrayCards(this.hand); 
+        this.#socket.emit('returnHand', Deck.sortCards(this.hand, this.room.settings.aceHigh), false);
 
         return true;
     }

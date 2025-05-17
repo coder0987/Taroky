@@ -1,5 +1,5 @@
 const Deck = require('../deck');
-const { SUIT } = require('../enums');
+const { SUIT, VALUE_REVERSE } = require('../enums');
 const SERVER = require('../logger');
 const RobotEasy = require('./RobotEasy');
 

@@ -1,13 +1,12 @@
 const Board = require('./board.js');
-const Player = require('./Player/Player.js');
 const RobotPlayer = require('./Player/RobotPlayer.js');
 const Deck = require('./deck.js');
 const GamePlay = require('./GamePlay.js');
 const GameManager = require('./GameManager.js');
 const SERVER = require('./logger.js');
-const {DIFFICULTY, PLAYER_TYPE, ROOM_TYPE, NUM_AVATARS, MESSAGE_TYPE, DIFFICULTY_TABLE, SENSITIVE_ACTIONS} = require('./enums.js');
-const {cardsToNotation} = require('./notation');
+const {DIFFICULTY, PLAYER_TYPE, MESSAGE_TYPE, DIFFICULTY_TABLE, SENSITIVE_ACTIONS} = require('./enums.js');
 const {playerOffset} = require('./utils');
+const {cardsToNotation} = require('./notation');
 const HumanPlayer = require('./Player/HumanPlayer.js');
 
 let iterator = 100000;
@@ -60,7 +59,7 @@ class Room {
 
     playToEnd() {
         this._stopAtEnd = true;
-        this.gameplay.actionCallback();
+        this.gameplay.autoAction();
     }
 
     resetForNextRound() {
@@ -79,13 +78,13 @@ class Room {
         SERVER.debug('informPlayers() called with message | ' + message + ' | messageType | ' + messageType + ' | extraInfo | ' + JSON.stringify(extraInfo) + ' | pn | ' + pn);
         for (let i in this._players) {
             if (this._players[i].type == PLAYER_TYPE.HUMAN) {
-                if (typeof pn != 'undefined') {
+                if (typeof pn != 'undefined' && this._players[pn]) {
                     if (pn == i) {
                         //Handled by youMessage
                         this._players[i].messenger.emit('gameMessage','You ' + message,messageType,extraInfo);
                     } else {
-                        if (this._players[i].messenger && this._players[i].username != 'Guest') {
-                            this._players[i].messenger.emit('gameMessage', this._players[i].username + ' ' + message, messageType, extraInfo);
+                        if (this._players[i].messenger && this._players[pn].type === PLAYER_TYPE.HUMAN && this._players[pn].username != 'Guest') {
+                            this._players[i].messenger.emit('gameMessage', this._players[pn].username + ' ' + message, messageType, extraInfo);
                         } else {
                             pn = +pn;
                             this._players[i].messenger.emit('gameMessage','Player ' + (pn+1) + ' ' + message, messageType, extraInfo);
@@ -268,7 +267,7 @@ class Room {
             clearTimeout(this._autoAction);
         }
         if (this._settings.timeout > 0) {
-            this._autoAction = setTimeout(() => this.gameplay.actionCallback(), this._settings.timeout);
+            this._autoAction = setTimeout(() => this.gameplay.autoAction(), this._settings.timeout);
         }
     }
 
@@ -294,7 +293,8 @@ class Room {
     }
 
     informNextAction() {
-        const action = this._board.nextStep;
+        const action = { ... this._board.nextStep };
+        action.info = {}; // shallow copy, doesn't affect original
 
         if (SENSITIVE_ACTIONS[action.action]) {
             const pn = action.player;
@@ -520,7 +520,7 @@ class Room {
         this.informPlayers('left the room',MESSAGE_TYPE.DISCONNECT,{},pn);
         this.informPlayersInGame();
         if (this._board.nextStep.player === pn) {
-            this.gameplay.actionCallback();
+            this.gameplay.autoAction();
         }
     }
 
@@ -788,10 +788,17 @@ class Room {
     get playersInGame() {
         let playersInGameArr = [];
         for (let i in this._players) {
-            playersInGameArr[i] = {
-                'name': this._players[i].type !== PLAYER_TYPE.HUMAN ? (this._players[i].type == PLAYER_TYPE.ROBOT ? 'Robot' : 'AI') : this._players[i].username,
-                'avatar': this._players[i].avatar
-            };
+            if (this._players[i].type == PLAYER_TYPE.HUMAN) {
+                playersInGameArr[i] = {
+                    'name':  this._players[i].username,
+                    'avatar': this._players[i].avatar
+                };
+            } else {
+                playersInGameArr[i] = {
+                    'name':  this._players[i].type == PLAYER_TYPE.ROBOT ? 'Robot' : 'AI',
+                    'avatar': this._players[i].avatar
+                };
+            }
         }
         return playersInGameArr;
     }

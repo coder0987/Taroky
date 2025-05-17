@@ -14,7 +14,8 @@ class RobotPlayer extends Player {
 
     #difficulty;
     #logic;
-    #delay = 5000;
+    #delay = 1000;
+    #longDelay = 3000;
 
     #timeout;
 
@@ -61,14 +62,14 @@ class RobotPlayer extends Player {
         return this.#timeout;
     }
 
-    submit() {
+    submit(long) {
         this.#timeout = setTimeout(() => {
             if (!this.room) {
                 return;
             }
 
             this.room.gameplay.actionCallback();
-        }, this.#delay);
+        }, long ? this.#longDelay : this.#delay);
     }
 
     clearTimeout() {
@@ -131,7 +132,7 @@ class RobotPlayer extends Player {
         this.submit();
     }
 
-    discard() {
+    discardAction() {
         Deck.grayUndiscardables(this.hand);
         this.info.card = this.#logic.robotDiscard(this.hand);
 
@@ -181,7 +182,7 @@ class RobotPlayer extends Player {
 
         this.info.card = this.#logic.robotLead(this.hand, this.room);
 
-        this.submit();
+        this.submit(true);
     }
 
     follow() {
@@ -189,11 +190,11 @@ class RobotPlayer extends Player {
 
         this.info.card = this.#logic.robotPlay(this.hand, this.room);
 
-        this.submit();
+        this.submit(true);
     }
 
     win() {
-        this.submit();
+        this.submit(true);
     }
 
     count() {

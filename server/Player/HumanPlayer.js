@@ -38,7 +38,7 @@ class HumanPlayer extends Player {
     drawPreverTalon() {}
     drawTalon() {}
 
-    discard() {
+    discardAction() {
         Deck.grayUndiscardables(this.hand);
         this.socket.emit('returnHand', Deck.sortCards(this.hand, this.room.settings.aceHigh), true);
     }
@@ -92,6 +92,10 @@ class HumanPlayer extends Player {
 
     get avatar() {
         return this.#client.avatar;
+    }
+
+    get username() {
+        return this.#client.username;
     }
 }
 

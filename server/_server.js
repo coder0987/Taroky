@@ -287,7 +287,7 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('choosePartner', (partner) => {
         log('choosePartner');
-        client.handlePartnerCard(partner);
+        client.handleChoosePartner(partner);
     });
 
     socket.on('goPrever Talon', () => {

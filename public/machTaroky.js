@@ -224,6 +224,11 @@ function displayRoundInfo(theRoundInfo) {
     for (let i=0; i<4; i++) {
         playerDivs[i] = document.getElementById('roundInfo' + (i+1));
         playerDivs[i].textContent = '';
+        if (currentAction && currentAction.player == i) {
+            playerDivs[i].classList.add('active-player');
+        } else {
+            playerDivs[i].classList.remove('active-player');
+        }
         let theInfo = document.createElement('p');
         theInfo.classList.add('no-margin-below');
         theInfo.classList.add('bold');
@@ -559,11 +564,24 @@ function moveCardsToDiv(theCards, toDiv, cardClickListener) {
 
 
 function displayNextAction(action) {
+    console.log(`Received action ${JSON.stringify(action)}`);
+
     clearButtons();
     if (!inGame) {
         return; //For when the player leaves the game
     }
     currentAction = action;
+
+    for (let i=1; i<5; i++) {
+        const playerDiv = document.getElementById('roundInfo'+i);
+        if (playerDiv) {
+            playerDiv.classList.remove('active-player');
+            if ((+currentAction.player + 1) == i) {
+                playerDiv.classList.add('active-player');
+            }
+        }
+    }
+
     if (action.action != 'start') {
         startActionTimer();
         document.getElementById('currentAction').innerHTML = ACTION_TABLE[action.action];
@@ -634,7 +652,7 @@ function displayNextAction(action) {
                     socket.emit('shuffle',Math.floor(Math.random()*3)+1,true);
                 });
                 document.getElementById('cardBack').addEventListener('mouseleave',function() {
-                    const shuffleButton = document.getElementById('shuffleButton').hidden;
+                    const shuffleButton = document.getElementById('shuffleButton');
                     if (shuffleButton) {
                         shuffleButton.hidden = true;
                     }
@@ -1259,6 +1277,7 @@ function onLoad() {
         updateRoomSettings(theSettings);
     });
     socket.on('returnPlayersInGame', function(returnPlayersInGame) {
+        console.log('Return players in game received ' + JSON.stringify(returnPlayersInGame));
         updatePlayersInGame(returnPlayersInGame);
     });
     socket.on('returnPN', function(returnPN, returnHostPN) {
@@ -1275,6 +1294,7 @@ function onLoad() {
     });
     socket.on('roomConnected', function(roomConnected) {
         displayRoomConnected(roomConnected);
+        socket.emit('getPlayerList');
     });
     socket.on('roomNotConnected', function(roomNotConnected){
         addMessage('Failed to connect to room ' + (roomNotConnected));

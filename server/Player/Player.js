@@ -41,7 +41,6 @@ class Player {
         SERVER.functionCall('next', {name:'action', value:nextAction.action}, {name:'Room Number',value: this.#room.name});
         
         let fakeMoneyCards = false;
-        let secret = false;
 
         switch (nextAction.action) {
             case ACTION.START:
@@ -72,7 +71,7 @@ class Player {
                 this.drawTalon();
                 break;
             case ACTION.DISCARD:
-                this.discard();
+                this.discardAction();
                 break;
             case ACTION.POVINNOST_BIDA_UNI_CHOICE:
                 fakeMoneyCards = this.bidaUniChoice();
@@ -87,14 +86,12 @@ class Player {
                 this.valat();
                 break;
             case ACTION.IOTE:
-                secret = true;
                 this.iote();
                 break;
             case ACTION.CONTRA:
             case ACTION.PREVER_CONTRA:
             case ACTION.PREVER_VALAT_CONTRA:
             case ACTION.VALAT_CONTRA:
-                secret = true;
                 this.contra();
                 break;
             case ACTION.LEAD:
@@ -114,10 +111,6 @@ class Player {
                 break;
             default:
                 SERVER.warn('Unknown robot action: ' + nextAction.action, this.room.name);
-        }
-
-        if (secret) {
-            return;
         }
 
         this.#room.informNextAction();
