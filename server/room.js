@@ -293,6 +293,10 @@ class Room {
     }
 
     informNextAction() {
+        if (!this._board.nextStep) {
+            this._board.nextStep = {};
+        }
+
         const action = { ... this._board.nextStep };
         action.info = {}; // shallow copy, doesn't affect original
 
