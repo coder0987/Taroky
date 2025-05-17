@@ -120,7 +120,7 @@ class GamePlay {
 
     actionCallback() {
         // A player has made a decision and submitted the move
-        SERVER.functionCall('GP.actionCallback', {name:'action', value: this.action}, {name:'Info', value: JSON.stringify(this.info)});
+        SERVER.functionCall('GP.actionCallback', {name:'action', value: this.action}, {name:'Info', value: JSON.stringify(this.info)}, {name: 'pn', value: this.player});
 
         let actionTaken = false;
 
@@ -807,7 +807,7 @@ class GamePlay {
         }
 
         // Chance at contra or supra-contra
-        this.nextPlayerOnTeam(!preverIsPovinnost);
+        this.nextPlayerOnTeam(preverIsPovinnost);
 
         if (this.currentPlayer === this.board.firstContraPlayer) {
             return true;

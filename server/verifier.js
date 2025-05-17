@@ -38,6 +38,10 @@ function notNegativeOne(number) {
     return !u(number) && !isNaN(+number) && ~(+number);
 }
 
+function isString(string) {
+    return typeof string === 'string';
+}
+
 function verifyIsAdmin(client) {
     return !u(client) && client && client.username && client.username !== 'Guest' && client.userInfo && client.userInfo.admin;
 }
@@ -118,7 +122,7 @@ function verifyPlayerCanPlayCard(client, card) {
 function verifyPartnerChoice(client, partner) {
     const partnerChoices = Deck.possiblePartners(client.hand);
 
-    return verifyCardStructure(partner) && partnerChoices.some(p => p.suit === partner.suit && p.value === partner.value);
+    return isString(partner) && partnerChoices.some(p => p.value === partner);
 }
 
 function verifyPlayerCanTakeContraAction(client) {
