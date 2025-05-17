@@ -824,7 +824,7 @@ class GamePlay {
     }
 
     preverValatContra() {
-        const povinnostIsValat = this.player[this.board.valat].isTeamPovinnost;
+        const povinnostIsValat = this.players[this.board.valat].isTeamPovinnost;
 
         if (this.info.contra) {
             // Someone called contra during a called valat
@@ -1317,7 +1317,6 @@ class GamePlay {
         gm.sendLeaderboardToAll();
 
         this.action = 'retry';
-        this.player = humanPN;
     }
 
     reset() {

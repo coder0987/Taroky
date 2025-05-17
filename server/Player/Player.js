@@ -109,6 +109,8 @@ class Player {
             case ACTION.RESET:
                 this.reset();
                 break;
+            case ACTION.RETRY:
+                break;
             default:
                 SERVER.warn('Unknown robot action: ' + nextAction.action, this.room.name);
         }
