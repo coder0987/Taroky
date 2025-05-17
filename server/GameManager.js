@@ -31,7 +31,7 @@ class GameManager {
     }
 
     addRoom( args = {}, prefix = '' ) {
-        const Room = require('./Room'); // To avoid dependency cycle
+        const Room = require('./room'); // To avoid dependency cycle
 
         const id = this.getFirstOpenRoomID(prefix);
 

@@ -5,7 +5,7 @@ const GameManager = require('./GameManager.js');
 
 const schedule = require('node-schedule');
 
-let baseDeck = GameManager.INSTANCE.baseDeck;
+let baseDeck = GameManager.INSTANCE.baseDeck.deck;
 
 class Challenge {
     constructor() {

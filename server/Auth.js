@@ -108,7 +108,7 @@ class Auth {
             players[socketId].userInfo = info;
             socket.emit('elo',info.elo);
             socket.emit('admin',info.admin);
-            socket.emit('defaultSettings',notationToObject(info.settings));
+            socket.emit('defaultSettings', notationToObject(info.settings));
             socket.emit('chat',info.chat);
             socket.emit('avatar',info.avatar);
             socket.emit('deckChoice',info.deck);

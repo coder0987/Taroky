@@ -2266,6 +2266,10 @@ function createInviteCard(roomName, roomCode, username) {
     renderer.hud.invite.createCard(roomName, roomCode, username);
 }
 
+// Debug
+function adminSignIn(username) {
+    socket.emit('adminSignIn', username)
+}
 
 function alive() {
     socket.emit('alive', (callback) => {

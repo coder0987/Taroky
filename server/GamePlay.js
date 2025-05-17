@@ -74,6 +74,10 @@ class GamePlay {
         return this.#room.board.prever;
     }
 
+    get playingPrever() {
+        return this.#room.board.playingPrever;
+    }
+
     // Setters
 
     set action(action) {
@@ -1312,8 +1316,8 @@ class GamePlay {
 
         gm.sendLeaderboardToAll();
 
-        action.action = 'retry';
-        action.player = humanPN;
+        this.action = 'retry';
+        this.player = humanPN;
     }
 
     reset() {

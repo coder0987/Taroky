@@ -178,6 +178,8 @@ function notationToObject(notation) {
 
 function notate(room, notation) {
     if (notation) {
+        SERVER.debug(`Creating room from notation ${notation}`, room.name);
+
         try {
             if (typeof notation !== "string") {
                 SERVER.debug('Notation: not a string');

@@ -688,6 +688,8 @@ class Client {
         Deck.unGrayCards(this.hand); 
         this.#socket.emit('returnHand', Deck.sortCards(this.hand, this.room.settings.aceHigh), false);
 
+        this.autoReconnect();
+
         return true;
     }
 

@@ -103,6 +103,8 @@ rooms = gm.rooms;
 gm.challenge = new Challenge();
 gm.challenge.scheduleChallenge();
 
+SERVER.log(`New challenge scheduled: ${gm.challenge.notation}`);
+
 let simplifiedRooms = {};
 let ticking = false;
 
@@ -404,8 +406,10 @@ io.sockets.on('connection', function (socket) {
         log('adminSignIn');
         if (DEBUG_MODE && players[socketId]) {
             gm.players[socketId].username = username;
-            gm.players[socketId].userInfo = { admin: true, elo: 2000 };
+            gm.players[socketId].userInfo = { admin: true, elo: 2000, avatar: 1, chat: true,  };
             socket.emit('loginSuccess', username);
+            socket.emit('elo', 2000);
+            socket.emit('avatar', 1);
             socket.emit('admin', true);
         }
     });
