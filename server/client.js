@@ -465,7 +465,7 @@ class Client {
     }
 
     handleChoosePartner(partner) {
-        if (!verifyPlayerCanTakeAction(this, ACTION.DISCARD) || !verifyPartnerChoice(this, partner)) {
+        if (!verifyPlayerCanTakeAction(this, ACTION.PARTNER) || !verifyPartnerChoice(this, partner)) {
             return;
         }
 

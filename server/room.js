@@ -296,6 +296,11 @@ class Room {
         const action = { ... this._board.nextStep };
         action.info = {}; // shallow copy, doesn't affect original
 
+        if (this._board.nextStep.info.possiblePartners) {
+            // Preserve possible partners
+            action.info.possiblePartners = this._board.nextStep.info.possiblePartners;
+        }
+
         if (SENSITIVE_ACTIONS[action.action]) {
             const pn = action.player;
             if (this._players[pn].messenger) {

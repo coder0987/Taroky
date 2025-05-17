@@ -720,7 +720,7 @@ class GamePlay {
         }
 
         if (this.playingPrever) {
-            this.action = PREVER_CONTRA;
+            this.action = ACTION.PREVER_CONTRA;
             this.player = nextPlayer(this.prever);
             this.board.firstContraPlayer = this.player;
             return true;

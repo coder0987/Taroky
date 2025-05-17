@@ -1,5 +1,7 @@
 const Deck = require('../deck');
 
+const { SUIT } = require('../enums');
+
 class RobotAuto {
     //ROBOT DIFFICULTY LAYOUT: go from hardest -> easiest so the more difficult algorithms fall back onto the less difficult ones while we haven't yet finished
     //BEGINNER: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5
