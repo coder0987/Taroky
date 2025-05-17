@@ -11,7 +11,7 @@ const gm = GameManager.INSTANCE;
 
 const { DISCONNECT_TIMEOUT, ACTION, SENSITIVE_ACTIONS, ROOM_TYPE } = require('./enums');
 const Deck = require('./deck');
-const { verifyCanJoinAudience, verifyCanPlayDailyChallenge, verifyCanMakeRoom, verifyCanReturnToGame, verifyPlayerCanChangeSettings, verifyCanSendInvite, verifyCanStartGame, verifyPlayerCanTakeAction, sanitizeShuffleType, sanitizeBoolean, sanitizeCutStyle, sanitizeCutLocation, sanitizeHandChoice, sanitizeDrawTalonChoice, verifyPartnerChoice, verifyCanDiscard, verifyPlayerCanTakeContraAction, verifyPlayerCanPlayCard, verifyCredentials, verifyCanSendMessage, verifyRoomExists, verifyCanSendMessageTo, verifyCanSaveSettings } = require('./Verifier');
+const { verifyCanJoinAudience, verifyCanPlayDailyChallenge, verifyCanMakeRoom, verifyCanReturnToGame, verifyPlayerCanChangeSettings, verifyCanSendInvite, verifyCanStartGame, verifyPlayerCanTakeAction, sanitizeShuffleType, sanitizeBoolean, sanitizeCutStyle, sanitizeCutLocation, sanitizeHandChoice, sanitizeDrawTalonChoice, verifyPartnerChoice, verifyCanDiscard, verifyPlayerCanTakeContraAction, verifyPlayerCanPlayCard, verifyCredentials, verifyCanSendMessage, verifyRoomExists, verifyCanSendMessageTo, verifyCanSaveSettings } = require('./verifier');
 const { notate, getPNFromNotation, notationToObject } = require('./notation');
 const { playerPerspective } = require('./utils');
 const Auth = require('./Auth');
