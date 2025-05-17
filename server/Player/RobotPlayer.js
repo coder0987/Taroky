@@ -71,7 +71,8 @@ class RobotPlayer extends Player {
     }
 
     clearTimeout() {
-        this.clearTimeout(this.#timeout);
+        clearTimeout(this.#timeout);
+        this.#timeout = undefined;
     }
     
     start() {
