@@ -494,11 +494,8 @@ class Room {
 
     ejectPlayers() {
         for (let i in this._players) {
-            if (this._players[i].messenger) {
-                players[this._players[i].socket]['room'] = -1;
-                players[this._players[i].socket]['pn'] = -1;
-                players[this._players[i].socket]['roomsSeen'] = {};
-                this._players[i].messenger.emit('gameEnded');
+            if (this._players[i].client) {
+                this._players[i].client.ejectFromGame();
             } else if (this._players[i].timeout) {
                 this._players[i].clearTimeout();
             }
@@ -507,6 +504,7 @@ class Room {
 
     removeFromAudience(socketId) {
         if (this._audience[socketId]) {
+            this._audience.ejectFromGame();
             delete this._audience[socketId];
             this.audienceCount--;
         }

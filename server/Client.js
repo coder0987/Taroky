@@ -744,6 +744,15 @@ class Client {
         }
     }
 
+    ejectFromGame() {
+        this.#inGame = false;
+        this.#room = null;
+        this.#roomID = -1;
+        this.#pn = -1;
+        this.#roomsSeen = {};
+        this.#socket.emit('gameEnded');
+    }
+
     sync() {
         this.#socket.emit('timeSync', Date.now());
     }
