@@ -293,8 +293,8 @@ class Room {
     }
 
     informNextAction() {
-        if (!this._board.nextStep) {
-            this._board.nextStep = {};
+        if (!this._board.nextStep.info) {
+            this._board.nextStep.info = {};
         }
 
         const action = { ... this._board.nextStep };
