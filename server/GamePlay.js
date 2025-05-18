@@ -1080,7 +1080,7 @@ class GamePlay {
                 return true;
             }
 
-            if (Deck.numOfSuit(tableCards, SUIT.TRUMP)) {
+            if (Deck.numOfSuit(tableCards, SUIT.TRUMP) > 1) {
                 // Another trump was played
 
                 if (this.players[this.board.hasTheI].isTeamPovinnost) {
