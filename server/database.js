@@ -99,7 +99,6 @@ class Database {
 
     static async updateUserAll(username, settings, avatar, deck, chat) {
         username = username.toLowerCase();
-        SERVER.log(`UPDATE users SET settings = ${settings}, avatar = ${avatar}, deck = ${deck}, chat = ${chat} WHERE username in (${username})`);
         let conn;
         try {
             conn = await pool.getConnection();
