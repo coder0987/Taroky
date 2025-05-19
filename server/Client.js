@@ -123,7 +123,7 @@ class Client {
         obj.dailyChallengeScore = gm.challenge.getUserScore(this.#username);
         obj.elo             = this.userInfo?.elo;
         obj.admin           = this.userInfo?.admin;
-        obj.defaultSettings = notationToObject(this.userInfo?.settings);
+        obj.defaultSettings = notationToObject(this.userInfo?.settings).object;
         obj.chat            = this.userInfo?.chat;
         obj.avatar          = this.userInfo?.avatar;
         obj.deck            = this.userInfo?.deck;

@@ -1551,7 +1551,7 @@ function onLoad() {
     });
     socket.on('defaultSettings', function(returnSettings) {
         if (returnSettings) {
-            console.log(returnSettings);
+            console.log('Default settings received ', returnSettings);
             defaultSettings = returnSettings;
             addBoldMessage('Settings loaded');
         }
