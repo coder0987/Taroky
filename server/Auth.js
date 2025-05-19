@@ -16,6 +16,7 @@ class Auth {
     static #signInCache = {}; // NOT CONSTANT. will be reset periodcally
 
     static signInSuccess(username, token, socket, socketId) {
+        SERVER.log(`${username} signed in`);
         players[socketId].username = username;
         players[socketId].token = token;
         socket.emit('loginSuccess', username);
@@ -106,7 +107,7 @@ class Auth {
 
     static loadDatabaseInfo(username, socketId, socket) {
         Database.promiseCreateOrRetrieveUser(username).then((info) => {
-            SERVER.log('Loaded settings for user ' + username + ': ' + info);
+            SERVER.log('Loaded settings for user ' + username + ': ' + JSON.stringify(info));
             players[socketId].userInfo = info;
             socket.emit('elo',info.elo);
             socket.emit('admin',info.admin);

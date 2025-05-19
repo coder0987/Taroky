@@ -1067,7 +1067,7 @@ function onLoad() {
     socket.on('loginExpired', function() {
         addError('Your login session has expired. Please sign in again.');
         activeUsername = '';
-        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
+        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true,'botPlayTime':3000,'botThinkTime':1000};
         delete elo;
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');
@@ -1082,7 +1082,7 @@ function onLoad() {
     socket.on('logout', function() {
         addBoldMessage('Successfully logged out');
         activeUsername = '';
-        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
+        defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true,'botPlayTime':3000,'botThinkTime':1000};
         delete elo;
         document.getElementById('chat-entry').setAttribute('hidden','hidden');
         document.getElementById('saveButton').setAttribute('hidden','hidden');

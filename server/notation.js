@@ -124,7 +124,7 @@ function notationToSettings(room,notation) {
 }
 function notationToObject(notation) {
     if (!notation) {
-        return null;
+        return new Settings();
     }
     let settingsObject = new Settings();
     let theSettings = notation.split(';')

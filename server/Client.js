@@ -607,7 +607,7 @@ class Client {
 
         Database.saveSettings(this.#username, this.#room.settingsNotation);
         this.#userInfo.settings = this.#room.settingsNotation;
-        this.#socket.emit('defaultSettings', notationToObject(this.#room.settingsNotation));
+        this.#socket.emit('defaultSettings', notationToObject(this.#room.settingsNotation).object);
         SERVER.log('Default settings saved for user ' + this.#username + ': ' + this.#room.settingsNotation);
     }
 
