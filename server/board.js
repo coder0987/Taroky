@@ -109,6 +109,7 @@ class Board {
     set povinnost(val) { this.#povinnost = val; }
     set buc(val) { this.#buc = val; }
     set leadPlayer(val) { this.#leadPlayer = val; }
+    set leadCard(val) { this.#leadCard = val; }
     set nextStep(val) { this.#nextStep = val; }
     set cutStyle(val) { this.#cutStyle = val; }
     set moneyCards(val) { this.#moneyCards = val; }
@@ -117,6 +118,9 @@ class Board {
     set ioteWin(val) { this.#ioteWin = val; }
     set hasTheI(val) { this.#hasTheI = val; }
     set contra(val) { this.#contra = val; }
+    set calledContra(val) { this.#calledContra = val; }
+    set rheaContra(val) { this.#rheaContra = val; }
+    set supraContra(val) { this.#supraContra = val; }
     set firstContraPlayer(val) { this.#firstContraPlayer = val; }
     set gameNumber(val) { this.#gameNumber = val; }
     set importantInfo(val) { this.#importantInfo = val; }
@@ -137,12 +141,16 @@ class Board {
     get povinnost() { return this.#povinnost; }
     get buc() { return this.#buc; }
     get leadPlayer() { return this.#leadPlayer; }
+    get leadCard() { return this.#leadCard; }
     get nextStep() { return this.#nextStep; }
     get cutStyle() { return this.#cutStyle; }
     get moneyCards() { return this.#moneyCards; }
     get valat() { return this.#valat; }
     get iote() { return this.#iote; }
     get contra() { return this.#contra; }
+    get calledContra() { return this.#calledContra; }
+    get rheaContra() { return this.#rheaContra; }
+    get supraContra() { return this.#supraContra; }
     get firstContraPlayer() { return this.#firstContraPlayer; }
     get gameNumber() { return this.#gameNumber; }
     get importantInfo() { return this.#importantInfo; }
