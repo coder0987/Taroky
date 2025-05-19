@@ -8,6 +8,7 @@ const {DIFFICULTY, PLAYER_TYPE, MESSAGE_TYPE, DIFFICULTY_TABLE, SENSITIVE_ACTION
 const {playerOffset} = require('./utils');
 const {cardsToNotation} = require('./notation');
 const HumanPlayer = require('./Player/HumanPlayer.js');
+const Settings = require('./Settings.js');
 
 let iterator = 100000;
 
@@ -16,7 +17,7 @@ class Room {
 
     constructor(args) {
         let name         = args.name || 'Room';
-        let settings     = args.settings || {'difficulty':DIFFICULTY.NORMAL, 'timeout': 30*1000, 'aceHigh':false, 'locked':true};
+        let settings     = args.settings || new Settings();
         let roomType     = args.roomType || 0;
         let logLevel     = args.logLevel || SERVER.logLevel;
         let botCutChoice = args.botCutChoice || 'Cut';
@@ -34,7 +35,6 @@ class Room {
         this._deck = deck;
         this._players = [new RobotPlayer({room: this}), new RobotPlayer({room: this}), new RobotPlayer({room: this}), new RobotPlayer({room: this})];
         this._autoAction = 0;
-        this._settingsNotation = 'difficulty=2;timeout=30000;aceHigh=false;locked=false';
         this._logLevel = logLevel;//0: none, 1: errors, 2: warn, 3: info, 4: debug logs, 5: trace
         this._audience = {};
         this._audienceCount = 0;
@@ -257,7 +257,7 @@ class Room {
     prepReturnToGame() {
         for (let i in this._players) {
             if (this._players[i].socket != -1) {
-                GameManager.INSTANCE.returnToGame[this._players[i].socket] = {notation: this._board.notation + this._settingsNotation, povinnost: this._board.povinnost, pn: i};
+                GameManager.INSTANCE.returnToGame[this._players[i].socket] = {notation: this._board.notation + this.settingsNotation, povinnost: this._board.povinnost, pn: i};
             }
         }
     }
@@ -276,7 +276,7 @@ class Room {
     }
 
     informSettings() {
-        this.sendAllPlayers('returnSettings', this._settings);
+        this.sendAllPlayers('returnSettings', this._settings.object);
     }
 
     informActionTaken() {
@@ -444,7 +444,7 @@ class Room {
     }
 
     informGameNotation() {
-        this.informPlayers(this._board.notation + this._settingsNotation, MESSAGE_TYPE.NOTATION, {povinnost: this._board.povinnost});
+        this.informPlayers(this._board.notation + this.settingsNotation, MESSAGE_TYPE.NOTATION, {povinnost: this._board.povinnost});
     }
 
     sendChatMessage(username, message) {
@@ -584,79 +584,11 @@ class Room {
     }
 
     setSettingsNotation() {
-        let settingNotation = '';
-        for (let i in this._settings) {
-            settingNotation += i + '=' + this._settings[i] + ';';
-        }
-        this._settingsNotation = settingNotation.substring(0,settingNotation.length - 1);
+        this._settings.setSettingsNotation();
     }
 
-    changeDifficulty(difficulty) {
-        if (!DIFFICULTY_TABLE[difficulty]) {
-            return;
-        }
-
-        this._settings.difficulty = +difficulty;
-        this.setSettingsNotation();
-
-        // TODO: switch bots to AI if difficulty is set to AI, and vice-versa
-
-        SERVER.debug('Difficulty is set to ' + DIFFICULTY_TABLE[difficulty], this._name);
-        this.informPlayers('Difficulty updated to ' + DIFFICULTY_TABLE[difficulty], MESSAGE_TYPE.SETTING);
-    }
-
-    changeTimeout(number) {
-        number = Math.floor(Number(number));
-        
-        if (isNaN(number)) {
-            return;
-        }
-
-        if (number <= 0) {
-            number = 0;
-        } else if (number <= 20000) {
-            number = 20000;
-        } else if (number >= 3600000) {
-            number = 3600000;
-        }
-
-        this._settings.timeout = number;
-
-        this.setSettingsNotation();
-
-        SERVER.debug('Timeout is set to ' + (number/1000) + 's', this._name);
-        this.informPlayers('Timeout updated to ' + (number/1000) + 's', MESSAGE_TYPE.SETTING);
-    }
-
-    changeAceHigh(aceHigh) {
-        let message;
-
-        if (aceHigh) {
-            this._settings.aceHigh = true;
-            message = 'Ace is high';
-        } else {
-            this._settings.aceHigh = false;
-            message = 'Ace is low';
-        }
-
-        this.setSettingsNotation();
-
-        SERVER.debug(message, this._name);
-        this.informPlayers(message, MESSAGE_TYPE.SETTING);
-    }
-
-    changeLock(lock) {
-        let message;
-
-        if (lock) {
-            this._settings.locked = true;
-            message = 'The room is now private';
-        } else {
-            this._settings.locked = false;
-            message = 'The room is now public';
-        }
-
-        this.setSettingsNotation();
+    settingsUpdate(message) {
+        if (!message) {return;}
 
         SERVER.debug(message, this._name);
         this.informPlayers(message, MESSAGE_TYPE.SETTING);
@@ -736,7 +668,7 @@ class Room {
     }
 
     get settingsNotation() {
-        return this._settingsNotation;
+        return this._settings.settingsNotation;
     }
 
     get logLevel() {

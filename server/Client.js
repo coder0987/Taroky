@@ -33,7 +33,8 @@ const {
     verifyCanSendMessage, 
     verifyRoomExists, 
     verifyCanSendMessageTo, 
-    verifyCanSaveSettings 
+    verifyCanSaveSettings, 
+    verifyIsAdmin
 } = require('./verifier');
 const { notate, getPNFromNotation, notationToObject } = require('./notation');
 const { playerPerspective } = require('./utils');
@@ -353,22 +354,26 @@ class Client {
             return;
         }
 
+        let message;
         switch (setting) {
             case 'difficulty':
-                this.#room.changeDifficulty(rule);
+                message = this.#room.settings.changeDifficulty(rule);
                 break;
             case 'timeout':
-                this.#room.changeTimeout(rule);
+                message = this.#room.settings.changeTimeout(rule);
                 break;
             case 'aceHigh':
-                this.#room.changeAceHigh(rule);
+                message = this.#room.settings.changeAceHigh(rule);
                 break;
             case 'lock':
-                this.#room.changeLock(rule);
+                message = this.#room.settings.changeLock(rule);
                 break;
             default:
+                message = null;
                 SERVER.log(`Nonexistent rule: ${setting}`);
         }
+
+        this.#room.settingsUpdate(message);
 
         this.#room.informSettings();
     }
@@ -712,7 +717,7 @@ class Client {
         room.promptAction();
 
         Deck.unGrayCards(this.hand); 
-        this.#socket.emit('returnHand', Deck.sortCards(this.hand, this.room.settings.aceHigh), false);
+        this.#socket.emit('returnHand', Deck.sortCards(this.hand, this.#room.settings.aceHigh), false);
 
         this.autoReconnect();
 
