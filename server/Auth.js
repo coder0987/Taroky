@@ -9,7 +9,6 @@ const { notationToObject } = require('./notation');
 
 const https = require('https');
 
-const players= gm.players;
 const SOCKET_LIST = gm.SOCKET_LIST;
 
 class Auth {
@@ -17,8 +16,8 @@ class Auth {
 
     static signInSuccess(username, token, socket, socketId) {
         SERVER.log(`${username} signed in`);
-        players[socketId].username = username;
-        players[socketId].token = token;
+        gm.players[socketId].username = username;
+        gm.players[socketId].token = token;
         socket.emit('loginSuccess', username);
         Auth.loadDatabaseInfo(username, socketId, socket);
         socket.emit('dailyChallengeScore', gm.challenge.getUserScore(username));
@@ -59,9 +58,9 @@ class Auth {
 
         if (Auth.#signInCache[username.toLowerCase()] == token) {
             Database.saveUserPreferences(username,settings,avatar,deck,chat);
-            for (let i in players) {
-                if (players[i].username == username) {
-                    Auth.loadDatabaseInfo(username, players[i].id, players[i].socket);
+            for (let i in gm.players) {
+                if (gm.players[i].username == username) {
+                    Auth.loadDatabaseInfo(username, i, gm.players[i].socket);
                 }
             }
         }
@@ -70,9 +69,9 @@ class Auth {
         }, () => {
             Auth.#signInCache[username.toLowerCase()] = token;
             Database.saveUserPreferences(username,settings,avatar,deck,chat);
-            for (let i in players) {
-                if (players[i].username == username) {
-                    Auth.loadDatabaseInfo(username, players[i].id, players[i].socket);
+            for (let i in gm.players) {
+                if (gm.players[i].username == username) {
+                    Auth.loadDatabaseInfo(username, i, gm.players[i].socket);
                 }
             }
         })
@@ -108,7 +107,7 @@ class Auth {
     static loadDatabaseInfo(username, socketId, socket) {
         Database.promiseCreateOrRetrieveUser(username).then((info) => {
             SERVER.log('Loaded settings for user ' + username + ': ' + JSON.stringify(info));
-            players[socketId].userInfo = info;
+            gm.players[socketId]?.userInfo = info;
             socket.emit('elo',info.elo);
             socket.emit('admin',info.admin);
             socket.emit('defaultSettings', notationToObject(info.settings).object);
@@ -122,16 +121,16 @@ class Auth {
 
     static checkAllUsers() {
         Auth.#signInCache = {};
-        for (let i in players) {
-            if (players[i].username != 'Guest' && SOCKET_LIST[players[i].id]) {
-                Auth.signIn(players[i].username, players[i].token, (err) => {
+        for (let i in gm.players) {
+            if (gm.players[i].username != 'Guest' && gm.SOCKET_LIST[i]) {
+                Auth.signIn(gm.players[i].username, gm.players[i].token, (err) => {
                     SERVER.error(err);
-                    players[i].username = 'Guest';
-                    players[i].token = -1;
-                    SOCKET_LIST[players[i].id].emit('loginExpired');
+                    gm.players[i].username = 'Guest';
+                    gm.players[i].token = -1;
+                    gm.SOCKET_LIST[i].emit('loginExpired');
                 }, () => {
                     // yay
-                    Auth.#signInCache[players[i].username.toLowerCase()] = players[i].token;
+                    Auth.#signInCache[gm.players[i].username.toLowerCase()] = gm.players[i].token;
                 })
             }
         }
