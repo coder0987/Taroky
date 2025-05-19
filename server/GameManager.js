@@ -56,7 +56,7 @@ class GameManager {
 
     cleanPlayers() {
         for (let i in this.#players) {
-            if (!this.#players[i].socket.connected) {
+            if (!this.#players[i].socket || !this.#players[i].socket.connected) {
                 SERVER.log(`GM: Removing player ${i}`);
                 this.removePlayer(i);
             }
