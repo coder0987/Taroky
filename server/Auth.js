@@ -107,7 +107,8 @@ class Auth {
     static loadDatabaseInfo(username, socketId, socket) {
         Database.promiseCreateOrRetrieveUser(username).then((info) => {
             SERVER.log('Loaded settings for user ' + username + ': ' + JSON.stringify(info));
-            gm.players[socketId]?.userInfo = info;
+            if (gm.players[socketId] != null) gm.players[socketId].userInfo = info;
+            if (socket == null) {return;}
             socket.emit('elo',info.elo);
             socket.emit('admin',info.admin);
             socket.emit('defaultSettings', notationToObject(info.settings).object);
