@@ -55,8 +55,7 @@ app.post('/preferences', function (req, res) {
     }
     Auth.saveUserPreferencesConditional(username, token, req.body);
 
-    res.writeHead(200);
-    return res.end()
+    return res.status(200).type('text/plain').send('OK');
 });
 app.get('/preferences', function (req, res) {
     if(!req.headers.authorization) {
@@ -87,7 +86,7 @@ app.get('/preferences', function (req, res) {
     }, function(e) {
         if (!once) {
             once = true;
-            return res.status(200).json(JSON.stringify(e));
+            return res.status(200).json(e);
         }
     });
 });
