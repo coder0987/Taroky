@@ -51,7 +51,9 @@ class Auth {
             'difficulty': +preferences.difficulty,
             'timeout': +preferences.timeout * 1000,
             'aceHigh': preferences.aceHighLow == 'on',
-            'locked': preferences.locked == 'on'
+            'locked': preferences.locked == 'on',
+            'botPlayTime': +preferences.botPlayeTime * 1000,
+            'botThinkTime': preferences.botThinkTime * 1000,
         });
 
         if (Auth.#signInCache[username.toLowerCase()] == token) {

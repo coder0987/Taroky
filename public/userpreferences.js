@@ -3,6 +3,8 @@ let saveButton;
 let chatSwitch;
 let aceHighSwitch;
 let timeoutInput;
+let botPlayTimeInput;
+let botThinkTimeInput;
 const SHOW_TOUR = false;
 let userNameToken = '';
 let shouldLeave = false;
@@ -14,6 +16,8 @@ window.addEventListener('load', function() {
     aceHighSwitch = document.getElementById('aceHighLow');
     timeoutInput = document.getElementById('timeout');
     aceHighSwitch.addEventListener('click',aceHighClick);
+    botPlayTimeInput = document.getElementById('botPlayTime');
+    botThinkTimeInput = document.getElementById('botThinkTime');
     chatSwitch.addEventListener('click',chatClick);
     form.addEventListener('submit', send, true)
     document.getElementById("saveExitTop").addEventListener('click', () => {shouldLeave = true});
@@ -140,6 +144,13 @@ function notationToSettingsPreferences(notation) {
                 } else {
                     aceHighSwitch.value = 'off';
                 }
+                break;
+            case 'botPlayTime':
+                botPlayTimeInput.value = +rule / 1000;
+                break;
+            case 'botThinkTime':
+                botThinkTimeInput.value = +rule / 1000;
+                break;
             default:
         }
     }
