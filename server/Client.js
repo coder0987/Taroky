@@ -80,11 +80,12 @@ class Client {
 
     playerDisconnectTimeout() {
         // Runs a few seconds after a player disconnects
-        if (this.tempDisconnect) {
+        if (this.tempDisconnect || typeof this.#socketId === 'undefined') {
             this.disconnect();
-        } else {
-            SERVER.log(`Player ${this.socketId} didn't disconnect after all`);
+            gm.cleanPlayers();
+            return;
         }
+        SERVER.log(`Player ${this.socketId} didn't disconnect after all`);
     }
 
     startDisconnectTimeout() {

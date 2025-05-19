@@ -54,6 +54,15 @@ class GameManager {
         delete SOCKET_LIST[socketId];
     }
 
+    cleanPlayers() {
+        for (let i in this.#players) {
+            if (!this.#players[i].socket.connected) {
+                SERVER.log(`GM: Removing player ${i}`);
+                this.removePlayer(i);
+            }
+        }
+    }
+
     addPlayer(socketId, socket, client) {
         this.#SOCKET_LIST[socketId] = socket;
         this.#players[socketId] = client;
