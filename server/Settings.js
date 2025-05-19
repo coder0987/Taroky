@@ -179,6 +179,10 @@ class Settings {
     get botThinkTime() {
         return this.#botThinkTime;
     }
+
+    get settingsNotation() {
+        return this.#notation;
+    }
 }
 
 module.exports = Settings;

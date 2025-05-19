@@ -602,6 +602,7 @@ class Client {
 
     handleSaveSettings() {
         if (!verifyCanSaveSettings(this)) {
+            SERVER.log(`${this.#socketId} failed to save new default settings`);
             return;
         }
 
@@ -773,7 +774,7 @@ class Client {
     }
 
     canSendMessage() {
-        return ((Date.now() - player.timeLastMessageSent) > RATE_LIMIT * 1000);
+        return ((Date.now() - this.#timeLastMessageSent) > RATE_LIMIT * 1000);
     }
 
     updateLastMessageSentTime() {

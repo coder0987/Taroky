@@ -153,13 +153,13 @@ function verifyRoomExists(id) {
 }
 
 function verifyCanSendMessage(client) {
-    return !u(client) && client && client.username && client.username !== 'Guest' && client.canSendMessage();
+    return !u(client) && client.username && client.username !== 'Guest' && client.canSendMessage();
 }
 
 function verifyCanSaveSettings(client) {
-    const isValid = !u(client) && client && client.username && client.username !== 'Guest'
+    const isValid = !u(client) && client.username && client.username !== 'Guest'
         && client.inGame && client.room && client.room.settingsNotation;
-    
+
     return isValid;
 }
 
