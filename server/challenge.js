@@ -15,7 +15,7 @@ class Challenge {
         this._arrLead = [];
         this._arrRetryLead = [];
 
-        this._settings = {'difficulty':DIFFICULTY.RUTHLESS, 'timeout': 0, 'aceHigh':false, 'locked':true};
+        this._settings = new Settings({'difficulty':DIFFICULTY.RUTHLESS, 'timeout': 0, 'aceHigh':false, 'locked':true});
         this._notation = Challenge.generateRandomNotationSequence();
 
     }
@@ -130,8 +130,8 @@ class Challenge {
        }
        notation += talonNotation;
 
-       for (let i in this._settings) {
-           notation += i + '=' + this._settings[i] + ';';
+       for (let i in this._settings.object) {
+           notation += i + '=' + this._settings.object[i] + ';';
        }
        notation += 'pn=' + workingPN;
        return notation;

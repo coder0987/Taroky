@@ -2,6 +2,7 @@ const { SUIT, TRUMP_VALUE, RED_VALUE, RED_VALUE_ACE_HIGH, BLACK_VALUE, VALUE_REV
 const SERVER = require('./logger.js');
 const GameManager = require('./GameManager.js');
 const { u, findTheI } = require('./utils');
+const Settings = require('./Settings.js');
 
 let baseDeck = GameManager.INSTANCE.baseDeck.deck;
 
@@ -84,7 +85,8 @@ function cardsToNotation(cards) {
     return theNotation;
 }
 function notationToSettings(room,notation) {
-    room.settingsNotation = notation;
+    room.settings = new Settings();
+    
     let theSettings = notation.split(';')
     for (let i in theSettings) {
         let [setting,rule] = theSettings[i].split('=');
@@ -93,31 +95,17 @@ function notationToSettings(room,notation) {
         } else {
             switch (setting) {
                 case 'difficulty':
-                    if (DIFFICULTY_TABLE[rule]) {
-                        room.settings.difficulty = +rule;
-                    }
+                    room.settings.changeDifficulty(rule);
                     break;
                 case 'timeout':
-                    rule = +rule;
-                    if (!isNaN(rule)) {
-                        if (rule <= 0) {
-                            rule = 0;//No timeout for negatives
-                        } else if (rule <= 20000) {
-                            rule = 20000;//20 second min
-                        } else if (rule >= 3600000) {
-                            rule = 3600000;//One hour max
-                        }
-                       room.settings.timeout = rule;
-                    }
+                    room.settings.changeTimeout(rule);
                     break;
                 case 'aceHigh':
-                    if (rule != 'false') {
-                        room.settings.aceHigh = true;
-                    }
+                    room.settingss.changeAceHigh(rule);
                     break;
                 case 'lock':
                 case 'locked':
-                    room.settings.lock = rule == 'true';
+                    room.settings.changeLock(rule);
                     break;
                 case 'pn':
                     //Handled later
@@ -132,7 +120,7 @@ function notationToObject(notation) {
     if (!notation) {
         return null;
     }
-    let settingsObject = {};
+    let settingsObject = new Settings();
     let theSettings = notation.split(';')
     for (let i in theSettings) {
         let [setting,rule] = theSettings[i].split('=');
@@ -141,29 +129,17 @@ function notationToObject(notation) {
         } else {
             switch (setting) {
                 case 'difficulty':
-                    if (DIFFICULTY_TABLE[rule]) {
-                        settingsObject.difficulty = +rule;
-                    }
+                    settingsObject.changeDifficulty(rule);
                     break;
                 case 'timeout':
-                    rule = +rule;
-                    if (!isNaN(rule)) {
-                        if (rule <= 0) {
-                            rule = 0;//No timeout for negatives
-                        } else if (rule <= 20000) {
-                            rule = 20000;//20 second min
-                        } else if (rule >= 3600000) {
-                            rule = 3600000;//One hour max
-                        }
-                       settingsObject.timeout = rule;
-                    }
+                    settingsObject.changeTimeout(rule);
                     break;
                 case 'lock':
                 case 'locked':
-                    settingsObject.lock = rule;
+                    settingsObject.changeLock(rule);
                     break;
                 case 'aceHigh':
-                    settingsObject.aceHigh = rule == 'true';
+                    settingsObject.changeAceHigh(rule);
                     break;
                 case 'pn':
                     //Handled later

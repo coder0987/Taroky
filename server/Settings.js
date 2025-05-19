@@ -9,7 +9,7 @@ class Settings {
     #notation;
 
     constructor (args = {}) {
-        this.#lock = args.lock ?? true;
+        this.#lock = args.lock ?? args.locked ?? true;
         this.#timeout = args.timeout ?? 30000;
         this.#aceHigh = args.aceHigh ?? false;
         this.#difficulty = args.difficulty ?? DIFFICULTY.NORMAL;
