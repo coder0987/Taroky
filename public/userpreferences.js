@@ -88,7 +88,7 @@ function getPreferencesCallback(event) {
     console.log(this.status);
     if (this.status === 200) {
         console.log(this);
-        let pref = JSON.parse(this.response);
+        let pref = this.response;
         let avatar = pref.avatar;
         let deck = pref.deck;
         let chat = pref.chat;
