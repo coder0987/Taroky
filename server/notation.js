@@ -107,6 +107,12 @@ function notationToSettings(room,notation) {
                 case 'locked':
                     room.settings.changeLock(rule);
                     break;
+                case 'botPlayTime':
+                    room.settings.changeBotPlayTime(rule);
+                    break;
+                case 'botThinkTime':
+                    room.settings.changeBotThinkTime(rule);
+                    break;
                 case 'pn':
                     //Handled later
                     break;
@@ -140,6 +146,12 @@ function notationToObject(notation) {
                     break;
                 case 'aceHigh':
                     settingsObject.changeAceHigh(rule);
+                    break;
+                case 'botPlayTime':
+                    settingsObject.changeBotPlayTime(rule);
+                    break;
+                case 'botThinkTime':
+                    settingsObject.changeBotThinkTime(rule);
                     break;
                 case 'pn':
                     //Handled later

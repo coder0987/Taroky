@@ -4,10 +4,13 @@ const { shuffleArray } = require('./utils.js');
 const GameManager = require('./GameManager.js');
 
 const schedule = require('node-schedule');
+const Settings = require('./Settings.js');
 
 let baseDeck = GameManager.INSTANCE.baseDeck.deck;
 
 class Challenge {
+    static _settings = new Settings({'difficulty':DIFFICULTY.RUTHLESS, 'timeout': 0, 'aceHigh':false, 'locked':true});
+
     constructor() {
         this._leaderboard = {};
         this._retryLeaderboard = {};
@@ -15,7 +18,6 @@ class Challenge {
         this._arrLead = [];
         this._arrRetryLead = [];
 
-        this._settings = new Settings({'difficulty':DIFFICULTY.RUTHLESS, 'timeout': 0, 'aceHigh':false, 'locked':true});
         this._notation = Challenge.generateRandomNotationSequence();
 
     }
@@ -130,8 +132,8 @@ class Challenge {
        }
        notation += talonNotation;
 
-       for (let i in this._settings.object) {
-           notation += i + '=' + this._settings.object[i] + ';';
+       for (let i in Challenge._settings.object) {
+           notation += i + '=' + Challenge._settings.object[i] + ';';
        }
        notation += 'pn=' + workingPN;
        return notation;

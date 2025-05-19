@@ -1,7 +1,6 @@
 const GameManager = require('../GameManager');
 const gm = new GameManager(); // Typically done by _server.js
 const Room = require('../room');
-const GamePlay = require('../GamePlay');
 const { ACTION, SUIT, VALUE, MONEY_CARDS, PLAYER_TYPE } = require('../enums');
 const Deck = require('../deck');
 

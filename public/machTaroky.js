@@ -101,7 +101,7 @@ let admin;
 let avatar = 0;
 let displayChat = true;
 let dailyScore = 0;
-let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true};
+let defaultSettings = {'timeout':30000,'difficulty':2,'aceHigh':false,'locked':true,'botPlayTime':3000,'botThinkTime':1000};
 let activeUsername = '';
 let activeUsernames = {'0':null, '1':null, '2':null, '3':null};
 let activeAvatars = {'0':0, '1':0, '2':0, '3':0};
@@ -880,6 +880,12 @@ function submitSettings(type) {
         case 'aceHigh':
             socket.emit('settings',type,document.getElementById('aceHighSelector').checked);
             break;
+        case 'botPlayTime':
+            socket.emit('settings',type,document.getElementById('botPlayTimeButton').value*1000);
+            break;
+        case 'botThinkTime':
+            socket.emit('settings',type,document.getElementById('botThinkTimeButton').value*1000);
+            break;
         case 'save':
             socket.emit('saveSettings');
             break;
@@ -916,6 +922,8 @@ function updateRoomSettings(roomSettings) {
     document.getElementById('display-timeout').innerHTML = (+roomSettings.timeout / 1000);
     document.getElementById('display-ace').innerHTML = roomSettings.aceHigh ? 'Yes' : 'No';
     document.getElementById('display-visibility').innerHTML = roomSettings.locked ? 'Private' : 'Public';
+    document.getElementById('display-bot-play-time').innerHTML = (+roomSettings.botPlayTime / 1000);
+    document.getElementById('display-bot-think-time').innerHTML = (+roomSettings.botThinkTime / 1000);
 
 
     if (document.getElementById(DIFFICULTY_TABLE[roomSettings.difficulty])) {
@@ -925,6 +933,10 @@ function updateRoomSettings(roomSettings) {
     document.getElementById('timeoutButton').value = roomSettings.timeout / 1000;
     document.getElementById('aceHighSelector').checked = roomSettings.aceHigh;
     document.getElementById('lockButton').innerHTML = roomSettings.locked ? 'Private' : 'Public';
+    document.getElementById('botPlayTimeButton').setAttribute('value',roomSettings.botPlayTime / 1000);
+    document.getElementById('botPlayTimeButton').value = roomSettings.botPlayTime / 1000;
+    document.getElementById('botThinkTimeButton').setAttribute('value',roomSettings.botThinkTime / 1000);
+    document.getElementById('botThinkTimeButton').value = roomSettings.botThinkTime / 1000;
 }
 
 function updatePlayersInGame(playersInGame) {

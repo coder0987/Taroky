@@ -45,8 +45,6 @@ const ROOM_TYPE = {STANDARD: 0, DEBUG: 1, TRAINING: 2, CHALLENGE: 3, TEST: 4};
 
 const NUM_AVATARS = 58;
 
-const BOT_SPEEDS = [ 1000, 3000 ];
-
 const ACTION = {
     START: 'start',
     PLAY: 'play',
@@ -129,5 +127,4 @@ module.exports = {
     SHUFFLE_TYPE,
     CUT_TYPE,
     MONEY_CARDS,
-    BOT_SPEEDS,
 }

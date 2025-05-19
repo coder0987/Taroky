@@ -194,6 +194,14 @@
                         class="btn white">Private
                 </button>
                 <hr>
+                <label for="botPlayTimeButton" class="col-md-3 col-6">Bot Play Time:</label>
+                <input type="number" value="3" min="0" id="botPlayTimeButton"
+                       onchange="submitSettings('botPlayTime')" class="col-3">
+                <hr>
+                <label for="botThinkTimeButton" class="col-md-3 col-6">Bot Think Time:</label>
+                <input type="number" value="1" min="0" id="botThinkTimeButton"
+                       onchange="submitSettings('botThinkTime')" class="col-3">
+                <hr>
                 <button id="saveButton" onclick="submitSettings('save');" hidden="hidden" class="btn white">Save
                 </button>
                 <br>
@@ -209,6 +217,12 @@
                 <br>
                 <span style="display: inline-block; width: 175px;">Visibility:	</span><span
                     id="display-visibility"></span>
+                <br>
+                <span style="display: inline-block; width: 175px;">Bot Play Time (in seconds):	</span><span
+                    id="display-bot-play-time"></span>
+                <br>
+                <span style="display: inline-block; width: 175px;">Bot Think Time (in seconds):	</span><span
+                    id="display-bot-think-time"></span>
                 <br>
             </div>
             <div class="col-12">

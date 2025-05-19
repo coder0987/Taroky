@@ -21,16 +21,10 @@ const { Buffer } = require('node:buffer')
 const {
     PLAYER_TYPE,
     ROOM_TYPE,
-    ACTION,
-    BOT_SPEEDS } = require('./enums.js');
+    ACTION } = require('./enums.js');
 const Challenge = require('./challenge.js');
 const Auth = require('./Auth');
 const Client = require('./Client.js');
-
-if (DEBUG_MODE) {
-    BOT_SPEEDS[0] = 0;
-    BOT_SPEEDS[1] = 0;
-}
 
 const http = require('http');
 const express = require('express');

@@ -1,4 +1,4 @@
-const { PLAYER_TYPE, NUM_AVATARS, SHUFFLE_TYPE, CUT_TYPE, ACTION, DIFFICULTY, BOT_SPEEDS } = require('../enums');
+const { PLAYER_TYPE, NUM_AVATARS, SHUFFLE_TYPE, CUT_TYPE, ACTION, DIFFICULTY } = require('../enums');
 const Player = require('./Player');
 const RobotAuto = require('./RobotAuto');
 const RobotBeginner = require('./RobotBeginner');
@@ -67,7 +67,7 @@ class RobotPlayer extends Player {
             }
 
             this.room.gameplay.actionCallback();
-        }, BOT_SPEEDS[long]);
+        }, long ? this.room.settings.botPlayTime : this.room.settings.botThinkTime);
     }
 
     clearTimeout() {

@@ -4,7 +4,7 @@ const Deck = require('./deck.js');
 const GamePlay = require('./GamePlay.js');
 const GameManager = require('./GameManager.js');
 const SERVER = require('./logger.js');
-const {DIFFICULTY, PLAYER_TYPE, MESSAGE_TYPE, DIFFICULTY_TABLE, SENSITIVE_ACTIONS} = require('./enums.js');
+const {PLAYER_TYPE, MESSAGE_TYPE, SENSITIVE_ACTIONS} = require('./enums.js');
 const {playerOffset} = require('./utils');
 const {cardsToNotation} = require('./notation');
 const HumanPlayer = require('./Player/HumanPlayer.js');
@@ -139,7 +139,7 @@ class Room {
     notifyStartGame() {
         for (let i in this._players) {
             if (this._players[i].messenger) {
-                this._players[i].messenger.emit('startingGame', this._host, i, this._board.gameNumber, this._settings);
+                this._players[i].messenger.emit('startingGame', this._host, i, this._board.gameNumber, this._settings.object);
             }
         }
     }
@@ -276,6 +276,7 @@ class Room {
     }
 
     informSettings() {
+        SERVER.debug(`Sending settings ${JSON.stringify(this._settings.object)} to players`, this._name);
         this.sendAllPlayers('returnSettings', this._settings.object);
     }
 

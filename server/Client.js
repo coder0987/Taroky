@@ -169,7 +169,7 @@ class Client {
         obj.roundInfo = structuredClone(this.#room.board.importantInfo);
         obj.roundInfo.pn = +this.#pn + 1;
 
-        obj.settings = this.#room.settings;
+        obj.settings = this.#room.settings.object;
         if (this.nextStep.action !== ACTION.SHUFFLE) {
             obj.table = this.#room.board.table;
         }
@@ -367,6 +367,12 @@ class Client {
                 break;
             case 'lock':
                 message = this.#room.settings.changeLock(rule);
+                break;
+            case 'botPlayTime':
+                message = this.#room.settings.changeBotPlayTime(rule);
+                break;
+            case 'botThinkTime':
+                message = this.#room.settings.changeBotThinkTime(rule);
                 break;
             default:
                 message = null;
