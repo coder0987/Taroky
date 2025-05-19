@@ -89,7 +89,7 @@ class Client {
     }
 
     startDisconnectTimeout() {
-        this.#disconnectTimeout = setTimeout(this.playerDisconnectTimeout, DISCONNECT_TIMEOUT);
+        this.#disconnectTimeout = setTimeout(() => {this.playerDisconnectTimeout()}, DISCONNECT_TIMEOUT);
     }
 
     stopDisconnectTimeout() {

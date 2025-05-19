@@ -49,7 +49,7 @@ class GameManager {
         try {
             SOCKET_LIST[socketId].disconnect();
         } catch (ignore) {}
-        numOnlinePlayers--;
+        this.#numOnlinePlayers--;
         delete players[socketId];
         delete SOCKET_LIST[socketId];
     }
