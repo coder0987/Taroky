@@ -3,10 +3,7 @@
 const Deck = require('../deck');
 const {
   SUIT,
-  TRUMP_VALUE,
   VALUE,
-  RED_VALUE,
-  BLACK_VALUE
 } = require('../enums');
 
 // Mock the logger to suppress output during tests
