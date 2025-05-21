@@ -49,9 +49,9 @@ class GameManager {
         try {
             SOCKET_LIST[socketId].disconnect();
         } catch (ignore) {}
-        this.#numOnlinePlayers--;
         delete players[socketId];
         delete SOCKET_LIST[socketId];
+        this.#numOnlinePlayers = Object.keys(this.#players).length;
     }
 
     cleanPlayers() {
@@ -66,7 +66,7 @@ class GameManager {
     addPlayer(socketId, socket, client) {
         this.#SOCKET_LIST[socketId] = socket;
         this.#players[socketId] = client;
-        this.#numOnlinePlayers++;
+        this.#numOnlinePlayers = Object.keys(this.#players).length;
 
         // Let other players know
         for (let i in this.#SOCKET_LIST) {
