@@ -101,7 +101,7 @@ function notationToSettings(room,notation) {
                     room.settings.changeTimeout(rule);
                     break;
                 case 'aceHigh':
-                    room.settingss.changeAceHigh(rule);
+                    room.settings.changeAceHigh(rule);
                     break;
                 case 'lock':
                 case 'locked':
