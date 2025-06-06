@@ -518,7 +518,7 @@ class Room {
 
         const wasHost = this._host == this._players[pn].socketId;
 
-        this._players[pn] = new RobotPlayer( { old: this._players[pn] } );
+        this._players[pn] = new RobotPlayer( { room: this, old: this._players[pn] } );
         this._playerCount--;
 
         if (wasHost) {
