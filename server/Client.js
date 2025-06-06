@@ -34,7 +34,8 @@ const {
     verifyRoomExists, 
     verifyCanSendMessageTo, 
     verifyCanSaveSettings, 
-    verifyIsAdmin
+    verifyIsAdmin,
+    verifyCanJoinRoom
 } = require('./verifier');
 const { notate, getPNFromNotation, notationToObject } = require('./notation');
 const { playerPerspective } = require('./utils');
