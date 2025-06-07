@@ -396,7 +396,7 @@ class Client {
         }
 
         SERVER.log(`${this.#socketId} sent an invite to ${socketId}`);
-        gm.players[socketId].socket.emit('invite', this.#room.joinCode, this.#username);
+        gm.players[socketId].socket.emit('invite', this.#room.name, this.#room.joinCode, this.#username);
     }
 
     handleStartGame() {

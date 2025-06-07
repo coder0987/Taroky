@@ -9,8 +9,6 @@ const { notationToObject } = require('./notation');
 
 const https = require('https');
 
-const SOCKET_LIST = gm.SOCKET_LIST;
-
 class Auth {
     static #signInCache = {}; // NOT CONSTANT. will be reset periodcally
 

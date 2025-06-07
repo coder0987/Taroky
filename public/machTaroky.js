@@ -834,7 +834,8 @@ let refreshing;
 function refresh() {
     if (!refreshing) {
         refreshing = true;
-        drawnRooms = {};
+        drawnRooms = [];
+        console.log('Reset drawn rooms without redrawing rooms');
         socket.emit('getRooms');
     }
 }
@@ -1195,10 +1196,13 @@ function onLoad() {
     });
 
     socket.on('returnRooms', function(returnRooms) {
+        console.log('Received rooms ' + JSON.stringify(returnRooms))
+        console.log('Current rooms ' + JSON.stringify(drawnRooms))
         availableRooms = returnRooms;
         refreshing = false;
         if (!inGame && !checkRoomsEquality(availableRooms,drawnRooms)) {
             drawRooms();
+            drawnRooms = availableRooms;
         }
         if (connectingToRoom) {
             addMessage('loading...');//ADD LOADING ANIMATION
@@ -1986,7 +1990,7 @@ function joinFromInvite(roomCode) {
     if (!connectingToRoom) {
         connectingToRoom=true;
         socket.emit('roomConnect',roomCode,true);
-        addMessage('Joining room...');
+        addMessage('Joining room ' + roomCode);
     } else {addError('Already connecting to a room!');}
 }
 
@@ -1996,7 +2000,12 @@ function drawRooms() {
 
 function ping() {socket.emit('currentAction');}//Debug function
 
-function checkRoomsEquality(a,b) {if (Object.keys(a).length != Object.keys(b).length) {return false;} for (let i in a) {if (!b[i] || (a[i].count != b[i].count)) {return false;}}return true;}
+function checkRoomsEquality(a,b) {
+    if (Object.keys(a).length != Object.keys(b).length) {return false;}
+    for (let i in a) {
+        if (!b[i] || (a[i].count != b[i].count)) {return false;}
+    }
+    return true;}
 
 function createTwelvesChoiceButton(choices) {
     for (let i in choices) {

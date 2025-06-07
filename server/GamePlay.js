@@ -1158,7 +1158,7 @@ class GamePlay {
                 }
             }
 
-            this.payChips(pointCountMessageTable, owedChips);
+            this.payChips(pointCountMessageTable, chipsOwed);
             
             this.#room.deck.deck = Deck.simulateCounting(povinnostTeamDiscard, opposingTeamDiscard);
             return true;

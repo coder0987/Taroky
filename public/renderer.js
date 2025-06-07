@@ -257,7 +257,8 @@ class InviteRenderer {
         joinButton.addEventListener('click', () => {
             exitCurrentRoom(true);
            document.body.removeChild(card);
-           clearTimeout(cardRemoveTimeout);joinFromInvite(roomCode)
+           clearTimeout(cardRemoveTimeout);
+           joinFromInvite(roomCode);
         }, {once:true});
         card.appendChild(joinButton);
 
@@ -297,6 +298,7 @@ class RoomsRenderer {
 
     render() {
         if (!renderer.gamestate.inGame) {
+            console.log('Drawing rooms ' + JSON.stringify(availableRooms));
             this.clear();
             this.createNewRoomCard();
             for (let i in availableRooms) {

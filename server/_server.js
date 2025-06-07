@@ -465,8 +465,10 @@ function tick() {
                 }
             }
         }
+        //SERVER.debug(JSON.stringify(simplifiedRooms));
         for (let i in players) {
-            if (!~players[i]['room'] && !players[i].tempDisconnect && !checkRoomsEquality(players[i].roomsSeen, simplifiedRooms)) {
+            if (!players[i].inGame && !players[i].inAudience && !players[i].tempDisconnect && !checkRoomsEquality(players[i].roomsSeen, simplifiedRooms)) {
+                SERVER.debug('Sent rooms to player ' + i);
                 players[i]['socket'].emit('returnRooms', simplifiedRooms);
                 players[i].roomsSeen = { ...simplifiedRooms };
             }
