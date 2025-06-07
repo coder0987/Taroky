@@ -54,7 +54,6 @@ class RobotAuto {
     }
 
     static robotChooseHand(theChoices) {
-        this.info.choice = 0;
         for (let i in theChoices) {
             if (typeof theChoices[i] !== 'undefined') {
                 return i;
