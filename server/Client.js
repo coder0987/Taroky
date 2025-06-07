@@ -107,6 +107,9 @@ class Client {
         this.gatherAudienceInfo(reconnectInfo);
         this.gatherGameInfo(reconnectInfo);
 
+        //SERVER.debug(JSON.stringify(this.#room));
+        SERVER.debug(JSON.stringify(this.nextStep));
+
         this.#socket.emit('autoReconnect', reconnectInfo);
     }
 
@@ -152,7 +155,7 @@ class Client {
             joinCode: this.#room.joinCode
         };
 
-        if (this.nextStep.player === this.#pn) {
+        if (this.nextStep.player == this.#pn) {
             // My turn
             obj.withGray = false;
 
@@ -163,6 +166,9 @@ class Client {
                 Deck.grayUnplayables(this.player.hand, this.#room.board.leadCard);
                 obj.withGray = true;
             }
+
+            // Includes sensitive actions
+            obj.nextAction = this.nextStep;
         }
         
         obj.hand = [...Deck.sortCards(this.player.hand, this.#room.settings.aceHigh)];
