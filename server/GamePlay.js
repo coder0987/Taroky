@@ -630,8 +630,8 @@ class GamePlay {
 
     partner() {
         const possiblePartners = Deck.possiblePartners(this.currentPlayer.hand);
-        if (possiblePartners.some(p => p.value === this.board.partnerCard.value)) {
-            this.board.partnerCard = this.board.partnerCard.value;
+        if (possiblePartners.some(p => p.value === this.info.partnerCard)) {
+            this.board.partnerCard = this.info.partnerCard;
         } else {
             this.board.partnerCard = "XIX";
         }

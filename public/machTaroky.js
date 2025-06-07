@@ -1362,7 +1362,11 @@ function onLoad() {
                 drawnCards = extraInfo.cards;
                 break;
             case MESSAGE_TYPE.PARTNER:
-                addBoldMessage(theMessage);
+                if (extraInfo && extraInfo.youMessage && extraInfo.pn == playerNumber) {
+                    addBoldMessage(extraInfo.youMessage);
+                } else {
+                    addBoldMessage(theMessage);
+                }
                 break;
             case MESSAGE_TYPE.TRUMP_DISCARD:
                 returnTableQueue.push([extraInfo.card]);

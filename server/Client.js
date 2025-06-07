@@ -513,7 +513,9 @@ class Client {
             return;
         }
 
-        this.nextStep.info.partnerCard = { suit: partner.suit, value: partner.value };
+        SERVER.debug(`${this.#socketId} is playing with ${partner}`, this.#room.name);
+
+        this.nextStep.info.partnerCard = partner;
 
         this.room.gameplay.actionCallback();
     }
