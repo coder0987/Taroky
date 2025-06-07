@@ -35,7 +35,8 @@ const {
     verifyCanSendMessageTo, 
     verifyCanSaveSettings, 
     verifyIsAdmin,
-    verifyCanJoinRoom
+    verifyCanJoinRoom,
+    sanitizeMessage
 } = require('./verifier');
 const { notate, getPNFromNotation, notationToObject } = require('./notation');
 const { playerPerspective } = require('./utils');
@@ -67,6 +68,7 @@ class Client {
     constructor(args) {
         this.#socketId = args.id || -1;
         this.#socket = args.socket || null;
+        this.updateLastMessageSentTime();
     }
 
     // Client-server interactions
@@ -695,6 +697,10 @@ class Client {
         if (!verifyCanSendMessage(this)) {
             return;
         }
+
+        message = sanitizeMessage(message);
+
+        SERVER.log(`Player ${this.#username} sent "${message}" in the chat`);
 
         if (this.#inGame || this.#inAudience) {
             // Send to players in local chat

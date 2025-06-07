@@ -319,6 +319,11 @@ class Room {
         this.sendAudience('nextAction', action);
     }
 
+    informCutChoice(pn, cutType) {
+        SERVER.debug('Cut choice: ' + cutType, this._name, this._name);
+        this.informPlayers('cut by ' + cutType, MESSAGE_TYPE.CUT, { pn: pn }, pn);
+    }
+
     informPovinnost() {
         SERVER.debug('Povinnost is ' + this._board.povinnost, this._name, this._name);
         this.informPlayers('is povinnost', MESSAGE_TYPE.POVINNOST, { 'pn': this._board.povinnost }, this._board.povinnost);

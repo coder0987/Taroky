@@ -275,6 +275,8 @@ class GamePlay {
             this.deck.shuffleDeck(SHUFFLE_TYPE.CUT, location);
         }
 
+        this.#room.informCutChoice(this.player, style);
+
         this.action = ACTION.DEAL;
         this.nextPlayer();
 

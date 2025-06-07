@@ -153,6 +153,9 @@ function verifyRoomExists(id) {
 }
 
 function verifyCanSendMessage(client) {
+    SERVER.debug(client.username);
+    SERVER.debug(client.canSendMessage());
+    SERVER.debug(client.timeLastMessageSent);
     return !u(client) && client.username && client.username !== 'Guest' && client.canSendMessage();
 }
 
@@ -212,6 +215,12 @@ function sanitizeCutLocation(location) {
 }
 
 function sanitizeHandChoice(client, choice) {
+    if (!isNumericalType(choice)) {
+        choice = 0;
+    } else {
+        choice -= 1;
+    }
+
     if (client.room.board.hands[choice]) {
         return choice;
     }
@@ -235,6 +244,14 @@ function sanitizeDrawTalonChoice(client, choice) {
 
 function sanitizeBoolean(bool) {
     return !(!bool);
+}
+
+function sanitizeMessage(message) {
+    if (typeof message !== 'string') {
+        return '';
+    }
+
+    return message.replace(/[\u0000-\u001F\u007F-\u009F\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, "");
 }
 
 module.exports = {
@@ -264,4 +281,5 @@ module.exports = {
     sanitizeHandChoice,
     sanitizeDrawTalonChoice,
     sanitizeBoolean,
+    sanitizeMessage,
 };

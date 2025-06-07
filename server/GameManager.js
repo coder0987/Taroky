@@ -114,7 +114,7 @@ class GameManager {
     sendChatMessage(username, message) {
         for (let i in players) {
             if (players[i].roomID === -1 && players[i].username !== username) {
-                players[i].socket.emit('chatMessage', playerName, message);
+                players[i].socket.emit('chatMessage', username, message);
             }
         }
     }
