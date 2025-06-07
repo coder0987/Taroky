@@ -244,7 +244,7 @@ class GamePlay {
         this.board.gameNumber++;
 
         this.action = ACTION.SHUFFLE;
-        this.nextPlayer();
+        this.prevPlayer();
 
         this.#room.updateImportantInfo();
 
@@ -628,7 +628,7 @@ class GamePlay {
 
     partner() {
         const possiblePartners = Deck.possiblePartners(this.currentPlayer.hand);
-        if (possiblePartners.includes(this.board.partnerCard)) {
+        if (possiblePartners.some(p => p.value === this.board.partnerCard.value)) {
             this.board.partnerCard = this.board.partnerCard.value;
         } else {
             this.board.partnerCard = "XIX";

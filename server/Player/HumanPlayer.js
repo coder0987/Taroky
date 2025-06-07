@@ -24,8 +24,8 @@ class HumanPlayer extends Player {
 
     twelves() {
         let tempChoiceArray = {};
-        for (let i in room.board.hands) {
-            if (typeof room.board.hands[i] == 'undefined' || !room.board.hands[i]) {
+        for (let i in this.room.board.hands) {
+            if (typeof this.room.board.hands[i] == 'undefined' || !this.room.board.hands[i]) {
                 delete tempChoiceArray[i];
             } else {
                 tempChoiceArray[i] = +i + 1;

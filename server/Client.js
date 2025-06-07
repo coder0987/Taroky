@@ -831,6 +831,10 @@ class Client {
         return this.#username;
     }
 
+    get avatar() {
+        return this.#userInfo.avatar;
+    }
+
     get token() {
         return this.#token;
     }
