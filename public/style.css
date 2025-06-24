@@ -1131,6 +1131,10 @@ div.hand.twelve-cards img {
   margin: 0;
 }
 
+.d-flex-reg {
+  display: flex; /* Used because it does not have !important */
+}
+
 /* Donate Page */
 .link-card {
   border-radius: 0.5rem;

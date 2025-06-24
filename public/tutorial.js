@@ -39,6 +39,7 @@ let speechText = document.getElementById('speechText');
 let nextBtn    = document.getElementById('nextBtn');
 let overlay    = document.getElementById('trainerOverlay');
 let board      = document.getElementById('training-room');
+let trainerImg = document.getElementById('trainer-img');
 
 function typeText(text, speed = 30) {
   let index = 0;
@@ -111,6 +112,7 @@ window.addEventListener("load", () => {
   nextBtn    = document.getElementById('nextBtn');
   overlay    = document.getElementById('trainerOverlay');
   board      = document.getElementById('training-room');
+  trainerImg = document.getElementById('trainer-img');
 
   overlay.addEventListener("click", () => {
     if (isTyping) {
@@ -130,7 +132,7 @@ window.addEventListener("load", () => {
     });
   }
 
-  typeText(texts[currentTextIndex]);
+  typeText(scenes[0].text);
 });
 
 document.addEventListener("keydown", (e) => {
