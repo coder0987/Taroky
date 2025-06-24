@@ -621,6 +621,18 @@ div.hand.thirteen-cards img {
   margin-bottom: -70px;
 }
 
+div.hand img:hover:not(.grayed) {
+  -webkit-transition: all 0.5s;
+  transition: all 0.5s;
+  border: 1px solid gray;
+  filter: brightness(130%);
+  -webkit-filter: brightness(130%);
+  -moz-filter: brightness(130%);
+  -o-filter: brightness(130%);
+  -ms-filter: brightness(110%);
+  transition: all 0.5s;
+}
+
 .thirteen-cards {
   padding-right: 4%;
   padding-bottom: 70px;
