@@ -292,7 +292,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "He lead a low trump - that's your queue! Play the XIX to let everyone know who your partner is",
+    text: "He lead a low trump - that's your cue! Play the XIX to let everyone know who your partner is",
     board: true,
     layout: () => {
       putCardOnTable(4, TRUMP, 'VII');
