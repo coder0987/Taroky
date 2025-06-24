@@ -43,6 +43,9 @@ const scenes = [
         // Ooh two layers of functional javascript. I'm sure this isn't confusing at all
 
         // Move the three of diamonds to the table, clear the grayed-out cards, and trigger the next dialog
+
+
+        nextDialogue();
       });
 
       document.getElementById('reminder-text').innerHTML = "Click the three of diamonds to play it";
