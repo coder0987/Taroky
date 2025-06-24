@@ -340,7 +340,6 @@ function drawTable(shouldHide) {
         child.removeEventListener("mouseleave", exit);
         child.removeEventListener("click", clickCard);
         child.title = "";
-        child.classList.remove("image-hover-highlight");
         child.hidden = true;
         divDeck.appendChild(child);
       } else {
@@ -609,14 +608,12 @@ function numTrumpInHand() {
 //TODO: These functions include game logic using UI components. While this works, I'd rather separate out the game logic from the UI components and then update the UI afterwards.
 function enter() {
   if (!this.classList.contains("grayed")) {
-    this.classList.add("image-hover-highlight");
     this.title = "Click to choose";
   } else {
     this.title = "You cannot choose this card.";
   }
 }
 function exit() {
-  this.classList.remove("image-hover-highlight");
   this.title = "";
 }
 function clickCard() {
@@ -627,7 +624,6 @@ function clickCard() {
     this.removeEventListener("click", clickCard);
     this.removeEventListener("click", discardClickListener);
     this.title = "";
-    this.classList.remove("image-hover-highlight");
     this.hidden = true;
   }
 }
@@ -682,7 +678,6 @@ function drawHand(withGray) {
       child.removeEventListener("click", clickCard);
       child.removeEventListener("click", discardClickListener);
       child.title = "";
-      child.classList.remove("image-hover-highlight");
       child.classList.remove("selected");
       child.classList.remove("grayed");
     }
@@ -726,7 +721,6 @@ function drawHand(withGray) {
       card.classList.remove("grayed");
       card.classList.remove("selected");
       card.title = "";
-      card.classList.remove("image-hover-highlight");
     }
     if (
       drawnCards.some((theCard) => {
@@ -769,7 +763,6 @@ function moveCardsToDiv(theCards, toDiv, cardClickListener) {
     card.classList.remove("grayed");
     card.classList.remove("selected");
     card.title = "";
-    card.classList.remove("image-hover-highlight");
     if (cardClickListener) {
       card.addEventListener("click", cardClickListener);
     }
@@ -1028,7 +1021,6 @@ function emptyHand() {
     child.removeEventListener("mouseleave", exit);
     child.removeEventListener("click", clickCard);
     child.title = "";
-    child.classList.remove("image-hover-highlight");
     child.hidden = true;
     divDeck.appendChild(child);
   }
@@ -2710,7 +2702,6 @@ function confirmButtonCallback() {
       selectedCards[i].removeEventListener("click", clickCard);
       selectedCards[i].removeEventListener("click", discardClickListener);
       selectedCards[i].title = "";
-      selectedCards[i].classList.remove("image-hover-highlight");
       selectedCards[i].hidden = true;
       numCardsSelected--;
     }
