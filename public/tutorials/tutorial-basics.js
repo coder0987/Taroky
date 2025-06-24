@@ -214,4 +214,54 @@ const scenes = [
       document.getElementById('reminder-text').innerHTML = "Click the jack of clubs to play it";
     }
   },
+  {
+    trainer: true,
+    text: "Great job! Jacks are worth 2 points, while most cards are worth only 1",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "Kings are worth 5, queens 4, and riders are worth 3",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "Trumps are all worth 1 - except for the Trul. The Skyz, the XXI (mond), and the I (pagat). These are worth 5 each.",
+    board: true,
+    layout: () => {
+      clearTable(4);
+      putCardOnTable(4, TRUMP, 'Skyz');
+      grayHand();
+      unGraySuit(TRUMP);
+      setCurrentPlayer(1);
+    }
+  },
+  {
+    trainer: true,
+    text: "Povinnost lead the Skyz! That's the biggest trump in the game. It always wins the trick",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "You should play the Pagat (the I), since it's worth 5 points, to get it home safely to your partner",
+    board: false
+  },
+  {
+    trainer: false,
+    board: true,
+    layout: () => {
+      document.getElementById('ITrump').addEventListener('click', () => {
+
+        ungrayHand();
+
+        putCardOnTable(1, TRUMP, 'I');
+
+        setCurrentPlayer(2);
+
+        nextDialogue();
+      });
+
+      document.getElementById('reminder-text').innerHTML = "Click the Pagat (the I) to play it";
+    }
+  },
 ]
