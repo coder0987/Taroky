@@ -55,6 +55,8 @@ const scenes = [
 
         putCardOnTable(1, DIAMONDS, 'Three');
 
+        setCurrentPlayer(2);
+
         nextDialogue();
       });
 
@@ -70,12 +72,20 @@ const scenes = [
     trainer: true,
     flip: true,
     text: "Notice the game is played turn-by-turn. Each player makes a move, then lets the next player go.",
-    board: false
+    board: true,
+    layout: () => {
+      putCardOnTable(2, DIAMONDS, 'Ace');
+      setCurrentPlayer(3);
+    }
   },
   {
     trainer: true,
     text: "Also, notice that you could only play the three of diamonds. That's because, in Taroky, you always have to follow suit - if you can.",
-    board: false
+    board: true,
+    layout: () => {
+      putCardOnTable(3, DIAMONDS, 'Queen');
+      setCurrentPlayer(4);
+    }
   },
   {
     trainer: true,
@@ -83,13 +93,53 @@ const scenes = [
     text: "It looks like it's your turn again! This time, Povinnost lead a spade.",
     board: true,
     layout: () => {
+      clearTable(4);
+      putCardOnTable(4, SPADES, 'Seven');
+      setCurrentPlayer(1);
+
       grayHand();
 
+      let toPlay = document.getElementById('KingSpade');
+      toPlay.classList.remove('grayed');
+      toPlay.style.filter = 'grayscale(0)';
 
+      toPlay.addEventListener('click', () => {
+        ungrayHand();
+
+        putCardOnTable(1, SPADES, 'King');
+
+        setCurrentPlayer(2);
+
+        nextDialogue();
+      });
+    }
+  },
+  {
+    trainer: false,
+    board: true,
+    layout: () => {
       document.getElementById('reminder-text').innerHTML = "Click the king of spades to play it";
     }
   },
+  {
+    trainer: true,
+    text: "Good move! You may even win this trick.",
+    board: false
+  },
+  {
+    trainer: true,
+    flip: true,
+    text: "The king is the highest value in each suit. If no trumps are played, the highest value of the lead suit wins.",
+    board: false
+  },
 ]
+
+function setCurrentPlayer(player) {
+  document.getElementById('currentPlayer').innerHTML = player === 1 ? 'Your Move' : `Player ${player}'s Move`;
+  for (let i=1; i<=4; i++) {
+    document.getElementById('roundInfo' + i).classList.toggle('active-player', player === i);
+  }
+}
 
 function putCardOnTable(slot, suit, value) {
   const id = value + suit;
@@ -109,6 +159,11 @@ function putCardOnTable(slot, suit, value) {
 
   const place = document.getElementById(`p${slot}`);
   place.appendChild(card);
+}
+
+function clearTable(leader) {
+  document.getElementById('table').innerHTML = '<div id="p1" class="col-3"><span id="p1leader" class="no-margin-below"><br></span></div><div id="p2" class="col-3"><span id="p2leader" class="no-margin-below"><br></span></div><div id="p3" class="col-3"><span id="p3leader" class="no-margin-below"><br></span></div><div id="p4" class="col-3"><span id="p4leader" class="no-margin-below"><br></span></div>';
+  document.getElementById(`p${leader}leader`).innerHTML = 'Leader<br>';
 }
 
 function grayHand() {
