@@ -609,10 +609,15 @@ div.hand.thirteen-cards img {
   margin-bottom: -70px;
 }
 
+div.hand img{
+  border-radius: 16px;
+}
+
 div.hand img:hover:not(.grayed) {
   -webkit-transition: all 0.5s;
   transition: all 0.5s;
   border: 1px solid gray;
+  border-radius: 16px;
   filter: brightness(130%);
   -webkit-filter: brightness(130%);
   -moz-filter: brightness(130%);
