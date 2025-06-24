@@ -264,4 +264,90 @@ const scenes = [
       document.getElementById('reminder-text').innerHTML = "Click the Pagat (the I) to play it";
     }
   },
+  {
+    trainer: true,
+    text: "Nice! That's 10 guaranteed points home. There are 106 points total, so each team is battling to get more than 53 to win",
+    board: true,
+    layout: () => {
+      putCardOnTable(2, TRUMP, 'V');
+      setCurrentPlayer(3);
+    }
+  },
+  {
+    trainer: true,
+    text: "Since Povinnost lead a trump, everyone must play a trump if they have one",
+    board: true,
+    layout: () => {
+      putCardOnTable(3, TRUMP, 'VI');
+      setCurrentPlayer(4);
+    }
+  },
+  {
+    trainer: true,
+    text: "Povinnost won that trick, what will he play next?",
+    board: true,
+    layout: () => {
+      clearTable(4);
+    }
+  },
+  {
+    trainer: true,
+    text: "He lead a low trump - that's your queue! Play the XIX to let everyone know who your partner is",
+    board: true,
+    layout: () => {
+      putCardOnTable(4, TRUMP, 'VII');
+      setCurrentPlayer(1);
+      grayHand();
+      unGraySuit(TRUMP);
+    }
+  },
+  {
+    trainer: false,
+    board: true,
+    layout: () => {
+      document.getElementById('XIXTrump').addEventListener('click', () => {
+
+        ungrayHand();
+
+        putCardOnTable(1, TRUMP, 'XIX');
+
+        setCurrentPlayer(2);
+
+        nextDialogue();
+      });
+
+      document.getElementById('reminder-text').innerHTML = "Click the XIX to play it";
+    }
+  },
+  {
+    trainer: true,
+    text: "Who each player is partners with is initially secret - but now everyone knows!",
+    board: true,
+    layout: () => {
+      putCardOnTable(2, TRUMP, 'VIII');
+      setCurrentPlayer(3);
+    }
+  },
+  {
+    trainer: true,
+    text: "It looks like player 3 is taking the trick with the Mond (the XXI); that's the second-highest trump",
+    board: true,
+    layout: () => {
+      putCardOnTable(3, TRUMP, 'XXI');
+      setCurrentPlayer(3);
+    }
+  },
+  {
+    trainer: true,
+    text: "Grandpa's back with his pepsi! Time to return the reigns",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "Want to learn more? Head back to the learn page, or try out a game against bots to get a feel for it",
+    board: true,
+    layout: () => {
+      board.innerHTML = '<a href="/learn.html" class="small-link">Learn</a><br><a href="/" class="small-link">Play</a>';
+    }
+  },
 ]
