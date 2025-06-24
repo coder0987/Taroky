@@ -126,4 +126,92 @@ const scenes = [
     text: "The king is the highest value in each suit. If no trumps are played, the highest value of the lead suit wins.",
     board: false,
   },
-];
+  {
+    trainer: true,
+    flip: true,
+    text: "Uh oh! It looks like player 2 trumped your king!",
+    board: true,
+    layout: () => {
+      putCardOnTable(2, TRUMP, 'III');
+      setCurrentPlayer(3);
+    }
+  },
+  {
+    trainer: true,
+    flip: true,
+    text: "When a trump is played, it always wins the trick, unless an even higher trump beats it",
+    board: true,
+    layout: () => {
+      putCardOnTable(3, SPADES, 'Eight');
+      setCurrentPlayer(4);
+    }
+  },
+  {
+    trainer: true,
+    text: "You can't play a trump unless you're 'void' in the lead suit - you don't have any left at all",
+    board: true,
+    layout: () => {
+      clearTable(2)
+      setCurrentPlayer(2);
+    }
+  },
+  {
+    trainer: true,
+    text: "Since player 2 won the trick, he'll lead the next one. The winner always leads",
+    board: true,
+    layout: () => {
+      putCardOnTable(2, CLUBS, 'King');
+      setCurrentPlayer(3);
+    }
+  },
+  {
+    trainer: true,
+    flip: true,
+    text: "Player 2 lead the king of clubs, and player 3 is forced to follow suit",
+    board: true,
+    layout: () => {
+      putCardOnTable(3, CLUBS, 'Queen');
+      setCurrentPlayer(4);
+    }
+  },
+  {
+    trainer: true,
+    text: "Player 4, however, is void in clubs and plays a trump. That's your partner!",
+    board: true,
+    layout: () => {
+      putCardOnTable(4, TRUMP, 'IIII');
+      grayHand();
+      unGraySuit(CLUBS);
+      setCurrentPlayer(1);
+    }
+  },
+  {
+    trainer: true,
+    flip: true,
+    text: "In Taroky, games usually are played in teams of 2. In this game, Povinnost is partnered with the XIX - which you have",
+    board: false,
+  },
+  {
+    trainer: true,
+    text: "That means you will combine your points at the end of the game for your total score! Since your partner is in the lead, you want to play your card with the highest point value",
+    board: false
+  },
+  {
+    trainer: false,
+    board: true,
+    layout: () => {
+      document.getElementById('JackClub').addEventListener('click', () => {
+
+        ungrayHand();
+
+        putCardOnTable(1, CLUBS, 'Jack');
+
+        setCurrentPlayer(4);
+
+        nextDialogue();
+      });
+
+      document.getElementById('reminder-text').innerHTML = "Click the jack of clubs to play it";
+    }
+  },
+]
