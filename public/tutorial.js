@@ -44,6 +44,7 @@ const scenes = [
 
         // Move the three of diamonds to the table, clear the grayed-out cards, and trigger the next dialog
 
+        ungrayHand();
 
         nextDialogue();
       });
@@ -73,10 +74,35 @@ const scenes = [
     text: "It looks like it's your turn again! This time, Povinnost lead a spade.",
     board: true,
     layout: () => {
+      grayHand();
+
+
       document.getElementById('reminder-text').innerHTML = "Click the king of spades to play it";
     }
   },
 ]
+
+function grayHand() {
+  let hand = document.getElementById('hand');
+
+  let cards = hand.children;
+
+  for (let i = 0; i < hand.childElementCount; i++) {
+    cards[i].classList.add('grayed');
+    cards[i].style.filter = 'grayscale(1)';
+  }
+}
+
+function ungrayHand() {
+  let hand = document.getElementById('hand');
+
+  let cards = hand.children;
+
+  for (let i = 0; i < hand.childElementCount; i++) {
+    cards[i].classList.remove('grayed');
+    cards[i].style.filter = 'grayscale(0)';
+  }
+}
 
 let currentTextIndex = 0;
 let typingInterval;
