@@ -624,6 +624,7 @@ div.hand img:hover:not(.grayed) {
   -o-filter: brightness(130%);
   -ms-filter: brightness(110%);
   transition: all 0.5s;
+  z-index: 99;
 }
 
 .thirteen-cards {
