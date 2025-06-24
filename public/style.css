@@ -1103,8 +1103,14 @@ div.hand.twelve-cards img {
   object-fit: contain;
   position: absolute;
   right: 1rem;
-  bottom: 1rem;
+  top: calc(1rem + 50%); /* Moved down 50% from original position */
   z-index: 1;
+  transition: transform 0.3s ease; /* Smooth rotation animation */
+  cursor: pointer; /* Indicates it's clickable */
+}
+
+.trainer-img.flipped {
+  transform: rotate(180deg);
 }
 
 .speech-box {
@@ -1124,7 +1130,6 @@ div.hand.twelve-cards img {
   white-space: pre-wrap;
   margin: 0;
 }
-
 
 /* Donate Page */
 .link-card {
