@@ -32,7 +32,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "It looks like player 4 is povinnost (They're in the lead). Try following suit by playing a diamond.",
+    text: "It looks like player 4 is povinnost (They lead the first trick). Try following suit by playing a diamond.",
     board: false
   },
   {
