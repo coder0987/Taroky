@@ -12,30 +12,75 @@
 </head>
 <body style="padding: 0px;">
     <div w3-include-html="/nav.html"></div>
+    <br>
     <div class="container navy-txt" id="donation">
-        <h1>Donate</h1>
+        <div class="row">
+            <div class="col">
+                <h1>Donate</h1>
+            </div>
+        </div>
 
+        <div class="row justify-content-center my-4">
+            <div class="col-md-6 col-lg-4 link-card">
+                <a href="https://PayPal.Me/MachTarok" class="text-decoration-none">
+                <div class="card shadow-sm hover-shadow border-0">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <img src="/assets/external/paypal.svg" alt="PayPal Logo" height="40" class="img-fluid">
+                    <span class="fs-5 fw-semibold text-dark">MachTarok on PayPal</span>
+                    </div>
+                </div>
+                </a>
+            </div>
+        </div>
 
-        <h2>Addresses</h2>
-        <ul id="donationList"></ul>
+        <div class="row justify-content-center my-4">
+            <div class="col-md-6 col-lg-4 link-card">
+                <a href="https://cash.app/$MachTarok" class="text-decoration-none">
+                <div class="card shadow-sm hover-shadow border-0">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <img src="/assets/external/cashapp.svg" alt="CashApp Logo" height="40" class="img-fluid">
+                    <span class="fs-5 fw-semibold text-dark">MachTarok on Cash App</span>
+                    </div>
+                </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center my-4">
+            <div class="col-md-6 col-lg-4 link-card">
+                <div onclick="copy('bc1qjqfv40dswdl0lssp45tmuwa5ts8p03dfx45nxl')" class="card shadow-sm hover-shadow border-0">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <img src="/assets/external/bitcoin.svg" alt="Bitcoin Logo" height="40" class="img-fluid">
+                    <span class="fs-5 fw-semibold text-dark">MachTarok on Bitcoin</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row justify-content-center my-4">
+            <div class="col-md-6 col-lg-4 link-card">
+                <div onclick="copy('0x5f2CfF4a4850Bd209e721b0C26fcF63F0EB79c6a')" class="card shadow-sm hover-shadow border-0">
+                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                    <img src="/assets/external/ethereum.svg" alt="Ethereum Logo" height="40" class="img-fluid">
+                    <span class="fs-5 fw-semibold text-dark">MachTarok on EVM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <script>
             function notifyCopied(element) {
-                // Add the flash class to the clicked element
-                element.classList.add('flash');
-
                 // Create a notification element
-                var notification = document.createElement('div');
+                const notification = document.createElement('div');
                 notification.innerText = 'Address Copied!';
                 notification.classList.add('notification');
 
                 // Append the notification element to the body
-                var donation = document.getElementById("donation");
+                const donation = document.getElementById("donation");
                 donation.appendChild(notification);
 
                 // Remove the flash class and notification element after a delay
                 setTimeout(function () {
-                    element.classList.remove('flash');
                     notification.classList.add('fade-out');
 
                     // Remove the notification element after the fade-out transition completes
@@ -46,37 +91,14 @@
             }
 
             function copy(that) {
-                var inp = document.createElement('input');
+                const inp = document.createElement('input');
                 document.body.appendChild(inp)
-                inp.value = that.textContent
+                inp.value = that;
                 inp.select();
                 document.execCommand('copy', false); //works on PC may need to change this line to support mobile
                 inp.remove();
                 notifyCopied(that);
             }
-
-            function addDonation(name, address) {
-
-                var listItem = document.createElement("li");
-
-                var nameLabel = document.createElement("span");
-                nameLabel.textContent = name + ": ";
-                var addressLabel = document.createElement("span");
-                addressLabel.textContent = address;
-                addressLabel.setAttribute("onclick", "copy(this)");
-
-                listItem.appendChild(nameLabel);
-                listItem.appendChild(addressLabel);
-
-                var donationList = document.getElementById("donationList");
-                donationList.appendChild(listItem);
-            }
-
-            // Manually Enter Donation Addresses
-            addDonation("Bitcoin", "bc1qjqfv40dswdl0lssp45tmuwa5ts8p03dfx45nxl");
-            addDonation("All EVM Chains", "0x5f2CfF4a4850Bd209e721b0C26fcF63F0EB79c6a");
-            addDonation("PayPal", "PayPal.Me/MachTarok");
-            addDonation("CashApp", "cash.app/$MachTarok");
 
         </script>
     </div>

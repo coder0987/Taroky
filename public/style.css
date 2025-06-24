@@ -1047,3 +1047,17 @@ div.hand.twelve-cards img {
 .hidden {
     display: none !important;
 }
+
+/* Donate Page */
+.link-card {
+    cursor: pointer;
+}
+
+.link-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.img-fluid {
+    height: 40px;
+}
