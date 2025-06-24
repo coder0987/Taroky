@@ -653,8 +653,10 @@ div.hand.twelve-cards img {
 #chat-and-hand {
   height: 40%;
 }
+
 #chat-box-container {
   height: 100%;
+  padding-right: 16px;
 }
 
 #chatbox {
