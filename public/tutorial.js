@@ -25,10 +25,27 @@ const scenes = [
     board: false
   },
   {
+    trainer: true,
+    flip: true,
+    text: "Grandpa needs your help! He's off to refill his pepsi, and he needs someone to take his place.",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "It looks like player 4 is povinnost (They're in the lead). Try following suit by playing a diamond.",
+    board: false
+  },
+  {
     trainer: false,
     board: true,
     layout: () => {
+      document.getElementById('ThreeDiamond').addEventListener('click', () => {
+        // Ooh two layers of functional javascript. I'm sure this isn't confusing at all
 
+        // Move the three of diamonds to the table, clear the grayed-out cards, and trigger the next dialog
+      });
+
+      document.getElementById('reminder-text').innerHTML = "Click the three of diamonds to play it";
     }
   },
 ]
@@ -71,6 +88,10 @@ function skipTyping() {
 function nextDialogue() {
   currentTextIndex++;
   if (currentTextIndex < scenes.length) {
+
+    if (scenes[currentTextIndex].flip) {
+      rotateSkyz();
+    }
 
     if (scenes[currentTextIndex].trainer) {
       overlay.removeAttribute('hidden');
