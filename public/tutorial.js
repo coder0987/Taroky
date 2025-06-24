@@ -61,7 +61,7 @@ function typeText(text, speed = 30) {
 
 function skipTyping() {
   clearInterval(typingInterval);
-  speechText.innerHTML = texts[currentTextIndex];
+  speechText.innerHTML = scenes[currentTextIndex].text;
   isTyping = false;
   nextBtn.style.display = "inline-block";
 }
