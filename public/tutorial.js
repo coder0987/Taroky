@@ -27,7 +27,9 @@ const scenes = [
   {
     trainer: false,
     board: true,
-    layout: ""
+    layout: () => {
+
+    }
   },
 ]
 
@@ -79,8 +81,7 @@ function nextDialogue() {
 
     if (scenes[currentTextIndex].board) {
       // Do something
-      
-      board.innerHTML = scenes[currentTextIndex].layout;
+      scenes[currentTextIndex].layout();
     }
 
   } else {
