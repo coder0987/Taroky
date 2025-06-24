@@ -370,16 +370,15 @@ function drawTable(shouldHide) {
         let card = document.getElementById(
           table[i].card.value + table[i].card.suit
         );
-        document.getElementById("p" + (+table[i].pn + 1)).appendChild(card);
-        document.getElementById("p" + (+table[i].pn + 1)).firstChild.innerHTML =
-          "<br>";
-        document
-          .getElementById("p" + (+table[i].pn + 1))
-          .firstChild.removeAttribute("hidden");
+        console.log(JSON.stringify(table))
+        console.log(i);
+        console.log(JSON.stringify(table[i]));
+        const playerSlot = document.getElementById("p" + (+table[i].pn + 1));
+        playerSlot.appendChild(card);
+        playerSlot.firstChild.innerHTML = '<br>';
+        playerSlot.firstChild.removeAttribute("hidden");
         if (table[i].lead) {
-          document.getElementById(
-            "p" + (+table[i].pn + 1)
-          ).firstChild.innerHTML = "Leader<br>";
+          playerSlot.firstChild.innerHTML = "Leader<br>";
         }
         card.removeAttribute("hidden");
       }
