@@ -83,7 +83,35 @@
       <!--
         This is the background content. The overlay will overshadow it. It should contain game visuals, like the cards and game board
       -->
-    </div>
+        <div id="actionInfo" class="row actionInfo">
+            <div class="col-4 no-padding">
+                <div id="currentAction">Play a Card</div>
+            </div>
+            <div class="col-4 no-padding">
+                <div id="currentPlayer" class="your-move">Your Move</div>
+            </div>
+        </div>
+        <div id="table" class="row table-container auto-shrink">
+            <div id="p1" class="col-3"><span id="p1leader" class="no-margin-below"><br></span></div>
+            <div id="p2" class="col-3"><span id="p2leader" class="no-margin-below"><br></span></div>
+            <div id="p3" class="col-3"><span id="p3leader" class="no-margin-below"><br></span></div>
+            <div id="p4" class="col-3"><span id="p4leader" class="no-margin-below">Leader<br></span></div>
+        </div>
+        <div id="roundInfo" class="row roundInfo">
+            <div class="col-md col-6 active-player" id="roundInfo1"><p class="no-margin-below bold">Player 1 (You) - 100</p><img src="/assets/profile-pictures/profile-1.png" class="avatar no-margin-below" id="playerAvatar1"></div>
+            <div class="col-md col-6" id="roundInfo2"><p class="no-margin-below bold">Player 2 - 100</p><img src="/assets/profile-pictures/profile-34.png" class="avatar no-margin-below" id="playerAvatar2"></div>
+            <div class="col-md col-6" id="roundInfo3"><p class="no-margin-below bold">Player 3 - 100</p><img src="/assets/profile-pictures/profile-23.png" class="avatar no-margin-below" id="playerAvatar3"></div>
+            <div class="col-md col-6" id="roundInfo4"><p class="no-margin-below bold">Player 4 - 100</p><img src="/assets/profile-pictures/profile-21.png" class="avatar no-margin-below" id="playerAvatar4"><p class="no-margin-below">Povinnost</p><p class="no-margin-below">Playing with the XIX</p></div>
+            <div class="col-12" id="genericRoundInfo"></div>
+        </div>
+        <div id="center"><br></div>
+        <hr>
+
+        <div class="row">
+          <div id="hand" class="hand col-12 d-md-block twelve-cards">
+            <img id="ThreeHeart" alt="Three of Heart" src="/assets/mach-deck-thumb/heart-three-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="EightClub" alt="Eight of Club" src="/assets/mach-deck-thumb/club-eight-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="JackClub" alt="Jack of Club" src="/assets/mach-deck-thumb/club-jack-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="ThreeDiamond" alt="Three of Diamond" src="/assets/mach-deck-thumb/diamond-three-t.png" class="col-md-1 col-xs-3" title="" style="filter: grayscale(0);"><img id="ITrump" alt="I of Trump" src="/assets/mach-deck-thumb/trump-i-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="IITrump" alt="II of Trump" src="/assets/mach-deck-thumb/trump-ii-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="VIITrump" alt="VII of Trump" src="/assets/mach-deck-thumb/trump-vii-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="VIIITrump" alt="VIII of Trump" src="/assets/mach-deck-thumb/trump-viii-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="IXTrump" alt="IX of Trump" src="/assets/mach-deck-thumb/trump-ix-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="XTrump" alt="X of Trump" src="/assets/mach-deck-thumb/trump-x-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"><img id="XXTrump" alt="XX of Trump" src="/assets/mach-deck-thumb/trump-xx-t.png" class="col-md-1 col-xs-3 grayed" title="" style="filter: grayscale(1);"></div>
+        </div>
+      </div>
 
     <div id="trainerOverlay" class="trainer-overlay align-items-end d-flex-reg">
         <img src="/assets/mach-deck-web/skyz.png" alt="Skyz" id="trainer-img" class="trainer-img d-none d-md-block" />
