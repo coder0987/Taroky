@@ -1,10 +1,35 @@
-const texts = [
-  "So you want to play Taroky?",
-  "At first glance, this game has a lot of rules",
-  "Luckily, most of them are pretty intuitive",
-  "Learning Taroky takes maybe half an hour",
-  "Mastering Taroky takes maybe half a lifetime"
-];
+const scenes = [
+  {
+    trainer: true,
+    text: "So you want to play Taroky?",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "At first glance, this game has a lot of rules.",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "Luckily, most of them are pretty intuitive.",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "Learning Taroky takes maybe half an hour.",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "Mastering Taroky takes maybe half a lifetime.",
+    board: false
+  },
+  {
+    trainer: false,
+    board: true,
+    layout: ""
+  },
+]
 
 let currentTextIndex = 0;
 let typingInterval;
@@ -13,6 +38,7 @@ let isTyping = false;
 let speechText = document.getElementById('speechText');
 let nextBtn    = document.getElementById('nextBtn');
 let overlay    = document.getElementById('trainerOverlay');
+let board      = document.getElementById('training-room');
 
 function typeText(text, speed = 30) {
   let index = 0;
@@ -41,8 +67,21 @@ function skipTyping() {
 
 function nextDialogue() {
   currentTextIndex++;
-  if (currentTextIndex < texts.length) {
-    typeText(texts[currentTextIndex]);
+  if (currentTextIndex < scenes.length) {
+
+    if (scenes[currentTextIndex].trainer) {
+      overlay.removeAttribute('hidden');
+      typeText(scenes[currentTextIndex].text);
+    } else {
+      overlay.setAttribute('hidden','hidden');
+    }
+
+    if (scenes[currentTextIndex].board) {
+      board.innerHTML = scenes[currentTextIndex].layout;
+    } else {
+      board.innerHTML = '';
+    }
+
   } else {
     overlay.style.display = 'none'; // hide overlay
   }
@@ -68,6 +107,7 @@ window.addEventListener('load', () => {
   speechText = document.getElementById('speechText');
   nextBtn    = document.getElementById('nextBtn');
   overlay    = document.getElementById('trainerOverlay');
+  board      = document.getElementById('training-room');
 
   overlay.addEventListener('click', () => {
     if (isTyping) {
@@ -80,5 +120,5 @@ window.addEventListener('load', () => {
     nextDialogue();
   });
 
-  typeText(texts[currentTextIndex]);
+  typeText(scenes[0].text);
 })
