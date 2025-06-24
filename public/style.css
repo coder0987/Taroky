@@ -86,6 +86,7 @@ body:fullscreen {
 
 .grayed {
   background-color: rgba(150, 150, 150, 0.2);
+  filter: grayscale(1);
 }
 
 .image-hover-highlight {
