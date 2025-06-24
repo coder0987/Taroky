@@ -66,8 +66,6 @@ const SUIT_SORT_ORDER = {
     Spade: 0, Club: 2, Heart: 1, Diamond: 3, Trump: 4
 }
 const START_TIME = Date.now();
-const SHOW_TOUR = true;
-let inTour = false;
 let cardBackLoaded = false;
 let ticker;
 let players;
@@ -802,7 +800,6 @@ function showAllCards() {
 }//Debug function
 
 function startActionTimer() {
-    if (inTour) {return;}
     if (!currentAction || currentAction == 'start' || !document.getElementById('host').hidden || isNaN(currentAction.time) || !currentAction.time || !theSettings || isNaN(theSettings.timeout) || theSettings.timeout <= 0) {
         stopActionTimer();
         return;
@@ -994,9 +991,6 @@ window.addEventListener('message', (event) => {
     if (event.origin !== 'https://sso.smach.us' && event.origin !== 'https://sso.samts.us') {console.log(event.origin); return;}
     if (event.data != 'signOut') {
         let [username,token,signUp] = event.data.split(':');
-        if (signUp == 'new') {
-            startTour();
-        }
         addMessage('Attempting to sign in as ' + username +'...');
         socket.emit('login',username,token);
         document.cookie = 'username=' + username + ';secure';
