@@ -1,16 +1,18 @@
 const texts = [
-  "Welcome to the world of MachTarok!",
-  "Here, you’ll learn to play the ancient card game of strategy and wit.",
-  "Let me show you how it works."
+  "So you want to play Taroky?",
+  "At first glance, this game has a lot of rules",
+  "Luckily, most of them are pretty intuitive",
+  "Learning Taroky takes maybe half an hour",
+  "Mastering Taroky takes maybe half a lifetime"
 ];
 
 let currentTextIndex = 0;
 let typingInterval;
 let isTyping = false;
 
-const speechText = document.getElementById('speechText');
-const nextBtn = document.getElementById('nextBtn');
-const overlay = document.getElementById('trainerOverlay');
+let speechText = document.getElementById('speechText');
+let nextBtn    = document.getElementById('nextBtn');
+let overlay    = document.getElementById('trainerOverlay');
 
 function typeText(text, speed = 30) {
   let index = 0;
@@ -46,15 +48,8 @@ function nextDialogue() {
   }
 }
 
-// Initial call
-typeText(texts[currentTextIndex]);
-
 // Event listeners
-overlay.addEventListener('click', () => {
-  if (isTyping) {
-    skipTyping();
-  }
-});
+
 
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
@@ -65,7 +60,25 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-nextBtn.addEventListener('click', (e) => {
-  e.stopPropagation(); // prevent overlay click
-  nextDialogue();
-});
+
+
+window.addEventListener('load', () => {
+  console.log('Let\'s begin!')
+
+  speechText = document.getElementById('speechText');
+  nextBtn    = document.getElementById('nextBtn');
+  overlay    = document.getElementById('trainerOverlay');
+
+  overlay.addEventListener('click', () => {
+    if (isTyping) {
+      skipTyping();
+    }
+  });
+  
+  nextBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // prevent overlay click
+    nextDialogue();
+  });
+
+  typeText(texts[currentTextIndex]);
+})
