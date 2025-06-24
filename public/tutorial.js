@@ -1,3 +1,10 @@
+const DIAMONDS = 'Diamond';
+const HEARTS = 'Heart';
+const SPADES = 'Spade';
+const CLUBS = 'Club';
+const TRUMP = 'Trump';
+
+
 const scenes = [
   {
     trainer: true,
@@ -46,6 +53,8 @@ const scenes = [
 
         ungrayHand();
 
+        putCardOnTable(1, DIAMONDS, 'Three');
+
         nextDialogue();
       });
 
@@ -81,6 +90,26 @@ const scenes = [
     }
   },
 ]
+
+function putCardOnTable(slot, suit, value) {
+  const id = value + suit;
+  
+  let card = document.getElementById(id);
+
+  if (!card) {
+    card = document.createElement('img');
+    card.src = `/assets/mach-deck-thumb/${suit.toLowerCase()}-${value.toLowerCase()}-t.png`;
+    card.id = id;
+    card.alt = `${value} of ${suit}`;
+  }
+
+  card.classList.remove('col-md');
+  card.classList.remove('col-xs-3');
+  card.classList.add('table-card');
+
+  const place = document.getElementById(`p${slot}`);
+  place.appendChild(card);
+}
 
 function grayHand() {
   let hand = document.getElementById('hand');
