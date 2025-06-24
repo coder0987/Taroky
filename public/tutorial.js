@@ -78,9 +78,9 @@ function nextDialogue() {
     }
 
     if (scenes[currentTextIndex].board) {
+      // Do something
+      
       board.innerHTML = scenes[currentTextIndex].layout;
-    } else {
-      board.innerHTML = '';
     }
 
   } else {

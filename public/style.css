@@ -1135,6 +1135,11 @@ div.hand.twelve-cards img {
   display: flex; /* Used because it does not have !important */
 }
 
+.table-card {
+  width: 100px;
+  height: auto;
+}
+
 /* Donate Page */
 .link-card {
   border-radius: 0.5rem;
