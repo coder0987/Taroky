@@ -48,6 +48,31 @@ const scenes = [
       document.getElementById('reminder-text').innerHTML = "Click the three of diamonds to play it";
     }
   },
+  {
+    trainer: true,
+    text: "Nice one! Now, players 2 & 3 will also follow suit.",
+    board: false
+  },
+  {
+    trainer: true,
+    flip: true,
+    text: "Notice the game is played turn-by-turn. Each player makes a move, then lets the next player go.",
+    board: false
+  },
+  {
+    trainer: true,
+    text: "Also, notice that you could only play the three of diamonds. That's because, in Taroky, you always have to follow suit - if you can.",
+    board: false
+  },
+  {
+    trainer: true,
+    flip: true,
+    text: "It looks like it's your turn again! This time, Povinnost lead a spade.",
+    board: true,
+    layout: () => {
+      document.getElementById('reminder-text').innerHTML = "Click the king of spades to play it";
+    }
+  },
 ]
 
 let currentTextIndex = 0;
