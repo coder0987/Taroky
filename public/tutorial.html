@@ -2,10 +2,102 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tutorial | MachTarok</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Tutorial - Mach Tarok</title>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function includeHTML() {
+            var z, i, elmnt, file, xhttp;
+            /* Loop through a collection of all HTML elements: */
+            z = document.getElementsByTagName("*");
+            for (i = 0; i < z.length; i++) {
+              elmnt = z[i];
+              /*search for elements with a certain atrribute:*/
+              file = elmnt.getAttribute("w3-include-html");
+              if (file) {
+                /* Make an HTTP request using the attribute value as the file name: */
+                xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                  if (this.readyState == 4) {
+                    if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                    if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                    /* Remove the attribute, and call this function once more: */
+                    loaded();
+                    elmnt.removeAttribute("w3-include-html");
+                    includeHTML();
+                  }
+                }
+                xhttp.open("GET", file, true);
+                xhttp.send();
+                /* Exit the function: */
+                return;
+              }
+            }
+        }
+        function getCookie(cname) {
+          let name = cname + "=";
+          let decodedCookie = decodeURIComponent(document.cookie);
+          let ca = decodedCookie.split(';');
+          for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+              c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+              return c.substring(name.length, c.length);
+            }
+          }
+          return "";
+        }
+        window.onload = () => {
+            includeHTML();
+        }
+        function loaded() {
+            let username = getCookie('username');
+            let accHandler = document.getElementById('accountHandler');
+            if (username) {
+                accHandler.innerHTML = 'Sign Out (' + username + ')';
+                accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
+            } else {
+                accHandler.hidden = 'hidden';
+            }
+        }
+    </script>
+    <script src="/tutorial.js"></script>
+    <link rel="stylesheet" href="/style.css">
 </head>
-<body>
-    <h1>So You Want to Play Taorky?</h1>
+<body style="padding: 0px;">
+    <div w3-include-html="/nav.html"></div>
+
+    <br>
+
+    <div class="container navy-txt">
+        <h1>So You Want to Play Taroky?</h1>
+
+        <p>At first glance, this game has a lot of rules</p>
+        <p>Luckily, most of them are pretty intuitive</p>
+        <p>Learning Taroky takes maybe half an hour</p>
+        <p>Mastering Taroky takes maybe half a lifetime</p>
+
+        <button>Get Started</button>
+    </div>
+
+    <div id="trainerOverlay" class="trainer-overlay d-flex align-items-end">
+        <img src="/assets/mach-deck-web/skyz.png" alt="Skyz" class="trainer-img d-none d-md-block" />
+
+        <div class="speech-box w-100">
+            <p id="speechText" class="speech-text"></p>
+            <button id="nextBtn" class="btn btn-primary btn-sm mt-2" style="display: none;">Next</button>
+        </div>
+    </div>
+
 </body>
 </html>
