@@ -370,6 +370,7 @@ function drawTable(shouldHide) {
         let card = document.getElementById(
           table[i].card.value + table[i].card.suit
         );
+        card.classList.add("table-card");
         console.log(JSON.stringify(table))
         console.log(i);
         console.log(JSON.stringify(table[i]));
@@ -833,6 +834,7 @@ function displayNextAction(action) {
           document
             .getElementById("center")
             .appendChild(document.getElementById("cardBack"));
+          document.getElementById("cardBack").classList.add("table-card")
           document.getElementById("cardBack").hidden = false;
         } else {
           addMessage("The image has not loaded yet");
@@ -842,6 +844,7 @@ function displayNextAction(action) {
               document
                 .getElementById("center")
                 .appendChild(document.getElementById("cardBack"));
+              document.getElementById("cardBack").classList.add("table-card")
               document.getElementById("cardBack").hidden = false;
             });
         }
