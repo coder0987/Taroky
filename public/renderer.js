@@ -164,7 +164,6 @@ class NavBarRenderer {
         this._accountHandler = document.getElementById("accountHandler");
         this._profile = document.getElementById('profile-a');
         this._avatar = document.getElementById('profile-img');
-        this._tour = document.getElementById('tour');
         if (loaded) {
             $('body').addClass('loaded');
             this._navbar.classList.add("fixed-top");
@@ -204,12 +203,6 @@ class NavBarRenderer {
         }
         this._accountHandler.href = href;
         return this._accountHandler;
-    }
-    renderTour() {
-        this._tour = document.getElementById('tour');
-        if (SHOW_TOUR && this._tour) {
-            this._tour.removeAttribute('hidden');
-        }
     }
 
     get accountHandler() {
@@ -630,7 +623,6 @@ function includeHTML() {
                     /* Remove the attribute, and call this function once more: */
                     elmnt.removeAttribute("w3-include-html");
                     includeHTML();
-                    renderer.hud.nav.renderTour();
                 }
             }
             xhttp.open("GET", file, true);
