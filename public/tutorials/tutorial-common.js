@@ -58,6 +58,19 @@ function ungrayHand() {
   }
 }
 
+function unGraySuit(suit) {
+  let hand = document.getElementById('hand');
+
+  let cards = hand.children;
+
+  for (let i = 0; i < hand.childElementCount; i++) {
+    if (cards[i].id.includes(suit)) {
+      cards[i].classList.remove('grayed');
+      cards[i].style.filter = 'grayscale(0)';
+    }
+  }
+}
+
 let currentTextIndex = 0;
 let typingInterval;
 let isTyping = false;
