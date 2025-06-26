@@ -85,7 +85,6 @@ body:fullscreen {
 }
 
 .grayed {
-  background-color: rgba(150, 150, 150, 0.2);
   filter: grayscale(1);
 }
 
@@ -625,6 +624,7 @@ div.hand img:hover:not(.grayed) {
   -o-filter: brightness(130%);
   -ms-filter: brightness(110%);
   transition: all 0.5s;
+  position: relative;
   z-index: 99;
 }
 
@@ -654,8 +654,10 @@ div.hand.twelve-cards img {
 #chat-and-hand {
   height: 40%;
 }
+
 #chat-box-container {
   height: 100%;
+  padding-right: 16px;
 }
 
 #chatbox {
@@ -843,9 +845,9 @@ div.hand.twelve-cards img {
   .twelve-cards {
     padding-right: 0;
   }
-  .grayed {
+  /* .grayed {
     display: inline-flex;
-  }
+  } */
   .profile-link {
     margin-left: auto;
     margin-right: 0;
