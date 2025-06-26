@@ -611,6 +611,7 @@ div.hand.thirteen-cards img {
 
 div.hand img{
   border-radius: 16px;
+  z-index: 0;
 }
 
 div.hand img:hover:not(.grayed) {
@@ -1155,4 +1156,14 @@ div.hand.twelve-cards img {
 /* Donate Page */
 .link-card {
   border-radius: 0.5rem;
+}
+
+/* User preferences */
+
+.pfp-choice {
+  width: 100px;
+}
+
+.deck-choice {
+  width: 100px;
 }

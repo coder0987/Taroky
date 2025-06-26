@@ -40,7 +40,7 @@ async function load() {
         req.send();
         req.responseType = "json";
     } else {
-        location.replace('https://machtarok.com/');
+        //location.replace('https://machtarok.com/');
     }
 }
 
