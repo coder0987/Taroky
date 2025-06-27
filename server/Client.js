@@ -118,7 +118,6 @@ class Client {
     gatherGMInfo( obj ) {
         obj.playerCount = gm.numOnlinePlayers;
         obj.leaderboard = gm.challenge.leaderboard;
-        obj.retryLeaderboard = gm.challenge.retryLeaderboard;
     }
 
     gatherUserInfo( obj ) {

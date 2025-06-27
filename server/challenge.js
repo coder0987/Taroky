@@ -13,13 +13,10 @@ class Challenge {
 
     constructor() {
         this._leaderboard = {};
-        this._retryLeaderboard = {};
 
         this._arrLead = [];
-        this._arrRetryLead = [];
 
         this._notation = Challenge.generateRandomNotationSequence();
-
     }
 
     get notation() {
@@ -40,22 +37,6 @@ class Challenge {
         return this._arrLead.sort((a,b) => {return b.score - a.score;}).slice(0,10);
     }
 
-    get retryLeaderboard() {
-        if (Object.keys(this._retryLeaderboard).length != this._arrRetryLead.length) {
-            this._arrRetryLead = [];
-            for (let i in this._retryLeaderboard) {
-                this._arrRetryLead.push(this._retryLeaderboard[i]);
-            }
-        }
-        this._arrRetryLead = this._arrRetryLead.sort((a,b) => {return +b.score - +a.score;});
-        let temp = [];
-        for (let i=0; i<10 && i<this._arrRetryLead.length; i++) {
-            temp[i] = this._arrRetryLead[i];
-            temp.score = temp.score + ' (' + temp.tries + ')';
-        }
-        return temp;
-    }
-
     getUserScore(username) {
         return this._leaderboard[username.toLowerCase()];
     }
@@ -67,12 +48,6 @@ class Challenge {
         }
         if (!this._leaderboard[username.toLowerCase()]) {
             this._leaderboard[username.toLowerCase()] = {'name':username, 'score': points};
-            this._retryLeaderboard[username.toLowerCase()] = {'name':username, 'score': points, 'tries': 1};
-        } else {
-            this._retryLeaderboard[username.toLowerCase()].tries += 1;
-            if (+this._retryLeaderboard[username.toLowerCase()].score < points) {
-                this._retryLeaderboard[username.toLowerCase()].score = points;
-            }
         }
     }
 

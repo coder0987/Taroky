@@ -1448,7 +1448,6 @@ function onLoad() {
     }
     if (typeof data.leaderboard !== "undefined") {
       renderer.gamestate.leaderboard = data.leaderboard;
-      renderer.gamestate.retryLeaderboard = data.retryLeaderboard;
       renderer.hud.rooms.render();
     }
     if (typeof data.povinnost !== "undefined") {
@@ -1618,7 +1617,6 @@ function onLoad() {
     document.getElementById("online").innerHTML = playerCount;
     document.getElementById("online-s").innerHTML = playerCount == 1 ? "" : "s";
     renderer.gamestate.leaderboard = lb;
-    renderer.gamestate.retryLeaderboard = retyrlb;
   });
   socket.on("returnHand", function (returnHand, withGray) {
     hand = returnHand;
