@@ -82,17 +82,12 @@ class Challenge {
 
         const workingPN = Math.floor(seededRandom() * 4);
 
-        console.log(seed);
-        console.log(workingPN);
-
         // Replace all Math.random() and shuffleArray calls with seeded versions
         let goodHandWeight = 0.7;
         let notation = '100/100/100/100/';
         let workingDeck = structuredClone(baseDeck);
 
         shuffleArraySeeded(workingDeck, seededRandom);
-
-        console.log('First card: ' + JSON.stringify(workingDeck[0]));
 
         for (let i in workingDeck) {
             workingDeck[i].weight = ((VALUE_REVERSE[workingDeck[i].value] + (workingDeck[i].value == 'I' ? 15 : 0)) * (workingDeck[i].suit == 'Trump' ? 3 : 1));
@@ -105,8 +100,6 @@ class Challenge {
             }
             return seededRandom() < 0.5 ? -1 : 1;
         });
-
-        console.log('Second card: ' + JSON.stringify(workingDeck[1]));
 
         for (let i in workingDeck) {
             delete workingDeck[i].weight;
