@@ -579,44 +579,44 @@ class GamePlay {
 
         const numTrump = Deck.numOfSuit(currentHand, SUIT.TRUMP);
         const num5Count = Deck.num5Count(currentHand);
-        let owedChips = 0;
+        let chipsOwed = 0;
 
         // Trump-based money cards
         if (numTrump === 0 && !skipUniBida) {
-            owedChips += 4;
+            chipsOwed += 4;
             this.currentMoneyCards.push(MONEY_CARDS.UNI);
         } else if (numTrump <= 2 && !skipUniBida) {
-            owedChips += 2;
+            chipsOwed += 2;
             this.currentMoneyCards.push(MONEY_CARDS.BIDA);
         } else if (numTrump >= 10) {
-            owedChips += 4;
+            chipsOwed += 4;
             this.currentMoneyCards.push(MONEY_CARDS.TAROKY);
         } else if (numTrump >= 8) {
-            owedChips += 2;
+            chipsOwed += 2;
             this.currentMoneyCards.push(MONEY_CARDS.TAROCKY);
         }
 
         // 5-count based money cards
         if (Deck.handContainsTrul(currentHand)) {
-            owedChips += 2;
+            chipsOwed += 2;
             this.currentMoneyCards.push(MONEY_CARDS.TRUL);
         }
 
         if (Deck.handContainsRosaPane(currentHand)) {
             if (num5Count > 4) {
-                owedChips += 6;
+                chipsOwed += 6;
                 this.currentMoneyCards.push(MONEY_CARDS.ROSA_PANE_PLUS);
             } else {
-                owedChips += 4;
+                chipsOwed += 4;
                 this.currentMoneyCards.push(MONEY_CARDS.ROSA_PANE);
             }
         } else if (num5Count >= 4) {
-            owedChips += 2;
+            chipsOwed += 2;
             this.currentMoneyCards.push(MONEY_CARDS.PANE);
         }
 
         this.#room.informMoneyCards(this.player, this.currentMoneyCards);
-        this.#room.payMoneyCards(this.player, owedChips);
+        this.#room.payMoneyCards(this.player, chipsOwed);
         this.#room.updateImportantMoneyCardsInfo();
 
         this.nextPlayer();
@@ -1175,7 +1175,7 @@ class GamePlay {
             }
             pointCountMessageTable.push({'name':'Valat', 'value':chipsOwed});
 
-            this.payChips(pointCountMessageTable, owedChips);
+            this.payChips(pointCountMessageTable, chipsOwed);
             
             this.#room.deck.deck = Deck.simulateCounting(povinnostTeamDiscard, opposingTeamDiscard);
             return true;
@@ -1189,7 +1189,7 @@ class GamePlay {
             }
             pointCountMessageTable.push({'name':'Valat', 'value':Math.abs(chipsOwed)});
 
-            this.payChips(pointCountMessageTable, owedChips);
+            this.payChips(pointCountMessageTable, chipsOwed);
             
             this.#room.deck.deck = Deck.simulateCounting(povinnostTeamDiscard, opposingTeamDiscard);
             return true;
