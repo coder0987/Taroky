@@ -20,9 +20,7 @@ class Deck {
             this._deck = structuredClone(d.deck);
             return;
         }
-        this._baseDeck = Deck.createDeck();
         this._deck = Deck.createDeck();
-        this.shuffleDeck(3);
     }
 
     static createDeck() {

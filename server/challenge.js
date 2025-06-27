@@ -1,6 +1,6 @@
 const Deck = require('./deck.js');
 const { DIFFICULTY, VALUE_REVERSE } = require('./enums.js');
-const { shuffleArray } = require('./utils.js');
+const { shuffleArray, shuffleArraySeeded, sfc32, cyrb128 } = require('./utils.js');
 const GameManager = require('./GameManager.js');
 
 const schedule = require('node-schedule');
@@ -93,51 +93,71 @@ class Challenge {
     }
 
     static generateRandomNotationSequence() {
-       let goodHandWeight = 0.7;
-       let notation = '100/100/100/100/';
-       let workingDeck = [];
-       for (let i in baseDeck) {
-           workingDeck[i] = baseDeck[i];
-       }
-       shuffleArray(workingDeck);
-       for (let i in workingDeck) {
-           workingDeck[i].weight = ((VALUE_REVERSE[workingDeck[i].value] + (workingDeck[i].value == 'I' ? 15 : 0)) * (workingDeck[i].suit == 'Trump' ? 3 : 1));
-       }
+        // Seeded random generator using date (MM-DD-YYYY)
+        const today = new Date();
+        const dateSeed = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+        const seed = cyrb128(dateSeed);
+        const rand = sfc32(seed[0], seed[1], seed[2], seed[3]);
 
+        
 
-       workingDeck.sort((a,b) => {
-           if (Math.abs(0.5 - goodHandWeight) > Math.abs(0.5 - Math.random())) {
-               return goodHandWeight < 0.5 ? a.weight - b.weight: b.weight - a.weight;
-           }
-           return 0;
-       });
+        function seededRandom() {
+            return rand();
+        }
 
-       for (let i in workingDeck) {
-           delete workingDeck[i].weight;
-       }
+        const workingPN = Math.floor(seededRandom() * 4);
 
-       let workingPN = Math.floor(Math.random() * 4);
+        console.log(seed);
+        console.log(workingPN);
 
-       let mainHandNotation = Deck.cardsToNotation(workingDeck.splice(0,12)) + '/';
-       let talonNotation = Deck.cardsToNotation(workingDeck.splice(0,6)) + '/';
+        // Replace all Math.random() and shuffleArray calls with seeded versions
+        let goodHandWeight = 0.7;
+        let notation = '100/100/100/100/';
+        let workingDeck = structuredClone(baseDeck);
 
-       shuffleArray(workingDeck);
+        shuffleArraySeeded(workingDeck, seededRandom);
 
-       for (let i=0; i<4; i++) {
-           if (i != workingPN) {
-               notation += Deck.cardsToNotation(workingDeck.splice(0,12)) + '/';
-           } else {
-               notation += mainHandNotation;
-           }
-       }
-       notation += talonNotation;
+        console.log('First card: ' + JSON.stringify(workingDeck[0]));
 
-       for (let i in Challenge._settings.object) {
-           notation += i + '=' + Challenge._settings.object[i] + ';';
-       }
-       notation += 'pn=' + workingPN;
-       return notation;
-   }
+        for (let i in workingDeck) {
+            workingDeck[i].weight = ((VALUE_REVERSE[workingDeck[i].value] + (workingDeck[i].value == 'I' ? 15 : 0)) * (workingDeck[i].suit == 'Trump' ? 3 : 1));
+        }
+
+        workingDeck.sort((a, b) => {
+            if (Math.abs(0.5 - goodHandWeight) > Math.abs(0.5 - seededRandom())) {
+                const delta = goodHandWeight < 0.5 ? a.weight - b.weight : b.weight - a.weight;
+                if (delta !== 0) return delta;
+            }
+            return seededRandom() < 0.5 ? -1 : 1;
+        });
+
+        console.log('Second card: ' + JSON.stringify(workingDeck[1]));
+
+        for (let i in workingDeck) {
+            delete workingDeck[i].weight;
+        }
+
+        let mainHandNotation = Deck.cardsToNotation(workingDeck.splice(0, 12)) + '/';
+        let talonNotation = Deck.cardsToNotation(workingDeck.splice(0, 6)) + '/';
+
+        shuffleArraySeeded(workingDeck, seededRandom);
+
+        for (let i = 0; i < 4; i++) {
+            if (i != workingPN) {
+                notation += Deck.cardsToNotation(workingDeck.splice(0, 12)) + '/';
+            } else {
+                notation += mainHandNotation;
+            }
+        }
+        notation += talonNotation;
+
+        for (let i in Challenge._settings.object) {
+            notation += i + '=' + Challenge._settings.object[i] + ';';
+        }
+        notation += 'pn=' + workingPN;
+        return notation;
+    }
+
 }
 
 module.exports = Challenge;

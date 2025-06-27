@@ -25,11 +25,6 @@ describe('Deck class', () => {
     expect(deck.deck.length).toBe(54);
   });
 
-  test('should create a shuffled deck different from base', () => {
-    const unshuffled = Deck.createDeck();
-    expect(deck.deck).not.toEqual(unshuffled);
-  });
-
   test('should cut shuffle correctly', () => {
     const original = [...deck.deck];
     deck.cutShuffle(10);
