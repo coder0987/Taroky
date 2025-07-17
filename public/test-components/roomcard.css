@@ -1,0 +1,43 @@
+/* ROOM CARD */
+#rooms {
+    display: flex;
+}
+
+.roomcard {
+    flex: 1;
+
+    border: .1rem solid var(--black);
+    border-radius: .5rem;
+    padding:1rem;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    display:inline-block;
+    margin: 10px;
+    max-width: 300px;
+
+
+    /*Disable text selection*/
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.roomnum {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 3rem;
+}
+
+/* ROOM INFO */
+.roominfo {
+    flex: 1;
+
+    border: .1rem solid var(--black);
+    border-radius: .5rem;
+    background-color: var(--tan);
+    background-image: '\assets\card table.png';
+    padding:1rem;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    display:inline-block;
+    margin: 10px;
+    max-width: 900px;
+
+}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/public/css/bootstrap.min.css">
+    <script src="/public/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+    <body>
+    <!-- Navbar -->
+<nav class="navbar navbar-expand-lg fixed-top navbar-dark">
+  <div class="container">
+    <a class="navbar-brand" href="#"><img id="MachTarok-logo"
+        src="/assets/logo/logo-full-white.png" alt="MachTarok"
+        draggable="false" height="30" /></a>
+    <button class="navbar-toggler" type="button" data-mt-collapse-init data-mt-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item">
+          <a class="nav-link mx-2" aria-current="page" href="/"><i class="bi bi-life-preserver"></i>Play</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link mx-2" href="/learn.html"><i class="bi bi-journal-text"></i>Learn</a>
+        </li>
+        <li class="nav-item"><!--new page, will include donations and short nontechnical writeup-->
+          <a class="nav-link mx-2" href="#!"><i class="bi bi-info-circle"></i>About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link mx-3" href="/updates.html"><i class="bi bi-code-square"></i>Development</a>
+        </li>
+        <li class="nav-item">
+          <a id="adminHandler" hidden="hidden" class="nav-link white-txt" href="/admin.html"><i class="bi bi-code-square"></i>Admin</a>
+        </li>
+        <li class="nav-item ms-4">
+          <a class="btn btn-light btn-rounded" href="#!">Sign in</a>
+          <div class="nav-link profile-link">
+                    <a class="no-click" target="_blank" id="profile-a" title="Sign in to edit user preferences"><img class="nav-size" id="profile-img" src="/assets/profile-pictures/profile-0.png"></a>
+                </div>
+        </li>
+        <li>
+            <div class="nav-link">
+                    <span class="active white-txt d-md-none" onclick="document.getElementById('nav-menu-toggler-button').click();renderer.toggleFullscreen()">⛶</span>
+                    <span class="active white-txt d-none d-md-inline-block" onclick="renderer.toggleFullscreen()">⛶</span>
+                </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<!-- Navbar -->
+    </body>
+ </html>
