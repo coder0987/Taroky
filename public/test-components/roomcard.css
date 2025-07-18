@@ -30,14 +30,19 @@
 .roominfo {
     flex: 1;
 
-    border: .1rem solid var(--black);
-    border-radius: .5rem;
-    background-color: var(--tan);
-    background-image: '\assets\card table.png';
+    background-image:  url("/public/assets/card\ table.png");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: auto;
+    background-attachment: scroll;
     padding:1rem;
     font-family: Georgia, 'Times New Roman', Times, serif;
     display:inline-block;
     margin: 10px;
     max-width: 900px;
 
+}
+
+.bi {
+  font-size: 1rem;
 }

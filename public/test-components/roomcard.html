@@ -10,7 +10,8 @@
 <div id="roomcard" class="roomcard col-md-2 col-sm-3 col-xs-6 white">
             <div id="room-preview" onclick="roomPreview()"><i class="bi bi-info-circle"></i></div>
             <div id="roomnum" class="roomnum d-flex justify-content-center">I</div>
-            <span id="players" alt="1 player">&#x25CF; &#x25CF; &#x25CB; &#x25CB;</span> players
+            <span id="players">&#x25CF; &#x25CF; &#x25CB; &#x25CB;</span> players
+            <p><span id="difficulty">Hard</span></p>
             <!--figure out why info symbol isn't showing-->
         </div>
 
@@ -18,9 +19,12 @@
     <!--on click, room info panel opens over Play screen (as bs alert?)-->
             <!--close symbol-->
             <h1>Room I Info</h1>
-            <p><span id="players" alt="1 player">&#x25CF; &#x25CF; &#x25CB; &#x25CB;</span> players</p>
-            <!--update to human and AI symbols-->
-            <!--add text info for settings-->
+            <p><span id="players"><i class="bi bi-person-fill"></i><i class="bi bi-robot"></i><i class="bi bi-robot"></i><i class="bi bi-robot"></i> players</span></br>
+            <em><i class="bi bi-person-fill"></i>human player <i class="bi bi-robot"></i> bot player</em></p>
+            <p>difficulty <i class="bi bi-square"></i><i class="bi bi-square"></i><i class="bi bi-square"></i><span class="btn btn-rounded btn-light">Hard</span><i class="bi bi-square"></i></p>
+            <p><i class="bi bi-arrow-up-circle-fill"></i> Ace high</p>
+            <p>Join code <strong></strong><span id="joincode">ABCDEF</span><br/>
+            Started by <span id="lead-player">Sirhenry</span></p>
             <button class="btn btn-rounded btn-dark" type="button">Join</button>
         </div>
 </body>
