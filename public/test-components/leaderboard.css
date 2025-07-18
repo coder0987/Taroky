@@ -1,0 +1,121 @@
+div.user-sm {
+    max-height: 3rem;
+    background-color: var(--white);
+    box-shadow: 0 4px 8px 0 var(--black);
+    border-radius: 3rem;
+    text-align: left;
+    color: var(--navy);
+    text-transform: lowercase;
+    font-weight: bold;
+}
+
+img.profile-sm {
+    border-radius: 50%;
+    max-width: 3rem;
+}
+
+img.profile-lg {
+    border-radius:50%;
+    max-width: 10rem;
+    background-color: var(--white);
+    border: .2rem solid var(--navy);
+}
+
+div.user-card {
+    background-color: var(--white);
+    width: 90%;
+    margin: 5%;
+    padding: 2rem;
+    border-radius: 3rem;
+}
+
+img.lead {
+    text-align: center;
+    max-height: 3rem;
+    max-width: 3rem;
+}
+
+span.prev-1 {
+    text-align: center;
+    color: var(--white);
+    font-weight: bold;
+    max-height: 2rem;
+    padding: .5rem;
+    background-image: url(/public/assets/gameplay/chip-black.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: 0ch;
+    @media(max-width: 720px) {
+        visibility: hidden;
+    }
+}
+span.prev-2 {
+    text-align: center;
+    color: var(--black);
+    font-weight: bold;
+    max-height: 2rem;
+    padding: .5rem;
+    background-image: url(/public/assets/gameplay/chip-green.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: 0ch;
+    @media(max-width: 720px) {
+        visibility: hidden;
+    }
+}
+span.prev-3 {
+    text-align: center;
+    color: var(--white);
+    font-weight: bold;
+    max-height: 2rem;
+    padding: .5rem;
+    background-image: url(/public/assets/gameplay/chip-blue.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: 0ch;
+    @media(max-width: 720px) {
+        visibility: hidden;
+    }
+}
+span.prev-4 {
+    text-align: center;
+    color: var(--white);
+    font-weight: bold;
+    max-height: 2rem;
+    padding: .5rem;
+    background-image: url(/public/assets/gameplay/chip-red.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: 0ch;
+    @media(max-width: 720px) {
+        visibility: hidden;
+    }
+}
+span.prev-5 {
+    text-align: center;
+    color: var(--black);
+    font-weight: bold;
+    max-height: 2rem;
+    padding: .5rem;
+    background-image: url(/public/assets/gameplay/chip-white.png);
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: 0ch;
+    @media(max-width: 720px) {
+        visibility: hidden;
+    }
+}
+
+p.align-items-right {
+    text-align: right;
+    align-items: right;
+}
+
+#leaderboard {
+    background-color: var(--white);
+    padding: 2rem;
+    max-width: 90%;
+    box-shadow: 0 4px 8px 0 var(--black);
+    border-radius: 2rem;
+    margin: 5%;
+}

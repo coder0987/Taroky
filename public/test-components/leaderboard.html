@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/public/css/bootstrap.min.css">
+<script src="/public/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="/public/style.css">
+<link rel="stylesheet" href="/public/test-components/leaderboard.css">
+</head>
+<body>
+    <div id="leaderboard">
+        <h1>Leaderboard</h1>
+        <!--update to dynamic date-->
+        <p class="align-items-right">17 July 2025</p>
+        <table class="table table-hover table-borderless">
+  <thead>
+    <tr>
+      <th scope="col">Place</th>
+      <!--first five spaces are chips with class lead; alt text numbers and descriptions. After that, just plain text numbers. -->
+      <th scope="col">User</th>
+      <!--new user bubble, combo of classes user-sm, profile-sm, and prev-12345. Prev chips disappear on s and xs screens-->
+    <!--profile pic, username, and # of each prev award will need to dynamically update. Formatting is handled in css-->
+      <th scope="col">Today's Score</th>
+      <!--column can be shown or hidden based on user status-->
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th scope="row"><img class="lead" src="/public/assets/gameplay/chip-black.png" alt="#1 black chip"></th>
+      <td><div class="user-sm"><img class="profile-sm lead-1" src="/public/assets/profile-pictures/profile-13.png"> Sam72 
+        <span class="prev-1">05</span><span class="prev-2">04</span><span class="prev-3">87</span><span class="prev-4">09</span><span class="prev-5">02</span></div></td>
+      <td>28</td>
+    </tr>
+        <tr>
+      <th scope="row"><img class="lead" src="/public/assets/gameplay/chip-green.png" alt="#2 green chip"></th>
+      <td><div class="user-sm"><img class="profile-sm lead-2" src="/public/assets/profile-pictures/profile-4.png"> boy343
+        <span class="prev-1">03</span><span class="prev-4">04</span></div></td>
+      <td>23</td>
+    </tr>
+        <tr>
+      <th scope="row"><img class="lead" src="/public/assets/gameplay/chip-blue.png" alt="#3 blue chip"></th>
+      <td><div class="user-sm"><img class="profile-sm lead-3" src="/public/assets/profile-pictures/profile-11.png"> bennyboy</div></td>
+      <td>22</td>
+    </tr>
+        <tr>
+      <th scope="row"><img class="lead" src="/public/assets/gameplay/chip-red.png" alt="#4 red chip"></th>
+      <td><div class="user-sm"><img class="profile-sm lead-4" src="/public/assets/profile-pictures/profile-22.png"> horsegirl66</div></td>
+      <td>19</td>
+    </tr>
+        <tr>
+      <th scope="row"><img class="lead" src="/public/assets/gameplay/chip-white.png" alt="#5 white chip"></th>
+      <td><div class="user-sm"><img class="profile-sm lead-5" src="/public/assets/profile-pictures/profile-2.png"> yohoo
+        <span class="prev-2">66</span></div></td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <th scope="row">6</th>
+      <td><div class="user-sm"><img class="profile-sm lead-5" src="/public/assets/profile-pictures/profile-20.png"> bbbb3user
+        <span class="prev-4">23</span><span class="prev-5">02</span></div></td>
+      <td>11</td>
+    </tr>
+    </div>
+</body>
+</html>
