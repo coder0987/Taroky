@@ -1,281 +1,166 @@
 class Board {
-    constructor() {
-        this._partnerCard = "";
-        this._talon = [];
-        this._table = [];
-        this._preverTalon = [];
-        this._preverTalonStep = 0;
-        this._prever = -1;
-        this._playingPrever = false;
-        this._povinnost = -1;
-        this._buc = false;
-        this._leadPlayer = -1;
-        this._leadCard = null;
-        this._nextStep = { player: 0, action: 'start', time: Date.now(), info: null };
-        this._cutStyle = '';
-        this._moneyCards = [[], [], [], []];
-        this._trickWinCount = [0,0];
-        this._valat = -1;
-        this._iote = -1;
-        this._ioteWin = 0;
-        this._hasTheI = -1;
-        this._contra = [-1, -1];
-        this._calledContra = -1;
-        this._rheaContra = -1;
-        this._supraContra = -1;
-        this._firstContraPlayer = -1;
-        this._gameNumber = 0;
-        this._importantInfo = {};
-        this._notation = '';
+    // Private fields
+    #partnerCard;
+    #talon;
+    #table;
+    #preverTalon;
+    #preverTalonStep;
+    #prever;
+    #playingPrever;
+    #povinnost;
+    #buc;
+    #leadPlayer;
+    #leadCard;
+    #nextStep;
+    #cutStyle;
+    #moneyCards;
+    #trickWinCount;
+    #valat;
+    #iote;
+    #ioteWin;
+    #hasTheI;
+    #contra;
+    #calledContra;
+    #rheaContra;
+    #supraContra;
+    #firstContraPlayer;
+    #gameNumber;
+    #importantInfo;
+    #notation;
+    #trickHistory;
+    #cardsPlayed;
+    #publicPreverTalon;
+    #trumpDiscarded;
 
-        this._trickHistory = [];
-        this._cardsPlayed = new Array(54).fill(false);//Spade, Club, Heart, Diamond, Trump -> Low to high
-        this._publicPreverTalon = [];
-        this._trumpDiscarded = [[],[],[]];
+    constructor() {
+        this.#partnerCard = "";
+        this.#talon = [];
+        this.#table = [];
+        this.#preverTalon = [];
+        this.#preverTalonStep = 0;
+        this.#prever = -1;
+        this.#playingPrever = false;
+        this.#povinnost = -1;
+        this.#buc = false;
+        this.#leadPlayer = -1;
+        this.#leadCard = null;
+        this.#nextStep = { player: 0, action: 'start', time: Date.now(), info: {} };
+        this.#cutStyle = '';
+        this.#moneyCards = [[], [], [], []];
+        this.#trickWinCount = [0, 0];
+        this.#valat = -1;
+        this.#iote = -1;
+        this.#ioteWin = 0;
+        this.#hasTheI = -1;
+        this.#contra = [-1, -1];
+        this.#calledContra = -1;
+        this.#rheaContra = -1;
+        this.#supraContra = -1;
+        this.#firstContraPlayer = -1;
+        this.#gameNumber = 0;
+        this.#importantInfo = {};
+        this.#notation = '';
+        this.#trickHistory = [];
+        this.#cardsPlayed = new Array(54).fill(false);
+        this.#publicPreverTalon = [];
+        this.#trumpDiscarded = [[], [], []];
     }
 
     resetForNextRound() {
-        this._partnerCard = "";
-        this._talon = [];
-        this._table = [];
-        this._preverTalon = [];
-        this._preverTalonStep = 0;
-        this._prever = -1;
-        this._playingPrever = false;
-        this._povinnost = (this._povinnost + 1) % 4;
-        this._buc = false;
-        this._leadPlayer = -1;
-        this._leadCard = null;
-        this._valat = -1;
-        this._iote = -1;
-        this._ioteWin = 0;
-        this._hasTheI = -1;
-        this._cutStyle = '';
-        this._moneyCards = [[], [], [], []];
-        this._trickWinCount = [0,0];
-        this._contra = [-1, -1];
-        this._calledContra = -1;
-        this._rheaContra = -1;
-        this._supraContra = -1;
-        this._firstContraPlayer = -1;
-        this._importantInfo = {};
-        this._notation = '';
-
-        this._trickHistory = [];
-        this._cardsPlayed = new Array(54).fill(false);
-        this._publicPreverTalon = [];
-        this._trumpDiscarded = [[],[],[]];
+        this.#partnerCard = "";
+        this.#talon = [];
+        this.#table = [];
+        this.#preverTalon = [];
+        this.#preverTalonStep = 0;
+        this.#prever = -1;
+        this.#playingPrever = false;
+        this.#povinnost = (this.#povinnost + 1) % 4;
+        this.#buc = false;
+        this.#leadPlayer = -1;
+        this.#leadCard = null;
+        this.#valat = -1;
+        this.#iote = -1;
+        this.#ioteWin = 0;
+        this.#hasTheI = -1;
+        this.#cutStyle = '';
+        this.#moneyCards = [[], [], [], []];
+        this.#trickWinCount = [0, 0];
+        this.#contra = [-1, -1];
+        this.#calledContra = -1;
+        this.#rheaContra = -1;
+        this.#supraContra = -1;
+        this.#firstContraPlayer = -1;
+        this.#importantInfo = {};
+        this.#notation = '';
+        this.#trickHistory = [];
+        this.#cardsPlayed = new Array(54).fill(false);
+        this.#publicPreverTalon = [];
+        this.#trumpDiscarded = [[], [], []];
     }
 
-    //Setters
-    set partnerCard(pc) {
-        this._partnerCard = pc;
-    }
+    // Setters
+    set partnerCard(val) { this.#partnerCard = val; }
+    set talon(val) { this.#talon = val; }
+    set table(val) { this.#table = val; }
+    set preverTalon(val) { this.#preverTalon = val; }
+    set preverTalonStep(val) { this.#preverTalonStep = val; }
+    set prever(val) { this.#prever = val; }
+    set playingPrever(val) { this.#playingPrever = val; }
+    set povinnost(val) { this.#povinnost = val; }
+    set buc(val) { this.#buc = val; }
+    set leadPlayer(val) { this.#leadPlayer = val; }
+    set leadCard(val) { this.#leadCard = val; }
+    set nextStep(val) { this.#nextStep = val; }
+    set cutStyle(val) { this.#cutStyle = val; }
+    set moneyCards(val) { this.#moneyCards = val; }
+    set valat(val) { this.#valat = val; }
+    set iote(val) { this.#iote = val; }
+    set ioteWin(val) { this.#ioteWin = val; }
+    set hasTheI(val) { this.#hasTheI = val; }
+    set contra(val) { this.#contra = val; }
+    set calledContra(val) { this.#calledContra = val; }
+    set rheaContra(val) { this.#rheaContra = val; }
+    set supraContra(val) { this.#supraContra = val; }
+    set firstContraPlayer(val) { this.#firstContraPlayer = val; }
+    set gameNumber(val) { this.#gameNumber = val; }
+    set importantInfo(val) { this.#importantInfo = val; }
+    set trickWinCount(val) { this.#trickWinCount = val; }
+    set trickHistory(val) { this.#trickHistory = val; }
+    set cardsPlayed(val) { this.#cardsPlayed = val; }
+    set publicPreverTalon(val) { this.#publicPreverTalon = val; }
+    set trumpDiscarded(val) { this.#trumpDiscarded = val; }
 
-    set talon(talon) {
-        this._talon = talon;
-    }
-
-    set table(table) {
-        this._table = table;
-    }
-
-    set preverTalon(preverTalon) {
-        this._preverTalon = preverTalon;
-    }
-
-    set preverTalonStep(preverTalonStep) {
-        this._preverTalonStep = preverTalonStep;
-    }
-
-    set prever(prever) {
-        this._prever = prever;
-    }
-
-    set playingPrever(playingPrever) {
-        this._playingPrever = playingPrever;
-    }
-
-    set povinnost(povinnost) {
-        this._povinnost = povinnost;
-    }
-
-    set buc(buc) {
-        this._buc = buc;
-    }
-
-    set leadPlayer(leadPlayer) {
-        this._leadPlayer = leadPlayer;
-    }
-
-    set nextStep(nextStep) {
-        this._nextStep = nextStep;
-    }
-
-    set cutStyle(cutStyle) {
-        this._cutStyle = cutStyle;
-    }
-
-    set moneyCards(moneyCards) {
-        this._moneyCards = moneyCards;
-    }
-
-    set valat(valat) {
-        this._valat = valat;
-    }
-
-    set iote(iote) {
-        this._iote = iote;
-    }
-
-    set ioteWin(win) {
-        this._ioteWin = win;
-    }
-
-    set hasTheI(who) {
-        this._hasTheI = who;
-    }
-
-    set contra(contra) {
-        this._contra = contra;
-    }
-
-    set firstContraPlayer(firstContraPlayer) {
-        this._firstContraPlayer = firstContraPlayer;
-    }
-
-    set gameNumber(gameNumber) {
-        this._gameNumber = gameNumber;
-    }
-
-    set importantInfo(importantInfo) {
-        this._importantInfo = importantInfo;
-    }
-
-    set trickWinCount(winCount) {
-        this._trickWinCount = winCount;
-    }
-
-    set trickHistory(trickHistory) {
-        this._trickHistory = trickHistory;
-    }
-
-    set cardsPlayed(cardsPlayed) {
-        this._cardsPlayed = cardsPlayed;
-    }
-
-    set publicPreverTalon(publicPreverTalon) {
-        this._publicPreverTalon = publicPreverTalon;
-    }
-
-    set trumpDiscarded(trumpDiscarded) {
-        this._trumpDiscarded = trumpDiscarded;
-    }
-
-    //Getters
-    get partnerCard() {
-        return this._partnerCard;
-    }
-
-    get talon() {
-        return this._talon;
-    }
-
-    get table() {
-        return this._table;
-    }
-
-    get preverTalon() {
-        return this._preverTalon;
-    }
-
-    get preverTalonStep() {
-        return this._preverTalonStep;
-    }
-
-    get prever() {
-        return this._prever;
-    }
-
-    get playingPrever() {
-        return this._playingPrever;
-    }
-
-    get povinnost() {
-        return this._povinnost;
-    }
-
-    get buc() {
-        return this._buc;
-    }
-
-    get leadPlayer() {
-        return this._leadPlayer;
-    }
-
-    get nextStep() {
-        return this._nextStep;
-    }
-
-    get cutStyle() {
-        return this._cutStyle;
-    }
-
-    get moneyCards() {
-        return this._moneyCards;
-    }
-
-    get valat() {
-        return this._valat;
-    }
-
-    get iote() {
-        return this._iote;
-    }
-
-    get contra() {
-        return this._contra;
-    }
-
-    get firstContraPlayer() {
-        return this._firstContraPlayer;
-    }
-
-    get gameNumber() {
-        return this._gameNumber;
-    }
-
-    get importantInfo() {
-        return this._importantInfo;
-    }
-
-    get trickWinCount() {
-        return this._trickWinCount;
-    }
-
-    get ioteWin() {
-        return this._ioteWin;
-    }
-
-    get hasTheI() {
-        return this._hasTheI;
-    }
-
-    get trickHistory() {
-        return this._trickHistory;
-    }
-
-    get cardsPlayed() {
-        return this._cardsPlayed;
-    }
-
-    get publicPreverTalon() {
-        return this._publicPreverTalon;
-    }
-
-    get trumpDiscarded() {
-        return this._trumpDiscarded;
-    }
+    // Getters
+    get partnerCard() { return this.#partnerCard; }
+    get talon() { return this.#talon; }
+    get table() { return this.#table; }
+    get preverTalon() { return this.#preverTalon; }
+    get preverTalonStep() { return this.#preverTalonStep; }
+    get prever() { return this.#prever; }
+    get playingPrever() { return this.#playingPrever; }
+    get povinnost() { return this.#povinnost; }
+    get buc() { return this.#buc; }
+    get leadPlayer() { return this.#leadPlayer; }
+    get leadCard() { return this.#leadCard; }
+    get nextStep() { return this.#nextStep; }
+    get cutStyle() { return this.#cutStyle; }
+    get moneyCards() { return this.#moneyCards; }
+    get valat() { return this.#valat; }
+    get iote() { return this.#iote; }
+    get contra() { return this.#contra; }
+    get calledContra() { return this.#calledContra; }
+    get rheaContra() { return this.#rheaContra; }
+    get supraContra() { return this.#supraContra; }
+    get firstContraPlayer() { return this.#firstContraPlayer; }
+    get gameNumber() { return this.#gameNumber; }
+    get importantInfo() { return this.#importantInfo; }
+    get trickWinCount() { return this.#trickWinCount; }
+    get ioteWin() { return this.#ioteWin; }
+    get hasTheI() { return this.#hasTheI; }
+    get trickHistory() { return this.#trickHistory; }
+    get cardsPlayed() { return this.#cardsPlayed; }
+    get publicPreverTalon() { return this.#publicPreverTalon; }
+    get trumpDiscarded() { return this.#trumpDiscarded; }
 }
 
 module.exports = Board;

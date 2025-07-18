@@ -1,88 +1,227 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Donation Page</title>
     <!-- JQuery -->
-    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <script
+      src="https://code.jquery.com/jquery-1.12.4.min.js"
+      integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+      crossorigin="anonymous"
+    ></script>
     <!-- Bootstrap Script (Requires JQuery) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <script src="nav.js"></script>
-    <link rel="stylesheet" href="/style.css">
-</head>
-<body style="padding: 0px;">
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body style="padding-top: 56px">
     <div w3-include-html="/nav.html"></div>
+    <br />
     <div class="container navy-txt" id="donation">
-        <h1>Donate</h1>
+      <div class="row">
+        <div class="col justify-content-center">
+          <h1 class="center text-center">Donate</h1>
+        </div>
+      </div>
 
+      <!-- Donation Cards Column -->
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+          <!-- PayPal -->
+          <div class="card shadow-sm border-0 link-card my-3">
+            <div
+              class="card-body d-flex align-items-center justify-content-between gap-3 p-3"
+            >
+              <img
+                src="/assets/external/paypal.svg"
+                alt="PayPal Logo"
+                style="height: 36px; object-fit: contain"
+              />
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-action btn-copy"
+                  onclick="copy('https://PayPal.Me/MachTarok')"
+                  title="Copy PayPal link"
+                >
+                  <img
+                    src="/assets/icons/copy.svg"
+                    alt="Copy"
+                    style="width: 16px; height: 16px"
+                  />
+                </button>
+                <a
+                  class="btn btn-action btn-external"
+                  href="https://PayPal.Me/MachTarok"
+                  target="_blank"
+                  title="Open PayPal"
+                >
+                  <img
+                    src="/assets/icons/external-link.svg"
+                    alt="External Link"
+                    style="width: 16px; height: 16px"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
 
-        <h2>Addresses</h2>
-        <ul id="donationList"></ul>
+          <!-- Cash App -->
+          <div class="card shadow-sm border-0 link-card my-3">
+            <div
+              class="card-body d-flex align-items-center justify-content-between gap-3 p-3"
+            >
+              <img
+                src="/assets/external/cashapp.svg"
+                alt="CashApp Logo"
+                style="height: 36px; object-fit: contain"
+              />
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-action btn-copy"
+                  onclick="copy('https://cash.app/$MachTarok')"
+                  title="Copy Cash App link"
+                >
+                  <img
+                    src="/assets/icons/copy.svg"
+                    alt="Copy"
+                    style="width: 16px; height: 16px"
+                  />
+                </button>
+                <a
+                  class="btn btn-action btn-external"
+                  href="https://cash.app/$MachTarok"
+                  target="_blank"
+                  title="Open Cash App"
+                >
+                  <img
+                    src="/assets/icons/external-link.svg"
+                    alt="External Link"
+                    style="width: 16px; height: 16px"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
 
-        <script>
-            function notifyCopied(element) {
-                // Add the flash class to the clicked element
-                element.classList.add('flash');
+          <!-- Bitcoin -->
+          <div class="card shadow-sm border-0 link-card my-3">
+            <div class="card-body d-flex align-items-center gap-3 p-3">
+              <img
+                src="https://static.debank.com/image/avax_token/logo_url/0x152b9d0fdc40c096757f570a51e494bd4b943e50/2411fb147c1cc4328edff5d204f09f80.png"
+                alt="Bitcoin Logo"
+                style="width: 40px; height: 40px; object-fit: contain"
+              />
+              <div class="flex-grow-1">
+                <span class="fs-5 fw-semibold text-dark"
+                  >MachTarok on Bitcoin</span
+                >
+              </div>
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-action btn-copy"
+                  onclick="copy('bc1qjqfv40dswdl0lssp45tmuwa5ts8p03dfx45nxl')"
+                  title="Copy Bitcoin address"
+                >
+                  <img
+                    src="/assets/icons/copy.svg"
+                    alt="Copy"
+                    style="width: 16px; height: 16px"
+                  />
+                </button>
+                <a
+                  class="btn btn-action btn-external"
+                  href="https://mempool.space/address/bc1qjqfv40dswdl0lssp45tmuwa5ts8p03dfx45nxl"
+                  target="_blank"
+                  title="View on blockchain explorer"
+                >
+                  <img
+                    src="/assets/icons/external-link.svg"
+                    alt="External Link"
+                    style="width: 16px; height: 16px"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
 
-                // Create a notification element
-                var notification = document.createElement('div');
-                notification.innerText = 'Address Copied!';
-                notification.classList.add('notification');
+          <!-- EVM (Ethereum) -->
+          <div class="card shadow-sm border-0 link-card my-3">
+            <div class="card-body d-flex align-items-center gap-3 p-3">
+              <img
+                src="https://static.debank.com/image/chain/logo_url/eth/42ba589cd077e7bdd97db6480b0ff61d.png"
+                alt="Ethereum Logo"
+                style="width: 40px; height: 40px; object-fit: contain"
+              />
+              <div class="flex-grow-1">
+                <span class="fs-5 fw-semibold text-dark">MachTarok on EVM</span>
+              </div>
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-action btn-copy"
+                  onclick="copy('0x5f2CfF4a4850Bd209e721b0C26fcF63F0EB79c6a')"
+                  title="Copy EVM address"
+                >
+                  <img
+                    src="/assets/icons/copy.svg"
+                    alt="Copy"
+                    style="width: 16px; height: 16px"
+                  />
+                </button>
+                <a
+                  class="btn btn-action btn-external"
+                  href="https://debank.com/profile/0x5f2CfF4a4850Bd209e721b0C26fcF63F0EB79c6a"
+                  target="_blank"
+                  title="View on Debank"
+                >
+                  <img
+                    src="/assets/icons/external-link.svg"
+                    alt="External Link"
+                    style="width: 16px; height: 16px"
+                  />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                // Append the notification element to the body
-                var donation = document.getElementById("donation");
-                donation.appendChild(notification);
+      <script>
+        function notifyCopied(content) {
+          const isUrl = content.startsWith("http");
+          const message = isUrl ? "Link Copied!" : "Address Copied!";
 
-                // Remove the flash class and notification element after a delay
-                setTimeout(function () {
-                    element.classList.remove('flash');
-                    notification.classList.add('fade-out');
+          const notification = document.createElement("div");
+          notification.innerText = message;
+          notification.classList.add("notification");
 
-                    // Remove the notification element after the fade-out transition completes
-                    setTimeout(function () {
-                        donation.removeChild(notification);
-                    }, 500);
-                }, 1500);
-            }
+          const donation = document.getElementById("donation");
+          donation.appendChild(notification);
 
-            function copy(that) {
-                var inp = document.createElement('input');
-                document.body.appendChild(inp)
-                inp.value = that.textContent
-                inp.select();
-                document.execCommand('copy', false); //works on PC may need to change this line to support mobile
-                inp.remove();
-                notifyCopied(that);
-            }
+          setTimeout(function () {
+            notification.classList.add("fade-out");
+            setTimeout(function () {
+              donation.removeChild(notification);
+            }, 500);
+          }, 1500);
+        }
 
-            function addDonation(name, address) {
-
-                var listItem = document.createElement("li");
-
-                var nameLabel = document.createElement("span");
-                nameLabel.textContent = name + ": ";
-                var addressLabel = document.createElement("span");
-                addressLabel.textContent = address;
-                addressLabel.setAttribute("onclick", "copy(this)");
-
-                listItem.appendChild(nameLabel);
-                listItem.appendChild(addressLabel);
-
-                var donationList = document.getElementById("donationList");
-                donationList.appendChild(listItem);
-            }
-
-            // Manually Enter Donation Addresses
-            addDonation("Bitcoin", "bc1qjqfv40dswdl0lssp45tmuwa5ts8p03dfx45nxl");
-            addDonation("All EVM Chains", "0x5f2CfF4a4850Bd209e721b0C26fcF63F0EB79c6a");
-            addDonation("PayPal", "PayPal.Me/MachTarok");
-            addDonation("CashApp", "cash.app/$MachTarok");
-
-        </script>
+        function copy(value) {
+          const inp = document.createElement("input");
+          document.body.appendChild(inp);
+          inp.value = value;
+          inp.select();
+          document.execCommand("copy");
+          inp.remove();
+          notifyCopied(value);
+        }
+      </script>
     </div>
 
     <script>
-        includeHTML();
+      includeHTML();
     </script>
-</body>
+  </body>
 </html>

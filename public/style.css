@@ -1,424 +1,405 @@
 :root {
-    --green: #98ad99;
-    --red: #9D181D;
-    --white: #f5f3f1;
-    --whiteHover: #e2dfdc;
-    --black: #342D27;
-    --tan: #E3D6B2;
-    --navy: #1f3855;
-    --gray: #777777;
+  --green: #98ad99;
+  --red: #9d181d;
+  --white: #f5f3f1;
+  --whiteHover: #e2dfdc;
+  --black: #342d27;
+  --tan: #e3d6b2;
+  --navy: #1f3855;
+  --gray: #777777;
 }
 
 .nav-link {
-    cursor: pointer;
+  cursor: pointer;
 }
-
 
 body {
-    background-color: var(--green);
-    padding-top: 4rem;
-    overflow-x: hidden;
-    padding-bottom: 34px;
+  background-color: var(--green);
+  padding-top: 4rem;
+  overflow-x: hidden;
+  padding-bottom: 34px;
 }
 body:fullscreen {
-   padding: 1rem;
+  padding: 1rem;
 }
 
-:fullscreen, ::backdrop {
-    background-color: var(--green);
+:fullscreen,
+::backdrop {
+  background-color: var(--green);
 }
 
 .button {
-    transition-duration: 0.4s;
-    opacity: 0.8;
-    /*Disable text selection*/
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+  transition-duration: 0.4s;
+  opacity: 0.8;
+  /*Disable text selection*/
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.button:hover{
-    opacity: 1;
+.button:hover {
+  opacity: 1;
 }
 
 .choice-button {
-    margin: 10px;
-    display: inline-block;
+  margin: 10px;
+  display: inline-block;
 
-    font-weight: 400;
-    line-height: 1.5;
-    color: #212529;
-    text-align: center;
-    text-decoration: none;
-    vertical-align: middle;
-    cursor: pointer;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-    background-color: var(--white);
-    border: 1px solid transparent;
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    border-radius: .25rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  background-color: var(--white);
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.25rem;
 
-    transition-duration: 0.4s;
-    opacity: 0.8;
-    /*Disable text selection*/
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+  transition-duration: 0.4s;
+  opacity: 0.8;
+  /*Disable text selection*/
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.choice-button:hover{
-    opacity: 1;
-}
-
-
-img {
-    border-radius: 8px;
-    width: 100px;
-    height: auto;
+.choice-button:hover {
+  opacity: 1;
 }
 
 .selected {
-    transform: scale(1.05);
-    outline: none;
-    background-color: #ffc107;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
-    padding: 1px;
-    z-index: 2;
+  transform: scale(1.05);
+  outline: none;
+  background-color: #ffc107;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+  padding: 1px;
+  z-index: 2;
 }
 
 .grayed {
-    background-color: rgba(150,150,150,0.2);
-}
-
-.image-hover-highlight {
-    -webkit-transition: all 0.50s;
-    transition: all 0.50s;
-    border: 1px solid gray;
-    filter: brightness(130%);
-    -webkit-filter: brightness(130%);
-    -moz-filter: brightness(130%);
-    -o-filter: brightness(130%);
-    -ms-filter: brightness(110%);
-    transition: all 0.50s;
+  filter: grayscale(1);
 }
 
 /*COLOR*/
 .green {
-    background-color: var(--green);
-    color: var(--navy);
+  background-color: var(--green);
+  color: var(--navy);
 }
 
 .red {
-    background-color: var(--red);
-    color: var(--white);
+  background-color: var(--red);
+  color: var(--white);
 }
 
 .navy {
-    background-color: var(--navy);
-    color: var(--green);
+  background-color: var(--navy);
+  color: var(--green);
 }
 
 .black {
-    background-color: var(--black);
-    color: var(--white);
+  background-color: var(--black);
+  color: var(--white);
 }
 
 .white {
-    background-color: var(--white);
-    color: var(--black);
+  background-color: var(--white);
+  color: var(--black);
 }
 .green-txt {
-    color: var(--green);
+  color: var(--green);
 }
 
 .red-txt {
-    color: var(--red);
+  color: var(--red);
 }
 
 .navy-txt {
-    color: var(--navy);
+  color: var(--navy);
 }
 
 .black-txt {
-    color: var(--black);
+  color: var(--black);
 }
 
 .white-txt {
-    color: var(--white);
+  color: var(--white);
 }
 
-#dark .p{
-    color: var(--green);
+#dark .p {
+  color: var(--green);
 }
 
-#light{
-
+#light {
 }
 
 /*LOADER*/
 #loader-wrapper .loader-section {
-    position: fixed;
-    top: 0;
-    width: 51%;
-    height: 100%;
-    background: var(--navy);
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  width: 51%;
+  height: 100%;
+  background: var(--navy);
+  z-index: 1000;
 }
 #loader-wrapper .loader-section.section-left {
-    left: 0;
+  left: 0;
 }
- 
+
 #loader-wrapper .loader-section.section-right {
-    right: 0;
+  right: 0;
 }
 #loader {
-    display: block;
-    position: relative;
-    z-index: 1001; 
+  display: block;
+  position: relative;
+  z-index: 1001;
 }
 
 /* Loaded */
 .loaded #loader-wrapper .loader-section.section-left {
-    -webkit-transform: translateX(-100%);  /* Chrome, Opera 15+, Safari 3.1+ */
-    -ms-transform: translateX(-100%);  /* IE 9 */
-    transform: translateX(-100%);  /* Firefox 16+, IE 10+, Opera */
-    -webkit-transition: all 0.3s 0.3s ease-out;
-    transition: all 0.3s 0.3s ease-out;
+  -webkit-transform: translateX(-100%); /* Chrome, Opera 15+, Safari 3.1+ */
+  -ms-transform: translateX(-100%); /* IE 9 */
+  transform: translateX(-100%); /* Firefox 16+, IE 10+, Opera */
+  -webkit-transition: all 0.3s 0.3s ease-out;
+  transition: all 0.3s 0.3s ease-out;
 }
- 
+
 .loaded #loader-wrapper .loader-section.section-right {
-    -webkit-transform: translateX(100%);  /* Chrome, Opera 15+, Safari 3.1+ */
-    -ms-transform: translateX(100%);  /* IE 9 */
-    transform: translateX(100%);  /* Firefox 16+, IE 10+, Opera */
-    -webkit-transition: all 0.3s 0.3s ease-out;
-    transition: all 0.3s 0.3s ease-out;
+  -webkit-transform: translateX(100%); /* Chrome, Opera 15+, Safari 3.1+ */
+  -ms-transform: translateX(100%); /* IE 9 */
+  transform: translateX(100%); /* Firefox 16+, IE 10+, Opera */
+  -webkit-transition: all 0.3s 0.3s ease-out;
+  transition: all 0.3s 0.3s ease-out;
 }
 .loaded #loader {
-    opacity: 0;
-    display: none;
-    -webkit-transition: all 0.3s ease-out;
-    transition: all 0.3s ease-out;
+  opacity: 0;
+  display: none;
+  -webkit-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
 }
 .loaded #loader-wrapper {
-    visibility: hidden;
-    -webkit-transform: translateY(-100%);
-    -ms-transform: translateY(-100%);
-        transform: translateY(-100%);
-    -webkit-transition: all 0.3s 0.6s ease-out;
-        transition: all 0.3s 0.6s ease-out;
+  visibility: hidden;
+  -webkit-transform: translateY(-100%);
+  -ms-transform: translateY(-100%);
+  transform: translateY(-100%);
+  -webkit-transition: all 0.3s 0.6s ease-out;
+  transition: all 0.3s 0.6s ease-out;
 }
 
 /* ROOM CARD */
 #rooms {
-    display: flex;
+  display: flex;
 }
 
 .roomcard {
-    flex: 1;
+  flex: 1;
 
-    border: .1rem solid var(--black);
-    border-radius: .5rem;
-    padding:1rem;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    display:inline-block;
-    margin: 10px;
-    max-width: 300px;
+  border: 0.1rem solid var(--black);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  display: inline-block;
+  margin: 10px;
+  max-width: 300px;
 
-    /*Disable text selection*/
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+  /*Disable text selection*/
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .roomnum {
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    font-size: 3rem;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: 3rem;
 }
 
 /*PREFERENCES*/
 .btn-primary {
-    color: var(--black);
-    border-color: var(--black);
-    background-color: var(--white);
+  color: var(--black);
+  border-color: var(--black);
+  background-color: var(--white);
 }
 
 .btn-primary:hover {
-    color: var(--white);
-    border-color: var(--black);
-    background-color: var(--red);
+  color: var(--white);
+  border-color: var(--black);
+  background-color: var(--red);
 }
 
 .btn-primary:checked {
-    color: var(--white);
-    border-color: var(--black);
-    background-color: var(--red);
+  color: var(--white);
+  border-color: var(--black);
+  background-color: var(--red);
 }
 
 /* TEXT */
 /* see text color settings in COLOR section */
 
 h1 {
-    font-size: 2rem;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-  }
+  font-size: 2rem;
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
 
 h2 {
-    font-size: 1.5rem;
-    font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 1.5rem;
+  font-family: Georgia, "Times New Roman", Times, serif;
 }
 h3 {
-    font-size: 1rem;
-    font-weight: bold;
-    font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: Georgia, "Times New Roman", Times, serif;
 }
 h4 {
-    font-size: 1rem;
-    font-style: italic;
-    font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 1rem;
+  font-style: italic;
+  font-family: Georgia, "Times New Roman", Times, serif;
 }
 .roomcard:hover {
-    background-color: var(--whiteHover);
+  background-color: var(--whiteHover);
 }
 
 .drew {
-    margin: 0px 15px 0px 0px;
+  margin: 0px 15px 0px 0px;
 }
 
 .left-margin {
-    margin-left: 10px;
+  margin-left: 10px;
 }
 
 .navbar-brand {
-    color: var(--red);
-    font-weight: bold;
+  color: var(--red);
+  font-weight: bold;
+  border-radius: 8px;
+  width: 100px;
+  height: auto;
 }
 
 .navbar-nav {
-    width: 100%;
+  width: 100%;
 }
 
 .max-width {
-    width: 100%;
+  width: 100%;
 }
 
 .no-side-padding {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 .save-button-preferences {
-    margin-left: 10px;
-    margin-right: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .footer {
-    -webkit-transition: .5s ease-in-out;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    height: 34px;
-    width: 100%;
-    background-color: var(--navy);
-    margin: 0;
-    padding: 0;
-    padding-bottom: 10px;
-    color: white;
+  -webkit-transition: 0.5s ease-in-out;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 34px;
+  width: 100%;
+  background-color: var(--navy);
+  margin: 0;
+  padding: 0;
+  padding-bottom: 10px;
+  color: white;
 }
 
 .footer-content {
-    display: inline;
-    vertical-align: middle;
-    margin: 0;
-    padding: 0;
+  display: inline;
+  vertical-align: middle;
+  margin: 0;
+  padding: 0;
 }
 
 .small-link {
-    margin: 0;
-    padding: 0;
-    font-size: 1rem;
-    font-weight: bold;
-    color: var(--red);
-    text-decoration: none;
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--red);
+  text-decoration: none;
 }
 
 .no-decorations {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 .centered {
-    text-align: center;
+  text-align: center;
 }
 
 .right-align {
-    text-align: right;
+  text-align: right;
 }
 
 .dark-background {
-    background-color: var(--navy);
-    color: var(--white);
+  background-color: var(--navy);
+  color: var(--white);
 }
 
-
 .flash {
-    animation: flash-animation 0.5s;
+  animation: flash-animation 0.5s;
 }
 
 @keyframes flash-animation {
-    0% {
-        opacity: 1;
-    }
+  0% {
+    opacity: 1;
+  }
 
-    50% {
-        opacity: 0;
-    }
+  50% {
+    opacity: 0;
+  }
 
-    100% {
-        opacity: 1;
-    }
+  100% {
+    opacity: 1;
+  }
 }
 
 .exit {
-    font-size: 1.25rem;
-    margin-bottom: 0px;
-    padding-top: 0px;
-    -moz-transform: scale(-1, -1);
-    -webkit-transform: scale(-1, -1);
-    -o-transform: scale(-1, -1);
-    -ms-transform: scale(-1, -1);
-    transform: scale(-1, -1);
+  font-size: 1.25rem;
+  margin-bottom: 0px;
+  padding-top: 0px;
+  -moz-transform: scale(-1, -1);
+  -webkit-transform: scale(-1, -1);
+  -o-transform: scale(-1, -1);
+  -ms-transform: scale(-1, -1);
+  transform: scale(-1, -1);
 }
 
 .no-margin-below {
-    margin-bottom: 0px;
+  margin-bottom: 0px;
 }
 
 .no-padding {
-    padding: 0px;
+  padding: 0px;
 }
 
 .notification {
-    color: var(--red);
-    position: fixed;
-    top: 95%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #f1f1f1;
-    padding: 10px 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    opacity: 1;
-    transition: opacity 0.5s;
+  color: var(--red);
+  position: fixed;
+  top: 95%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #f1f1f1;
+  padding: 10px 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  transition: opacity 0.5s;
 }
 
 .notification.fade-out {
-    opacity: 0;
+  opacity: 0;
 }
-
 
 /*Thanks w3 schools: https://www.w3schools.com/howto/howto_js_rangeslider.asp */
 .slideContainer {
@@ -427,15 +408,15 @@ h4 {
 
 /* The slider itself */
 .slider {
-  -webkit-appearance: none;  /* Override default CSS styles */
+  -webkit-appearance: none; /* Override default CSS styles */
   appearance: none;
   width: 50%; /* Full-width */
   height: 25px; /* Specified height */
   background: #d3d3d3; /* Grey background */
   outline: none; /* Remove outline */
   opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
-  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
-  transition: opacity .2s;
+  -webkit-transition: 0.2s; /* 0.2 seconds transition on hover */
+  transition: opacity 0.2s;
 }
 
 /* Mouse-over effects */
@@ -449,14 +430,14 @@ h4 {
   appearance: none;
   width: 25px; /* Set a specific slider handle width */
   height: 25px; /* Slider handle height */
-  background: #04AA6D; /* Green background */
+  background: #04aa6d; /* Green background */
   cursor: pointer; /* Cursor on hover */
 }
 
 .slider::-moz-range-thumb {
   width: 25px; /* Set a specific slider handle width */
   height: 25px; /* Slider handle height */
-  background: #04AA6D; /* Green background */
+  background: #04aa6d; /* Green background */
   cursor: pointer; /* Cursor on hover */
 }
 /*End w3 schools*/
@@ -468,169 +449,202 @@ h4 {
 */
 
 .box {
-    border: .1rem solid var(--black);
-    border-radius: .5rem;
-    padding:1rem;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    display:inline-block;
-    width: 80%;
+  border: 0.1rem solid var(--black);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: Georgia, "Times New Roman", Times, serif;
+  display: inline-block;
+  width: 80%;
 
-    margin: 0 auto;
+  margin: 0 auto;
 
-    color: var(--white);
-    background-color: var(--navy);
-    cursor: pointer;
+  color: var(--white);
+  background-color: var(--navy);
+  cursor: pointer;
 
-    /*Disable text selection*/
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+  /*Disable text selection*/
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .subtitle {
-    font-style: italic;
-    color: var(--black);
+  font-style: italic;
+  color: var(--black);
 }
 
 .fadeIn {
-    opacity: 0;
-    animation: fadeIn 0.5s linear forwards;
+  opacity: 0;
+  animation: fadeIn 0.5s linear forwards;
 }
 
 .fadeOut {
-    opacity 1;
-    animation: fadeOut 0.5s linear forwards;
+  opacity: 1;
+  animation: fadeOut 0.5s linear forwards;
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; display: none; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+    display: none;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 @keyframes fadeOut {
-  100% { opacity: 0; display: none; visibility: collapse; }
-  0% { opacity: 1; visibility: visible; display: block; }
+  100% {
+    opacity: 0;
+    display: none;
+    visibility: collapse;
+  }
+  0% {
+    opacity: 1;
+    visibility: visible;
+    display: block;
+  }
 }
 
 .back {
-    width: 35%;
+  width: 35%;
 }
 
 .your-move {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 /* Settings and Invite Screen */
 #inviteScreen {
-    position: fixed;
-    width: 80%;
-    height: 80%;
-    z-index:98;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  position: fixed;
+  width: 80%;
+  height: 80%;
+  z-index: 98;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 
-    background-color: white;
-    border-radius: 30px;
-    padding: 30px;
+  background-color: white;
+  border-radius: 30px;
+  padding: 30px;
 }
 
 .close {
-    color: gray;
-    border-radius: 3rem;
-    font-size: 1.5rem;
-    width: 3rem;
-    height: 3rem;
-    text-align: center;
+  color: gray;
+  border-radius: 3rem;
+  font-size: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  text-align: center;
 }
 
 .share-link {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: bold;
-    color: var(--navy);
-    text-decoration: none;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--navy);
+  text-decoration: none;
 }
 
 .invite-card {
-    position: fixed;
-    width: 100%;
-    height: 10%;
-    min-height: 6rem;
-    z-index:99;
-    top: 80%;
-    left: 0;
-    transform: translate(0, -50%);
-    text-align: center;
+  position: fixed;
+  width: 100%;
+  height: 10%;
+  min-height: 6rem;
+  z-index: 99;
+  top: 80%;
+  left: 0;
+  transform: translate(0, -50%);
+  text-align: center;
 
-    background-color: var(--navy);
-    border-radius: 10px;
-    padding: 20px;
+  background-color: var(--navy);
+  border-radius: 10px;
+  padding: 20px;
 }
 
 .invite-card-header {
-    color: var(--white);
-    text-align: left;
+  color: var(--white);
+  text-align: left;
 }
 
 .invite-card-button {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: bold;
-    color: var(--red);
-    text-decoration: none;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--red);
+  text-decoration: none;
 }
 
 .invite-card-spacer {
-    margin: 10px;
-    color: black;
+  margin: 10px;
+  color: black;
 }
 
 .auto-shrink {
-    -webkit-transform:scale(0.75);
-    -moz-transform:scale(0.75);
-    -ms-transform:scale(0.75);
-    transform:scale(0.75);
+  -webkit-transform: scale(0.75);
+  -moz-transform: scale(0.75);
+  -ms-transform: scale(0.75);
+  transform: scale(0.75);
 }
 
 div.hand.sixteen-cards img {
-    /*2 rows, 8 cards each. For 15 and 16 card hands*/
-    width: 20%;
-    margin-right: -9%;
-    margin-bottom: -80px;
+  /*2 rows, 8 cards each. For 15 and 16 card hands*/
+  width: 20%;
+  margin-right: -9%;
+  margin-bottom: -80px;
 }
 
 .sixteen-cards {
-    /* Offset margin-right applied to cards */
-    padding-right: 6%;
-    padding-bottom: 80px;
-    padding-left: 0;
+  /* Offset margin-right applied to cards */
+  padding-right: 6%;
+  padding-bottom: 80px;
+  padding-left: 0;
 }
 
 div.hand.thirteen-cards img {
-    /*2 rows, 7 cards each. For 14 and 13 card hands*/
-    width: 23%;
-    margin-right: -10%;
-    margin-bottom: -70px;
+  /*2 rows, 7 cards each. For 14 and 13 card hands*/
+  width: 23%;
+  margin-right: -10%;
+  margin-bottom: -70px;
+}
+
+div.hand img{
+  border-radius: 16px;
+  z-index: 0;
+}
+
+div.hand img:hover:not(.grayed) {
+  -webkit-transition: all 0.5s;
+  transition: all 0.5s;
+  border: 1px solid gray;
+  border-radius: 16px;
+  filter: brightness(130%);
+  -webkit-filter: brightness(130%);
+  -moz-filter: brightness(130%);
+  -o-filter: brightness(130%);
+  -ms-filter: brightness(110%);
+  transition: all 0.5s;
+  position: relative;
+  z-index: 99;
 }
 
 .thirteen-cards {
-    padding-right: 4%;
-    padding-bottom: 70px;
-    padding-left: 0;
+  padding-right: 4%;
+  padding-bottom: 70px;
+  padding-left: 0;
 }
 
 div.hand.twelve-cards img {
-    /*2 rows, 6 cards each. For 12 and fewer card hands*/
-    width: 26%;
-    margin-right: -11%;
-    margin-bottom: -70px;
+  /*2 rows, 6 cards each. For 12 and fewer card hands*/
+  width: 26%;
+  margin-right: -11%;
+  margin-bottom: -70px;
 }
 
 .twelve-cards {
-    padding-right: 6%;
-    padding-bottom: 70px;
-    padding-left: 0;
+  padding-right: 6%;
+  padding-bottom: 70px;
+  padding-left: 0;
 }
 /*
 #outer {
@@ -638,394 +652,400 @@ div.hand.twelve-cards img {
 }
 */
 #chat-and-hand {
-    height: 40%;
+  height: 40%;
 }
+
 #chat-box-container {
-    height: 100%;
+  height: 100%;
+  padding-right: 16px;
 }
 
 #chatbox {
-    height: calc(100% - 50px);
+  height: calc(100% - 50px);
 }
 
 .nav-size {
-    height: auto;
-    width: 2.5rem;
+  height: auto;
+  width: 2.5rem;
 }
 
 .profile-link {
-    padding-bottom: 0;
-    padding-top: 0;
+  padding-bottom: 0;
+  padding-top: 0;
 }
 
 .no-click {
-    cursor: not-allowed;
+  cursor: not-allowed;
 }
 
 .avatar {
-    width: 50px;
+  width: 50px;
+}
+
+.active-player .avatar {
+  background-color: var(--red);
+  border-radius: 5px;
 }
 
 .card-in-table {
-    display: inline-block;
+  display: inline-block;
 }
 
 .table-section {
-
 }
 
 @media (min-width: 576px) {
-    .back {
-        width: 30%;
-    }
-    .invite-card {
-        width: 60%;
-        left: 40%;
-    }
-    div.hand.sixteen-cards img {
-        margin-bottom: -180px;
-    }
+  .back {
+    width: 30%;
+  }
+  .invite-card {
+    width: 60%;
+    left: 40%;
+  }
+  div.hand.sixteen-cards img {
+    margin-bottom: -180px;
+  }
 
-    .sixteen-cards {
-        padding-bottom: 180px;
-    }
+  .sixteen-cards {
+    padding-bottom: 180px;
+  }
 
-    div.hand.thirteen-cards img {
-        margin-bottom: -170px;
-    }
+  div.hand.thirteen-cards img {
+    margin-bottom: -170px;
+  }
 
-    .thirteen-cards {
-        padding-bottom: 170px;
-    }
+  .thirteen-cards {
+    padding-bottom: 170px;
+  }
 
-    div.hand.twelve-cards img {
-        margin-bottom: -170px;
-    }
+  div.hand.twelve-cards img {
+    margin-bottom: -170px;
+  }
 
-    .twelve-cards {
-        padding-bottom: 170px;
-    }
+  .twelve-cards {
+    padding-bottom: 170px;
+  }
 }
 
 @media (min-width: 768px) {
-    .back {
-        width: 20%;
-    }
-    .invite-card {
-        width: 50%;
-        left: 50%;
-    }
-    div.hand.sixteen-cards img {
-        margin-bottom: -120px;
-    }
+  .back {
+    width: 20%;
+  }
+  .invite-card {
+    width: 50%;
+    left: 50%;
+  }
+  div.hand.sixteen-cards img {
+    margin-bottom: -120px;
+  }
 
-    .sixteen-cards {
-        padding-bottom: 120px;
-    }
+  .sixteen-cards {
+    padding-bottom: 120px;
+  }
 
-    div.hand.thirteen-cards img {
-        margin-bottom: -110px;
-    }
+  div.hand.thirteen-cards img {
+    margin-bottom: -110px;
+  }
 
-    .thirteen-cards {
-        padding-bottom: 110px;
-    }
+  .thirteen-cards {
+    padding-bottom: 110px;
+  }
 
-    div.hand.twelve-cards img {
-        margin-bottom: -110px;
-    }
+  div.hand.twelve-cards img {
+    margin-bottom: -110px;
+  }
 
-    .twelve-cards {
-        padding-bottom: 110px;
-    }
+  .twelve-cards {
+    padding-bottom: 110px;
+  }
 }
 
 @media (min-width: 992px) {
-    .back {
-        width: 15%;
-    }
-    .invite-card {
-        width: 20%;
-        left: 80%;
-    }
-    body {
-        padding-left: 4rem;
-        padding-right: 4rem;
-        padding-bottom: 0;
-    }
-    #refresh {
-        margin-bottom: 0;
-    }
-    .auto-shrink {
-        -webkit-transform:scale(1);
-        -moz-transform:scale(1);
-        -ms-transform:scale(1);
-        transform:scale(1);
-    }
-    div.hand.sixteen-cards img {
-        /*2 rows, 8 cards each. 100% / 8 cards = 12.5% per card*/
-        width: 16%;
-        margin-right: -5%;
-        margin-bottom: 5px;
-    }
-    .sixteen-cards {
-        padding-right: 4%;
-        padding-bottom: 0;
-    }
-    div.hand.thirteen-cards img {
-        /*2 rows, 7 cards each. For 14 and 13 card hands*/
-        width: 18%;
-        margin-right: -5%;
-        margin-bottom: 5px;
-    }
-    .thirteen-cards {
-        padding-right: 4%;
-        padding-bottom: 0;
-    }
+  .back {
+    width: 15%;
+  }
+  .invite-card {
+    width: 20%;
+    left: 80%;
+  }
+  body {
+    padding-left: 4rem;
+    padding-right: 4rem;
+    padding-bottom: 0;
+  }
+  #refresh {
+    margin-bottom: 0;
+  }
+  .auto-shrink {
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    transform: scale(1);
+  }
+  div.hand.sixteen-cards img {
+    /*2 rows, 8 cards each. 100% / 8 cards = 12.5% per card*/
+    width: 16%;
+    margin-right: -5%;
+    margin-bottom: 5px;
+  }
+  .sixteen-cards {
+    padding-right: 4%;
+    padding-bottom: 0;
+  }
+  div.hand.thirteen-cards img {
+    /*2 rows, 7 cards each. For 14 and 13 card hands*/
+    width: 18%;
+    margin-right: -5%;
+    margin-bottom: 5px;
+  }
+  .thirteen-cards {
+    padding-right: 4%;
+    padding-bottom: 0;
+  }
 
-    div.hand.twelve-cards img {
-        /*2 rows, 6 cards each. For 12 and fewer card hands*/
-        width: 20%;
-        margin-right: -5%;
-        margin-bottom: 5px;
-    }
+  div.hand.twelve-cards img {
+    /*2 rows, 6 cards each. For 12 and fewer card hands*/
+    width: 20%;
+    margin-right: -5%;
+    margin-bottom: 5px;
+  }
 
-    .twelve-cards {
-        padding-right: 4%;
-        padding-bottom: 0;
-    }
+  .twelve-cards {
+    padding-right: 4%;
+    padding-bottom: 0;
+  }
 }
 
 @media (min-width: 1200px) {
-    .back {
-        width: 15%;
-    }
-    div.hand.sixteen-cards img {
-        /*2 rows, 8 cards each. 100% / 8 cards = 12.5% per card*/
-        width: 11%;
-        margin-right: 0;
-    }
-    .sixteen-cards {
-        padding-right: 0;
-    }
-    div.hand.thirteen-cards img {
-        /*2 rows, 7 cards each. For 14 and 13 card hands*/
-        width: 13%;
-        margin-right: 0;
-    }
-    .thirteen-cards {
-        padding-right: 0;
-    }
-    div.hand.twelve-cards img {
-        /*2 rows, 6 cards each. For 12 and fewer card hands*/
-        width: 15%;
-        margin-right: 0;
-    }
+  .back {
+    width: 15%;
+  }
+  div.hand.sixteen-cards img {
+    /*2 rows, 8 cards each. 100% / 8 cards = 12.5% per card*/
+    width: 11%;
+    margin-right: 0;
+  }
+  .sixteen-cards {
+    padding-right: 0;
+  }
+  div.hand.thirteen-cards img {
+    /*2 rows, 7 cards each. For 14 and 13 card hands*/
+    width: 13%;
+    margin-right: 0;
+  }
+  .thirteen-cards {
+    padding-right: 0;
+  }
+  div.hand.twelve-cards img {
+    /*2 rows, 6 cards each. For 12 and fewer card hands*/
+    width: 15%;
+    margin-right: 0;
+  }
 
-    .twelve-cards {
-        padding-right: 0;
-    }
-    .grayed {
-        display: inline-flex;
-    }
-    .profile-link {
-        margin-left: auto;
-        margin-right: 0;
-        display: block;
-    }
+  .twelve-cards {
+    padding-right: 0;
+  }
+  /* .grayed {
+    display: inline-flex;
+  } */
+  .profile-link {
+    margin-left: auto;
+    margin-right: 0;
+    display: block;
+  }
 }
 
 @media (min-width: 1400px) {
-    .back {
-        width: 10%;
-    }
+  .back {
+    width: 10%;
+  }
 }
 
 .board-container {
-    display: grid;
-    gap: 1px;
-    height: 100%;
-    width: 100%;
-    grid-template-columns: [cols-start col1-start] 1fr [col1-end col2-start] 5fr [col2-end col3-start] 1fr [col3-end cols-end];
-    grid-template-rows: [rows-start row1-start] 1fr [row1-end row2-start] 5fr [row2-end row3-start] 1fr [row3-end rows-end];
-    outline: green solid 3px;
+  display: grid;
+  gap: 1px;
+  height: 100%;
+  width: 100%;
+  grid-template-columns: [cols-start col1-start] 1fr [col1-end col2-start] 5fr [col2-end col3-start] 1fr [col3-end cols-end];
+  grid-template-rows: [rows-start row1-start] 1fr [row1-end row2-start] 5fr [row2-end row3-start] 1fr [row3-end rows-end];
+  outline: green solid 3px;
 }
 
 .player-1-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform-origin: center center;
-    grid-column: col2-start / col2-end;
-    grid-row: row3-start / row3-end;
-    outline: red solid 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  grid-column: col2-start / col2-end;
+  grid-row: row3-start / row3-end;
+  outline: red solid 1px;
 }
 
 .player-2-container {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    transform-origin: center center;
-    grid-column: col3-start / col3-end;
-    grid-row: row2-start / row2-end;
-    outline: red solid 1px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  grid-column: col3-start / col3-end;
+  grid-row: row2-start / row2-end;
+  outline: red solid 1px;
 }
 
 .player-3-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform-origin: center center;
-    grid-column: col2-start / col2-end;
-    grid-row: row1-start / row1-end;
-    outline: red solid 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  grid-column: col2-start / col2-end;
+  grid-row: row1-start / row1-end;
+  outline: red solid 1px;
 }
 
 .player-4-container {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    transform-origin: center center;
-    grid-column: col1-start / col1-end;
-    grid-row: row2-start / row2-end;
-    outline: red solid 1px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center center;
+  grid-column: col1-start / col1-end;
+  grid-row: row2-start / row2-end;
+  outline: red solid 1px;
 }
 
 .table-container {
-    /*outline: green solid 3px;*/
+  /*outline: green solid 3px;*/
 }
 
 .chat-box-container {
-    display: flex;
-    flex-direction: column;
-    /*border: 2px solid var(--navy);
+  display: flex;
+  flex-direction: column;
+  /*border: 2px solid var(--navy);
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.15);
     background-color: var(--tan);*/
-    padding-left: 0px;
-    padding-right: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
 }
 
 .chat-box {
-    max-height: 300px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    border-left : 0px;
-    border-right: 0px;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-left: 0px;
+  border-right: 0px;
 }
 .chat-box-entry {
-    display: flex;
-    justify-content: space-between;
-    height: 50px;
+  display: flex;
+  justify-content: space-between;
+  height: 50px;
 }
 
 .chat-form {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .chat-input {
-    width: 100%;
-    margin-right: 0px;
-    border-radius: 5px 0px 0px 5px;
+  width: 100%;
+  margin-right: 0px;
+  border-radius: 5px 0px 0px 5px;
 }
 
 .send-button {
-    flex-shrink: 0;
-    margin: 2px;
-    margin-left: 0px;
-    margin-top: 10px;
-    height: 30px;
-    border-radius: 0px 15px 15px 0px;
-    text-align: center;
-    vertical-align: center;
-    padding-top: 0px;
+  flex-shrink: 0;
+  margin: 2px;
+  margin-left: 0px;
+  margin-top: 10px;
+  height: 30px;
+  border-radius: 0px 15px 15px 0px;
+  text-align: center;
+  vertical-align: center;
+  padding-top: 0px;
 }
 
 .message-container {
-    display: flex;
-    flex-direction: row; /* Stack author and chat bubble horizontally */
+  display: flex;
+  flex-direction: row; /* Stack author and chat bubble horizontally */
 }
 
 .author-container {
-    display: flex;
-    flex-direction: column;
-    margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: auto;
 }
 
 .author-text {
-    color: var(--navy);
+  color: var(--navy);
 }
 
 .chat-bubble {
-    display: flex;
-    margin: 8px;
-    width: 100%;
+  display: flex;
+  margin: 8px;
+  width: 100%;
 }
 
 .message {
-    color: var(--white); /* Set the text color for messages */
-    border-radius: 10px; /* Add rounded corners to the bubble */
-    padding: 10px; /* Add padding to the bubble */
-    padding-bottom: 2px;
-    width: 100%; /* Make the chat bubble fill the horizontal space */
-    display: flex;
-    flex-direction: column; /* Stack message and timestamp vertically */
-    margin: 1px;
+  color: var(--white); /* Set the text color for messages */
+  border-radius: 10px; /* Add rounded corners to the bubble */
+  padding: 10px; /* Add padding to the bubble */
+  padding-bottom: 2px;
+  width: 100%; /* Make the chat bubble fill the horizontal space */
+  display: flex;
+  flex-direction: column; /* Stack message and timestamp vertically */
+  margin: 1px;
 }
 
 .error-message {
-    background-color: var(--red);
+  background-color: var(--red);
 }
 
 .regular-message {
-    background-color: var(--navy);
+  background-color: var(--navy);
 }
 
 .message-text {
-    /* Style for the message text span */
+  /* Style for the message text span */
 }
 
 .bold {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .timestamp {
-    align-self: flex-end;
-    color: var(--white); /* Adjust the color of the timestamp as needed */
-    font-size: 10px; /* Adjust the font size as needed */
+  align-self: flex-end;
+  color: var(--white); /* Adjust the color of the timestamp as needed */
+  font-size: 10px; /* Adjust the font size as needed */
 }
 
 .actionInfo {
-    /*outline: purple solid 3px;*/
+  /*outline: purple solid 3px;*/
 }
 
 .roundInfo {
-    /*outline: blue solid 3px;*/
+  /*outline: blue solid 3px;*/
 }
 
 .hand {
-    /*outline: orange solid 3px;*/
+  /*outline: orange solid 3px;*/
 }
 
 .p1 {
-    transform: rotate(0deg);
+  transform: rotate(0deg);
 }
 
 .p2 {
-    transform: rotate(270deg);
+  transform: rotate(270deg);
 }
 
 .p3 {
-    transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .p4 {
-    transform: rotate(90deg);
+  transform: rotate(90deg);
 }
 
 .clearfix {
@@ -1035,10 +1055,117 @@ div.hand.twelve-cards img {
 }
 
 .disabled {
-    background-color: var(--gray);
-    cursor: not-allowed;
+  background-color: var(--gray);
+  cursor: not-allowed;
 }
 
 .hidden {
-    display: none !important;
+  display: none !important;
+}
+
+.author-avatar {
+  width: 100px;
+  height: auto;
+}
+
+/* Learn page */
+
+.btn-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #212529;
+}
+
+.btn-subtitle {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.btn-author {
+  font-size: 0.9rem;
+  color: #adb5bd;
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.card-link {
+  margin: 0;
+  padding: 0;
+  color: var(--red);
+  text-decoration: none;
+}
+
+/* Tutorial page */
+.trainer-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6); /* overlay dark backdrop */
+  z-index: 9999;
+  padding: 1rem;
+  box-sizing: border-box;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.trainer-img {
+  max-height: 80%;
+  object-fit: contain;
+  position: absolute;
+  right: 1rem;
+  top: calc(1rem + 50%); /* Moved down 50% from original position */
+  z-index: 1;
+  transition: transform 0.3s ease; /* Smooth rotation animation */
+  cursor: pointer; /* Indicates it's clickable */
+}
+
+.trainer-img.flipped {
+  transform: rotate(180deg);
+}
+
+.speech-box {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.speech-text {
+  font-size: 1.2rem;
+  color: #333;
+  min-height: 3rem;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.d-flex-reg {
+  display: flex; /* Used because it does not have !important */
+}
+
+.table-card {
+  width: 100px;
+  height: auto;
+}
+
+/* Donate Page */
+.link-card {
+  border-radius: 0.5rem;
+}
+
+/* User preferences */
+
+.pfp-choice {
+  width: 100px;
+}
+
+.deck-choice {
+  width: 100px;
 }

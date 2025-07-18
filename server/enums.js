@@ -1,7 +1,16 @@
-const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump' };
+const SUIT = { 0: 'Spade', 1: 'Club', 2: 'Heart', 3: 'Diamond', 4: 'Trump', SPADE: 'Spade', CLUB: 'Club', HEART: 'Heart', DIAMOND: 'Diamond', TRUMP: 'Trump' };
 
 const SUIT_REVERSE = { Spade: 0, Club: 1, Heart: 2, Diamond: 3, Trump: 4 };
 
+const VALUE = { 
+    ACE: 'Ace', TWO: 'Two', THREE: 'Three', FOUR: 'Four', 
+    SEVEN: 'Seven', EIGHT: 'Eight', NINE: 'Nine', TEN: 'Ten', 
+    JACK: 'Jack', RIDER: 'Rider', QUEEN: 'Queen', KING: 'King', 
+    I: 'I', II: 'II', III: 'III', IIII: 'IIII', V: 'V', VI: 'VI',
+    VII: 'VII', VIII: 'VIII', IX: 'IX', X: 'X', XI: 'XI', XII: 'XII',
+    XIII: 'XIII', XIV: 'XIV', XV: 'XV', XVI: 'XVI', XVII: 'XVII',
+    XVIII: 'XVIII', XIX: 'XIX', XX: 'XX', XXI: 'XXI', SKYZ: 'Skyz'
+};
 const RED_VALUE = { 0: 'Ace', 1: 'Two', 2: 'Three', 3: 'Four', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const RED_VALUE_ACE_HIGH = { 0: 'Two', 1: 'Three', 2: 'Four', 3: 'Ace', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
 const BLACK_VALUE = { 0: 'Seven', 1: 'Eight', 2: 'Nine', 3: 'Ten', 4: 'Jack', 5: 'Rider', 6: 'Queen', 7: 'King' };
@@ -25,20 +34,81 @@ const VALUE_REVERSE_ACE_HIGH = {
 const DIFFICULTY = { BEGINNER: 0, EASY: 1, NORMAL: 2, HARD: 3, RUTHLESS: 4, AI: 5 };
 const DIFFICULTY_TABLE = {0: 'Beginner', 1: 'Easy', 2: 'Normal', 3: 'Hard', 4: 'Ruthless', 5: 'AI'};
 
-const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16};
+const MESSAGE_TYPE = {POVINNOST: 0, MONEY_CARDS: 1, PARTNER: 2, VALAT: 3, CONTRA: 4, IOTE: 5, LEAD: 6, PLAY: 7, WINNER: 8, PREVER_TALON: 9, PAY: 10, CONNECT: 11, DISCONNECT: 12, SETTING: 13, TRUMP_DISCARD: 14, NOTATION: 15, DRAW: 16, CUT: 17};
 
 const PLAYER_TYPE = { HUMAN: 0, ROBOT: 1, AI: 2, H: 0, R: 1 };
 
 const DISCONNECT_TIMEOUT = 20 * 1000; //Number of milliseconds after disconnect before player info is deleted
 const SENSITIVE_ACTIONS = {'povinnostBidaUniChoice': true,'contra': true, 'preverContra': true, 'preverValatContra': true, 'valatContra': true, 'iote': true};
 
-const ROOM_TYPE = {STANDARD: 0, DEBUG: 1, TRAINING: 2, CHALLENGE: 3};
+const ROOM_TYPE = {STANDARD: 0, DEBUG: 1, TRAINING: 2, CHALLENGE: 3, TEST: 4};
 
 const NUM_AVATARS = 58;
+
+const ACTION = {
+    START: 'start',
+    PLAY: 'play',
+    SHUFFLE: 'shuffle',
+    CUT: 'cut',
+    DEAL: 'deal',
+    CHOICE: '12choice',
+    PREVER: 'prever',
+    DRAW_TALON: 'drawTalon',
+    PASS_TALON: 'passTalon',
+    PASS_PREVER: 'passPrever',
+    CALL_PREVER: 'callPrever',
+    DISCARD: 'discard',
+    DRAW_PREVER_TALON: 'drawPreverTalon',
+    MONEY_CARDS: 'moneyCards',
+    PARTNER: 'partner',
+    POVINNOST_BIDA_UNI_CHOICE: 'povinnostBidaUniChoice',
+    VALAT: 'valat',
+    LEAD: 'lead',
+    FOLLOW: 'follow',
+    IOTE: 'iote',
+    CONTRA: 'contra',
+    PREVER_CONTRA: 'preverContra',
+    PREVER_VALAT_CONTRA: 'preverValatContra',
+    VALAT_CONTRA: 'valatContra',
+    WIN_TRICK: 'winTrick',
+    COUNT_POINTS: 'countPoints',
+    RESET: 'resetBoard',
+    RETRY: 'retry',
+}
+
+const SHUFFLE_TYPE = {
+    CUT: 1,
+    RIFFLE: 2,
+    RANDOM: 3
+}
+
+const CUT_TYPE = {
+    CUT: 'Cut',
+    ONES: '1',
+    TWOS: '2',
+    THREES: '3',
+    FOURS: '4',
+    SIXES: '6',
+    TWELVES: '12',
+    TWELVE_STRAIGHT: '12 Straight',
+    THREE_FOUR_FIVE: '345',
+}
+
+const MONEY_CARDS = {
+    UNI: 'Uni',
+    BIDA: 'Bida',
+    TAROKY: 'Taroky',
+    TAROCKY: 'Tarocky',
+    TRUL: 'Trul',
+    PANE: 'Pane',
+    ROSA_PANE: 'Rosa-Pane',
+    ROSA_PANE_PLUS: 'Rosa-Pane+'
+};
 
 module.exports = {
     SUIT,
     SUIT_REVERSE,
+    VALUE,
     RED_VALUE,
     RED_VALUE_ACE_HIGH,
     BLACK_VALUE,
@@ -52,5 +122,9 @@ module.exports = {
     DISCONNECT_TIMEOUT,
     SENSITIVE_ACTIONS,
     ROOM_TYPE,
-    NUM_AVATARS
+    NUM_AVATARS,
+    ACTION,
+    SHUFFLE_TYPE,
+    CUT_TYPE,
+    MONEY_CARDS,
 }

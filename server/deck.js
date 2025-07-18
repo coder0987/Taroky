@@ -1,7 +1,7 @@
 const { SUIT,
     SUIT_REVERSE,
+    VALUE,
     RED_VALUE,
-    RED_VALUE_ACE_HIGH,
     BLACK_VALUE,
     TRUMP_VALUE,
     VALUE_REVERSE,
@@ -14,10 +14,13 @@ const SUIT_SORT_ORDER = {
 }
 
 class Deck {
-    constructor() {
-        this._baseDeck = Deck.createDeck();
+    constructor(d) {
+        if (d) {
+            //Create a copy of this deck instead
+            this._deck = structuredClone(d.deck);
+            return;
+        }
         this._deck = Deck.createDeck();
-        this.shuffleDeck(3);
     }
 
     static createDeck() {
@@ -72,6 +75,165 @@ class Deck {
         return this._deck.splice(start, end);
     }
 
+    dealTalon(talon) {
+        for (let i = 0; i < 6; i++)
+            talon[i] = this.splice(0, 1)[0];
+    }
+
+    dealBy(hands, num) {
+        for (let i = 0; this._deck[0]; i = (i + 1) % 4) {
+            for (let c = 0; c < num; c++) {
+                hands[i].push(this.splice(0, 1)[0]);
+            }
+        }
+    }
+
+    deal345(hands) {
+        for (let t = 3; t < 6; t++) {
+            for (let i = 0; i < 4; i++) {
+                for (let c = 0; c < t; c++) hands[i].push(this.splice(0, 1)[0]);
+            }
+        }
+    }
+
+    static dealHand(from, to) {
+        while (from[0]) {to.push(from.splice(0,1)[0]);}
+    }
+
+    static dealCards(from, to, count) {
+        for (let i=0; i<count; i++) {to.push(from.splice(0,1)[0]);}
+    }
+
+    static copyCards(from, to, count) {
+        to.push(...from.slice(0,count));
+    }
+
+    static removeCard(from, card) {
+        for (let i in from) {
+            if (from[i].suit === card.suit && from[i].value === card.value) {
+                return from.splice(i, 1)[0];
+            }
+        }
+        return null;
+    }
+
+    static points(cards) {
+        let tp = 0;
+        for (let i in cards) {
+            tp += Deck.pointValue(cards[i]);
+        }
+        return tp;
+    }
+
+    static get5(cards) {
+        if (cards.length == 0) {return 0;}
+        if (Deck.points(cards) <= 5 || cards.length <= 4) {
+            return cards.length;
+        }
+        if (Deck.points(cards.slice(0,5)) > 5) {
+            //First 5 are not all 1s
+            if (Deck.pointValue(cards[0]) == 5) {
+                return 1;//5-pointer
+            }
+            if (Deck.pointValue(cards[1]) == 5) {
+                let temp = cards[0];
+                cards[0] = cards[1];
+                cards[1] = temp;
+                return 1;
+            }
+            if (Deck.points(cards.slice(0,2)) == 5) {
+                //Queen and 1, or rider and jack
+                return 2;
+            }
+            if (Deck.pointValue(cards[2]) == 5) {
+                let temp = cards[0];
+                cards[0] = cards[2];
+                cards[2] = temp;
+                return 1;
+            }
+            if (Deck.points(cards.slice(0,3)) == 5) {
+                return 3;
+            }
+            if (Deck.pointValue(cards[3]) == 5) {
+                let temp = cards[0];
+                cards[0] = cards[3];
+                cards[3] = temp;
+                return 1;
+            }
+            if (Deck.points(cards.slice(0,4)) == 5) {
+                return 4;
+            }
+            switch (Deck.pointValue(cards[0])) {
+                case 1:
+                    //First few cards don't add up to 5 - next two together must bust
+                case 2:
+                    //Next two together must bust
+                    return 1;//I'm too lazy to code that
+                case 3:
+                    //May bust with second. Look either for a jack or 2 1s
+                    let first = -1;
+                    for (let i in cards) {
+                        let pv = Deck.pointValue(cards[i])
+                        if (pv == 1 && ~first) {
+                            let temp = cards[1];
+                            cards[1] = cards[first];
+                            cards[first] = temp;
+
+                            temp = cards[2];
+                            cards[2] = cards[i];
+                            cards[i] = temp;
+                            return 3;
+                        } else if (pv == 1) {
+                            first = i;
+                        } else if (pv == 2) {
+                            let temp = cards[1];
+                            cards[1] = cards[i];
+                            cards[i] = temp;
+                            return 2;
+                        }
+                    }
+                    return cards.length; // Nothing adds to 5
+                case 4:
+                    //Def. busts with second card. Look for 1 pointer
+                    let idx = -1;
+                    for (let i in cards) {
+                        if (Deck.pointValue(cards[i]) == 1) {
+                            idx = i;
+                            break;
+                        }
+                    }
+                    if (idx = -1) {
+                        //No more 1-pointers :( just give up
+                        return cards.length;
+                    }
+                    let temp = cards[1];
+                    cards[1] = cards[idx];
+                    cards[idx] = temp;
+                    return 2;
+            }
+        }
+        return 5;//First 5 are all 1s
+    }
+
+    static simulateCounting(povCards, oppCards) {
+        let stack = [];
+
+        //Simulate counting the cards and return one string of all the cards put together
+        if (povCards.length < oppCards.length - 5) {
+            let num;
+            while (num = Deck.get5(povCards)) {
+                stack = stack.concat(povCards.splice(0,num));
+            }
+        }
+        if (oppCards.length < povCards.length - 5) {
+            let num;
+            while (num = Deck.get5(oppCards)) {
+                stack = stack.concat(oppCards.splice(0,num));
+            }
+        }
+        return povCards.concat(stack).concat(oppCards);
+    }
+
     static sortCards(toSort, aceHigh) {
         let valueEnum = aceHigh ? VALUE_REVERSE_ACE_HIGH : VALUE_REVERSE;
         toSort = toSort.sort((a, b) => {
@@ -107,8 +269,8 @@ class Deck {
     }
 
     static pointValue(card) {
-        if (card.suit == 'Trump') {
-            if (card.value == 'I' || card.value == 'XXI' || card.value == 'Skyz') {
+        if (card.suit == SUIT.TRUMP) {
+            if (card.value == VALUE.I || card.value == VALUE.XXI || card.value == VALUE.SKYZ) {
                 return 5;
             }
             return 1;
@@ -151,6 +313,23 @@ class Deck {
     static handContains(handToCheck, valueToCheck, suitToCheck) {
         for (let i in handToCheck) {
             if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck) {
+                return true;
+            }
+        }
+        return false;
+    }
+    static handContainsNonGray(handToCheck, valueToCheck, suitToCheck) {
+        for (let i in handToCheck) {
+            if (handToCheck[i].value == valueToCheck && handToCheck[i].suit == suitToCheck && !handToCheck[i].grayed) {
+                return true;
+            }
+        }
+        return false;
+    }
+    static moveCard(from, to, suit, value) {
+        for (let i in from) {
+            if (from[i].suit == suit && from[i].value == value) {
+                to.push(from.splice(i, 1)[0]);
                 return true;
             }
         }
@@ -264,6 +443,51 @@ class Deck {
         for (let i in hand) {
             hand[i].grayed = false;
         }
+    }
+    static getPlayerToDiscard(hands, povinnost) {
+        const { playerOffset } = require('./utils'); // Put here to remove dependency cycle :/
+        for (let i = 0; i < hands.length; i++) {
+            // Starting with povinnost, check all 4 hands to see if any have more than 12 cards
+            const p = playerOffset(povinnost, i);
+
+            if (hands[p].length > 12) {
+                return p;
+            }
+        }
+
+        // If all have 12 or fewer, return -1
+        return -1;
+    }
+    static handContainsTrul(hand) {
+        let hasSkyz = false, hasXXI = false, hasI = false;
+
+        for (const card of hand) {
+            if (card.value === VALUE.SKYZ) hasSkyz = true;
+            else if (card.value === VALUE.XXI) hasXXI = true;
+            else if (card.value === VALUE.I) hasI = true;
+        }
+
+        return hasSkyz && hasXXI && hasI;
+    }
+    static handContainsRosaPane(hand) {
+        let kings = [false, false, false, false];
+
+        for (const card of hand) {
+            if (card.value === VALUE.KING) {
+                kings[ SUIT_REVERSE[card.suit] ] = true;
+            }
+        }
+
+        return kings[0] && kings[1] && kings[2] && kings[3];
+    }
+    static num5Count(hand) {
+        let count = 0;
+        for (let i in hand) {
+            if (Deck.pointValue(hand[i]) === 5) {
+                count++;
+            }
+        }
+        return count;
     }
     static numOfSuit(hand, suit) {
         let suitCount = 0;
@@ -465,6 +689,10 @@ class Deck {
     //Getters
     get deck() {
         return this._deck
+    }
+
+    set deck(deck) {
+        this._deck = deck;
     }
 
 }

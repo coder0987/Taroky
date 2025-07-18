@@ -164,7 +164,6 @@ class NavBarRenderer {
         this._accountHandler = document.getElementById("accountHandler");
         this._profile = document.getElementById('profile-a');
         this._avatar = document.getElementById('profile-img');
-        this._tour = document.getElementById('tour');
         if (loaded) {
             $('body').addClass('loaded');
             this._navbar.classList.add("fixed-top");
@@ -204,12 +203,6 @@ class NavBarRenderer {
         }
         this._accountHandler.href = href;
         return this._accountHandler;
-    }
-    renderTour() {
-        this._tour = document.getElementById('tour');
-        if (SHOW_TOUR && this._tour) {
-            this._tour.removeAttribute('hidden');
-        }
     }
 
     get accountHandler() {
@@ -257,7 +250,8 @@ class InviteRenderer {
         joinButton.addEventListener('click', () => {
             exitCurrentRoom(true);
            document.body.removeChild(card);
-           clearTimeout(cardRemoveTimeout);joinFromInvite(roomCode)
+           clearTimeout(cardRemoveTimeout);
+           joinFromInvite(roomCode);
         }, {once:true});
         card.appendChild(joinButton);
 
@@ -297,6 +291,7 @@ class RoomsRenderer {
 
     render() {
         if (!renderer.gamestate.inGame) {
+            console.log('Drawing rooms ' + JSON.stringify(availableRooms));
             this.clear();
             this.createNewRoomCard();
             for (let i in availableRooms) {
@@ -455,6 +450,8 @@ class RoomsRenderer {
         this._rooms.appendChild(bDiv);
     }
     drawLeaderboards() {
+        const showscores = typeof renderer.gamestate.dailyChallengeScore !== 'undefined';
+
         if (renderer.gamestate.leaderboard && renderer.gamestate.leaderboard.length > 0) {
             this._leaderboard.innerHTML = '';
             let l1d = document.createElement('div');
@@ -473,18 +470,8 @@ class RoomsRenderer {
 
             for (let i in renderer.gamestate.leaderboard) {
                 let l1t = document.createElement('p');
-                l1t.innerHTML = (+i+1) + '. ' + renderer.gamestate.leaderboard[i].name + ': ' + renderer.gamestate.leaderboard[i].score;
+                l1t.innerHTML = (+i+1) + '. ' + renderer.gamestate.leaderboard[i].name + (showscores ? ': ' + renderer.gamestate.leaderboard[i].score : '');
                 l1d.appendChild(l1t)
-            }
-
-            let l2p = document.createElement('h3');
-            l2p.innerHTML = 'Daily Challenge Multi-Try Top Scores';
-            l2d.appendChild(l2p);
-            l2d.appendChild(document.createElement('hr'))
-            for (let i in renderer.gamestate.retryLeaderboard) {
-                let l2t = document.createElement('p');
-                l2t.innerHTML = (+i+1) + '. ' + renderer.gamestate.retryLeaderboard[i].name + ': ' + renderer.gamestate.retryLeaderboard[i].score;
-                l2d.appendChild(l2t)
             }
 
             this._leaderboard.removeAttribute('hidden');
@@ -628,7 +615,6 @@ function includeHTML() {
                     /* Remove the attribute, and call this function once more: */
                     elmnt.removeAttribute("w3-include-html");
                     includeHTML();
-                    renderer.hud.nav.renderTour();
                 }
             }
             xhttp.open("GET", file, true);
