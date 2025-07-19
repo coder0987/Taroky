@@ -1,5 +1,5 @@
 div.user-sm {
-    max-height: 3rem;
+    height: 3rem;
     background-color: var(--white);
     box-shadow: 0 4px 8px 0 var(--black);
     border-radius: 3rem;
@@ -7,6 +7,7 @@ div.user-sm {
     color: var(--navy);
     text-transform: lowercase;
     font-weight: bold;
+    margin: .25rem;
 }
 
 img.profile-sm {
@@ -16,9 +17,11 @@ img.profile-sm {
 
 img.profile-lg {
     border-radius:50%;
-    max-width: 10rem;
+    max-width: 20rem;
     background-color: var(--white);
     border: .2rem solid var(--navy);
+    float: center;
+    margin: 1rem;
 }
 
 div.user-card {
@@ -27,6 +30,7 @@ div.user-card {
     margin: 5%;
     padding: 2rem;
     border-radius: 3rem;
+    text-align: center;
 }
 
 img.lead {
@@ -41,34 +45,6 @@ span.prev-1 {
     font-weight: bold;
     max-height: 2rem;
     padding: .5rem;
-    background-image: url(/public/assets/gameplay/chip-black.png);
-    background-size: 100%;
-    background-repeat: no-repeat;
-    background-position: 0ch;
-    @media(max-width: 720px) {
-        visibility: hidden;
-    }
-}
-span.prev-2 {
-    text-align: center;
-    color: var(--black);
-    font-weight: bold;
-    max-height: 2rem;
-    padding: .5rem;
-    background-image: url(/public/assets/gameplay/chip-green.png);
-    background-size: 100%;
-    background-repeat: no-repeat;
-    background-position: 0ch;
-    @media(max-width: 720px) {
-        visibility: hidden;
-    }
-}
-span.prev-3 {
-    text-align: center;
-    color: var(--white);
-    font-weight: bold;
-    max-height: 2rem;
-    padding: .5rem;
     background-image: url(/public/assets/gameplay/chip-blue.png);
     background-size: 100%;
     background-repeat: no-repeat;
@@ -77,7 +53,7 @@ span.prev-3 {
         visibility: hidden;
     }
 }
-span.prev-4 {
+span.prev-2 {
     text-align: center;
     color: var(--white);
     font-weight: bold;
@@ -91,7 +67,7 @@ span.prev-4 {
         visibility: hidden;
     }
 }
-span.prev-5 {
+span.prev-3 {
     text-align: center;
     color: var(--black);
     font-weight: bold;
@@ -118,4 +94,9 @@ p.align-items-right {
     box-shadow: 0 4px 8px 0 var(--black);
     border-radius: 2rem;
     margin: 5%;
+}
+
+#user-stats {
+    margin: 2rem 10%;
+    max-width: 80%;
 }

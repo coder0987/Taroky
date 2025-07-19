@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/public/css/bootstrap.min.css">
+<script src="/public/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="/public/style.css">
+<link rel="stylesheet" href="/public/test-components/leaderboard.css">
+<link rel="stylesheet" href="/public/test-components/newroom.css">
+</head>
+<body>
+    <div class="container new-room">
+    <!--click to copy room code-->
+    <h1>Room IV | <button class="btn btn-outline-light">ABC123</button> | <button class="btn btn-light">Invite</button></h1>
+        <div class="row">
+        <div class="form-check form-switch">
+            <!--set labels to hidden when not selected-->
+            <label for="privacy-setting">Public</label> 
+            <input class="form-check-input" id="privacy-setting" type="checkbox">
+            <label for="privacy-setting">Private</label>
+        </div>
+    </div>
+    <div class="row">
+       <div class="user-sm col-lg-2 col-md-3 col-sm-6"><img class="profile-sm" src="/public/assets/profile-pictures/profile-13.png"> Sam72 </div>
+       <div class="user-sm col-lg-2 col-md-3 col-sm-6"><img class="profile-sm" src="/public/assets/profile-pictures/profile-1.png"> pepsiislife</div>
+        <div class="user-sm col-lg-2 col-md-3 col-sm-6"><img class="profile-sm" src="/public/assets/profile-pictures/profile-19.png"> User93840</div>
+      <div class="user-sm col-lg-2 col-md-3 col-sm-6"><i class="bi bi-robot"></i> bot</div></p>
+    </div>
+    <div class="row">
+        <label for="difficulty" class="form-label">Difficulty</label>
+        <div class="input-group mb-3"  name="difficulty">
+            <button class="btn btn-outline-light btn-check" name="difficulty" type="radio" id="dif-beg" for="dif-beg">Beginner</button>
+            <button class="btn btn-outline-light btn-check" name="difficulty" type="radio" id="dif-easy" for="dif-easy">Easy</button>
+            <button class="btn btn-outline-light btn-check" name="difficulty" type="radio" id="dif-norm" for="dif-norm" checked>Normal</button>
+            <button class="btn btn-outline-light btn-check" name="difficulty" type="radio" id="dif-dif" for="dif-dif">Difficult</button>
+            <button class="btn btn-outline-light btn-check" name="difficulty" type="radio" id="dif-exp" for="dif-exp">Expert</button>
+            <button class="btn btn-outline-light btn-check" name="difficulty" type="radio" id="dif-ai" for="dif-ai">AI</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="form-check form-switch">
+            <!--set labels to hidden when not selected-->
+            <label for="ace-setting">Ace low</label> 
+            <input class="form-check-input" id="ace-setting" type="checkbox">
+            <label for="ace-setting">Ace high</label> 
+        </div>
+    </div>
+    <div class="row">
+        <label>Timeout</label>
+        <div class="form-check"></div>
+            <!--<input class="slider"></input>-->
+        <label>Bot speed</label>
+        <div class="form-check">
+        </div>
+    </div>
+    <div class="row">
+        <div>
+            <h2>Custom Game</h2>
+            <div class="form-check input-group">
+                <label>Adjust how good your hand will be</label>
+                <button class="btn btn-light">Apply</button>
+            </div>
+            <div class="form-check input-group">
+                <label for="hand-notation">Custom hand</label>
+                <input type="text" id="hand-notation"></input>
+                <button class="btn btn-light">Random</button>
+                <button class="btn btn-light">Apply</button>
+            </div>
+        </div>
+    </div>
+</div>
+    </body>
+    </html>

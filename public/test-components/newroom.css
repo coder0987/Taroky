@@ -1,0 +1,12 @@
+.new-room {
+    background-image: url(/public/assets/card\ table.png);
+    background-position: top;
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+    color: var(--white);
+    padding: 4rem;
+
+    @media screen(<720px) {
+        background-size: auto 100%;
+    }
+}

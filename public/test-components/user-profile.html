@@ -8,11 +8,32 @@
 </head>
 <body>
     <div class="user-card">
-    <h1>Username3553</h1>
-    <div class="row">
-    <div col-md-3><img src="/public/assets/profile-pictures/profile-17.png" class="profile-lg">
-        <div col-md-9><p>Joined 2/2/2021 <i class="bi bi-heart"></i> Last played 7/17/2025 <i class="bi bi-spade"></i> Online <i class="bi bi-diamond"></i> <button class="btn btn-dark">Invite to Game</button></p>
-        <span class="prev-1">05</span> <span class="prev-2">04</span> <span class="prev-3">87</span> <span class="prev-4">09</span> <span class="prev-5">02</span></div>
-</div></div></div>
+        <!--show/hide buttons based on user identity-->
+        <div class="row"><button class="btn red">Edit Profile</button><button class="btn btn-outline-dark">Edit User Preferences</button><button class="btn btn-dark">Invite to Game</button>
+    </div>
+    <img src="/public/assets/profile-pictures/profile-17.png" class="profile-lg">
+    <div> <h1>Username3553</h1>
+     <span class="prev-1">05</span> <span class="prev-2">04</span> <span class="prev-3">87</span>
+    </div>   
+    <table class="table table-responsive table-borderless table-hover" id="user-stats">
+        <tr>
+            <td>Joined</td>
+            <td>2/2/2021</td>
+        </tr>
+        <tr>
+            <td>Last Played</td>
+            <td>7/19/2025</td>
+        </tr>
+        <tr>
+            <td>Completed Games</td>
+            <td>1827</td>
+        </tr>
+        <tr>
+            <td>Completed Challenges</td>
+            <td>107</td>
+        </tr>
+    </table>
+        
+</div>
 </body>
 </html>

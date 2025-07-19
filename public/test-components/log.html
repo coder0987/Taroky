@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/public/css/bootstrap.min.css">
+<script src="/public/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="/public/style.css">
+<link rel="stylesheet" href="/public/test-components/log.css">
+</head>
+<body>
+
+<div class="container content">
+    <div class="row">
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 col-12">
+        	<div class="card">
+        		<div class="card-header">Log - Room I - ABC123 <span class="report"><i class="bi bi-exclamation-triangle-fill">Report</i></span></div>
+        		<div class="card-body height3">
+        			<ul class="log-list">
+        				<li class="play">
+        					<div class="log-body">
+        						<div class="log-msg">
+        							<h5>Samm76</h5>
+        							<p>Played ace of spades</p>
+        						</div>
+        					</div>
+        				</li>
+        				
+        				<li class="play">
+        					<div class="log-body">
+        						<div class="log-msg">
+        							<h5 class="name">Bobbyisbest</h5>
+        							<p>Played XII</p>
+        						</div>
+        					</div>
+        				</li>
+        				<li class="you">
+        					<div class="log-body">
+        						<div class="log-msg">
+        							<h5>Assist <i class="bi bi-person-raised-hand">|</i> Your turn</h5>
+        							<p>You can play a spade</p>
+        						</div>
+        					</div>
+        				</li>
+						<li class="you">
+        					<div class="log-body">
+        						<div class="log-msg">
+        							<h5>Your turn</h5>
+        							<p>What card would you like to play?</p>
+        						</div>
+        					</div>
+        				</li>
+						<li class="err">
+        					<div class="log-body">
+        						<div class="log-msg">
+        							<h5>Invalid play</h5>
+        							<p>You can't play the 3 of diamonds right now</p>
+        						</div>
+        					</div>
+        				</li>
+						    <li class="sys">
+        					<div class="log-body">
+        						<div class="log-msg">
+        							<h5 class="name">System</h5>
+        							<p>Disconnected from Room 7</p>
+        						</div>
+        					</div>
+        				</li>
+        			</ul>
+                    
+        		</div>
+        	</div> 
+        </div>
+    </div>
+    <!--remove words chat and send once icons are working-->
+    <!--chat bubble should open and minimize chat; always visible-->
+    <div class="log-bubble"><button class="btn"><i class="bi bi-journal-text"></i>log</button></div>
+</div>

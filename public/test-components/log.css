@@ -1,0 +1,118 @@
+
+.log-list {
+    padding: 0;
+    font-size: .8rem;
+}
+
+.log-list li {
+    margin-bottom: 10px;
+    overflow: auto;
+    color: var(--black);
+}
+
+.log-list .log-msg {
+    -webkit-border-radius: 50px;
+    -moz-border-radius: 50px;
+    border-radius: 50px;
+    background: var(--white);
+    display: inline-block;
+    padding: 10px 20px;
+    position: relative;
+}
+
+.log-list .log-msg:before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    width: 0;
+    height: 0;
+}
+
+.log-list .log-msg h5 {
+    margin: 0 0 5px 0;
+    font-weight: 600;
+    line-height: 100%;
+    font-size: .9rem;
+}
+
+.log-list .log-msg p {
+    line-height: 18px;
+    margin: 0;
+    padding: 0;
+}
+
+.log-list .log-body .sys {
+    margin-left: 20px;
+    float: left;
+    width: 70%;
+    background-color: var(--white);
+}
+
+.log-list .err .log-body {
+    float: right;
+    margin-right: 0px;
+    text-align: right;
+}
+
+.log-list .err .log-msg {
+    background: var(--red);
+    color: var(--white);
+}
+
+.log-list .you .log-body {
+    float: right;
+    margin-right: 0px;
+    text-align: right;
+}
+
+.log-list .you .log-msg {
+    background: var(--green);
+}
+
+.log-list .play .log-msg {
+    background: var(--tan);
+}
+
+.card .card-header:first-child {
+    -webkit-border-radius: 0.3rem 0.3rem 0 0;
+    -moz-border-radius: 0.3rem 0.3rem 0 0;
+    border-radius: 0.3rem 0.3rem 0 0;
+}
+.card .card-header {
+    background: var(--white);
+    border: 0;
+    font-size: 1rem;
+    padding: .65rem 1rem;
+    position: relative;
+    font-weight: 600;
+    color: var(--black);
+}
+
+.card {
+    background-color: var(--black);
+    box-shadow: 0 4px 8px 0 var(--black);
+    float: right;
+}
+
+.content{
+    margin-top:40px;    
+}
+
+.log-bubble {
+    background-color: var(--black);
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    text-align: center;
+    box-shadow: 0 4px 8px 0 var(--black);
+    color: var(--white);
+
+}
+
+.log-bubble .btn {
+    color: var(--white);
+}
+
+.report {
+    float: right;
+}
