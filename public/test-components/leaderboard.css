@@ -45,7 +45,7 @@ span.prev-1 {
     font-weight: bold;
     max-height: 2rem;
     padding: .5rem;
-    background-image: url(/public/assets/gameplay/chip-blue.png);
+    background-image: url(/assets/gameplay/chip-blue.png);
     background-size: 100%;
     background-repeat: no-repeat;
     background-position: 0ch;
@@ -59,7 +59,7 @@ span.prev-2 {
     font-weight: bold;
     max-height: 2rem;
     padding: .5rem;
-    background-image: url(/public/assets/gameplay/chip-red.png);
+    background-image: url(/assets/gameplay/chip-red.png);
     background-size: 100%;
     background-repeat: no-repeat;
     background-position: 0ch;
@@ -73,7 +73,7 @@ span.prev-3 {
     font-weight: bold;
     max-height: 2rem;
     padding: .5rem;
-    background-image: url(/public/assets/gameplay/chip-white.png);
+    background-image: url(/assets/gameplay/chip-white.png);
     background-size: 100%;
     background-repeat: no-repeat;
     background-position: 0ch;

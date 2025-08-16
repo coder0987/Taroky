@@ -153,7 +153,7 @@ class RobotPlayer extends Player {
     }
 
     partner() {
-        this.info.partner = this.#logic.robotPartner(this.hand);
+        this.info.partnerCard = this.#logic.robotPartner(this.hand)?.value;
 
         this.submit();
     }

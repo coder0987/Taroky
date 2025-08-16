@@ -10,6 +10,12 @@ const pool = mariadb.createPool({
      connectionLimit: 15
 });
 
+const placeMap = {
+    1: 'first',
+    2: 'second',
+    3: 'third'
+}
+
 class Database {
     static async getUsers() {
         let conn,
@@ -69,7 +75,7 @@ class Database {
                 info = await Database.getUser(username);
             } else {
                 await conn.query("INSERT INTO users (username) VALUES (?)", [username]);
-                info = {username: username, elo: 300, admin: false, settings: null, avatar: 0, deck: 'mach-deck-thumb', chat: true};
+                info = {username: username, elo: 300, admin: false, settings: null, avatar: 0, deck: 'mach-deck-thumb', chat: true, first: 0, second: 0, third: 0};
             }
         } catch (err) {
             throw err;
@@ -108,6 +114,29 @@ class Database {
         } finally {
             if (conn) conn.release();
         }
+    }
+
+    static async updateChallenge(username, place) {
+        if (!username) {return;}
+        username = username.toLowerCase();
+        const toIncrement = placeMap[place];
+        if (!toIncrement) {return;}
+        let conn;
+        try {
+            conn = await pool.getConnection();
+            await conn.query(`UPDATE users SET \`${toIncrement}\` = \`${toIncrement}\` + 1 WHERE username in (?)`, [username]);
+        } catch (err) {
+            throw err;
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+
+    static async updateChallengeWins(firstUser, secondUser, thirdUser) {
+        // Params are usernames
+        Database.updateChallenge(firstUser, 1);
+        Database.updateChallenge(secondUser, 2);
+        Database.updateChallenge(thirdUser, 3);
     }
 
     static promiseCreateOrRetrieveUser(username) {

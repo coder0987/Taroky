@@ -365,6 +365,7 @@ class Deck {
                 }
             }
         }
+        console.log(JSON.stringify(partners));
         return partners;
     }
     static grayUndiscardables(hand) {

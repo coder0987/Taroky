@@ -1169,9 +1169,9 @@ class GamePlay {
         // No called valat
 
         if (this.board.trickWinCount[0] === 0) {
-            chipsOwed = 20;
+            chipsOwed = -20;
             if (this.playingPrever) {
-                chipsOwed = 30;
+                chipsOwed = -30;
             }
             pointCountMessageTable.push({'name':'Valat', 'value':chipsOwed});
 
@@ -1183,9 +1183,9 @@ class GamePlay {
 
         if (this.board.trickWinCount[1] === 0) {
             //Opposing team valat'd
-            chipsOwed = -20;
+            chipsOwed = 20;
             if (this.playingPrever) {
-                chipsOwed = -30;
+                chipsOwed = 30;
             }
             pointCountMessageTable.push({'name':'Valat', 'value':Math.abs(chipsOwed)});
 
@@ -1313,7 +1313,7 @@ class GamePlay {
 
         this.currentPlayer.socket.emit('challengeComplete', this.currentPlayer.chips - 100);
 
-        gm.challenge.complete(this.currentPlayer.username, this.currentPlayer.chips - 100);
+        gm.challenge.complete(this.currentPlayer.username, this.currentPlayer.chips - 100, this.currentPlayer.avatar, this.currentPlayer.challengeWins);
 
 
         gm.sendLeaderboardToAll();

@@ -97,6 +97,10 @@ class HumanPlayer extends Player {
     get username() {
         return this.#client.username;
     }
+
+    get challengeWins() {
+        return this.#client.challengeWins;
+    }
 }
 
 module.exports = HumanPlayer;

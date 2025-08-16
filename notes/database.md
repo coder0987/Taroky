@@ -6,14 +6,18 @@ mariadb -p -u root
 CREATE DATABASE machtarok;
 USE machtarok;
 CREATE TABLE users (
-id MEDIUMINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-username TEXT NOT NULL,
-elo SMALLINT NOT NULL DEFAULT 300,
-admin BOOLEAN NOT NULL DEFAULT 0,
-settings TEXT,
-avatar SMALLINT DEFAULT 0,
-deck TEXT DEFAULT "mach-deck-thumb",
-chat BOOLEAN NOT NULL DEFAULT 1);
+    id MEDIUMINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    username TEXT NOT NULL,
+    elo SMALLINT NOT NULL DEFAULT 300,
+    admin BOOLEAN NOT NULL DEFAULT 0,
+    settings TEXT,
+    avatar SMALLINT DEFAULT 0,
+    deck TEXT DEFAULT "mach-deck-thumb",
+    chat BOOLEAN NOT NULL DEFAULT 1,
+    first SMALLINT DEFAULT 0,
+    second SMALLINT DEFAULT 0,
+    third SMALLINT DEFAULT 0
+);
 CREATE USER 'TarokyAdmin'@'localhost' IDENTIFIED BY 'p@sSw0rD';
 ```
 Note: REPLACE THE PASSWORD. Do not use p@sSw0rD.

@@ -450,33 +450,108 @@ class RoomsRenderer {
         this._rooms.appendChild(bDiv);
     }
     drawLeaderboards() {
+        const leaderboardData = renderer.gamestate.leaderboard;
         const showscores = typeof renderer.gamestate.dailyChallengeScore !== 'undefined';
+        const leaderboardEl = this._leaderboard;
 
-        if (renderer.gamestate.leaderboard && renderer.gamestate.leaderboard.length > 0) {
-            this._leaderboard.innerHTML = '';
-            let l1d = document.createElement('div');
-            l1d.classList.add('col-12');
-            l1d.classList.add('col-md-6');
-            let l2d = document.createElement('div');
-            l2d.classList.add('col-12');
-            l2d.classList.add('col-md-6');
-            this._leaderboard.appendChild(l1d);
-            this._leaderboard.appendChild(l2d);
+        if (!leaderboardData || leaderboardData.length === 0) {
+            leaderboardEl.setAttribute('hidden', '');
+            return;
+        }
 
-            let l1p = document.createElement('h3');
-            l1p.innerHTML = 'Daily Challenge Leaderboard';
-            l1d.appendChild(l1p);
-            l1d.appendChild(document.createElement('hr'))
+        // Clear previous content
+        leaderboardEl.innerHTML = '';
 
-            for (let i in renderer.gamestate.leaderboard) {
-                let l1t = document.createElement('p');
-                l1t.innerHTML = (+i+1) + '. ' + renderer.gamestate.leaderboard[i].name + (showscores ? ': ' + renderer.gamestate.leaderboard[i].score : '');
-                l1d.appendChild(l1t)
+        // Header
+        const header = document.createElement('h1');
+        header.textContent = 'Leaderboard';
+        leaderboardEl.appendChild(header);
+
+        // Date (you could replace with dynamic date)
+        const dateP = document.createElement('p');
+        dateP.classList.add('align-items-right');
+        dateP.textContent = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+        leaderboardEl.appendChild(dateP);
+
+        // Table
+        const table = document.createElement('table');
+        table.classList.add('table', 'table-hover', 'table-borderless');
+
+        // Table Head
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+            <tr>
+                <th scope="col">Place</th>
+                <th scope="col">User</th>
+                ${showscores ? `<th scope="col">Today's Score</th>` : ''}
+            </tr>
+        `;
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+
+        leaderboardData.forEach((entry, i) => {
+            const tr = document.createElement('tr');
+
+            // Place column
+            const thPlace = document.createElement('th');
+            thPlace.setAttribute('scope', 'row');
+
+            if (i < 3) {
+                const chipColors = ['blue', 'red', 'white'];
+                const img = document.createElement('img');
+                img.classList.add('lead');
+                img.src = `/assets/gameplay/chip-${chipColors[i]}.png`;
+                img.alt = `#${i+1} ${chipColors[i]} chip`;
+                thPlace.appendChild(img);
+            } else {
+                thPlace.textContent = `${i + 1}`;
             }
 
-            this._leaderboard.removeAttribute('hidden');
-        }
+            tr.appendChild(thPlace);
+
+            // User column
+            const tdUser = document.createElement('td');
+            const userDiv = document.createElement('div');
+            userDiv.classList.add('user-sm');
+
+            const avatarImg = document.createElement('img');
+            avatarImg.classList.add('profile-sm', `lead-${i+1}`);
+            avatarImg.src = `/assets/profile-pictures/profile-${entry.avatar}.png`;
+            userDiv.appendChild(avatarImg);
+
+            userDiv.appendChild(document.createTextNode(` ${entry.name} `));
+
+            // Previous wins
+            if (entry.wins && Array.isArray(entry.wins)) {
+                entry.wins.forEach((count, index) => {
+                    if (count > 0) { // only show non-zero awards
+                        const span = document.createElement('span');
+                        span.classList.add(`prev-${index + 1}`);
+                        span.textContent = count.toString().padStart(2, '0');
+                        userDiv.appendChild(span);
+                    }
+                });
+            }
+
+            tdUser.appendChild(userDiv);
+            tr.appendChild(tdUser);
+
+            // Score column
+            if (showscores) {
+                const tdScore = document.createElement('td');
+                tdScore.textContent = entry.score.toString();
+                tr.appendChild(tdScore);                
+            }
+
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        leaderboardEl.appendChild(table);
+        leaderboardEl.removeAttribute('hidden');
     }
+
 }
 
 class SettingsRenderer {

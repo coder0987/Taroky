@@ -848,6 +848,13 @@ class Client {
         return this.#userInfo.avatar;
     }
 
+    get challengeWins() {
+        if (!this.#userInfo.first) {
+            return [0,0,0];
+        }
+        return [this.#userInfo.first, this.#userInfo.second, this.#userInfo.third];
+    }
+
     get token() {
         return this.#token;
     }

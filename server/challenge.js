@@ -5,6 +5,7 @@ const GameManager = require('./GameManager.js');
 
 const schedule = require('node-schedule');
 const Settings = require('./Settings.js');
+const Database = require('./database.js');
 
 let baseDeck = GameManager.INSTANCE.baseDeck.deck;
 
@@ -41,18 +42,26 @@ class Challenge {
         return this._leaderboard[username.toLowerCase()];
     }
 
-    complete(username, points) {
+    complete(username, points, avatar, wins) {
         if (username == 'Guest') {
             //someone signed out while completing the challenge
             return;
         }
         if (!this._leaderboard[username.toLowerCase()]) {
-            this._leaderboard[username.toLowerCase()] = {'name':username, 'score': points};
+            this._leaderboard[username.toLowerCase()] = {'name':username, 'score': points, 'avatar': avatar, 'wins': wins};
         }
     }
 
     scheduleChallenge() {
         schedule.scheduleJob('0 0 * * *', () => {
+            // First, save the results from the current challenge
+
+            if (GameManager.INSTANCE.challenge._leaderboard.length > 0) {
+                const top = GameManager.INSTANCE.challenge.leaderboard;
+                Database.updateChallengeWins(top[0]?.name, top[1]?.name, top[2]?.name);
+            }
+
+            // Then, create a new challenge
             GameManager.INSTANCE.challenge = new Challenge();
             for (let i in GameManager.INSTANCE.players) {
                 GameManager.INSTANCE.players[i].socket.emit('challengeOver');
