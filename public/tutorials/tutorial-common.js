@@ -82,6 +82,7 @@ let nextBtn = document.getElementById("nextBtn");
 let overlay = document.getElementById("trainerOverlay");
 let board = document.getElementById("training-room");
 let trainerImg = document.getElementById("trainer-img");
+let handDiv = document.getElementById("hand");
 
 function typeText(text, speed = 30) {
   let index = 0;
@@ -137,6 +138,29 @@ function rotateSkyz() {
   }
 }
 
+function renderHand() {
+  if (!hand) {
+    // Hand is specified in the other file, like scenes
+    return;
+  }
+
+  handDiv.innerHTML = '';
+  for (let i in hand) {
+    const newCard = document.createElement('img');
+    newCard.id = hand[i].value + hand[i].suit;
+    newCard.alt = `${hand[i].value} of ${hand[i].suit}`;
+    newCard.src = `/assets/mach-deck-thumb/${hand[i].suit.toLowerCase()}-${hand[i].value.toLowerCase()}-t.png`;
+    newCard.classList.add('col-md');
+    newCard.classList.add('col-xs-3');
+
+    handDiv.appendChild(newCard);
+
+    // Add whitespace for small space between cards
+    const space = document.createTextNode('\n            ');
+    handDiv.appendChild(space);
+  }
+}
+
 // Event listeners
 
 document.addEventListener("keydown", (e) => {
@@ -156,6 +180,7 @@ window.addEventListener("load", () => {
   overlay = document.getElementById("trainerOverlay");
   board = document.getElementById("training-room");
   trainerImg = document.getElementById("trainer-img");
+  handDiv = document.getElementById("hand");
 
   overlay.addEventListener("click", () => {
     if (isTyping) {
@@ -175,6 +200,7 @@ window.addEventListener("load", () => {
     });
   }
 
+  renderHand();
   typeText(scenes[0].text);
 });
 

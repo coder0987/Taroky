@@ -1139,6 +1139,7 @@ div.hand.twelve-cards img {
   z-index: 1;
   transition: transform 0.3s ease; /* Smooth rotation animation */
   cursor: pointer; /* Indicates it's clickable */
+  border-radius: clamp(12px, 2vw, 40px);
 }
 
 .trainer-img.flipped {
@@ -1170,6 +1171,12 @@ div.hand.twelve-cards img {
 .table-card {
   width: 100px;
   height: auto;
+}
+
+#reminder-text {
+  font-size: large;
+  font-weight: bold;
+  margin: 5px;
 }
 
 /* Donate Page */
