@@ -106,13 +106,8 @@
     </div>
 
     <div class="container">
-      <!--
-        Room Card template
-        <div id="roomcard" class="roomcard col-md-2 col-sm-3 col-xs-6 white">
-            <div id="roomnum" class="roomnum d-flex justify-content-center">I</div>
-            <span id="players" alt="1 player">&#x25CF; &#x25CB; &#x25CB; &#x25CB;</span> players
-        </div>
-    -->
+      <div class="row" id="main-wrapper-row">
+        <div class="col-12 col-lg-8" id="central-wrapper">
       <div class="row" id="lobby-controls">
         <div class="col-12 col-md-6 clearfix" id="joinRoomDiv">
           <div class="d-flex justify-content-center">
@@ -323,8 +318,8 @@
         </div>
       </div>
 
-      <div id="rooms"></div>
-      <div id="dailyLeaderboard" class="row"></div>
+      <div id="rooms" class="row g-3"></div>
+      
       <div class="row" id="chat-and-hand">
         <div
           id="chat-box-container"
@@ -364,8 +359,14 @@
         <div
           id="hand"
           class="hand col-12 col-md-6 twelve-cards d-md-block"
-        ></div>
+        >
       </div>
+      </div>
+      </div>
+      <div class="col-12 col-lg-4 mt-3 mt-lg-0" id="leaderboard-wrapper">
+        <div id="leaderboard" class="row"></div>
+      </div>
+    </div>
     </div>
     <button
       id="chat-toggler"

@@ -285,7 +285,7 @@ class InviteRenderer {
 class RoomsRenderer {
     constructor() {
         this._rooms = document.getElementById('rooms');
-        this._leaderboard = document.getElementById('dailyLeaderboard');
+        this._leaderboard = document.getElementById('leaderboard');
         this._drawnRooms = [];
     }
 
@@ -313,13 +313,23 @@ class RoomsRenderer {
         this._drawnRooms = [];
         this._rooms.innerHTML = '';
         this._leaderboard.innerHTML = '';
+        const wrapper = document.getElementById('leaderboard-wrapper');
+        wrapper?.classList.add('d-none');
+        const leftCol = document.getElementById('central-wrapper');
+        leftCol?.classList.remove('col-lg-8');
+        leftCol?.classList.add('col-lg-12');
     }
+
+    static styleRoom(room) {
+        room.classList.add('roomcard');
+        room.classList.add('col-md-4');
+        room.classList.add('col-12');
+        room.classList.add('white');
+    }
+
     createRoomCard(simplifiedRoom, roomId) {
         const bDiv = document.createElement('div');
-        bDiv.classList.add('roomcard');
-        bDiv.classList.add('col-md-3');
-        bDiv.classList.add('col-xs-6');
-        bDiv.classList.add('white');
+        RoomsRenderer.styleRoom(bDiv);
         bDiv.id = 'roomCard' + roomId;
         let theTitle = '';
         for (let i in simplifiedRoom.usernames) {
@@ -358,8 +368,7 @@ class RoomsRenderer {
     createTutorialRoomCard() {
         const anchor = document.createElement('a');
         anchor.href = '/tutorials/tutorial-basics.html';
-        anchor.classList.add('col-md-3');
-        anchor.classList.add('col-xs-6');
+        RoomsRenderer.styleRoom(anchor);
         anchor.classList.add('room-card-link');
 
         const bDiv = document.createElement('div');
@@ -385,10 +394,7 @@ class RoomsRenderer {
     }
     createReturnToGameRoomCard() {
         const bDiv = document.createElement('div');
-        bDiv.classList.add('roomcard');
-        bDiv.classList.add('col-md-3');
-        bDiv.classList.add('col-xs-6');
-        bDiv.classList.add('white');
+        RoomsRenderer.styleRoom(bDiv);
         bDiv.id = 'roomCardReturnToGame';
         const numberDiv = document.createElement('div');
         numberDiv.classList.add('roomnum');
@@ -409,10 +415,7 @@ class RoomsRenderer {
 
     createCustomRoomCard() {
         const bDiv = document.createElement('div');
-        bDiv.classList.add('roomcard');
-        bDiv.classList.add('col-md-3');
-        bDiv.classList.add('col-xs-6');
-        bDiv.classList.add('white');
+        RoomsRenderer.styleRoom(bDiv);
         bDiv.id = 'roomCardCustom';
         const numberDiv = document.createElement('div');
         numberDiv.classList.add('roomnum');
@@ -433,10 +436,8 @@ class RoomsRenderer {
 
     createNewRoomCard() {
         const bDiv = document.createElement('div');
-        bDiv.classList.add('roomcard');
-        bDiv.classList.add('col-md-3');
-        bDiv.classList.add('col-xs-6');
-        bDiv.classList.add('white');
+        RoomsRenderer.styleRoom(bDiv);
+
         bDiv.id = 'roomCardNew';
         const numberDiv = document.createElement('div');
         numberDiv.classList.add('roomnum');
@@ -457,10 +458,8 @@ class RoomsRenderer {
 
     createChallengeRoomCard() {
         const bDiv = document.createElement('div');
-        bDiv.classList.add('roomcard');
-        bDiv.classList.add('col-md-3');
-        bDiv.classList.add('col-xs-6');
-        bDiv.classList.add('white');
+        RoomsRenderer.styleRoom(bDiv);
+
         bDiv.id = 'roomCardChallenge';
         const numberDiv = document.createElement('div');
         numberDiv.classList.add('roomnum');
@@ -479,40 +478,67 @@ class RoomsRenderer {
         this._rooms.appendChild(bDiv);
     }
     drawLeaderboards() {
-        const leaderboardData = renderer.gamestate.leaderboard;
+        //const leaderboardData = renderer.gamestate.leaderboard;
         const showscores = typeof renderer.gamestate.dailyChallengeScore !== 'undefined';
         const leaderboardEl = this._leaderboard;
 
+        const leaderboardData = [
+            { avatar: 5, 'name': 'first', score: 60, wins: [5,3,2] },
+            { avatar: 5, 'name': 'second', score: 60, wins: [0,0,0] },
+            { avatar: 5, 'name': 'third', score: 60, wins: [0,0,0] },
+            { avatar: 5, 'name': 'fourth', score: 60, wins: [0,0,0] },
+            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
+            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
+            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
+            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
+            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
+
+        ]
+
         if (!leaderboardData || leaderboardData.length === 0) {
             leaderboardEl.setAttribute('hidden', '');
+            document.getElementById('leaderboard-wrapper').classList.add('d-none');
+            const leftCol = document.getElementById('central-wrapper');
+            leftCol.classList.remove('col-lg-8');
+            leftCol.classList.add('col-lg-12');
             return;
         }
+
+        document.getElementById('leaderboard-wrapper')?.classList.remove('d-none');
+        const leftCol = document.getElementById('central-wrapper');
+        leftCol?.classList.remove('col-lg-12');
+        leftCol?.classList.add('col-lg-8');
 
         // Clear previous content
         leaderboardEl.innerHTML = '';
 
         // Header
         const header = document.createElement('h1');
+        header.classList.add('col-12');
         header.textContent = 'Leaderboard';
         leaderboardEl.appendChild(header);
 
         // Date (you could replace with dynamic date)
         const dateP = document.createElement('p');
-        dateP.classList.add('align-items-right');
+        dateP.classList.add('justify-content-start');
+        dateP.classList.add('col-12');
+        dateP.classList.add('d-flex');
         dateP.textContent = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
         leaderboardEl.appendChild(dateP);
 
         // Table
         const table = document.createElement('table');
+        table.id = 'leaderboard-table';
         table.classList.add('table', 'table-hover', 'table-borderless');
 
         // Table Head
         const thead = document.createElement('thead');
         thead.innerHTML = `
             <tr>
-                <th scope="col">Place</th>
-                <th scope="col">User</th>
-                ${showscores ? `<th scope="col">Today's Score</th>` : ''}
+                <th scope="col" class="leaderboard-header">Place</th>
+                <th scope="col" class="leaderboard-header">User</th>
+                ${showscores ? `<th scope="col" class="leaderboard-header">Today's Score</th>` : ''}
+                <th scope="col" class="leaderboard-header"></th>
             </tr>
         `;
         table.appendChild(thead);
@@ -525,6 +551,7 @@ class RoomsRenderer {
             // Place column
             const thPlace = document.createElement('th');
             thPlace.setAttribute('scope', 'row');
+            thPlace.classList.add('leaderboard-data');
 
             if (i < 3) {
                 const chipColors = ['blue', 'red', 'white'];
@@ -541,6 +568,7 @@ class RoomsRenderer {
 
             // User column
             const tdUser = document.createElement('td');
+            tdUser.classList.add('leaderboard-data');
             const userDiv = document.createElement('div');
             userDiv.classList.add('user-sm');
 
@@ -556,6 +584,7 @@ class RoomsRenderer {
                 entry.wins.forEach((count, index) => {
                     if (count > 0) { // only show non-zero awards
                         const span = document.createElement('span');
+                        span.classList.add('leaderboard-win');
                         span.classList.add(`prev-${index + 1}`);
                         span.textContent = count.toString().padStart(2, '0');
                         userDiv.appendChild(span);
@@ -569,9 +598,10 @@ class RoomsRenderer {
             // Score column
             if (showscores) {
                 const tdScore = document.createElement('td');
+                tdScore.classList.add('leaderboard-data');
                 tdScore.textContent = entry.score.toString();
                 tr.appendChild(tdScore);                
-            }
+            }        
 
             tbody.appendChild(tr);
         });
