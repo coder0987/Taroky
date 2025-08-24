@@ -305,6 +305,7 @@ class RoomsRenderer {
             if (activeUsername != '') {
                 this.createChallengeRoomCard();
             }
+            this.createTutorialRoomCard();
             this.drawLeaderboards();
         }
     }
@@ -353,6 +354,34 @@ class RoomsRenderer {
         }
         bDiv.addEventListener('click', buttonClick);
         this._rooms.appendChild(bDiv);
+    }
+    createTutorialRoomCard() {
+        const anchor = document.createElement('a');
+        anchor.href = '/tutorials/tutorial-basics.html';
+        anchor.classList.add('col-md-3');
+        anchor.classList.add('col-xs-6');
+        anchor.classList.add('room-card-link');
+
+        const bDiv = document.createElement('div');
+        anchor.classList.add('roomcard');
+        anchor.classList.add('white');
+        bDiv.id = 'roomCardTutorial';
+        const numberDiv = document.createElement('div');
+        numberDiv.classList.add('roomnum');
+        numberDiv.classList.add('d-flex');
+        numberDiv.classList.add('justify-content-center');
+        numberDiv.innerHTML = 'Tutorial';
+        numberDiv.id = 'roomNumTutorial';
+        bDiv.appendChild(numberDiv);
+        const playerCountSpan = document.createElement('span');
+        for (let i=0; i<4; i++) {
+            playerCountSpan.innerHTML += '&#x25CB; ';
+        }
+        bDiv.appendChild(playerCountSpan);
+        //Make it clickable
+        anchor.appendChild(bDiv);
+
+        this._rooms.appendChild(anchor);
     }
     createReturnToGameRoomCard() {
         const bDiv = document.createElement('div');

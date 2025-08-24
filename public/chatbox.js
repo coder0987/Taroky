@@ -149,7 +149,7 @@ class ChatMessage {
         author.classList.add('author-container');
         let authorText = document.createElement('p');
         authorText.classList.add('author-text');
-        authorText.innerHTML = this.author + ':';
+        authorText.innerHTML = this.author;
         author.appendChild(authorText);
 
         //Get chat bubble which holds messages and timestamp

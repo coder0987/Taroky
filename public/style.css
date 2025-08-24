@@ -140,6 +140,10 @@ body:fullscreen {
 #light {
 }
 
+.white-txt-hover:hover {
+  color: var(--white);
+}
+
 /*LOADER*/
 #loader-wrapper .loader-section {
   position: fixed;
@@ -209,6 +213,8 @@ body:fullscreen {
   margin: 10px;
   max-width: 300px;
 
+  cursor: pointer;
+
   /*Disable text selection*/
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -218,6 +224,15 @@ body:fullscreen {
 .roomnum {
   font-family: Georgia, "Times New Roman", Times, serif;
   font-size: 3rem;
+}
+
+.room-card-link {
+  color: var(--black);
+  text-decoration: none;
+}
+
+.room-card-link:hover {
+  color: var(--black);
 }
 
 /*PREFERENCES*/
@@ -968,28 +983,30 @@ div.hand.twelve-cards img {
 
 .message-container {
   display: flex;
-  flex-direction: row; /* Stack author and chat bubble horizontally */
+  flex-direction: column; /* Stack author and chat bubble horizontally */
 }
 
 .author-container {
   display: flex;
   flex-direction: column;
-  margin-top: auto;
+  margin: 0 0 0 5px;
 }
 
 .author-text {
   color: var(--navy);
+  font-weight: bold;
+  margin: 0;
 }
 
 .chat-bubble {
   display: flex;
   margin: 8px;
-  width: 100%;
+  width: 95%;
 }
 
 .message {
   color: var(--white); /* Set the text color for messages */
-  border-radius: 10px; /* Add rounded corners to the bubble */
+  border-radius: 2px 10px 10px 10px;
   padding: 10px; /* Add padding to the bubble */
   padding-bottom: 2px;
   width: 100%; /* Make the chat bubble fill the horizontal space */
