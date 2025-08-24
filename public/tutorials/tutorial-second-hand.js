@@ -83,14 +83,16 @@ const scenes = [
             nextDialogue();
         });
 
-        document.getElementById("reminder-text").innerHTML =
-            "Click the II to play it";
+        document.getElementById("reminder-text").innerHTML = "Click the II to play it";
     },
   },
   {
     trainer: true,
     text: "Playing Second Hand Low preserves your higher trumps and allows your partner an opportunity to take the trick.",
-    board: false,
+    board: true,
+    layout: () => {
+      document.getElementById('reminder-text').innerHTML = "";
+    }
   },
   {
     trainer: true,
@@ -170,6 +172,8 @@ const scenes = [
     layout: () => {
       putCardOnTable(2, TRUMP, 'Skyz');
       setCurrentPlayer(3);
+
+      document.getElementById('reminder-text').innerHTML = "";
     }
   },
   {
