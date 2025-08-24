@@ -1,4 +1,4 @@
-let hand = [ 
+let handArr = [ 
     { suit: HEARTS, value: 'Ace' }, 
     { suit: CLUBS, value: 'Eight' },
     { suit: CLUBS, value: 'Queen' },
@@ -128,7 +128,7 @@ const scenes = [
         putCardOnTable(4, TRUMP, "II");
         setCurrentPlayer(1);
 
-        hand = secondHandHigh;
+        handArr = secondHandHigh;
         renderHand();
 
         grayHand();

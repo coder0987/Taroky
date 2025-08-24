@@ -139,17 +139,17 @@ function rotateSkyz() {
 }
 
 function renderHand() {
-  if (!hand) {
+  if (typeof handArr === 'undefined' || !handArr) {
     // Hand is specified in the other file, like scenes
     return;
   }
 
   handDiv.innerHTML = '';
-  for (let i in hand) {
+  for (let i in handArr) {
     const newCard = document.createElement('img');
-    newCard.id = hand[i].value + hand[i].suit;
-    newCard.alt = `${hand[i].value} of ${hand[i].suit}`;
-    newCard.src = `/assets/mach-deck-thumb/${hand[i].suit.toLowerCase()}-${hand[i].value.toLowerCase()}-t.png`;
+    newCard.id = handArr[i].value + handArr[i].suit;
+    newCard.alt = `${handArr[i].value} of ${handArr[i].suit}`;
+    newCard.src = `/assets/mach-deck-thumb/${handArr[i].suit.toLowerCase()}-${handArr[i].value.toLowerCase()}-t.png`;
     newCard.classList.add('col-md');
     newCard.classList.add('col-xs-3');
 
