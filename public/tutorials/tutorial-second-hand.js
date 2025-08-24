@@ -167,7 +167,7 @@ const scenes = [
   {
     trainer: true,
     flip: true,
-    text: "You play a high trump in order to weaken the hands of players 3 and 4",
+    text: "You play a high trump in order to weaken the hands of players 3 and 4.",
     board: true,
     layout: () => {
       putCardOnTable(2, TRUMP, 'Skyz');
@@ -178,7 +178,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "By weakening your own and (and those of players 3 and 4) your partner's hand becomes much stronger",
+    text: "By weakening your own and (and those of players 3 and 4) your partner's hand becomes much stronger.",
     board: true,
     layout: () => {
       putCardOnTable(3, TRUMP, 'IIII');
@@ -187,7 +187,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "It beneficial to strengthen your partner's hand at the expense of your own hand.",
+    text: "It is beneficial to strengthen your partner's hand at the expense of your own hand.",
     board: false,
   },
   {
@@ -198,12 +198,12 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "As with all 'General Guidelines' in Taroky, there are times and circumstances where it might not work out, but this is a good general rule in the face of uncertainty",
+    text: "As with all 'General Guidelines' in Taroky, there are times and circumstances where it might not work out, but this is a good general rule in the face of uncertainty.",
     board: false,
   },
   {
     trainer: true,
-    text: "Want to learn more? Head back to the learn page, or try out a game against bots to get a feel for it",
+    text: "Want to learn more? Head back to the learn page, or try out a game against the bots.",
     board: true,
     layout: () => {
       board.innerHTML = '<a href="/learn.html" class="small-link">Learn</a><br><a href="/" class="small-link">Play</a><p>This tutorial was written by James L. Brezina Jr.</p><p>Edited and adapted for use on MachTarok.com by Samuel Mach</p>';

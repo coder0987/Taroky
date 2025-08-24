@@ -139,7 +139,7 @@ const scenes = [
   {
     trainer: true,
     flip: true,
-    text: "When a trump is played, it always wins the trick, unless an even higher trump beats it",
+    text: "When a trump is played, it always wins the trick, unless an even higher trump beats it.",
     board: true,
     layout: () => {
       putCardOnTable(3, SPADES, 'Eight');
@@ -148,7 +148,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "You can't play a trump unless you're 'void' in the lead suit - you don't have any left at all",
+    text: "You can't play a trump unless you're 'void' in the lead suit - you don't have any left at all.",
     board: true,
     layout: () => {
       clearTable(2)
@@ -157,7 +157,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "Since player 2 won the trick, he'll lead the next one. The winner always leads",
+    text: "Since player 2 won the trick, he'll lead the next one. The winner always leads.",
     board: true,
     layout: () => {
       putCardOnTable(2, CLUBS, 'King');
@@ -167,7 +167,7 @@ const scenes = [
   {
     trainer: true,
     flip: true,
-    text: "Player 2 lead the king of clubs, and player 3 is forced to follow suit",
+    text: "Player 2 lead the king of clubs, and player 3 is forced to follow suit.",
     board: true,
     layout: () => {
       putCardOnTable(3, CLUBS, 'Queen');
@@ -188,12 +188,12 @@ const scenes = [
   {
     trainer: true,
     flip: true,
-    text: "In Taroky, games usually are played in teams of 2. In this game, Povinnost is partnered with the XIX - which you have",
+    text: "In Taroky, games usually are played in teams of 2. In this game, Povinnost is partnered with the XIX - which you have.",
     board: false,
   },
   {
     trainer: true,
-    text: "That means you will combine your points at the end of the game for your total score! Since your partner is in the lead, you want to play your card with the highest point value",
+    text: "That means you will combine your points at the end of the game for your total score! Since your partner is in the lead, you want to play your card with the highest point value.",
     board: false
   },
   {
@@ -216,12 +216,12 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "Great job! Jacks are worth 2 points, while most cards are worth only 1",
+    text: "Great job! Jacks are worth 2 points, while most cards are worth only 1.",
     board: false
   },
   {
     trainer: true,
-    text: "Kings are worth 5, queens 4, and riders are worth 3",
+    text: "Kings are worth 5, queens 4, and riders are worth 3.",
     board: false
   },
   {
@@ -238,12 +238,12 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "Povinnost lead the Skyz! That's the biggest trump in the game. It always wins the trick",
+    text: "Povinnost lead the Skyz! That's the biggest trump in the game. It always wins the trick.",
     board: false
   },
   {
     trainer: true,
-    text: "You should play the Pagat (the I), since it's worth 5 points, to get it home safely to your partner",
+    text: "You should play the Pagat (the I), since it's worth 5 points, to get it home safely to your partner.",
     board: false
   },
   {
@@ -266,7 +266,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "Nice! That's 10 guaranteed points home. There are 106 points total, so each team is battling to get more than 53 to win",
+    text: "Nice! That's 10 guaranteed points home. There are 106 points total, so each team is battling to get more than 53 to win.",
     board: true,
     layout: () => {
       putCardOnTable(2, TRUMP, 'V');
@@ -275,7 +275,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "Since Povinnost lead a trump, everyone must play a trump if they have one",
+    text: "Since Povinnost lead a trump, everyone must play a trump if they have one.",
     board: true,
     layout: () => {
       putCardOnTable(3, TRUMP, 'VI');
@@ -292,7 +292,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "He lead a low trump - that's your cue! Play the XIX to let everyone know who your partner is",
+    text: "He lead a low trump - that's your cue! Play the XIX to let everyone know who your partner is.",
     board: true,
     layout: () => {
       putCardOnTable(4, TRUMP, 'VII');
@@ -330,7 +330,7 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "It looks like player 3 is taking the trick with the Mond (the XXI); that's the second-highest trump",
+    text: "It looks like player 3 is taking the trick with the Mond (the XXI); that's the second-highest trump.",
     board: true,
     layout: () => {
       putCardOnTable(3, TRUMP, 'XXI');
@@ -339,12 +339,12 @@ const scenes = [
   },
   {
     trainer: true,
-    text: "Grandpa's back with his pepsi! Time to return the reigns",
+    text: "Grandpa's back with his pepsi! Time to return the reigns.",
     board: false
   },
   {
     trainer: true,
-    text: "Want to learn more? Head back to the learn page, or try out a game against bots to get a feel for it",
+    text: "Want to learn more? Head back to the learn page, or try out a game against the bots to get a feel for it.",
     board: true,
     layout: () => {
       board.innerHTML = '<a href="/learn.html" class="small-link">Learn</a><br><a href="/" class="small-link">Play</a>';
