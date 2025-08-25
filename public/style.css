@@ -1221,6 +1221,7 @@ div.user-sm {
     font-weight: bold;
     margin: .25rem;
     gap: 8px;
+    padding-right: 5px;
 }
 
 img.profile-sm {
