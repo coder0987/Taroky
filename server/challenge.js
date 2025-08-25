@@ -56,8 +56,11 @@ class Challenge {
         schedule.scheduleJob('0 0 * * *', () => {
             // First, save the results from the current challenge
 
-            if (GameManager.INSTANCE.challenge._leaderboard.length > 0) {
+            SERVER.log('Midnight: A new challenge begins.');
+
+            if (GameManager.INSTANCE.challenge.leaderboard.length > 0) {
                 const top = GameManager.INSTANCE.challenge.leaderboard;
+                SERVER.log('Saving the top scores from today\'s challenge: ', JSON.stringify(top));
                 Database.updateChallengeWins(top[0]?.name, top[1]?.name, top[2]?.name);
             }
 

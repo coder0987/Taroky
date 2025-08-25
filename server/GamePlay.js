@@ -1304,6 +1304,8 @@ class GamePlay {
             return true;
         }
 
+        // Daily challenge
+
         for (let i in this.players) {
             if (this.players[i].type == PLAYER_TYPE.HUMAN) {
                 this.player = i;
