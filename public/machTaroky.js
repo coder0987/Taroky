@@ -334,7 +334,7 @@ function drawTable(shouldHide) {
       let child = returnToDeck[i];
       if (child.nodeName == "IMG") {
         //Prever talon
-        child.classList.remove("col-2");
+        child.classList.remove("table-card");
         child.removeEventListener("mouseenter", enter);
         child.removeEventListener("mouseleave", exit);
         child.removeEventListener("click", clickCard);
@@ -360,7 +360,7 @@ function drawTable(shouldHide) {
       for (let i in table) {
         let card = document.getElementById(table[i].value + table[i].suit);
         document.getElementById("table").prepend(card);
-        card.classList.add("col-2");
+        card.classList.add("table-card");
         card.removeAttribute("hidden");
       }
     } else {
