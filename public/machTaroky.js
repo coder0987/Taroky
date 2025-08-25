@@ -261,7 +261,6 @@ let elo;
 let admin;
 let avatar = 0;
 let displayChat = true;
-let dailyScore = 0;
 let defaultSettings = {
   timeout: 30000,
   difficulty: 2,
@@ -988,7 +987,7 @@ function displayNextAction(action) {
         returnTableQueue.push("hide");
         break;
       case "retry":
-        createShareButton(dailyScore);
+        createShareButton(renderer.gamestate.dailyChallengeScore);
         returnTableQueue.push("hide");
         break;
       default:
@@ -1961,7 +1960,7 @@ function onLoad() {
     addBoldMessage(
       "Good job on completing the challenge! You made a score of " + score
     );
-    dailyScore = score;
+    renderer.gamestate.dailyChallengeScore = score;
   });
 
   socket.emit("reconnect");
