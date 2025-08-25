@@ -1430,6 +1430,7 @@ function onLoad() {
       activeUsername = data.username;
       renderer.gamestate.signedIn = true;
       displaySignOut(data.username);
+      enableChat();
       if (typeof data.dailyChallengeScore !== "undefined") {
         renderer.gamestate.dailyChallengeScore = data.dailyChallengeScore;
       }

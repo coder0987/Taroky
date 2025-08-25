@@ -60,7 +60,8 @@ class Challenge {
 
             if (GameManager.INSTANCE.challenge.leaderboard.length > 0) {
                 const top = GameManager.INSTANCE.challenge.leaderboard;
-                SERVER.log('Saving the top scores from today\'s challenge: ', JSON.stringify(top));
+                SERVER.log('Saving the top scores from today\'s challenge: ');
+                SERVER.log(JSON.stringify(top));
                 Database.updateChallengeWins(top[0]?.name, top[1]?.name, top[2]?.name);
             }
 
