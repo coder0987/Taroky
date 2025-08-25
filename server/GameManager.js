@@ -121,7 +121,7 @@ class GameManager {
     
     sendLeaderboardToAll() {
         for (let i in this.#SOCKET_LIST) {
-            this.#SOCKET_LIST[i].emit('returnPlayerCount', this.#numOnlinePlayers, this.#challenge.leaderboard, this.#challenge.retryLeaderboard);
+            this.#SOCKET_LIST[i].emit('returnPlayerCount', this.#numOnlinePlayers, this.#challenge.leaderboard);
         }
     }
 

@@ -1612,7 +1612,7 @@ function onLoad() {
   socket.on("returnPovinnost", function (returnPovinnost) {
     povinnostNumber = returnPovinnost;
   });
-  socket.on("returnPlayerCount", function (playerCount, lb, retyrlb) {
+  socket.on("returnPlayerCount", function (playerCount, lb) {
     document.getElementById("online").innerHTML = playerCount;
     document.getElementById("online-s").innerHTML = playerCount == 1 ? "" : "s";
     renderer.gamestate.leaderboard = lb;

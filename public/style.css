@@ -1187,6 +1187,8 @@ div.hand.twelve-cards img {
   width: 100px;
   height: auto;
   border-radius: 10px;
+  padding: 0;
+  margin: 5px;
 }
 
 #reminder-text {
