@@ -1242,12 +1242,16 @@ class GamePlay {
 
         if (this.board.contra[0] != -1) {
             //*2 for one contra, *4 for two
-            chipsOwed *= Math.pow(2, this.board.contra[0]);
+            chipsOwed *= 2;
             pointCountMessageTable.push({'name':'Contra', 'value':Math.abs(chipsOwed)});
         }
         if (this.board.contra[1] != -1) {
-            chipsOwed *= Math.pow(2, this.board.contra[1]);
-            pointCountMessageTable.push({'name':'Contra again', 'value':Math.abs(chipsOwed)});
+            chipsOwed *= 2;
+            pointCountMessageTable.push({'name':'Rhea Contra', 'value':Math.abs(chipsOwed)});
+        }
+        if (this.board.contra[0] == 2) {
+            chipsOwed *= 2;
+            pointCountMessageTable.push({'name':'Supra Contra', 'value':Math.abs(chipsOwed)});
         }
 
         if (this.board.iote != -1 || this.board.ioteWin != 0) {
