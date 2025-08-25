@@ -135,6 +135,15 @@ io.sockets.on('connection', function (socket) {
 
     const log = (event) => SERVER.debug(`Received socket event: '${event}' from player ${socketId}`);
 
+    socket.on('saveChallengeDebug', () => {
+        if (GameManager.INSTANCE.challenge.leaderboard.length > 0) {
+            const top = GameManager.INSTANCE.challenge.leaderboard;
+            SERVER.log('Saving the top scores from today\'s challenge: ', JSON.stringify(top));
+            const Database = require('./database.js');
+            Database.updateChallengeWins(top[0]?.name, top[1]?.name, top[2]?.name);
+        }
+    })
+
     socket.on('reconnect', () => {
         log('reconnect');
         client.socket = socket;
