@@ -166,6 +166,8 @@ class Client {
             } else if (this.nextStep.action === ACTION.FOLLOW) {
                 Deck.grayUnplayables(this.player.hand, this.#room.board.leadCard);
                 obj.withGray = true;
+            } else if (this.nextStep.action === ACTION.DRAW_PREVER_TALON) {
+                this.#room.informPreverTalon(this.nextStep.player, this.#room.board.preverTalonStep);
             }
 
             // Includes sensitive actions
