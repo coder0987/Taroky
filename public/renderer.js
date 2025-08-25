@@ -478,11 +478,11 @@ class RoomsRenderer {
         this._rooms.appendChild(bDiv);
     }
     drawLeaderboards() {
-        //const leaderboardData = renderer.gamestate.leaderboard;
+        const leaderboardData = renderer.gamestate.leaderboard;
         const showscores = typeof renderer.gamestate.dailyChallengeScore !== 'undefined';
         const leaderboardEl = this._leaderboard;
 
-        const leaderboardData = [
+        /*const leaderboardData = [
             { avatar: 5, 'name': 'first', score: 60, wins: [5,3,2] },
             { avatar: 5, 'name': 'second', score: 60, wins: [0,0,0] },
             { avatar: 5, 'name': 'third', score: 60, wins: [0,0,0] },
@@ -493,7 +493,7 @@ class RoomsRenderer {
             { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
             { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
 
-        ]
+        ]*/
 
         if (!leaderboardData || leaderboardData.length === 0) {
             leaderboardEl.setAttribute('hidden', '');
