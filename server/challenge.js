@@ -77,6 +77,8 @@ class Challenge {
                     delete GameManager.INSTANCE.rooms[i];
                 }
             }
+
+            GameManager.INSTANCE.sendLeaderboardToAll();
         })
     }
 
