@@ -479,7 +479,7 @@ class RoomsRenderer {
     }
     drawLeaderboards() {
         const leaderboardData = renderer.gamestate.leaderboard;
-        const showscores = typeof renderer.gamestate.dailyChallengeScore !== 'undefined';
+        const showscores = typeof renderer.gamestate.dailyChallengeScore !== 'undefined' && renderer.gamestate.dailyChallengeScore !== null;
         const leaderboardEl = this._leaderboard;
 
         /*example leaderboard data
