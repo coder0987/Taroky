@@ -177,6 +177,19 @@ function rmv(event) {
     socket.emit('removeRoom',id);
 }
 
+function setChallenge() {
+    const cUsername = document.getElementById('challengeUsername')?.value || 'Guest';
+    const cPoints   = document.getElementById('challengePoints')?.value || 0;
+    const cAvatar   = document.getElementById('challengeAvatar')?.value || 0;
+    const cWinsOne  = document.getElementById('challengeWinsOne')?.value || 0;
+    const cWinsTwo  = document.getElementById('challengeWinsTwo')?.value || 0;
+    const cWinsThree= document.getElementById('challengeWinsThree')?.value || 0;
+
+    console.log(cUsername, cPoints, cAvatar, cWinsOne, cWinsTwo, cWinsThree);
+
+    socket.emit('adminSetChallengeScore', cUsername, cPoints, cAvatar, [cWinsOne, cWinsTwo, cWinsThree]);
+}
+
 //thanks w3 schools
 function getCookie(cname) {
   let name = cname + "=";

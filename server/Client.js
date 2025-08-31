@@ -196,13 +196,15 @@ class Client {
         gm.SOCKET_LIST[this.#socketId] = this.#socket;
 
         SERVER.debug(`Player ${this.#socketId} auto-reconnected`);
-        this.#socket.emit('message','You have been automatically reconnected');//debug
+        //this.#socket.emit('message','You have been automatically reconnected');//debug
 
         this.#tempDisconnect = false;
         this.autoReconnect();
     }
 
     handleDisconnect() {
+        SERVER.debug(`Player ${this.#socketId}'s socket disconnected`);
+
         this.stopDisconnectTimeout();
         this.startDisconnectTimeout();
 
@@ -219,6 +221,7 @@ class Client {
     }
 
     handleAlive(callback) {
+        SERVER.debug(`Player ${this.#socketId} is alive`);
         callback(!this.#tempDisconnect);
     }
 
@@ -649,30 +652,14 @@ class Client {
         AdminPanel.reloadClients();
     }
 
-    printPlayerList() {
+    adminSetChallengeScore(username, points, avatar, wins) {
         if (!verifyIsAdmin(this)) {
             return;
         }
 
-        SERVER.log(`Admin ${this.#username} fetched the client list`);
+        SERVER.log(`Admin ${this.#username} set a user's challenge score`);
 
-        this.#socket.emit('playerList', AdminPanel.printPlayerList());
-    }
-
-    printRoomList() {
-        if (!verifyIsAdmin(this)) {
-            return;
-        }
-
-        SERVER.log(`Admin ${this.#username} fetched the room list`);
-
-        try {
-            this.#socket.emit('roomList', AdminPanel.printRoomsList());
-        } catch (maximumcallstacksize) {
-            //too much info for one socket message
-            SERVER.error('tmi');
-            AdminPanel.printRoomsList(true);
-        }
+        AdminPanel.setChallengeScore(username, points, avatar, wins);
     }
 
     adminMessage(id, message) {

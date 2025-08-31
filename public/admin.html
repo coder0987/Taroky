@@ -59,8 +59,16 @@ TODO
                         <button class="btn btn-primary" onclick="socket.emit('restartServer')">Restart Server When it Empties</button>
                         <button class="btn btn-primary" onclick="socket.emit('restartServer',true)">Restart Server NOW</button>
                         <button class="btn btn-primary" onclick="socket.emit('reloadClients')">Reload All Clients</button>
-                        <button class="btn btn-primary" onclick="socket.emit('printPlayerList')">Fetch Player List</button>
-                        <button class="btn btn-primary" onclick="socket.emit('printRoomList')">Fetch Room List</button>
+                    </div>
+                    <div class="card-body">
+
+                        <input type="text" id="challengeUsername" default="username">
+                        <input type="number" id="challengePoints" default="0">
+                        <input type="number" id="challengeAvatar" default="0">
+                        <input type="number" id="challengeWinsOne" default="0">
+                        <input type="number" id="challengeWinsTwo" default="0">
+                        <input type="number" id="challengeWinsThree" default="0">
+                        <button class="btn btn-primary" onclick="setChallenge()"></button>
                     </div>
                 </div>
             </div>

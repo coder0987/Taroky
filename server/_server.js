@@ -386,15 +386,10 @@ io.sockets.on('connection', function (socket) {
         client.reloadClients();
     });
 
-    socket.on('printPlayerList', () => {
-        log('printPlayerList');
-        client.printPlayerList();
-    });
-
-    socket.on('printRoomList', () => {
-        log('printRoomList');
-        client.printRoomList();
-    });
+    socket.on('adminSetChallengeScore', (username, points, avatar, wins) => {
+        log('adminSetChallengeScore');
+        client.adminSetChallengeScore(username, points, avatar, wins);
+    })
 
     socket.on('adminMessage', (id, message) => {
         log('adminMessage');

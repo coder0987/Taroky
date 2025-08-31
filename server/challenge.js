@@ -53,6 +53,14 @@ class Challenge {
         }
     }
 
+    adminSetScore(username, points, avatar, wins) {
+        if (username == 'Guest') {
+            //default
+            return;
+        }
+        this._leaderboard[username.toLowerCase()] = {'name':username, 'score': points, 'avatar': avatar, 'wins': wins};
+    }
+
     scheduleChallenge() {
         schedule.scheduleJob('0 0 * * *', () => {
             // First, save the results from the current challenge
