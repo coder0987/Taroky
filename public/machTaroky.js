@@ -1617,6 +1617,7 @@ function onLoad() {
     document.getElementById("online").innerHTML = playerCount;
     document.getElementById("online-s").innerHTML = playerCount == 1 ? "" : "s";
     renderer.gamestate.leaderboard = lb;
+    renderer.hud.rooms.render();
   });
   socket.on("returnHand", function (returnHand, withGray) {
     hand = returnHand;

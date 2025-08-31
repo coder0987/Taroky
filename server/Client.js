@@ -611,7 +611,7 @@ class Client {
     handleLogout() {
         this.#username = 'Guest';
         this.#token = -1;
-        this.#userInfo = {};
+        this.#userInfo = { avatar: 0 };
         this.#socket.emit('logout');
         SERVER.log(`Player ${this.#socketId} has signed out`);
     }
@@ -839,7 +839,7 @@ class Client {
     }
 
     get challengeWins() {
-        if (!this.#userInfo.first) {
+        if (!this.#userInfo || typeof this.#userInfo.first === 'undefined') {
             return [0,0,0];
         }
         return [this.#userInfo.first, this.#userInfo.second, this.#userInfo.third];
