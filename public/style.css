@@ -1220,7 +1220,6 @@ div.user-sm {
     border-radius: 3rem;
     text-align: left;
     color: var(--navy);
-    text-transform: lowercase;
     font-weight: bold;
     margin: .25rem;
     gap: 8px;

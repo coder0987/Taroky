@@ -482,17 +482,11 @@ class RoomsRenderer {
         const showscores = typeof renderer.gamestate.dailyChallengeScore !== 'undefined';
         const leaderboardEl = this._leaderboard;
 
-        /*const leaderboardData = [
-            { avatar: 5, 'name': 'first', score: 60, wins: [5,3,2] },
-            { avatar: 5, 'name': 'second', score: 60, wins: [0,0,0] },
-            { avatar: 5, 'name': 'third', score: 60, wins: [0,0,0] },
-            { avatar: 5, 'name': 'fourth', score: 60, wins: [0,0,0] },
-            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
-            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
-            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
-            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
-            { avatar: 5, 'name': 'first', score: 60, wins: [0,0,0] },
-
+        /*example leaderboard data
+        const leaderboardData = [
+            { avatar: 5, 'name': 'First', score: 60, wins: [5,3,2] },
+            { avatar: 5, 'name': 'Second', score: 60, wins: [0,0,0] },
+            { avatar: 5, 'name': 'Third', score: 60, wins: [0,0,0] },
         ]*/
 
         if (!leaderboardData || leaderboardData.length === 0) {
