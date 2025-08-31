@@ -97,6 +97,7 @@ class Client {
 
     stopDisconnectTimeout() {
         clearTimeout(this.#disconnectTimeout);
+        this.#disconnectTimeout = null;
     }
 
     autoReconnect() {
