@@ -14,8 +14,11 @@ class Auth {
 
     static signInSuccess(username, token, socket, socketId) {
         SERVER.log(`${username} signed in`);
-        gm.players[socketId].username = username;
-        gm.players[socketId].token = token;
+        if (gm.players[socketId]) {
+            gm.players[socketId].username = username;
+            gm.players[socketId].token = token;
+        }
+        if (socket == null) {return;}
         socket.emit('loginSuccess', username);
         Auth.loadDatabaseInfo(username, socketId, socket);
         socket.emit('dailyChallengeScore', gm.challenge.getUserScore(username));
