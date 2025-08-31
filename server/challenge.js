@@ -2,6 +2,7 @@ const Deck = require('./deck.js');
 const { DIFFICULTY, VALUE_REVERSE } = require('./enums.js');
 const { shuffleArray, shuffleArraySeeded, sfc32, cyrb128 } = require('./utils.js');
 const GameManager = require('./GameManager.js');
+const SERVER = require('./logger.js');
 
 const schedule = require('node-schedule');
 const Settings = require('./Settings.js');
