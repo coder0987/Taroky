@@ -1025,6 +1025,16 @@ function emptyHand() {
   }
 }
 
+// Move all cards to the deck and hide them
+function hideAllCards() {
+  let divDeck = document.getElementById("deck");
+  for (let i in baseDeck) {
+    let card = document.getElementById(baseDeck[i].value + baseDeck[i].suit);
+    card.hidden = true;
+    divDeck.appendChild(card);
+  }
+}
+
 function showAllCards() {
   let divDeck = document.getElementById("deck");
   let toShow = divDeck.children;
@@ -2185,9 +2195,19 @@ function loadCardsFromRoomCode() {
       theNotationSettings[theNotationSettings.length - 1].split("=")[1];
     document.getElementById("pna").innerHTML =
       "You are player " + (+thePN + 1) + ". Player 1 is Povinnost.";
+
+    // First, clear existing cards
+    hideAllCards();
+
     let theHands = [];
     for (let i = 0; i < 4; i++) {
       let currentDiv = document.getElementById("customHand" + i);
+      currentDiv.innerHTML = "";
+
+      let currentCardsInner = document.createElement("div");
+      currentCardsInner.id = "customHandInner" + i;
+      currentDiv.appendChild(currentCardsInner);
+
       let playerDescription = document.createElement("p");
       playerDescription.innerHTML = "Player " + (i + 1);
       if (i == +thePN) {
@@ -2199,20 +2219,24 @@ function loadCardsFromRoomCode() {
       theHands[i] = sortCards(theHands[i]);
       moveCardsToDiv(
         theHands[i],
-        document.getElementById("customHandInner" + i),
+        currentCardsInner,
         swapCardsClickListener
       );
       currentDiv.appendChild(document.createElement("br"));
     }
     let theTalonDiv = document.getElementById("customTalon");
+    theTalonDiv.innerHTML = "";
     let talonDescription = document.createElement("p");
     talonDescription.innerHTML = "Talon";
+    let talonInner = document.createElement("div");
+    talonInner.id = "talonInner";
+    theTalonDiv.appendChild(talonInner);
     theTalonDiv.appendChild(document.createElement("br"));
     theTalonDiv.prepend(talonDescription);
     let theTalon = notationToCards(theNotationSplit[8]);
     moveCardsToDiv(
       theTalon,
-      document.getElementById("talonInner"),
+      talonInner,
       swapCardsClickListener
     );
   }
