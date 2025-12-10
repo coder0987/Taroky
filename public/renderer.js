@@ -623,6 +623,7 @@ class RoomsRenderer {
         const bDiv = document.createElement('a');
         bDiv.href = notice.link;
         bDiv.target = notice.target ? '_blank' : '_self';
+        bDiv.rel = notice.target ? 'opener' : 'noopener noreferrer';
         RoomsRenderer.styleRoom(bDiv);
         bDiv.classList.add('room-card-link');
         bDiv.id = 'roomCardNotice';
