@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Calling Contra - Learn - Mach Tarok</title>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function includeHTML() {
+            var z, i, elmnt, file, xhttp;
+            /* Loop through a collection of all HTML elements: */
+            z = document.getElementsByTagName("*");
+            for (i = 0; i < z.length; i++) {
+              elmnt = z[i];
+              /*search for elements with a certain atrribute:*/
+              file = elmnt.getAttribute("w3-include-html");
+              if (file) {
+                /* Make an HTTP request using the attribute value as the file name: */
+                xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                  if (this.readyState == 4) {
+                    if (this.status == 200) {elmnt.innerHTML = this.responseText;}
+                    if (this.status == 404) {elmnt.innerHTML = "Page not found.";}
+                    /* Remove the attribute, and call this function once more: */
+                    loaded();
+                    elmnt.removeAttribute("w3-include-html");
+                    includeHTML();
+                  }
+                }
+                xhttp.open("GET", file, true);
+                xhttp.send();
+                /* Exit the function: */
+                return;
+              }
+            }
+        }
+        function getCookie(cname) {
+          let name = cname + "=";
+          let decodedCookie = decodeURIComponent(document.cookie);
+          let ca = decodedCookie.split(';');
+          for(let i = 0; i <ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) == ' ') {
+              c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+              return c.substring(name.length, c.length);
+            }
+          }
+          return "";
+        }
+        window.onload = () => {
+            includeHTML();
+        }
+        function loaded() {
+            let username = getCookie('username');
+            let accHandler = document.getElementById('accountHandler');
+            if (username) {
+                accHandler.innerHTML = 'Sign Out (' + username + ')';
+                accHandler.href = 'https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/';
+            } else {
+                accHandler.hidden = 'hidden';
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body style="padding: 0px;">
+    <div w3-include-html="/nav.html"></div>
+
+    <div class="container navy-txt">
+        <br>
+        <h1>Moving Up the Ranks - Calling Contra</h1>
+
+        <div class="row" id="main">
+            <div class="col-md-8 col-12">
+                <p>
+                    Contra is one of the most underused ways of gaining a competitive advantage in Taroky, especially in a tournament setting. 
+                    Roughly 20% of the time, contra is the best option. 
+                    Yet most players go through 6 hour tournaments with at most one contra. 
+                    Lets take a look at why.
+                </p>
+                
+                <h2>Contra is Risky</h2>
+                <p>
+                    Contra doubles the stakes. 
+                    Worse yet, a misjudged hand could be hit with a rhea-contra, doubling the stakes again. 
+                    A hand which can win but isn’t guaranteed typically doesn’t result in a contra. 
+                </p>
+                <h2>Prever Pays Better</h2>
+                <p>
+                    A hand which is powerful enough to contra is usually powerful enough to go prever. 
+                    Prever gets 4.5 times the chips, as opposed to only double (three players instead of one, triple instead of double during counting). 
+                    Prever is much riskier, but extremely powerful hands will always call prever rather than contra. 
+                    Veteran players will tell you, the number of hands that can win a contra is very small because prever is almost always a better option.
+                </p>
+                <h2>The Contra Advantage</h2>
+                <p>
+                    Because of its scarcity, contra can be a powerful tool to gain an edge, especially in a tournament setting. 
+                    Someone who contras regularly (if they win) will make far more chips than another player with the same hands who never (or only very rarely) calls contra. Contra also allows you to see what point cards your opponents (and partner!) have before comitting to the risk. 
+                    If another player calls bida or uni and you dont have the trump to carry them, you can bail out before calling contra. Anyone who has called prever against bida knows that the same isn’t true for prever.
+                </p>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <hr>
+        <div class="row author-card">
+            <div class="col-md-8 col-12">
+                <h2>About the Author</h2>
+            </div>
+            <div class="col-md-4"></div>
+            <div class="col-md-2 col-4">
+                <img class="author-avatar" src="/assets/profile-pictures/profile-17.png">
+            </div>
+            <div class="col-md-10 col-8">
+                <p>Samuel Mach has been playing Taroky for nearly 10 years.</p>
+                <p>He has been to several local Taroky tournaments and started MachTarok in July of 2022.</p>
+                <p>This article was published December 10, 2025.</p>
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="feedback col-md-8 col-12">
+                <p>Feedback? Suggestions? Want to <a class="small-link" href="writing.html">write an article</a> yourself?</p>
+                <p>Send an email to <a class="small-link" href="mailto:webmaster@smach.us">webmaster@smach.us</a></p>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    
+    </div>
+   
+    <br>
+    <br>
+    <br>
+    <br>
+</div>
+
+    <script>
+        includeHTML();
+    </script>
+</body>
+</html>
