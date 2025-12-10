@@ -250,6 +250,13 @@ body:fullscreen {
   color: var(--black);
 }
 
+.notice-title {
+  font-family: Georgia, "Times New Roman", Times, serif;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+}
+
 /*PREFERENCES*/
 .btn-primary {
   color: var(--black);

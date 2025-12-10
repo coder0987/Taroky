@@ -282,10 +282,18 @@ class InviteRenderer {
     }
 }
 
+const notices = [
+    { title: "Sign in to Play the Daily Challenge!", message: "Compete with other MachTarok players online to see who can get the best score for the same hand.", link: "https://sso.smach.us/?redirect=https://machtarok.com/", target: 'target="_blank"' },
+    { title: "Read Our Free Articles Today!", message: "Check out the 'Learn' page to read Taroky strategy articles.", link: "/learn.html", target: '' },
+    { title: "Sign in to Save Your Preferred Settings!", message: "From user avatars and deck customizations to bot play time, sign in to play Taroky your way!", link: "https://sso.smach.us/?redirect=https://machtarok.com/", target: 'target="_blank"' },
+    { title: "When Should You Call Contra?", message: "Read the new article now", link: "/articles/contra.html", target: '' },
+];
+
 class RoomsRenderer {
     constructor() {
         this._rooms = document.getElementById('rooms');
         this._leaderboard = document.getElementById('leaderboard');
+        this._noticeElement = document.getElementById("notice");
         this._drawnRooms = [];
     }
 
@@ -307,14 +315,18 @@ class RoomsRenderer {
             }
             this.createTutorialRoomCard();
             this.drawLeaderboards();
+
+            this.drawNotice();
         }
     }
     clear() {
         this._drawnRooms = [];
         this._rooms.innerHTML = '';
         this._leaderboard.innerHTML = '';
+
         const wrapper = document.getElementById('leaderboard-wrapper');
         wrapper?.classList.add('d-none');
+
         const leftCol = document.getElementById('central-wrapper');
         leftCol?.classList.remove('col-lg-8');
         leftCol?.classList.add('col-lg-12');
@@ -604,7 +616,29 @@ class RoomsRenderer {
         leaderboardEl.appendChild(table);
         leaderboardEl.removeAttribute('hidden');
     }
-
+    drawNotice() {
+        const noticeIndex = Math.floor(Math.random() * notices.length);
+        const notice = notices[noticeIndex];
+        
+        const bDiv = document.createElement('a');
+        bDiv.href = notice.link;
+        bDiv.target = notice.target ? '_blank' : '_self';
+        RoomsRenderer.styleRoom(bDiv);
+        bDiv.classList.add('room-card-link');
+        bDiv.id = 'roomCardNotice';
+        const numberDiv = document.createElement('div');
+        numberDiv.classList.add('notice-title');
+        numberDiv.classList.add('d-flex');
+        numberDiv.classList.add('justify-content-center');
+        numberDiv.innerHTML = notice.title;
+        numberDiv.id = 'roomNumNotice';
+        bDiv.appendChild(numberDiv);
+        const playerCountSpan = document.createElement('span');
+        playerCountSpan.innerHTML = notice.message;
+        bDiv.appendChild(playerCountSpan);
+        //Make it clickable
+        this._rooms.appendChild(bDiv);
+    }
 }
 
 class SettingsRenderer {
