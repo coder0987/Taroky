@@ -617,6 +617,10 @@ class RoomsRenderer {
         leaderboardEl.removeAttribute('hidden');
     }
     drawNotice() {
+        if (renderer.gamestate.signedIn) {
+            return; // No notice for signed-in users
+        }
+
         const noticeIndex = Math.floor(Math.random() * notices.length);
         const notice = notices[noticeIndex];
         
