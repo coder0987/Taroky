@@ -108,6 +108,7 @@ class GamePlay {
         this.player = nextPlayer(this.player);
     }
 
+    // Counter-intuitively, "false" means "next player on Povinnost's team" and "true" means "next player on opposing team"
     nextPlayerOnTeam(team) {
         do {
             this.nextPlayer()
@@ -748,7 +749,7 @@ class GamePlay {
             this.#room.informCalledContra(this.player);
 
             if (this.currentPlayer.isTeamPovinnost === preverIsPovinnost) {
-                // Povinnost's team called rhea-contra
+                // Prever's team called rhea-contra
                 this.board.contra[1] = 1;
                 this.board.rheaContra = this.player;
 
@@ -761,7 +762,7 @@ class GamePlay {
                 return true;
             }
 
-            // Non-povinnost team called contra
+            // Non-prever team called contra
             if (this.board.contra[0] === -1) {
                 // Contra
                 this.board.contra[0] = 1;
@@ -791,10 +792,10 @@ class GamePlay {
 
         // This player did not call contra
         if (this.currentPlayer.isTeamPovinnost === preverIsPovinnost) {
-            // Give another player the chance to call rhea-contra
+            // Give another player on prever's team (which should be no one) the chance to call rhea-contra
             this.nextPlayerOnTeam(!preverIsPovinnost);
 
-            if (this.currentPlayer !== this.board.firstContraPlayer) {
+            if (this.player !== this.board.firstContraPlayer) {
                 return true;
             }
 
@@ -808,10 +809,10 @@ class GamePlay {
             return true;
         }
 
-        // Chance at contra or supra-contra
+        // Chance at contra or supra-contra for non-prever team
         this.nextPlayerOnTeam(preverIsPovinnost);
 
-        if (this.currentPlayer === this.board.firstContraPlayer) {
+        if (this.player !== this.board.firstContraPlayer) {
             return true;
         }
 
@@ -833,7 +834,7 @@ class GamePlay {
 
             this.#room.informCalledContra(this.player);
 
-            if (this.currentPlayer === povinnostIsValat) {
+            if (this.currentPlayer.isTeamPovinnost === povinnostIsValat) {
                 // Rhea-contra
                 this.board.contra[1] = 1;
                 this.board.rheaContra = this.player;
