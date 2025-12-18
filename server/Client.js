@@ -297,7 +297,7 @@ class Client {
 
     handleNewRoom() {
         if (!verifyCanMakeRoom(this)) {
-            socket.emit('roomNotConnected', roomID);
+            this.#socket.emit('roomNotConnected', roomID);
             return;
         }
 
