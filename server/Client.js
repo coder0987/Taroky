@@ -218,7 +218,8 @@ class Client {
     handleExitRoom() {
         this.exitGame();
         this.exitAudience();
-        this.#socket.emit('returnRoomInfo',{})
+        this.#socket.emit('returnRoomInfo',{});
+        this.#socket.emit('gameEnded');
     }
 
     handleAlive(callback) {
@@ -297,7 +298,7 @@ class Client {
 
     handleNewRoom() {
         if (!verifyCanMakeRoom(this)) {
-            this.#socket.emit('roomNotConnected', roomID);
+            this.#socket.emit('roomNotConnected');
             return;
         }
 
