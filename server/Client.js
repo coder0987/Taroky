@@ -251,7 +251,7 @@ class Client {
 
     handleJoinByID(roomID, isCode) {
         if (!verifyCanJoinRoom(this, roomID, isCode)) {
-            socket.emit('roomNotConnected', roomID);
+            this.#socket.emit('roomNotConnected', roomID);
             return;
         }
 
