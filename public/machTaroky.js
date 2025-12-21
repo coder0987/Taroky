@@ -1933,7 +1933,8 @@ function onLoad() {
     socket.connect();
   });
   socket.on("gameEnded", function () {
-    exitCurrentRoom(true);
+    if (inGame)
+      exitCurrentRoom(true);
   });
   socket.on("elo", function (returnElo) {
     elo = returnElo;
