@@ -273,11 +273,13 @@ class Room {
 
     informPlayersInGame() {
         this.sendAllPlayers('returnPlayersInGame', this.playersInGame);
+        this.sendAudience('returnPlayersInGame', this.playersInGame);
     }
 
     informSettings() {
         SERVER.debug(`Sending settings ${JSON.stringify(this._settings.object)} to players`, this._name);
         this.sendAllPlayers('returnSettings', this._settings.object);
+        this.sendAudience('returnSettings', this._settings.object);
     }
 
     informActionTaken() {
@@ -510,7 +512,7 @@ class Room {
 
     removeFromAudience(socketId) {
         if (this._audience[socketId]) {
-            this._audience.ejectFromGame();
+            this._audience[socketId].ejectFromGame();
             delete this._audience[socketId];
             this.audienceCount--;
         }
@@ -587,6 +589,9 @@ class Room {
     addToAudience( client ) {
         this._audience[client.socketId] = client;
         this._audienceCount++;
+
+        client.socket.emit('returnPlayersInGame', this.playersInGame);
+        client.socket.emit('returnSettings', this.settings.object);
     }
 
     setSettingsNotation() {
