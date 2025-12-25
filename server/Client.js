@@ -247,6 +247,8 @@ class Client {
         } else {
             this.handleJoinByID(roomID, false);
         }
+
+        if (this.#room) this.#room.informPlayersInGame();
     }
 
     handleJoinByID(roomID, isCode) {
@@ -313,6 +315,7 @@ class Client {
         this.#socket.emit('roomHost');
         this.#socket.emit('youStart', room.name, room.joinCode);
         this.#socket.emit('roomConnected', room.name);
+        this.#room.informPlayersInGame();
         this.sync();
     }
 
@@ -733,6 +736,8 @@ class Client {
         this.#socket.emit('returnHand', Deck.sortCards(this.hand, this.#room.settings.aceHigh), false);
 
         this.autoReconnect();
+
+        room.informPlayersInGame();
 
         return true;
     }
