@@ -365,36 +365,36 @@ class Deck {
                 }
             }
         }
-        console.log(JSON.stringify(partners));
+        SERVER.debug(JSON.stringify(partners));
         return partners;
     }
     static grayUndiscardables(hand) {
         let hasNonTrump = false;
-        for (let i in hand) {
-            if (hand[i].suit != 'Trump') {
+        for (let card of hand) {
+            if (card.suit != 'Trump') {
                 hasNonTrump = true;
                 break;
             }
         }
-        for (let i in hand) {
-            if ((hasNonTrump && hand[i].suit == 'Trump') || hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
-                hand[i].grayed = true;
+        for (let card of hand) {
+            if ((hasNonTrump && card.suit == 'Trump') || card.value == 'King' || card.value == 'I' || card.value == 'XXI' || card.value == 'Skyz') {
+                card.grayed = true;
             } else {
-                hand[i].grayed = false;
+                card.grayed = false;
             }
         }
         //If everything is King and Trump, only gray 5-pointers
-        for (let i in hand) {
-            if (!hand[i].grayed) {
+        for (let card of hand) {
+            if (!card.grayed) {
                 return false;
             }
         }
         Deck.unGrayCards(hand);
-        for (let i in hand) {
-            if (hand[i].value == 'King' || hand[i].value == 'I' || hand[i].value == 'XXI' || hand[i].value == 'Skyz') {
-                hand[i].grayed = true;
+        for (let card of hand) {
+            if (card.value == 'King' || card.value == 'I' || card.value == 'XXI' || card.value == 'Skyz') {
+                card.grayed = true;
             } else {
-                hand[i].grayed = false;
+                card.grayed = false;
             }
         }
         return true;
@@ -690,6 +690,10 @@ class Deck {
     //Getters
     get deck() {
         return this._deck
+    }
+
+    get length() {
+        return this._deck.length;
     }
 
     set deck(deck) {

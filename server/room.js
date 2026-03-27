@@ -251,7 +251,8 @@ class Room {
         
         this.setSettingsNotation(this);
 
-        SERVER.log(this._board.notation);
+        SERVER.log(`Players: ${this.players[0].type},${this.players[1].type},${this.players[2].type},${this.players[3].type}`);
+        SERVER.log(`${this._board.notation}${this._settings.settingsNotation}`);
     }
 
     prepReturnToGame() {
