@@ -97,8 +97,8 @@ class Room {
         }
         for (let i in this._audience) {
             if (typeof pn != 'undefined') {
-                if (pn != -1 && this._players[pn].socket != -1 && players[this._players[pn].socket].username != 'Guest') {
-                    this._audience[i].messenger.emit('gameMessage', players[this._players[pn].socket].username + ' ' + message,messageType,extraInfo);
+                if (pn != -1 && this._players[pn].socket != -1 && GameManager.INSTANCE.players[this._players[pn].socket] && GameManager.INSTANCE.players[this._players[pn].socket].username != 'Guest') {
+                    this._audience[i].messenger.emit('gameMessage', GameManager.INSTANCE.players[this._players[pn].socket].username + ' ' + message,messageType,extraInfo);
                 } else {
                     pn = +pn;
                     this._audience[i].messenger.emit('gameMessage','Player ' + (pn+1) + ' ' + message,messageType,extraInfo);
