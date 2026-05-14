@@ -1,5 +1,5 @@
 const Deck = require('../deck');
-const { PLAYER_TYPE } = require('../enums');
+const { PLAYER_TYPE, SUIT } = require('../enums');
 const Player = require('./Player');
 
 class HumanPlayer extends Player {
@@ -37,9 +37,9 @@ class HumanPlayer extends Player {
 
     prever() {}
     drawPreverTalon() {}
-    
+
     drawTalon() {
-        this.info.canPass = this.room.board.povinnost != this.pid && Deck.numOfSuit(this.hand, SUIT[4]) <= 2;
+        this.info.canPass = this.room.board.povinnost != this.pid && Deck.numOfSuit(this.hand, SUIT.TRUMP) <= 2;
     }
 
     discardAction() {
