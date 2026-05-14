@@ -93,7 +93,12 @@ app.get('/preferences', function (req, res) {
 const server = http.createServer(app);
 
 //SOCKETS
-const io = require('socket.io')(server);
+const io = DEBUG_MODE ? require('socket.io')(server, { cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true
+  }}) :
+  require('socket.io')(server);
 
 SOCKET_LIST = gm.SOCKET_LIST;
 players = gm.players;
