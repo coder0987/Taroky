@@ -31,12 +31,16 @@ class HumanPlayer extends Player {
                 tempChoiceArray[i] = +i + 1;
             }
         }
+        this.info.choices = tempChoiceArray;
         this.socket.emit('12choice',tempChoiceArray);
     }
 
     prever() {}
     drawPreverTalon() {}
-    drawTalon() {}
+    
+    drawTalon() {
+        this.info.canPass = this.room.board.povinnost != this.pid && Deck.numOfSuit(this.hand, SUIT[4]) <= 2;
+    }
 
     discardAction() {
         Deck.grayUndiscardables(this.hand);

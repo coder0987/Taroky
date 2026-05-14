@@ -171,6 +171,11 @@ io.sockets.on('connection', function (socket) {
         client.handleJoinRoom(roomID, idIsCode);
     });
 
+    socket.on('getPlayersInGame', () => {
+        log('getPlayersInGame');
+        client.handleGetPlayersInGame();
+    })
+
     socket.on('dailyChallenge', () => {
         log('dailyChallenge');
         client.handleDailyChallenge();

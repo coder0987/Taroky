@@ -401,6 +401,12 @@ class Client {
         this.#room.informSettings();
     }
 
+    handleGetPlayersInGame() {
+        if (this.#inGame || this.#inAudience) {
+            this.#room.informPlayersInGame();
+        }
+    }
+
     handleGetPlayers() {
         this.#socket.emit('returnPlayerList', gm.getPlayerList(this.#socketId));
     }
