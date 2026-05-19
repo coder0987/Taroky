@@ -320,8 +320,8 @@ class Client {
     }
 
     handleCustomRoom(notation) {
+        const room = gm.addRoom( { roomType: ROOM_TYPE.CUSTOM }, 'Custom ');
         try {
-            const room = gm.addRoom( { roomType: ROOM_TYPE.CUSTOM }, 'Custom ');
             const joined = this.joinByNotation(room, notation);
 
             if (!joined) {
@@ -330,7 +330,8 @@ class Client {
             }
 
         } catch (err) {
-            SERVER.debug('Notation error');
+            SERVER.debug('Notation error: Custom room failed to connect');
+            gm.removeRoom(room);
             this.#socket.emit('roomNotConnected', 'Custom');
         }
     }
@@ -357,7 +358,7 @@ class Client {
             }
 
         } catch (err) {
-            SERVER.debug('Notation error');
+            SERVER.debug('Notation error: failed to return to game');
             this.#socket.emit('roomNotConnected', 'Return To Game');
         }
     }
@@ -401,6 +402,12 @@ class Client {
         this.#room.settingsUpdate(message);
 
         this.#room.informSettings();
+    }
+
+    handleGetPlayersInGame() {
+        if (this.#inGame || this.#inAudience) {
+            this.#room.informPlayersInGame();
+        }
     }
 
     handleGetPlayers() {
@@ -710,18 +717,20 @@ class Client {
 
     joinByNotation(room, notation) {
         // Assumes room was created by gm
-        if (!notate(room, notation)) {
-            SERVER.debug('Notation error');
+        const gameCreated = notate(room, notation);
+
+        if (!gameCreated) {
+            SERVER.debug(`Notation error: failed to joinByNotation()`);
             gm.removeRoom(room.name);
 
             return false;
         }
+        
+        const pn = getPNFromNotation(notation);
 
         this.#inGame = true;
         this.#room = room;
         this.#roomID = this.#room.name;
-
-        const pn = getPNFromNotation(notation);
 
         room.fillSlot(this, pn);
 

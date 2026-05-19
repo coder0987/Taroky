@@ -289,6 +289,8 @@ class GamePlay {
     deal() {
         const style = this.board.cutStyle || CUT_TYPE.CUT;
 
+        if (this.deck.length != 54) SERVER.errorTrace(`Deck is the wrong length`, this.#room.name);
+
         this.deck.dealTalon(this.board.talon);
 
         switch (style) {
