@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Reference | Mach Tarok</title>
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Reference</h1>
+    <div class="row g-3">
+        <div class="accordion" id="accordionExample">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Calling Special Points
+                </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                            <p>Called after partners are declared<br>
+                        4: Big ones/Taroky (10+ taroks)<br>
+                        2: Little ones/Tarocky (8-9
+                        taroks)<br>
+                        2: Bida (1-2 taroks)<br>
+                        4: Uni (0 taroks)<br>
+                        2: Honery (4+ 5-point cards)<br>
+                        4: Rosa-Honery/Kralovske-
+                        Honery (all 4 kings)<br>
+                        6: Rosa-Honery+ (all 4 kings plus
+                        another 5-point card)<br>
+                        2: Trul (Skyz, XXI/Mond,
+                        I/Pagat)<br>
+                        +/-4: Pagat (I on the end)<br>
+                        +/-40: Valat (win every trick)<br>
+                        2x: Contra (not povenost, other
+                        team must call)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Calculating Points
+                </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body">
+                        <p><em>106 Total points in the deck</em></p>
+                        <ol>
+                            <li>Calculate the points of all cards in your team's tricks</li>
+                            <li>Subtract your points from 53</li>
+                            <li>Add 10</li>
+                            <li>Double it (triple for prever)</li>
+                            <li>Divide by 10</li>
+                            <li>Round to the nearest whole number</li>
+                            <li>Pay out any special points</li>
+                            <li>Losers pay winners chips</li>
+                        </ol>
+                        <h3>Card Values</h3>
+                        <p>5: Skyz, Mond, Pagat, kings<br>
+                        4: Queens<br>
+                        3: Riders<br>
+                        2: Walkers<br>
+                        1: Taroks II-XX, 10, 9, 8, 7, ace, 2, 3, 4</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <a class="btn btn-primary" type="button" href="https://machtarok.com/">Play Taroky Online</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
