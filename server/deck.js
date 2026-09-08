@@ -101,7 +101,14 @@ class Deck {
     }
 
     static dealCards(from, to, count) {
-        for (let i=0; i<count; i++) {to.push(from.splice(0,1)[0]);}
+        for (let i=0; i<count; i++) {
+            const card = from.splice(0,1)[0];
+            if (!card) {
+                SERVER.errorTrace(`Attempted to push an undefined card! From ${JSON.stringify(from)}, to ${JSON.stringify(to)}, count ${count}`);
+                return;
+            }
+            to.push(card);
+        }
     }
 
     static copyCards(from, to, count) {
