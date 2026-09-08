@@ -347,7 +347,12 @@ const scenes = [
     text: "Want to learn more? Head back to the learn page, or try out a game against the bots to get a feel for it.",
     board: true,
     layout: () => {
-      board.innerHTML = '<a href="/learn.html" class="small-link">Learn</a><br><a href="/" class="small-link">Play</a>';
+      const learnCard = '<a href="/learn.html" class="roomcard col-md-4 col-12 white room-card-link"><div><div class="roomnum d-flex justify-content-center">Learn More</div><span>○ ○ ○ ○ </span></div></a>';
+      const playCard = '<a href="/" class="roomcard col-md-4 col-12 white room-card-link"><div><div class="roomnum d-flex justify-content-center">Play Now</div><span>○ ○ ○ ○ </span></div></a>';
+      const preamble = '<div class="container"><div class="row">';
+      const post = '</div></div>';
+
+      board.innerHTML = `${preamble}${playCard}${learnCard}${post}`;
     }
   },
 ]

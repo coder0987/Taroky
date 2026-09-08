@@ -624,6 +624,18 @@ h4 {
   transform: scale(0.75);
 }
 
+.tutorial-hand {
+  /* One row, 12 cards on desktop. Two rows, 6 cards each on mobile */
+
+}
+
+.tutorial-hand img {
+  /* One row, 12 cards on desktop. Two rows, 6 cards each on mobile */
+  width: 19%;
+  margin-bottom: 5px;
+  margin-right: -3%;
+}
+
 div.hand.sixteen-cards img {
   /*2 rows, 8 cards each. For 15 and 16 card hands*/
   width: 20%;
@@ -850,6 +862,21 @@ div.hand.twelve-cards img {
   .twelve-cards {
     padding-right: 4%;
     padding-bottom: 0;
+  }
+
+  .tutorial-hand {
+    /* One row, 12 cards on desktop. Two rows, 6 cards each on mobile */
+    
+  }
+
+  .tutorial-hand img {
+    /* One row, 12 cards on desktop. Two rows, 6 cards each on mobile */
+    width: 10%;
+    margin-right: -2.25%;
+  }
+
+  .m-pt {
+    padding-top: 10px;
   }
 }
 
@@ -1340,4 +1367,8 @@ p.align-items-right {
 #user-stats {
     margin: 2rem 10%;
     max-width: 80%;
+}
+
+.pl {
+  padding-left: 5px;
 }
