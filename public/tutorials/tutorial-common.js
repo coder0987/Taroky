@@ -168,6 +168,8 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault();
     if (isTyping) {
       skipTyping();
+    } else {
+      nextDialogue();
     }
   }
 });

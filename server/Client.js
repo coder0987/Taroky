@@ -111,7 +111,7 @@ class Client {
         this.gatherGameInfo(reconnectInfo);
 
         //SERVER.debug(JSON.stringify(this.#room));
-        SERVER.debug(JSON.stringify(this.nextStep));
+        //SERVER.debug(JSON.stringify(this.nextStep));
 
         this.#socket.emit('autoReconnect', reconnectInfo);
     }

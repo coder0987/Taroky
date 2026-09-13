@@ -89,13 +89,13 @@
   <body style="padding: 0px">
     <div w3-include-html="/nav.html"></div>
 
-    <br />
+    
 
     <div class="container navy-txt" id="training-room">
       <!--
         This is the background content. The overlay will overshadow it. It should contain game visuals, like the cards and game board
       -->
-      <div id="actionInfo" class="row actionInfo">
+      <div id="actionInfo" class="row actionInfo pl m-pt">
         <div class="col-4 no-padding">
           <div id="currentAction">Play a Card</div>
         </div>
@@ -160,12 +160,11 @@
         </div>
         <div class="col-12" id="genericRoundInfo"></div>
       </div>
-      <div id="center"><br /></div>
+      <div id="center"></div>
       <hr />
       <span id="reminder-text"></span>
 
-      <div class="row">
-        <div id="hand" class="hand col-12 d-md-block twelve-cards">
+      <div id="hand" class="tutorial-hand row d-md-block">
           <img
             id="ThreeHeart"
             alt="Three of Heart"
@@ -250,7 +249,6 @@
             class="col-md col-xs-3 grayed"
             title=""
           />
-        </div>
       </div>
     </div>
 
