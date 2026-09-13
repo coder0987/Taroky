@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <title>Tournaments - Mach Tarok</title>
+
+    <!-- JQuery -->
+    <script
+      src="https://code.jquery.com/jquery-1.12.4.min.js"
+      integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+      crossorigin="anonymous"
+    ></script>
+    <!-- Bootstrap Script (Requires JQuery) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script>
+      function notifyCopied(content) {
+          const message = "Address Copied!";
+
+          const notification = document.createElement("div");
+          notification.innerText = message;
+          notification.classList.add("notification");
+
+          const container = document.getElementById("container");
+          container.appendChild(notification);
+
+          setTimeout(function () {
+          notification.classList.add("fade-out");
+          setTimeout(function () {
+              container.removeChild(notification);
+          }, 500);
+          }, 1500);
+      }
+      function includeHTML() {
+        var z, i, elmnt, file, xhttp;
+        /* Loop through a collection of all HTML elements: */
+        z = document.getElementsByTagName("*");
+        for (i = 0; i < z.length; i++) {
+          elmnt = z[i];
+          /*search for elements with a certain atrribute:*/
+          file = elmnt.getAttribute("w3-include-html");
+          if (file) {
+            /* Make an HTTP request using the attribute value as the file name: */
+            xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+              if (this.readyState == 4) {
+                if (this.status == 200) {
+                  elmnt.innerHTML = this.responseText;
+                }
+                if (this.status == 404) {
+                  elmnt.innerHTML = "Page not found.";
+                }
+                /* Remove the attribute, and call this function once more: */
+                loaded();
+                elmnt.removeAttribute("w3-include-html");
+                includeHTML();
+              }
+            };
+            xhttp.open("GET", file, true);
+            xhttp.send();
+            /* Exit the function: */
+            return;
+          }
+        }
+      }
+      function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(";");
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) == " ") {
+            c = c.substring(1);
+          }
+          if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+          }
+        }
+        return "";
+      }
+      window.onload = () => {
+        includeHTML();
+        loadTournaments();
+      };
+      function loaded() {
+        let username = getCookie("username");
+        let accHandler = document.getElementById("accountHandler");
+        if (username) {
+          accHandler.innerHTML = "Sign Out (" + username + ")";
+          accHandler.href =
+            "https://sso.smach.us/?signOut=true&redirect=https://machtarok.com/";
+        } else {
+          accHandler.hidden = "hidden";
+        }
+      }
+      
+      function formatPhone(number) {
+        const n = '' + number;
+        return `+1 (${n.substring(0,3)}) ${n.substring(3,6)}-${n.substring(6)}`;
+      }
+
+      function createTournamentElement(tournament) {
+            const col = document.createElement('div');
+            col.className = 'col-md-8 col-lg-6 mb-3';
+
+            const card = document.createElement('div');
+            card.className = 'card shadow-sm hover-shadow border-0 p-3 bg-light h-100';
+
+            // Tournament location
+            const location = document.createElement('h3');
+            location.className = 'btn-title mb-1';
+            location.textContent = tournament.location;
+
+            // Tournament date
+            const date = document.createElement('div');
+            date.className = 'text-muted mb-2';
+            date.textContent = tournament.date.toLocaleDateString();
+
+            // Address
+            const address = document.createElement('div');
+            address.className = 'mb-3';
+
+            const addressLink = document.createElement('a');
+            addressLink.href = '#';
+            addressLink.textContent = tournament.address;
+            addressLink.className = 'small-link';
+
+            // Copy address when clicked
+            addressLink.addEventListener('click', async (event) => {
+                event.preventDefault();
+
+                await navigator.clipboard.writeText(tournament.address);
+                notifyCopied(tournament.address);
+            });
+
+            address.appendChild(addressLink);
+
+            // Contacts
+            const contacts = document.createElement('div');
+
+            if (tournament.contacts.length) {
+                const contactsHeader = document.createElement('p');
+                contactsHeader.textContent = 'Contacts';
+                contactsHeader.className = 'btn-title mb-1';
+
+                contacts.appendChild(contactsHeader);
+            }
+
+            for (const contact of tournament.contacts) {
+                const contactDiv = document.createElement('div');
+                contactDiv.className = 'mb-2';
+
+                // Name
+                const name = document.createElement('div');
+                name.textContent = contact.name;
+                
+                // Put phone and email next to each other
+                const contactLinks = document.createElement('div');
+
+                // Phone
+                if (contact.phone) {
+                    const phone = document.createElement('a');
+                    phone.href = `tel:${contact.phone}`;
+                    phone.className = 'me-2 small-link';
+
+                    const phoneIcon = document.createElement('img');
+                    phoneIcon.src = '/assets/icons/phone.svg';
+                    phoneIcon.alt = 'Phone';
+
+                    const phoneText = document.createElement('span');
+                    phoneText.textContent = formatPhone(contact.phone);
+
+                    phone.appendChild(phoneIcon);
+                    phone.appendChild(phoneText);
+                    contactLinks.appendChild(phone);
+                }
+
+
+                // Email
+                if (contact.email) {
+                    const email = document.createElement('a');
+                    email.href = `mailto:${contact.email}`;
+                    email.className = 'small-link'
+
+                    const emailIcon = document.createElement('img');
+                    emailIcon.src = '/assets/icons/email.svg';
+                    emailIcon.alt = 'Email';
+
+                    const emailText = document.createElement('span');
+                    emailText.textContent = contact.email;
+
+                    email.appendChild(emailIcon);
+                    email.appendChild(emailText);
+                    contactLinks.appendChild(email);
+                }
+
+
+                contactDiv.appendChild(name);
+                contactDiv.appendChild(contactLinks);
+
+                contacts.appendChild(contactDiv);
+            }
+
+            // Assemble card
+            card.appendChild(location);
+            card.appendChild(date);
+            card.appendChild(address);
+            card.appendChild(contacts);
+
+            col.appendChild(card);
+
+            return col;
+        }
+      
+      function loadTournaments() {
+        const tournaments = [
+            {
+                location: 'Lake Victor Community Center',
+                date: new Date(2026, 4, 9),
+                address: '200 Lake Ave. Lampass, Texas',
+                contacts: [
+                    {
+                        name: 'Sandra Motloch',
+                        phone: 5103788942,
+                        email: ''
+                    },
+                    {
+                        name: 'Travis Motloch',
+                        phone: 5127699257,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Ammannsville',
+                date: new Date(2026, 4, 17),
+                address: '7904 Mensik Rd. Schulenburg, Texas',
+                contacts: [
+                    {
+                        name: 'Wilbert Cernosek',
+                        phone: 7134090512,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Granger',
+                date: new Date(2026, 4, 30),
+                address: '500 W. Davilla St. Granger, Texas',
+                contacts: [
+                    {
+                        name: 'Danny Stefek',
+                        phone: 5127507022,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Circleville',
+                date: new Date(2026, 6, 11),
+                address: '600 S State Hwy 95 Taylor, Texas',
+                contacts: [
+                    {
+                        name: 'Jvonne Elwood',
+                        phone: 5127507022,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Fort Worth',
+                date: new Date(2026, 7, 1),
+                address: '128 Heather Wind Lane Aledo, Texas',
+                contacts: [
+                    {
+                        name: 'John Dresbach',
+                        phone: 8173726610,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Westfest',
+                date: new Date(2026, 8, 5),
+                address: '200 Tokio Rd, West, Texas',
+                contacts: [
+                    {
+                        name: 'Brian Sykora',
+                        phone: 2547166105,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Schulenburg K C',
+                date: new Date(2026, 8, 13),
+                address: '405 South St. Schulenburg, Texas',
+                contacts: [
+                    {
+                        name: 'Marcus Demel',
+                        phone: 9795050370,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Schwertner',
+                date: new Date(2026, 9, 10),
+                address: '14775 FM 1105 Jarrell, Texas',
+                contacts: [
+                    {
+                        name: 'Mary Jo Tschoerner',
+                        phone: 5129172866,
+                        email: ''
+                    },
+                    {
+                        name: 'Modene Marek',
+                        phone: 5128183822,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'La Grange',
+                date: new Date(2026, 9, 17),
+                address: '1899 N. Jefferson St. La Garange, Texas',
+                contacts: [
+                    {
+                        name: 'Wibert Cernosek',
+                        phone: 7134090512,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Seaton Star Hall',
+                date: new Date(2026, 10, 14),
+                address: '10842 TX-52 Temple, Texas',
+                contacts: [
+                    {
+                        name: 'Danny Stephan',
+                        phone: 2547607819,
+                        email: ''
+                    },
+                ]
+            },
+            {
+                location: 'Lake Victor Community Center',
+                date: new Date(2026, 10, 7),
+                address: '200 Lake Ave. Lampass, Texas',
+                contacts: [
+                    {
+                        name: 'Sandra Motloch',
+                        phone: 5103788942,
+                        email: ''
+                    },
+                    {
+                        name: 'Travis Motloch',
+                        phone: 5127699257,
+                        email: ''
+                    },
+                ]
+            },
+        ];
+
+        const tournamentContainer = document.getElementById('upcoming');
+        const pastTournamentContainer = document.getElementById('past');
+
+        const today = Date.now();
+
+        for (const tournament of tournaments) {
+            if (tournament.date < today) {
+                pastTournamentContainer.appendChild(
+                    createTournamentElement(tournament)
+                );
+            } else {
+                tournamentContainer.appendChild(
+                    createTournamentElement(tournament)
+                );
+            }
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body style="padding: 0px">
+    <div w3-include-html="/nav.html"></div>
+
+    <br />
+
+    <div class="container navy-txt" id="container">
+      <h1>Tournaments</h1>
+
+      <h2>Upcoming Tournaments</h2>
+      <div class="row" id="upcoming">
+      </div>
+
+      <h2>Past Tournaments</h2>
+      <div class="row" id="past">
+      </div>
+
+      
+    </div>
+  </body>
+</html>
