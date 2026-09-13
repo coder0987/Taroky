@@ -286,7 +286,7 @@ const notices = [
     { title: "Sign in to Play the Daily Challenge!", message: "Compete with other MachTarok players online to see who can get the best score for the same hand.", link: "https://sso.smach.us/?redirect=https://machtarok.com/", target: 'target="_blank"' },
     { title: "Read Our Free Articles Today!", message: "Check out the 'Learn' page to read Taroky strategy articles.", link: "/learn.html", target: '' },
     { title: "Sign in to Save Your Preferred Settings!", message: "From user avatars and deck customizations to bot play time, sign in to play Taroky your way!", link: "https://sso.smach.us/?redirect=https://machtarok.com/", target: 'target="_blank"' },
-    { title: "When Should You Call Contra?", message: "Read the new article now", link: "/articles/contra.html", target: '' },
+    { title: "What is the Mond?", message: "Read the new article now", link: "/articles/trul.html", target: '' },
 ];
 
 class RoomsRenderer {
