@@ -1398,7 +1398,7 @@ function onLoad() {
       botPlayTime: 3000,
       botThinkTime: 1000,
     };
-    delete elo;
+    elo = undefined;
     document.getElementById("chat-entry").setAttribute("hidden", "hidden");
     document.getElementById("saveButton").setAttribute("hidden", "hidden");
     displaySignIn();
@@ -1420,7 +1420,7 @@ function onLoad() {
       botPlayTime: 3000,
       botThinkTime: 1000,
     };
-    delete elo;
+    elo = undefined;
     document.getElementById("chat-entry").setAttribute("hidden", "hidden");
     document.getElementById("saveButton").setAttribute("hidden", "hidden");
     displaySignIn();
