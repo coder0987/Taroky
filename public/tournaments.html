@@ -115,7 +115,7 @@
             // Tournament location
             const location = document.createElement('h3');
             location.className = 'btn-title mb-1';
-            location.textContent = tournament.location;
+            location.textContent = `${tournament.location} Taroky Tournament`;
 
             // Tournament date
             const date = document.createElement('div');
@@ -167,7 +167,7 @@
                 if (contact.phone) {
                     const phone = document.createElement('a');
                     phone.href = `tel:${contact.phone}`;
-                    phone.className = 'me-2 small-link';
+                    phone.className = 'me-2 small-link d-block';
 
                     const phoneIcon = document.createElement('img');
                     phoneIcon.src = '/assets/icons/phone.svg';
@@ -186,10 +186,10 @@
                 if (contact.email) {
                     const email = document.createElement('a');
                     email.href = `mailto:${contact.email}`;
-                    email.className = 'small-link'
+                    email.className = 'small-link d-block'
 
                     const emailIcon = document.createElement('img');
-                    emailIcon.src = '/assets/icons/email.svg';
+                    emailIcon.src = '/assets/icons/mail.svg';
                     emailIcon.alt = 'Email';
 
                     const emailText = document.createElement('span');
@@ -198,6 +198,27 @@
                     email.appendChild(emailIcon);
                     email.appendChild(emailText);
                     contactLinks.appendChild(email);
+                }
+
+                // Link
+                if (contact.link) {
+                    const link = document.createElement('a');
+                    link.href = contact.link;
+                    link.className = 'small-link d-block';
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+
+                    const linkIcon = document.createElement('img');
+                    linkIcon.src = '/assets/icons/external-link.svg';
+                    linkIcon.alt = 'link';
+
+                    const linkText = document.createElement('span');
+                    linkText.className = 'pl';
+                    linkText.textContent = contact.link;
+
+                    link.appendChild(linkIcon);
+                    link.appendChild(linkText);
+                    contactLinks.appendChild(link);
                 }
 
 
@@ -367,6 +388,19 @@
                     },
                 ]
             },
+            {
+                location: 'SPJST Temple',
+                date: new Date(2027, 1, 6),
+                address: '520 N Main St, Temple, TX',
+                contacts: [
+                    {
+                        name: 'SPJST Home Office',
+                        link: 'https://form.jotform.com/spjst_life/state-tarok',
+                        phone: 2547731575,
+                        email: 'tammym@spjst.com'
+                    },
+                ]
+            },
         ];
 
         const tournamentContainer = document.getElementById('upcoming');
@@ -397,6 +431,13 @@
     <div class="container navy-txt" id="container">
       <h1>Tournaments</h1>
 
+      <p>
+          Play Taroky in person at one of these upcoming events. 
+          Normally played in 6, 1-hour rounds against 40-60 opponents. 
+          Registration fees vary from $20-$40.
+          See the contact information below for more information.
+      </p>
+
       <h2>Upcoming Tournaments</h2>
       <div class="row" id="upcoming">
       </div>
@@ -405,7 +446,13 @@
       <div class="row" id="past">
       </div>
 
-      
+      <div class="row">
+            <div class="feedback col-md-8 col-12">
+                <p>Know of an upcoming tournament that isn't listed?</p>
+                <p>Send an email to <a class="small-link" href="mailto:webmaster@smach.us">webmaster@smach.us</a></p>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
     </div>
   </body>
 </html>
